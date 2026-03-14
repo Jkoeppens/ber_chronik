@@ -516,22 +516,29 @@ let netNeighbors     = null;   // Map<id, Set<id>> built in drawNetwork
 const DIM = 0.35;  // opacity for "rest" nodes when something is highlighted
 
 // ── Timeline highlight ────────────────────────────────────────────────────────
-let chartDotSelection  = null;   // D3 selection of all .dot circles, set in drawChart
-let highlightedAnchors = null;   // Set<string> of active source anchors, or null
-let focusedAnchor      = null;   // single anchor being focused via src-ref click, or null
+// Three explicit states, one central setter:
+//   "none"   – all dots at rest
+//   "answer" – source dots highlighted, rest dimmed
+//   "single" – one dot extra-prominent, other source dots normal-highlighted, rest dimmed
+let chartDotSelection = null;  // D3 selection of all .dot circles; refreshed after each drawChart
+let hlState = { mode: "none", anchors: null, active: null };
 
-function applyTimelineHighlight(anchorSet, focused) {
-  highlightedAnchors = anchorSet ?? null;
-  focusedAnchor      = focused ?? null;
+function setHighlight(mode, anchors = null, active = null) {
+  hlState = { mode, anchors, active };
+  _applyHighlight();
+}
+
+function _applyHighlight() {
   if (!chartDotSelection) return;
-  if (!anchorSet || anchorSet.size === 0) {
+  const { mode, anchors, active } = hlState;
+  if (mode === "none" || !anchors || anchors.size === 0) {
     chartDotSelection
       .attr("r", 4).attr("opacity", null)
       .attr("stroke", "#fff").attr("stroke-width", 1.5);
     return;
   }
-  const isSource  = v => v.anchorSet && [...anchorSet].some(a => v.anchorSet.has(a));
-  const isFocused = v => focused && v.anchorSet?.has(focused);
+  const isSource  = v => v.anchorSet && [...anchors].some(a => v.anchorSet.has(a));
+  const isFocused = v => active && v.anchorSet?.has(active);
   chartDotSelection
     .attr("r",            v => isFocused(v) ? 9 : isSource(v) ? 7 : 4)
     .attr("opacity",      v => isSource(v) ? 1 : DIM)
@@ -576,8 +583,8 @@ function _renderView({ type, title, renderFn, entityKey }) {
   document.getElementById(`view-${type}`).classList.add("active");
   if (renderFn) renderFn(document.getElementById(`view-${type}`));
   document.getElementById("panel-content").scrollTop = 0;
-  // Returning to chat: restore base highlight without any single-ref focus
-  if (type === "chat" && highlightedAnchors) applyTimelineHighlight(highlightedAnchors, null);
+  // Returning to chat: drop single-ref focus but keep answer highlight
+  if (type === "chat" && hlState.mode === "single") setHighlight("answer", hlState.anchors);
 }
 
 function showView(type, title, renderFn, entityKey) {
@@ -684,7 +691,7 @@ document.getElementById("panel-content").addEventListener("click", e => {
     document.getElementById(targetId)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
     const anchor = targetId.replace(/^src-/, "");
-    if (highlightedAnchors) applyTimelineHighlight(highlightedAnchors, anchor);
+    if (hlState.mode !== "none") setHighlight("single", hlState.anchors, anchor);
     return;
   }
   // Entity highlight click
@@ -758,13 +765,13 @@ function drawChart(series, years) {
       });
   });
 
-  // Store dot selection for highlight; re-apply any active highlight after redraw
+  // Store dot selection; re-apply current highlight state after redraw
   chartDotSelection = svg.selectAll("circle.dot");
-  if (highlightedAnchors) applyTimelineHighlight(highlightedAnchors, focusedAnchor);
+  _applyHighlight();
 
-  // Click on empty chart area resets all timeline highlighting
+  // Click on empty chart area resets timeline highlighting
   svg.on("click.reset", (event) => {
-    if (event.target.tagName !== "circle") applyTimelineHighlight(null);
+    if (event.target.tagName !== "circle") setHighlight("none");
   });
 }
 
@@ -978,7 +985,7 @@ function renderChatAnswer(viewEl, question, mode, content) {
       ${data.keywords?.length ? `<div class="chat-params">Keywords: ${data.keywords.join(", ")}</div>` : ""}
       ${sourcesHTML}
     `;
-    applyTimelineHighlight(new Set(data.sources || []));
+    setHighlight("answer", new Set(data.sources || []));
   } else {
     const { hits, keywords } = content;
     const cards = hits.length
@@ -1002,7 +1009,7 @@ function renderChatAnswer(viewEl, question, mode, content) {
       ${hits.length ? `<div class="chat-params">${hits.length} Treffer · Keywords: ${keywords.join(", ")}</div>` : ""}
       <div class="chat-hits">${cards}</div>
     `;
-    applyTimelineHighlight(new Set(hits.map(h => h.doc_anchor).filter(Boolean)));
+    setHighlight("answer", new Set(hits.map(h => h.doc_anchor).filter(Boolean)));
   }
 }
 
