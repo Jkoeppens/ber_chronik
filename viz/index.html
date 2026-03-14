@@ -901,9 +901,10 @@ function renderChatAnswer(viewEl, question, mode, content) {
     // Replace them with unique placeholders before parsing, restore after.
     const srcRefMap = new Map();
     let refIdx = 0;
-    const protectedAnswer = data.answer.replace(/\[([pP]\d+),\s*(\d+|\?)\]/g, (match, anchor, year) => {
+    const protectedAnswer = data.answer.replace(/\[([pP]\d+)(?:,\s*(\d+|\?))?\]/g, (match, anchor, year) => {
       const key = `\x02SRCREF${refIdx++}\x03`;
-      srcRefMap.set(key, `<a href="#src-${anchor.toLowerCase()}" class="src-ref">[${anchor}, ${year}]</a>`);
+      const label = year ? `[${anchor}, ${year}]` : `[${anchor}]`;
+      srcRefMap.set(key, `<a href="#src-${anchor.toLowerCase()}" class="src-ref">${label}</a>`);
       return key;
     });
     let answerHtml = marked.parse(protectedAnswer);
