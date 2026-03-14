@@ -55,6 +55,7 @@
       padding: 20px 24px 16px;
       overflow: hidden;
       min-width: 0;
+      /* right padding is set dynamically via JS to match panel width */
     }
     #chart-area.hidden { display: none; }
     #chart-area svg { flex: 1; overflow: visible; }
@@ -574,15 +575,28 @@ document.getElementById("panel-close").onclick = goHome;
 document.addEventListener("keydown", e => { if (e.key === "Escape") goHome(); });
 
 // ── Panel collapse/expand ─────────────────────────────────────────────────────
-const panelEl  = document.getElementById("panel");
-const panelMin = document.getElementById("panel-min");
+const panelEl    = document.getElementById("panel");
+const panelMin   = document.getElementById("panel-min");
+const chartArea  = document.getElementById("chart-area");
+const networkArea = document.getElementById("network-area");
 let panelExpanded = false;
+
+function applyPanelWidth() {
+  const w = panelEl.offsetWidth;
+  chartArea.style.paddingRight  = `${w + 24}px`;
+  networkArea.style.paddingRight = `${w}px`;
+}
+
+// Set initial padding once layout is ready
+requestAnimationFrame(applyPanelWidth);
 
 panelMin.addEventListener("click", () => {
   panelExpanded = !panelExpanded;
   panelEl.classList.toggle("expanded", panelExpanded);
   panelMin.textContent = panelExpanded ? "→" : "←";
   panelMin.title       = panelExpanded ? "Einklappen" : "Ausklappen";
+  // After CSS transition ends, update padding (transition is 0.25s)
+  setTimeout(applyPanelWidth, 260);
 });
 
 // ── Para list helpers ─────────────────────────────────────────────────────────
