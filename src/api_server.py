@@ -14,9 +14,12 @@ from typing import Any
 
 import anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 load_dotenv()
 
@@ -25,7 +28,8 @@ MODEL          = "claude-haiku-4-5-20251001"
 MAX_PARAGRAPHS = 20
 DATA_PATH      = Path(__file__).parent.parent / "viz" / "data.json"
 
-client = anthropic.Anthropic()
+client  = anthropic.Anthropic()
+limiter = Limiter(key_func=get_remote_address)
 
 # ── Prompt ────────────────────────────────────────────────────────────────────
 ANSWER_PROMPT = """\
@@ -76,6 +80,8 @@ with open(DATA_PATH, encoding="utf-8") as _f:
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="BER Chronik Chat API", version="2.0")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -132,7 +138,8 @@ def search_entries(entries: list[dict], keywords: list[str]) -> list[dict]:
 
 # ── Endpoint ──────────────────────────────────────────────────────────────────
 @app.post("/chat", response_model=ChatResponse)
-def chat(req: ChatRequest) -> ChatResponse:
+@limiter.limit("50/hour")
+def chat(req: ChatRequest, request: Request) -> ChatResponse:
     question = req.question.strip()
     if not question:
         raise HTTPException(status_code=400, detail="question must not be empty")
