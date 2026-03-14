@@ -658,7 +658,7 @@ function renderParaList(entries) {
     const color = COLOR[et] || "#999";
     const date  = p.date_raw || String(p.year || "");
     const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
-    return `<div class="ep-para">
+    return `<div class="ep-para" data-anchor="${escapeHtml(p.doc_anchor || '')}">
       <div class="para-date">${escapeHtml(date)}</div>
       <span class="para-label" style="background:${color}">${et}</span>
       <div class="para-text">${highlightEntities(p.text || "")}</div>
@@ -706,11 +706,11 @@ document.getElementById("panel-content").addEventListener("click", e => {
   // Entity highlight click (checked before card so entities inside cards still work)
   const ent = e.target.closest(".entity");
   if (ent) { selectEntity(ent.dataset.name); return; }
-  // Source card click: highlight that single dot on the timeline
-  const card = e.target.closest(".ep-para[id^='src-']");
+  // Para card click (source cards and entity view cards): single-dot highlight
+  const card = e.target.closest(".ep-para[data-anchor], .ep-para[id^='src-']");
   if (card && hlState.mode !== "none") {
-    const anchor = card.id.replace(/^src-/, "");
-    setHighlight("single", hlState.anchors, anchor);
+    const anchor = card.dataset.anchor || card.id.replace(/^src-/, "");
+    if (anchor) setHighlight("single", hlState.anchors, anchor);
   }
 });
 
