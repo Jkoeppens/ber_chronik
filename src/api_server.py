@@ -109,8 +109,11 @@ def call_claude(prompt: str) -> str:
             model=MODEL,
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
+            timeout=25.0,
         )
         return next((b.text for b in response.content if b.type == "text"), "").strip()
+    except anthropic.APITimeoutError:
+        raise HTTPException(status_code=504, detail="Claude API timeout – bitte erneut versuchen.")
     except anthropic.APIError as exc:
         raise HTTPException(status_code=502, detail=f"Claude API error: {exc}")
 
