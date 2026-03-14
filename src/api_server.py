@@ -85,7 +85,13 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://jkoeppens.github.io",
+        "http://localhost:8765",
+        "http://localhost:8000",
+        "http://127.0.0.1:8765",
+        "http://127.0.0.1:8000",
+    ],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
