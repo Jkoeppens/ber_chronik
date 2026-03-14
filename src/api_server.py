@@ -17,7 +17,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
@@ -30,6 +31,15 @@ DATA_PATH      = Path(__file__).parent.parent / "viz" / "data.json"
 
 client  = anthropic.Anthropic()
 limiter = Limiter(key_func=get_remote_address)
+
+
+def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    response = JSONResponse(
+        status_code=429,
+        content={"detail": f"Rate limit exceeded: {exc.detail}"},
+    )
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 # ── Prompt ────────────────────────────────────────────────────────────────────
 ANSWER_PROMPT = """\
@@ -81,17 +91,11 @@ with open(DATA_PATH, encoding="utf-8") as _f:
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="BER Chronik Chat API", version="2.0")
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://jkoeppens.github.io",
-        "http://localhost:8765",
-        "http://localhost:8000",
-        "http://127.0.0.1:8765",
-        "http://127.0.0.1:8000",
-    ],
+    allow_origins=["*"],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
