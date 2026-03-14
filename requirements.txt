@@ -7,3 +7,5 @@ python-dateutil==2.9.0.post0
 regex==2024.11.6
 tqdm==4.66.5
 spacy>=3.8,<3.9
+anthropic>=0.40,<1.0
+python-dotenv>=1.0,<2.0

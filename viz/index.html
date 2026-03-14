@@ -45,7 +45,7 @@
     .tab:hover { color: #111; }
     .tab.active { color: #111; border-bottom-color: #111; font-weight: 600; }
 
-    #main { display: flex; flex: 1; overflow: hidden; }
+    #main { display: flex; flex: 1; overflow: hidden; position: relative; }
 
     /* ── Chart ── */
     #chart-area {
@@ -147,48 +147,180 @@
       z-index: 100;
     }
 
-    /* ── Panel ── */
+    /* ── Panel (overlays right side) ── */
     #panel {
-      width: 360px;
-      flex-shrink: 0;
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 300px;
       background: #fff;
       border-left: 1px solid #ddd;
+      box-shadow: -3px 0 12px rgba(0,0,0,0.08);
       display: flex;
       flex-direction: column;
-      transform: translateX(100%);
-      transition: transform 0.2s ease;
+      overflow: hidden;
+      transition: width 0.25s ease;
+      z-index: 10;
     }
-    #panel.open { transform: translateX(0); }
+    #panel.expanded { width: 66.666%; }
 
-    #panel-header {
-      padding: 14px 16px 10px;
-      border-bottom: 1px solid #eee;
+    /* Row 1: collapse toggle + chat input – always visible */
+    #panel-topbar {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
       flex-shrink: 0;
     }
-    #panel-title    { font-weight: 600; font-size: 0.95rem; }
-    #panel-subtitle { font-size: 0.75rem; color: #888; margin-top: 2px; }
+    #panel-min {
+      background: none; border: none;
+      width: 26px; height: 26px;
+      font-size: 1rem; cursor: pointer;
+      color: #888; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+    }
+    #panel-min:hover { color: #111; background: #f0f0f0; }
+    #chat-input {
+      flex: 1;
+      padding: 6px 9px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      outline: none;
+      min-width: 0;
+    }
+    #chat-input:focus { border-color: #999; }
+    #chat-send {
+      padding: 6px 11px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    #chat-send:hover { background: #333; }
+    #chat-send:disabled { background: #999; cursor: default; }
 
+    /* Row 2: back + title + close */
+    #panel-navbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 8px;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0;
+      min-height: 34px;
+    }
+    #panel-back {
+      background: none; border: none;
+      font-size: 1rem; cursor: pointer;
+      color: #888; flex-shrink: 0;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+      visibility: hidden;
+    }
+    #panel-back.visible { visibility: visible; }
+    #panel-back:hover { color: #111; background: #f0f0f0; }
+    #panel-title {
+      flex: 1;
+      font-size: 0.88rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
     #panel-close {
       background: none; border: none;
-      font-size: 1.2rem; cursor: pointer;
-      color: #888; line-height: 1; padding: 0 2px; flex-shrink: 0;
+      font-size: 1.1rem; cursor: pointer;
+      color: #888; flex-shrink: 0;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px;
     }
-    #panel-close:hover { color: #111; }
+    #panel-close:hover { color: #111; background: #f0f0f0; }
 
-    #panel-body {
+    /* Scrollable content area – three mutually exclusive views */
+    #panel-content {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      padding: 14px;
+    }
+    .panel-view          { display: none; }
+    .panel-view.active   { display: block; }
+
+    mark.kw-hit {
+      background: #fef08a;
+      color: inherit;
+      border-radius: 2px;
+      padding: 0 1px;
     }
 
+    .chat-question-label {
+      font-size: 0.7rem;
+      color: #888;
+      margin-bottom: 5px;
+    }
+    .chat-answer-text {
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #1a1a1a;
+      white-space: pre-wrap;
+    }
+    .chat-sources {
+      margin-top: 8px;
+      padding-top: 7px;
+      border-top: 1px solid #eee;
+      font-size: 0.7rem;
+      color: #888;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+    }
+    .chat-source-link {
+      background: #f0f0ee;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 0.68rem;
+      cursor: pointer;
+      color: #444;
+    }
+    .chat-source-link:hover { background: #e0e0de; color: #111; }
+    .chat-params {
+      margin-top: 6px;
+      font-size: 0.66rem;
+      color: #bbb;
+    }
+    .chat-spinner { font-size: 0.78rem; color: #888; padding: 6px 0; }
+
+    .chat-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+    .chat-mode {
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .chat-mode-ai    { background: #dbeafe; color: #1d4ed8; }
+    .chat-mode-local { background: #fef3c7; color: #92400e; }
+    .chat-hits { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+
     /* Paragraph card */
-    #para-card {}
     .para-date   { font-size: 0.7rem; color: #888; margin-bottom: 5px; }
     .para-label  {
       display: inline-block; padding: 2px 7px; border-radius: 3px;
@@ -211,171 +343,6 @@
     .entity[data-typ="Gremium"] { background: #ead5f5; color: #5a0080; }
     .entity[data-typ="Partei"]  { background: #ffd5d5; color: #800000; }
 
-    /* Entity summary box */
-    #entity-box {
-      background: #f9f9f7;
-      border: 1px solid #e0ddd8;
-      border-radius: 6px;
-      padding: 12px 14px;
-      display: none;
-    }
-    #entity-box.visible { display: block; }
-    #entity-box-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 8px;
-    }
-    #entity-box-name { font-weight: 600; font-size: 0.88rem; }
-    #entity-box-close {
-      background: none; border: none;
-      color: #999; cursor: pointer; font-size: 1rem; line-height: 1;
-    }
-    #entity-box-close:hover { color: #333; }
-    #entity-box-back {
-      display: none;
-      background: none; border: none;
-      color: #888; cursor: pointer; font-size: 0.72rem;
-      padding: 0 0 8px 0; margin-bottom: 2px;
-    }
-    #entity-box-back:hover { color: #111; }
-    #entity-box-summary { font-size: 0.8rem; line-height: 1.55; color: #333; }
-    #entity-box-count   { margin-top: 8px; font-size: 0.7rem; color: #888; }
-
-    /* Nav */
-    #panel-nav {
-      padding: 12px 16px;
-      border-top: 1px solid #eee;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-    #panel-nav button {
-      background: #f0f0f0; border: 1px solid #ddd;
-      border-radius: 4px; padding: 4px 14px;
-      cursor: pointer; font-size: 1rem;
-    }
-    #panel-nav button:hover:not(:disabled) { background: #e0e0e0; }
-    #panel-nav button:disabled { opacity: 0.3; cursor: default; }
-    #para-counter { font-size: 0.8rem; color: #555; }
-
-    /* ── Chat ── */
-    #chat-area {
-      flex: 1;
-      display: none;
-      flex-direction: column;
-      justify-content: flex-end;
-      overflow: hidden;
-      min-width: 0;
-      background: #fafaf8;
-    }
-    #chat-area.active { display: flex; }
-
-    #chat-inner {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      height: 100%;
-      max-width: 720px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 24px 24px 20px;
-      gap: 16px;
-    }
-
-    #chat-result {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .chat-answer-block {
-      background: #fff;
-      border: 1px solid #e0ddd8;
-      border-radius: 8px;
-      padding: 16px 18px;
-    }
-    .chat-answer-text {
-      font-size: 0.88rem;
-      line-height: 1.65;
-      color: #1a1a1a;
-      white-space: pre-wrap;
-    }
-    .chat-sources {
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px solid #eee;
-      font-size: 0.72rem;
-      color: #888;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 6px;
-    }
-    .chat-source-link {
-      background: #f0f0ee;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      padding: 1px 6px;
-      font-size: 0.7rem;
-      cursor: pointer;
-      color: #444;
-      text-decoration: none;
-    }
-    .chat-source-link:hover { background: #e0e0de; color: #111; }
-
-    .chat-question-label {
-      font-size: 0.72rem;
-      color: #888;
-      margin-bottom: 8px;
-    }
-    .chat-params {
-      margin-top: 8px;
-      font-size: 0.68rem;
-      color: #bbb;
-    }
-
-    #chat-input-row {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    #chat-input {
-      flex: 1;
-      padding: 9px 13px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 0.88rem;
-      font-family: inherit;
-      outline: none;
-    }
-    #chat-input:focus { border-color: #999; }
-    #chat-send {
-      padding: 9px 18px;
-      background: #1a1a1a;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    #chat-send:hover { background: #333; }
-    #chat-send:disabled { background: #999; cursor: default; }
-
-    .chat-spinner {
-      font-size: 0.8rem; color: #888;
-      padding: 12px 0;
-    }
-
-    /* ── Entity panel mode (network click) ── */
-    #entity-panel { display: none; flex-direction: column; gap: 10px; }
-    #panel.entity-mode #entity-panel  { display: flex; }
-    #panel.entity-mode #para-card     { display: none; }
-    #panel.entity-mode #panel-nav     { display: none; }
 
     .ep-summary {
       background: #f9f9f7;
@@ -406,7 +373,6 @@
 <nav id="tabs">
   <button class="tab active" id="tab-timeline">Timeline</button>
   <button class="tab"        id="tab-network">Netzwerk</button>
-  <button class="tab"        id="tab-chat">Chat</button>
 </nav>
 
 <div id="main">
@@ -421,46 +387,26 @@
     <div id="net-legend"></div>
   </div>
 
-  <div id="chat-area">
-    <div id="chat-inner">
-      <div id="chat-result"></div>
-      <div id="chat-input-row">
-        <input id="chat-input" type="text" placeholder="Frage zur BER-Chronik stellen …" autocomplete="off">
-        <button id="chat-send">Senden</button>
-      </div>
-    </div>
-  </div>
-
   <aside id="panel">
-    <div id="panel-header">
-      <div>
-        <div id="panel-title"></div>
-        <div id="panel-subtitle"></div>
-      </div>
-      <button id="panel-close">×</button>
+    <!-- Row 1: collapse toggle + chat input – always visible -->
+    <div id="panel-topbar">
+      <button id="panel-min" title="Ausklappen">←</button>
+      <input id="chat-input" type="text" placeholder="Frage zur BER-Chronik …" autocomplete="off">
+      <button id="chat-send">→</button>
     </div>
 
-    <div id="panel-body">
-      <div id="para-card"></div>
-      <div id="entity-panel">
-        <div id="ep-summary"></div>
-        <div id="ep-paras"></div>
-      </div>
-      <div id="entity-box">
-        <div id="entity-box-header">
-          <span id="entity-box-name"></span>
-          <button id="entity-box-close">×</button>
-        </div>
-        <button id="entity-box-back">← zurück</button>
-        <div id="entity-box-summary"></div>
-        <div id="entity-box-count"></div>
-      </div>
+    <!-- Row 2: back + title + close -->
+    <div id="panel-navbar">
+      <button id="panel-back" title="Zurück">←</button>
+      <div id="panel-title">Suche</div>
+      <button id="panel-close" title="Schließen">×</button>
     </div>
 
-    <div id="panel-nav">
-      <button id="btn-prev">←</button>
-      <span id="para-counter"></span>
-      <button id="btn-next">→</button>
+    <!-- Scrollable content: three mutually exclusive views -->
+    <div id="panel-content">
+      <div id="view-chat"     class="panel-view active"></div>
+      <div id="view-timeline" class="panel-view"></div>
+      <div id="view-entity"   class="panel-view"></div>
     </div>
   </aside>
 </div>
@@ -486,9 +432,9 @@ const NODE_COLOR = {
 };
 
 // ── Entity lookup ─────────────────────────────────────────────────────────────
-let aliasMap      = {};   // alias (lowercase) → { normalform, typ }
-let aliasesSorted = [];   // sorted longest-first for greedy matching
-let summaryMap    = {};   // normalform → { summary, count }
+let aliasMap      = {};
+let aliasesSorted = [];
+let summaryMap    = {};
 
 function buildAliasMap(csvText) {
   const lines = csvText.split("\n").slice(1);
@@ -518,90 +464,113 @@ function escapeRegex(s) {
 }
 
 function highlightEntities(text) {
-  if (!aliasesSorted.length) return escapeHtml(text);
-  const pattern = aliasesSorted.map(escapeRegex).join("|");
+  return highlightWithKeywords(text, []);
+}
+
+function highlightWithKeywords(text, keywords) {
+  const kwSet = new Set(keywords.map(k => k.toLowerCase()));
+  const allPatterns = [
+    ...aliasesSorted.map(escapeRegex),
+    ...keywords.map(escapeRegex),
+  ];
+  if (!allPatterns.length) return escapeHtml(text);
+
+  const pattern = allPatterns.join("|");
   const re = new RegExp(`(?<![\\p{L}\\d])(?:${pattern})(?![\\p{L}\\d])`, "giu");
 
   let result = "", lastIdx = 0;
   for (const match of text.matchAll(re)) {
-    const info = aliasMap[match[0].toLowerCase()];
-    if (!info) continue;
+    const m    = match[0];
+    const info = aliasMap[m.toLowerCase()];
     result += escapeHtml(text.slice(lastIdx, match.index));
-    result += `<span class="entity" data-typ="${info.typ}" data-name="${escapeHtml(info.normalform)}">${escapeHtml(match[0])}</span>`;
-    lastIdx = match.index + match[0].length;
+    if (info) {
+      result += `<span class="entity" data-typ="${info.typ}" data-name="${escapeHtml(info.normalform)}">${escapeHtml(m)}</span>`;
+    } else if (kwSet.has(m.toLowerCase())) {
+      result += `<mark class="kw-hit">${escapeHtml(m)}</mark>`;
+    } else {
+      result += escapeHtml(m);
+    }
+    lastIdx = match.index + m.length;
   }
   return result + escapeHtml(text.slice(lastIdx));
 }
 
-// ── Entity summary box ────────────────────────────────────────────────────────
-let currentEntity  = null;
-let previousEntity = null;
+// ── Entity + network highlight ────────────────────────────────────────────────
+let selectedEntity   = null;
+let netNodeSelection = null;
 
-function showEntityBox(normalform, isBack = false) {
-  if (isBack) {
-    previousEntity = null;
-  } else if (currentEntity && currentEntity !== normalform) {
-    previousEntity = currentEntity;
-  }
-  currentEntity = normalform;
-
-  document.getElementById("entity-box-back").style.display = previousEntity ? "block" : "none";
-  document.getElementById("entity-box-name").textContent = normalform;
-
-  const info      = summaryMap[normalform];
-  const summaryEl = document.getElementById("entity-box-summary");
-  const countEl   = document.getElementById("entity-box-count");
-
-  if (info && info.summary) {
-    summaryEl.innerHTML = highlightEntities(info.summary);
-    countEl.textContent = `${info.count} Nennungen in der Chronik`;
-    summaryEl.style.display = "";
-    countEl.style.display   = "";
-  } else {
-    summaryEl.textContent = "Keine Zusammenfassung verfügbar (< 3 Nennungen).";
-    countEl.style.display = "none";
-  }
-
-  const box = document.getElementById("entity-box");
-  box.classList.add("visible");
-  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
-}
-
-function closeEntityBox() {
-  document.getElementById("entity-box").classList.remove("visible");
-  currentEntity  = null;
-  previousEntity = null;
-}
-
-document.getElementById("entity-box-close").onclick = closeEntityBox;
-document.getElementById("entity-box-back").onclick  = () => {
-  if (previousEntity) showEntityBox(previousEntity, true);
-};
-
-document.getElementById("panel-body").addEventListener("click", e => {
-  const ent = e.target.closest(".entity");
-  if (!ent) return;
-  const norm = ent.dataset.name;
-
-  // Click inside entity summary text (network panel) → navigate to that entity
-  if (ent.closest("#ep-summary")) {
-    openEntityPanel(norm);
+function applyNetworkHighlight(normalform) {
+  if (!netNodeSelection) return;
+  if (!normalform) {
+    netNodeSelection.attr("opacity", 1);
+    netNodeSelection.select("circle")
+      .attr("stroke",           d => summaryMap[d.id] ? "#fff" : "#888")
+      .attr("stroke-width",     1.5)
+      .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
     return;
   }
+  netNodeSelection.attr("opacity", d => d.id === normalform ? 1 : 0.15);
+  netNodeSelection.select("circle")
+    .attr("stroke",           d => d.id === normalform ? "#f5c518" : (summaryMap[d.id] ? "#fff" : "#888"))
+    .attr("stroke-width",     d => d.id === normalform ? 3.5 : 1.5)
+    .attr("stroke-dasharray", d => d.id === normalform ? null : (summaryMap[d.id] ? null : "4,3"));
+}
 
-  // Click inside entity-box summary → Wikipedia-navigate
-  if (ent.closest("#entity-box-summary")) {
-    showEntityBox(norm);
+// ── Panel view state machine ──────────────────────────────────────────────────
+let viewStack   = [];
+let currentView = { type: "chat", title: "Suche", renderFn: null, entityKey: null };
+
+function _renderView({ type, title, renderFn, entityKey }) {
+  document.getElementById("panel-title").textContent = title;
+  document.getElementById("panel-back").classList.toggle("visible", viewStack.length > 0);
+  document.querySelectorAll(".panel-view").forEach(el => el.classList.remove("active"));
+  document.getElementById(`view-${type}`).classList.add("active");
+  if (renderFn) renderFn(document.getElementById(`view-${type}`));
+  document.getElementById("panel-content").scrollTop = 0;
+}
+
+function showView(type, title, renderFn, entityKey) {
+  // Same entity already showing – just re-render in place
+  if (currentView && currentView.type === type && currentView.entityKey === entityKey && entityKey) {
+    if (renderFn) renderFn(document.getElementById(`view-${type}`));
     return;
   }
+  if (currentView) viewStack.push(currentView);
+  currentView = { type, title, renderFn, entityKey };
+  _renderView(currentView);
+}
 
-  // Click in any paragraph text → toggle entity box
-  const box = document.getElementById("entity-box");
-  if (box.classList.contains("visible") && currentEntity === norm) {
-    closeEntityBox();
-  } else {
-    showEntityBox(norm);
-  }
+function goBack() {
+  if (!viewStack.length) return;
+  currentView = viewStack.pop();
+  _renderView(currentView);
+  selectedEntity = currentView.entityKey || null;
+  applyNetworkHighlight(selectedEntity);
+}
+
+function goHome() {
+  viewStack      = [];
+  selectedEntity = null;
+  applyNetworkHighlight(null);
+  if (activeDot) { activeDot.classList.remove("active"); activeDot = null; }
+  currentView = { type: "chat", title: "Suche", renderFn: null, entityKey: null };
+  _renderView(currentView);
+}
+
+document.getElementById("panel-back").addEventListener("click", goBack);
+document.getElementById("panel-close").onclick = goHome;
+document.addEventListener("keydown", e => { if (e.key === "Escape") goHome(); });
+
+// ── Panel collapse/expand ─────────────────────────────────────────────────────
+const panelEl  = document.getElementById("panel");
+const panelMin = document.getElementById("panel-min");
+let panelExpanded = false;
+
+panelMin.addEventListener("click", () => {
+  panelExpanded = !panelExpanded;
+  panelEl.classList.toggle("expanded", panelExpanded);
+  panelMin.textContent = panelExpanded ? "→" : "←";
+  panelMin.title       = panelExpanded ? "Einklappen" : "Ausklappen";
 });
 
 // ── Para list helpers ─────────────────────────────────────────────────────────
@@ -622,58 +591,29 @@ function renderParaList(entries) {
   }).join("");
 }
 
-function openPanel(title, entries) {
-  const sorted = [...entries].sort((a, b) =>
-    (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
-
-  document.getElementById("panel-title").textContent = title;
-  document.getElementById("panel-subtitle").textContent =
-    `${sorted.length} Eintr${sorted.length === 1 ? "ag" : "äge"}`;
-  document.getElementById("ep-summary").innerHTML = "";
-  document.getElementById("ep-paras").innerHTML   = renderParaList(sorted);
-
-  const panel = document.getElementById("panel");
-  panel.classList.add("open", "entity-mode");
-  document.getElementById("panel-body").scrollTop = 0;
-  closeEntityBox();
-}
-
-function openEntityPanel(normalform) {
+function renderEntityView(normalform, viewEl) {
   const entries = entriesByActor.get(normalform) || [];
   const sorted  = [...entries].sort((a, b) =>
     (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
-
-  document.getElementById("panel-title").textContent = normalform;
-  document.getElementById("panel-subtitle").textContent =
-    `${sorted.length} Eintr${sorted.length === 1 ? "ag" : "äge"}`;
-
-  // Summary block (only if Mistral summary exists)
   const info = summaryMap[normalform];
-  document.getElementById("ep-summary").innerHTML = (info && info.summary) ? `
+  const summaryHTML = (info && info.summary) ? `
     <div class="ep-summary">
       ${highlightEntities(info.summary)}
       <div class="ep-summary-count">${info.count} Nennungen in der Chronik</div>
     </div>` : "";
-
-  // Paragraph list, chronologically
-  document.getElementById("ep-paras").innerHTML = renderParaList(sorted);
-
-  const panel = document.getElementById("panel");
-  panel.classList.add("open", "entity-mode");
-  document.getElementById("panel-body").scrollTop = 0;
+  viewEl.innerHTML = summaryHTML + renderParaList(sorted);
 }
 
-function closePanel() {
-  document.getElementById("panel").classList.remove("open", "entity-mode");
-  closeEntityBox();
-  if (activeDot) { activeDot.classList.remove("active"); activeDot = null; }
+function selectEntity(normalform) {
+  selectedEntity = normalform;
+  applyNetworkHighlight(normalform);
+  showView("entity", normalform, viewEl => renderEntityView(normalform, viewEl), normalform);
 }
 
-document.getElementById("panel-close").onclick = closePanel;
-
-document.addEventListener("keydown", e => {
-  if (!document.getElementById("panel").classList.contains("open")) return;
-  if (e.key === "Escape") closePanel();
+document.getElementById("panel-content").addEventListener("click", e => {
+  const ent = e.target.closest(".entity");
+  if (!ent) return;
+  selectEntity(ent.dataset.name);
 });
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
@@ -734,7 +674,10 @@ function drawChart(series, years) {
         if (activeDot) activeDot.classList.remove("active");
         activeDot = event.currentTarget;
         activeDot.classList.add("active");
-        openPanel(`${v.year} · ${s.et}`, v.entries);
+        const sorted = [...v.entries].sort((a, b) =>
+          (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
+        showView("timeline", `${v.year} · ${s.et}`,
+          viewEl => { viewEl.innerHTML = renderParaList(sorted); });
       });
   });
 }
@@ -761,14 +704,12 @@ function drawNetwork(nodes, links, entriesByActor) {
     .force("center",  d3.forceCenter(W / 2, H / 2))
     .force("collide", d3.forceCollide(d => nodeRadius(d) + 4));
 
-  // Edges
   const link = g.append("g")
     .selectAll("line").data(links).join("line")
     .attr("stroke", "#ccc")
     .attr("stroke-opacity", 0.6)
     .attr("stroke-width", d => Math.min(5, 0.8 + Math.log(d.count + 1)));
 
-  // Node groups
   const node = g.append("g")
     .selectAll("g").data(nodes).join("g")
     .attr("cursor", "pointer")
@@ -785,7 +726,6 @@ function drawNetwork(nodes, links, entriesByActor) {
     .attr("stroke-width",   1.5)
     .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
 
-  // Labels: only for nodes with enough mentions (surname only to save space)
   node.filter(d => d.count >= 5)
     .append("text")
     .attr("class", "net-label")
@@ -800,8 +740,13 @@ function drawNetwork(nodes, links, entriesByActor) {
     .on("mouseleave", hideTip)
     .on("click", (event, d) => {
       hideTip();
-      openEntityPanel(d.id);
+      selectEntity(d.id);
     });
+
+  // Store selection for external highlight updates
+  netNodeSelection = node;
+  // Re-apply any existing selection after redraw
+  if (selectedEntity) applyNetworkHighlight(selectedEntity);
 
   sim.on("tick", () => {
     link
@@ -810,7 +755,6 @@ function drawNetwork(nodes, links, entriesByActor) {
     node.attr("transform", d => `translate(${d.x},${d.y})`);
   });
 
-  // Type legend
   const netLegendEl = document.getElementById("net-legend");
   netLegendEl.innerHTML = Object.entries(NODE_COLOR).map(([typ, color]) => `
     <div class="net-legend-item">
@@ -821,110 +765,147 @@ function drawNetwork(nodes, links, entriesByActor) {
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 let networkDrawn  = false;
 let netNodes = [], netLinks = [], entriesByActor = new Map();
-let entriesByAnchor = new Map();   // doc_anchor → entry (for chat source links)
-
-const AREAS = {
-  timeline: document.getElementById("chart-area"),
-  network:  document.getElementById("network-area"),
-  chat:     document.getElementById("chat-area"),
-};
+let entriesByAnchor = new Map();
 
 function switchTab(active) {
-  ["timeline", "network", "chat"].forEach(id => {
+  ["timeline", "network"].forEach(id => {
     document.getElementById(`tab-${id}`).classList.toggle("active", id === active);
   });
-  AREAS.timeline.classList.toggle("hidden",  active !== "timeline");
-  AREAS.network.classList.toggle("active",   active === "network");
-  AREAS.chat.classList.toggle("active",      active === "chat");
+  document.getElementById("chart-area").classList.toggle("hidden",  active !== "timeline");
+  document.getElementById("network-area").classList.toggle("active", active === "network");
 }
 
 document.getElementById("tab-timeline").addEventListener("click", () => switchTab("timeline"));
-document.getElementById("tab-chat").addEventListener("click",     () => switchTab("chat"));
 document.getElementById("tab-network").addEventListener("click",  () => {
   switchTab("network");
   if (!networkDrawn) { drawNetwork(netNodes, netLinks, entriesByActor); networkDrawn = true; }
 });
 
-// ── Chat ──────────────────────────────────────────────────────────────────────
-const API_URL = "http://localhost:8000";  // change for production deployment
+// ── Chat (in panel) ───────────────────────────────────────────────────────────
+const API_URL = "http://localhost:8000";
 
-function formatParams(data) {
-  return data.keywords?.length
-    ? `Keywords: ${data.keywords.join(", ")}`
-    : "keine Keywords extrahiert";
+// German stopwords (mirrors api_server.py)
+const STOPWORDS = new Set([
+  "aber","alle","allem","allen","aller","alles","also","als","am","an","auch",
+  "auf","aus","bei","beim","bin","bis","bitte","da","damit","dann","dass","dem",
+  "den","denn","der","des","dessen","die","dies","dieser","dieses","doch","dort",
+  "durch","ein","eine","einem","einen","einer","eines","er","es","etwa","euch",
+  "euer","gibt","haben","hatte","hier","ihm","ihn","ihnen","ihr","ihre","im",
+  "immer","ist","kann","kein","keine","mal","man","mehr","mich","mir","mit",
+  "nach","nicht","noch","nun","nur","oder","ohne","sehr","sein","sich","sie",
+  "sind","soll","sowie","über","um","und","unter","uns","vom","von","vor","war",
+  "waren","warum","was","weil","wenn","wer","werden","wie","wird","wir","worden",
+  "wurde","wurden","wäre","würde","ziel","zu","zum","zur","zwischen",
+]);
+
+function extractKeywords(question) {
+  return [...question.matchAll(/[A-Za-zÄÖÜäöüß]+/g)]
+    .map(m => m[0].toLowerCase())
+    .filter(w => w.length >= 4 && !STOPWORDS.has(w))
+    .slice(0, 6);
+}
+
+// All loaded entries (filled in boot)
+let allEntries = [];
+
+function fulltextSearch(question) {
+  const keywords = extractKeywords(question);
+  if (!keywords.length) return { hits: [], keywords };
+  const hits = allEntries
+    .filter(e => keywords.some(kw => (e.text || "").toLowerCase().includes(kw)))
+    .sort((a, b) => (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
+  return { hits, keywords };
+}
+
+function renderChatAnswer(viewEl, question, mode, content) {
+  const modeLabel = mode === "ai"
+    ? `<span class="chat-mode chat-mode-ai">KI-Antwort</span>`
+    : `<span class="chat-mode chat-mode-local">Volltextsuche</span>`;
+
+  if (mode === "ai") {
+    const { data, sourceLinks } = content;
+    viewEl.innerHTML = `
+      <div class="chat-meta">${modeLabel}<span class="chat-question-label">${escapeHtml(question)}</span></div>
+      <div class="chat-answer-text">${escapeHtml(data.answer)}</div>
+      ${data.sources?.length ? `<div class="chat-sources"><span>Quellen:</span>${sourceLinks}</div>` : ""}
+      ${data.keywords?.length ? `<div class="chat-params">Keywords: ${data.keywords.join(", ")}</div>` : ""}
+    `;
+    viewEl.querySelectorAll(".chat-source-link").forEach(el => {
+      el.addEventListener("click", () => {
+        const entry = entriesByAnchor.get(el.dataset.anchor);
+        if (entry) showView("timeline", el.dataset.anchor,
+          v => { v.innerHTML = renderParaList([entry]); });
+      });
+    });
+  } else {
+    const { hits, keywords } = content;
+    const cards = hits.length
+      ? hits.map(p => {
+          const et    = p.event_type || "?";
+          const color = COLOR[et] || "#999";
+          const date  = p.date_raw || String(p.year || "");
+          const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
+          return `<div class="ep-para">
+            <div class="para-date">${escapeHtml(date)}</div>
+            <span class="para-label" style="background:${color}">${et}</span>
+            <div class="para-text">${highlightWithKeywords(p.text || "", keywords)}</div>
+            ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
+          </div>`;
+        }).join("")
+      : `<div class="chat-params">Keine Treffer.</div>`;
+
+    viewEl.innerHTML = `
+      <div class="chat-meta">${modeLabel}<span class="chat-question-label">${escapeHtml(question)}</span></div>
+      ${hits.length ? `<div class="chat-params">${hits.length} Treffer · Keywords: ${keywords.join(", ")}</div>` : ""}
+      <div class="chat-hits">${cards}</div>
+    `;
+  }
 }
 
 async function sendChat() {
-  const input  = document.getElementById("chat-input");
-  const sendBtn = document.getElementById("chat-send");
-  const result  = document.getElementById("chat-result");
+  const input    = document.getElementById("chat-input");
+  const sendBtn  = document.getElementById("chat-send");
   const question = input.value.trim();
   if (!question) return;
 
+  // Switch to chat view if we're elsewhere (push current view to stack)
+  if (currentView.type !== "chat") {
+    viewStack.push(currentView);
+    currentView = { type: "chat", title: "Suche", renderFn: null, entityKey: null };
+    _renderView(currentView);
+  }
+
+  const viewEl = document.getElementById("view-chat");
   sendBtn.disabled = true;
   input.disabled   = true;
+  viewEl.innerHTML = `<div class="chat-spinner">Suche …</div>`;
 
-  const spinner = document.createElement("div");
-  spinner.className = "chat-spinner";
-  spinner.textContent = "Mistral denkt …";
-  result.appendChild(spinner);
-  result.scrollTop = result.scrollHeight;
-
+  let usedFallback = false;
   try {
     const res = await fetch(`${API_URL}/chat`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ question }),
+      signal:  AbortSignal.timeout(5000),
     });
-
-    spinner.remove();
-
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: res.statusText }));
       throw new Error(err.detail || res.statusText);
     }
-
     const data = await res.json();
-
-    const block = document.createElement("div");
-    block.className = "chat-answer-block";
-
     const sourceLinks = (data.sources || []).map(anchor => {
       const entry = entriesByAnchor.get(anchor);
       return `<span class="chat-source-link" data-anchor="${anchor}" title="${entry ? escapeHtml((entry.text||"").slice(0,80)) : ""}">${anchor}</span>`;
     }).join("");
-
-    block.innerHTML = `
-      <div class="chat-question-label">Frage: ${escapeHtml(question)}</div>
-      <div class="chat-answer-text">${escapeHtml(data.answer)}</div>
-      ${data.sources?.length ? `
-        <div class="chat-sources">
-          <span>Quellen:</span>${sourceLinks}
-        </div>` : ""}
-      <div class="chat-params">${formatParams(data)}</div>
-    `;
-
-    result.appendChild(block);
-    result.scrollTop = result.scrollHeight;
-
-    // source link clicks → open panel with that entry
-    block.querySelectorAll(".chat-source-link").forEach(el => {
-      el.addEventListener("click", () => {
-        const entry = entriesByAnchor.get(el.dataset.anchor);
-        if (entry) openPanel(el.dataset.anchor, [entry]);
-      });
-    });
-
-    input.value = "";
-  } catch (err) {
-    spinner.remove();
-    const errBlock = document.createElement("div");
-    errBlock.className = "chat-answer-block";
-    errBlock.innerHTML = `<div class="chat-answer-text" style="color:#c00">Fehler: ${escapeHtml(err.message)}<br><small>Läuft der API-Server? <code>uvicorn src.api_server:app --port 8000</code></small></div>`;
-    result.appendChild(errBlock);
+    renderChatAnswer(viewEl, question, "ai", { data, sourceLinks });
+  } catch {
+    usedFallback = true;
+    const result = fulltextSearch(question);
+    renderChatAnswer(viewEl, question, "local", result);
   } finally {
     sendBtn.disabled = false;
     input.disabled   = false;
+    if (!usedFallback) input.value = "";
     input.focus();
   }
 }
@@ -945,8 +926,8 @@ Promise.all([
 
   buildAliasMap(csvText);
   summaryMap = summaries;
+  allEntries = entries;
 
-  // ── Anchor index for chat source links ──
   for (const e of entries) {
     if (e.doc_anchor) entriesByAnchor.set(e.doc_anchor, e);
   }
@@ -1006,7 +987,6 @@ Promise.all([
     typ: aliasMap[id.toLowerCase()]?.typ || "Org",
   }));
 
-  // Only edges with ≥ 2 co-occurrences to reduce clutter
   netLinks = [...edgeCounts.entries()]
     .filter(([, count]) => count >= 2)
     .map(([key, count]) => {

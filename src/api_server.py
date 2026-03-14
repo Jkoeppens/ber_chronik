@@ -3,7 +3,7 @@ BER Chronik Chat API
 POST /chat  →  { answer, sources, keywords }
 
 Run with:
-    pip install fastapi uvicorn requests
+    pip install fastapi uvicorn anthropic python-dotenv
     uvicorn src.api_server:app --reload --port 8000
 """
 
@@ -12,16 +12,20 @@ import re
 from pathlib import Path
 from typing import Any
 
-import requests
+import anthropic
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+load_dotenv()
+
 # ── Config ────────────────────────────────────────────────────────────────────
-OLLAMA_URL     = "http://localhost:11434/api/generate"
-MODEL          = "mistral"
+MODEL          = "claude-haiku-4-5-20251001"
 MAX_PARAGRAPHS = 20
 DATA_PATH      = Path(__file__).parent.parent / "viz" / "data.json"
+
+client = anthropic.Anthropic()
 
 # ── Prompt ────────────────────────────────────────────────────────────────────
 ANSWER_PROMPT = """\
@@ -86,17 +90,16 @@ class ChatResponse(BaseModel):
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-def call_ollama(prompt: str) -> str:
+def call_claude(prompt: str) -> str:
     try:
-        r = requests.post(
-            OLLAMA_URL,
-            json={"model": MODEL, "prompt": prompt, "stream": False},
-            timeout=120,
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
         )
-        r.raise_for_status()
-        return r.json().get("response", "").strip()
-    except requests.RequestException as exc:
-        raise HTTPException(status_code=502, detail=f"Ollama unreachable: {exc}")
+        return next((b.text for b in response.content if b.type == "text"), "").strip()
+    except anthropic.APIError as exc:
+        raise HTTPException(status_code=502, detail=f"Claude API error: {exc}")
 
 
 def extract_keywords(question: str, min_len: int = 4, max_kw: int = 6) -> list[str]:
@@ -146,7 +149,7 @@ def chat(req: ChatRequest) -> ChatResponse:
         f"[{e['doc_anchor']}, {e.get('year', '?')}] {e.get('text', '')}"
         for e in hits
     )
-    answer = call_ollama(
+    answer = call_claude(
         ANSWER_PROMPT.format(question=question, count=len(hits), paragraphs=para_block)
     )
     if not answer:
