@@ -260,6 +260,117 @@
     #panel-nav button:disabled { opacity: 0.3; cursor: default; }
     #para-counter { font-size: 0.8rem; color: #555; }
 
+    /* ── Chat ── */
+    #chat-area {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+      overflow: hidden;
+      min-width: 0;
+      background: #fafaf8;
+    }
+    #chat-area.active { display: flex; }
+
+    #chat-inner {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      height: 100%;
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 24px 20px;
+      gap: 16px;
+    }
+
+    #chat-result {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .chat-answer-block {
+      background: #fff;
+      border: 1px solid #e0ddd8;
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+    .chat-answer-text {
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: #1a1a1a;
+      white-space: pre-wrap;
+    }
+    .chat-sources {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+      font-size: 0.72rem;
+      color: #888;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .chat-source-link {
+      background: #f0f0ee;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      color: #444;
+      text-decoration: none;
+    }
+    .chat-source-link:hover { background: #e0e0de; color: #111; }
+
+    .chat-question-label {
+      font-size: 0.72rem;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    .chat-params {
+      margin-top: 8px;
+      font-size: 0.68rem;
+      color: #bbb;
+    }
+
+    #chat-input-row {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    #chat-input {
+      flex: 1;
+      padding: 9px 13px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      outline: none;
+    }
+    #chat-input:focus { border-color: #999; }
+    #chat-send {
+      padding: 9px 18px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    #chat-send:hover { background: #333; }
+    #chat-send:disabled { background: #999; cursor: default; }
+
+    .chat-spinner {
+      font-size: 0.8rem; color: #888;
+      padding: 12px 0;
+    }
+
     /* ── Entity panel mode (network click) ── */
     #entity-panel { display: none; flex-direction: column; gap: 10px; }
     #panel.entity-mode #entity-panel  { display: flex; }
@@ -295,6 +406,7 @@
 <nav id="tabs">
   <button class="tab active" id="tab-timeline">Timeline</button>
   <button class="tab"        id="tab-network">Netzwerk</button>
+  <button class="tab"        id="tab-chat">Chat</button>
 </nav>
 
 <div id="main">
@@ -307,6 +419,16 @@
     <svg id="network"></svg>
     <div id="net-hint">Scrollen zum Zoomen · Ziehen zum Verschieben · Knoten ziehbar</div>
     <div id="net-legend"></div>
+  </div>
+
+  <div id="chat-area">
+    <div id="chat-inner">
+      <div id="chat-result"></div>
+      <div id="chat-input-row">
+        <input id="chat-input" type="text" placeholder="Frage zur BER-Chronik stellen …" autocomplete="off">
+        <button id="chat-send">Senden</button>
+      </div>
+    </div>
   </div>
 
   <aside id="panel">
@@ -699,23 +821,120 @@ function drawNetwork(nodes, links, entriesByActor) {
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 let networkDrawn  = false;
 let netNodes = [], netLinks = [], entriesByActor = new Map();
+let entriesByAnchor = new Map();   // doc_anchor → entry (for chat source links)
 
-document.getElementById("tab-timeline").addEventListener("click", () => {
-  document.getElementById("tab-timeline").classList.add("active");
-  document.getElementById("tab-network").classList.remove("active");
-  document.getElementById("chart-area").classList.remove("hidden");
-  document.getElementById("network-area").classList.remove("active");
+const AREAS = {
+  timeline: document.getElementById("chart-area"),
+  network:  document.getElementById("network-area"),
+  chat:     document.getElementById("chat-area"),
+};
+
+function switchTab(active) {
+  ["timeline", "network", "chat"].forEach(id => {
+    document.getElementById(`tab-${id}`).classList.toggle("active", id === active);
+  });
+  AREAS.timeline.classList.toggle("hidden",  active !== "timeline");
+  AREAS.network.classList.toggle("active",   active === "network");
+  AREAS.chat.classList.toggle("active",      active === "chat");
+}
+
+document.getElementById("tab-timeline").addEventListener("click", () => switchTab("timeline"));
+document.getElementById("tab-chat").addEventListener("click",     () => switchTab("chat"));
+document.getElementById("tab-network").addEventListener("click",  () => {
+  switchTab("network");
+  if (!networkDrawn) { drawNetwork(netNodes, netLinks, entriesByActor); networkDrawn = true; }
 });
 
-document.getElementById("tab-network").addEventListener("click", () => {
-  document.getElementById("tab-network").classList.add("active");
-  document.getElementById("tab-timeline").classList.remove("active");
-  document.getElementById("chart-area").classList.add("hidden");
-  document.getElementById("network-area").classList.add("active");
-  if (!networkDrawn) {
-    drawNetwork(netNodes, netLinks, entriesByActor);
-    networkDrawn = true;
+// ── Chat ──────────────────────────────────────────────────────────────────────
+const API_URL = "http://localhost:8000";  // change for production deployment
+
+function formatParams(p) {
+  const parts = [];
+  if (p.event_type) parts.push(`Typ: ${p.event_type}`);
+  if (p.keywords?.length) parts.push(`Keywords: ${p.keywords.join(", ")}`);
+  if (p.year_from || p.year_to)
+    parts.push(`Jahre: ${p.year_from || "?"} – ${p.year_to || "?"}`);
+  return parts.length ? parts.join(" · ") : "keine Filter";
+}
+
+async function sendChat() {
+  const input  = document.getElementById("chat-input");
+  const sendBtn = document.getElementById("chat-send");
+  const result  = document.getElementById("chat-result");
+  const question = input.value.trim();
+  if (!question) return;
+
+  sendBtn.disabled = true;
+  input.disabled   = true;
+
+  const spinner = document.createElement("div");
+  spinner.className = "chat-spinner";
+  spinner.textContent = "Mistral denkt …";
+  result.appendChild(spinner);
+  result.scrollTop = result.scrollHeight;
+
+  try {
+    const res = await fetch(`${API_URL}/chat`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ question }),
+    });
+
+    spinner.remove();
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || res.statusText);
+    }
+
+    const data = await res.json();
+
+    const block = document.createElement("div");
+    block.className = "chat-answer-block";
+
+    const sourceLinks = (data.sources || []).map(anchor => {
+      const entry = entriesByAnchor.get(anchor);
+      return `<span class="chat-source-link" data-anchor="${anchor}" title="${entry ? escapeHtml((entry.text||"").slice(0,80)) : ""}">${anchor}</span>`;
+    }).join("");
+
+    block.innerHTML = `
+      <div class="chat-question-label">Frage: ${escapeHtml(question)}</div>
+      <div class="chat-answer-text">${escapeHtml(data.answer)}</div>
+      ${data.sources?.length ? `
+        <div class="chat-sources">
+          <span>Quellen:</span>${sourceLinks}
+        </div>` : ""}
+      <div class="chat-params">${formatParams(data.params)}</div>
+    `;
+
+    result.appendChild(block);
+    result.scrollTop = result.scrollHeight;
+
+    // source link clicks → open panel with that entry
+    block.querySelectorAll(".chat-source-link").forEach(el => {
+      el.addEventListener("click", () => {
+        const entry = entriesByAnchor.get(el.dataset.anchor);
+        if (entry) openPanel(el.dataset.anchor, [entry]);
+      });
+    });
+
+    input.value = "";
+  } catch (err) {
+    spinner.remove();
+    const errBlock = document.createElement("div");
+    errBlock.className = "chat-answer-block";
+    errBlock.innerHTML = `<div class="chat-answer-text" style="color:#c00">Fehler: ${escapeHtml(err.message)}<br><small>Läuft der API-Server? <code>uvicorn src.api_server:app --port 8000</code></small></div>`;
+    result.appendChild(errBlock);
+  } finally {
+    sendBtn.disabled = false;
+    input.disabled   = false;
+    input.focus();
   }
+}
+
+document.getElementById("chat-send").addEventListener("click", sendChat);
+document.getElementById("chat-input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
 });
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
@@ -729,6 +948,11 @@ Promise.all([
 
   buildAliasMap(csvText);
   summaryMap = summaries;
+
+  // ── Anchor index for chat source links ──
+  for (const e of entries) {
+    if (e.doc_anchor) entriesByAnchor.set(e.doc_anchor, e);
+  }
 
   // ── Timeline series ──
   const years  = d3.range(1989, 2018);
