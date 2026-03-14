@@ -1,18 +1,8 @@
 # BER Chronik – Projektplan
 
-**Quelle:** Chronik der Entwicklung 1989–2017, zusammengestellt von André Geicke  
-**Ziel:** Interaktives Recherchetool (Phase 1) → öffentliche Erzählung (Phase 2)  
+**Quelle:** Chronik der Entwicklung 1989–2017, zusammengestellt von André Geicke
+**Ziel:** Interaktives Recherchetool (Phase 1) → öffentliche Erzählung (Phase 2)
 **Prinzip:** Reproduzierbar, verständlich, kein Blackbox-Code
-
----
-
-## Arbeitsumgebung
-
-**Planung & Entscheidungen** → hier (Claude Chat)  
-**Implementierung** → Claude Code (Terminal, Datei-Zugriff, Skripte ausführen)  
-**Versionierung** → Git-Repo, reproduzierbar, kein Blackbox-Code
-
-Wechsel zu Claude Code sobald du anfängst, Skripte zu schreiben oder auszuführen. Bring den Plan als `README.md` mit ins Repo. Wenn du inhaltliche Entscheidungen zu treffen hast (Kategorien, Akteursliste, was gesplittet wird), komm zurück hierher.
 
 ---
 
@@ -20,7 +10,7 @@ Wechsel zu Claude Code sobald du anfängst, Skripte zu schreiben oder auszuführ
 
 978 Absätze, 29 Jahresabschnitte. Geicke hat drei Typen von Einträgen gemischt:
 
-- **Belegte Ereignisse** mit Datum und Quellenangabe  
+- **Belegte Ereignisse** mit Datum und Quellenangabe
   `„Am 13. Oktober gibt das OLG Hochtief Recht..." Tsp, 14.10.2000`
 - **Paraphrasen ohne Quelle** – Geickes eigene Einordnung, oft besonders wertvoll
 - **Direkte Zitate** aus Artikeln, meist in „Anführungszeichen"
@@ -29,39 +19,43 @@ Das hat Konsequenzen: Es gibt keine perfekt saubere Datentabelle am Ende. Das Zi
 
 ---
 
-## Architektur: Zwei Phasen, eine Datenbasis
+## Architektur
 
 ```
 Rohdokument (DOCX)
       │
       ▼
-paragraphs_raw.csv        ← du hast das bereits
+paragraphs_raw.csv          ← Schritt 1
       │
       ▼
-paragraphs_enriched.csv   ← Phase 1 Ziel
+paragraphs_enriched.csv     ← Schritte 2–4
   (Datum, Quelle, Typ, Akteure, Konfidenz)
       │
-      ├──► Timeline-Visualisierung (Phase 1)
-      ├──► Akteursnetzwerk         (Phase 1)
-      └──► Chat-Interface          (Phase 2)
+      ▼
+viz/data.json               ← Schritt 5a
+      │
+      ├──► Timeline-Visualisierung  ✅
+      └──► Akteursnetzwerk          ✅
 ```
 
-Die CSV ist die einzige Quelle der Wahrheit. Alle Visualisierungen lesen daraus.  
+Die CSV ist die einzige Quelle der Wahrheit. Alle Visualisierungen lesen daraus.
 Manuelle Korrekturen gehen in eine separate `overrides.csv`, nie direkt in die generierte Datei.
 
 ---
 
 ## Phase 1: Recherchetool
 
-### Schritt 1 – Ingest ✅ (erledigt)
-**Skript:** `src/ingest_docx.py`  
+### Schritt 1 – Ingest ✅
+
+**Skript:** `src/berchronik/ingest_docx.py`
 **Output:** `data/interim/paragraphs_raw.csv`
 
-978 Zeilen, year_bucket 1989–2017, doc_anchor für Rückverfolgbarkeit.
+978 Zeilen (davon 29 Jahres-Überschriften), `year_bucket` 1989–2017, `doc_anchor` (p1…p978) für Rückverfolgbarkeit.
 
 ---
 
-### Schritt 2 – Feature-Extraktion
+### Schritt 2 – Feature-Extraktion ✅
+
 **Skripte:** `src/berchronik/parse_features.py` + `src/berchronik/classify_events.py`
 **Output:** `data/interim/paragraphs_enriched.csv`
 
@@ -73,7 +67,7 @@ Zwei Stufen, die zusammen die enriched CSV befüllen:
 |------|---------|---------|
 | `date_raw` | Regex im Text | `„13. Oktober"`, `„Am 3. August"` |
 | `date_precision` | aus Regex-Match | `exact` / `month_day` / `month` / `year` / `none` |
-| `source_name` | Regex überall im Text, `findall` | `Tsp`, `BerlZtg;Tsp` (`;`-getrennt bei mehreren) |
+| `source_name` | `findall` überall im Text | `Tsp`, `BerlZtg;Tsp` (`;`-getrennt bei mehreren) |
 | `source_date` | wie source_name | `14.10.2000`, `30.04.91` (zwei- oder vierstellig) |
 | `is_quote` | beginnt mit `„` | `True/False` |
 | `is_geicke` | kein Quellbeleg, kein Zitat | eigene Einordnung des Autors |
@@ -89,19 +83,15 @@ Mögliche Werte für `event_type`: `Beschluss` · `Vertrag` · `Klage` · `Perso
 
 Der Prompt ist auf Englisch, Kategorienamen bleiben Deutsch. Bei ungültigem JSON-Response: einmal Retry, danach `event_type=None` / `confidence=low`.
 
-**Wichtig:** Alles hier ist automatisch und fehlerbehaftet. Das ist gewollt.
-Fehler werden nicht im Skript gefixt, sondern in `overrides.csv` korrigiert.
+**Hinweis:** Alles hier ist automatisch und fehlerbehaftet. Das ist gewollt. Fehler werden nicht im Skript gefixt, sondern in `event_type_manual` oder `overrides/` korrigiert.
 
 ---
 
 ### Schritt 3 – Ereignistypen definieren (manuell, iterativ)
+
 **Kein Skript. Du arbeitest in der CSV.**
 
-Die Taxonomie hat zwei unabhängige Achsen:
-
-**Achse 1 – `event_type`** (was ist passiert, maschinell erkennbar per Keyword):
-
-| Wert | Bedeutung |
+| `event_type` | Bedeutung |
 |------|-----------|
 | `Beschluss` | Politische oder behördliche Entscheidung |
 | `Vertrag` | Unterzeichnung, Letter of Intent |
@@ -113,77 +103,64 @@ Die Taxonomie hat zwei unabhängige Achsen:
 | `Planung` | Ausschreibung, Konzept, Standortwahl |
 | `Claim` | Pressemeinung, Einschätzung ohne Ereignis |
 
-Achse 1 befüllt `parse_features.py` automatisch. Jeder Eintrag hat **genau einen** Wert.
-
-**Achse 2 – `causal_theme`** (warum relevant fürs Scheitern, manuell kuratiert):
-
-`Standortwahl` · `Generalunternehmer` · `Governance` · `Pol_Eitelkeit` · `Finanzierung` · `Brandschutz` · `Oeffentlicher_Widerstand` · `Externer_Schock`
-
-Achse 2 ist ein Array – ein Eintrag kann mehrere Themen haben. Sie bleibt leer bis du sie manuell befüllst. Vollständigkeit nicht nötig: 30% Abdeckung reicht für die Erzählung.
-
-**Workflow:**  
-Öffne `paragraphs_enriched.csv` in einem Tabelleneditor (Numbers, LibreOffice, Google Sheets).  
-Filtere auf `confidence = low` oder `event_type = ?`.  
-Trag Korrekturen in `event_type_manual` und `causal_theme` ein.  
-`apply_overrides.py` mergt deine Korrekturen in die Haupttabelle.
+Manuelle Korrekturen: Feld `event_type_manual` in der CSV (überschreibt `event_type` beim Export).
+`causal_theme` (Array, `;`-getrennt) bleibt leer bis manuell befüllt.
 
 ---
 
-### Schritt 4 – Akteure
-**Skript:** `src/entities.py`  
-**Input:** `config/entities_seed.csv` (du pflegst diese Datei)  
-**Output:** Spalte `actors` in `paragraphs_enriched.csv`
+### Schritt 4 – Akteure ✅
+
+**Skript:** `src/berchronik/entities.py`
+**Input:** `config/entities_seed.csv`
+**Output:** Spalte `actors` in `paragraphs_enriched.csv`, `data/interim/entity_candidates.csv`
 
 Zweistufig:
 
-1. **Dictionary-Matching** – du legst eine Seed-Liste an mit Kürzeln und Normalformen:
-   ```
-   Kürzel, Normalform, Typ
-   Tsp, Tagesspiegel, Medium
-   BBF, Berlin-Brandenburg Flughafenholding, Org
-   FBB, Flughafen Berlin Brandenburg GmbH, Org
-   Wowereit, Klaus Wowereit, Person
-   ```
-2. **Kandidatenliste** – alles was häufig vorkommt aber nicht im Dictionary ist,  
-   landet in `data/interim/entity_candidates.csv` zur manuellen Entscheidung.
+**Stufe 4a – Dictionary-Matching:**
+`config/entities_seed.csv` enthält Aliase und Normalformen (213 Zeilen, Typen: Person/Org/Gremium).
 
-Die Seed-Liste wächst iterativ. Du fängst mit 20 Einträgen an, nicht mit 200.
+- **Multi-Wort-Aliase** (z.B. `Flughafen Berlin Brandenburg`) → spaCy `PhraseMatcher`
+- **Einzel-Wort-Aliase** (z.B. `SPD`, `CDU`, `BER`) → Regex mit `\b`-Wortgrenzen
 
----
+Der Regex-Fix war nötig weil spaCy `SPD-Fraktion` als ein Token tokenisiert und `PhraseMatcher` `SPD` darin nicht findet. Regex mit `\bSPD\b` matcht korrekt auf die Wortgrenze zwischen `D` und `-`.
 
-### Schritt 5 – Visualisierung (Timeline)
-**Technologie:** Einfaches HTML/JS, keine Build-Pipeline nötig, läuft lokal im Browser.
+Ergebnis: **659/949 Absätze** mit mindestens einem Akteur, **112 eindeutige Normalformen** in der enriched CSV.
 
-**Was die Timeline zeigt:**
-- X-Achse: Jahr (1989–2017)
-- Y-Achse / Farbe: Ereignistyp
-- Jeder Punkt: ein Absatz – klickbar, öffnet Originaltext + Quellenangabe
-- Filter: Jahr, Ereignistyp, Akteur, Suchtext
-- Density-Ansicht: Heatmap wann welche Typen auftreten (das „Scheiternsmuster" sichtbar machen)
-
-**Meilenstein:** Erste lauffähige Version schon nach Schritt 2, auch mit unvollständigen Daten.  
-Lieber früh sehen ob das Interface stimmt.
+**Stufe 4b – NER-Kandidaten:**
+spaCy `de_core_news_sm` erkennt PER/ORG-Entitäten die nicht im Dictionary stehen → `entity_candidates.csv` zur manuellen Entscheidung (Schwellwert: ≥ 2 Nennungen).
 
 ---
 
-### Schritt 6 – Akteursnetzwerk
-**Technologie:** D3.js Force-Graph oder einfaches Cytoscape.js
+### Schritt 5 – Visualisierung ✅
 
-Knoten: Personen + Organisationen  
-Kanten: Beide erscheinen im selben Absatz  
-Gewicht: Häufigkeit der gemeinsamen Nennungen  
-Filter: Zeitraum eingrenzbar
+**Skript:** `src/berchronik/export_viz.py`
+**Output:** `viz/data.json`, `viz/entities_summary.json`
 
----
+```bash
+# Daten exportieren
+PYTHONPATH=src python -m berchronik.export_viz
 
-## Phase 2: Öffentliche Erzählung (später)
+# Mistral-Zusammenfassungen generieren (Ollama muss laufen)
+PYTHONPATH=src python -m berchronik.export_viz --summaries
+```
 
-Erst wenn Phase 1 stabil ist. Die Datenbasis bleibt dieselbe.
+**`viz/index.html`** – Alles in einer Datei, kein Build-Tool, D3.js v7 via CDN.
 
-Was hinzukommt:
-- **Kuratierte Narrative** – du markierst 5–10 „Schlüsselmomente" in der CSV, die als Anker für die Erzählung dienen
-- **Chat-Interface** – Frage stellen, Antwort mit verlinkten Originalquellen; funktioniert über Embeddings auf der enriched CSV
-- **Öffentliches Deployment** – GitHub Pages oder Vercel, statische Seite
+**Tab 1 – Timeline:**
+- Liniendiagramm, X-Achse 1989–2017, eine Linie pro Ereignistyp
+- Klick auf einen Punkt → alle Absätze dieses Jahres/Typs im Panel, scrollbar
+- Entity-Highlighting im Absatztext (Person=blau, Org=orange, Gremium=lila, Partei=rot)
+- Klick auf markierten Namen → Mistral-Zusammenfassung, Wikipedia-Navigation zwischen Entities
+
+**Tab 2 – Netzwerk:**
+- D3 Force-Graph: Knoten = Entities, Kanten = gemeinsame Nennungen im selben Absatz
+- Knotengröße nach Anzahl Nennungen, Farbe nach Typ
+- Gestrichelter Rand = keine Mistral-Zusammenfassung vorhanden
+- Klick auf Knoten → alle Absätze dieser Entity, chronologisch
+
+**Entity-Zusammenfassungen:**
+69 Entities mit ≥ 3 Nennungen haben eine Mistral-Zusammenfassung in `viz/entities_summary.json`.
+Resume-fähig: bricht die Generierung ab, startet sie dort wo sie aufgehört hat.
 
 ---
 
@@ -191,57 +168,113 @@ Was hinzukommt:
 
 ```
 ber-chronik/
-  README.md               ← dieser Plan, gekürzt
+  README.md
   .gitignore
+  vercel.json                         ← Deployment-Config (outputDirectory: viz)
+  requirements.txt
 
   data/
-    raw/
+    raw/                              ← nicht im Repo (Urheberrecht)
       Flh_Bln_Chronik_1989-2017.docx
     interim/
-      paragraphs_raw.csv
-      paragraphs_enriched.csv
-      entity_candidates.csv
-    processed/
-      paragraphs_final.csv    ← nach Override-Merge
-      entities_dictionary.csv
+      paragraphs_raw.csv              ← Schritt 1 Output
+      paragraphs_enriched.csv         ← Schritte 2–4 Output
+      entity_candidates.csv           ← NER-Kandidaten zur manuellen Prüfung
 
   config/
-    event_types.yml           ← Keyword → Typ Mapping
-    entities_seed.csv         ← deine Akteursliste
+    entities_seed.csv                 ← Akteursliste (213 Aliase, 125 Normalformen)
+    sources_seed.csv                  ← Medienkürzel-Normalisierung
 
-  src/
-    ingest_docx.py            ✅ fertig
-    parse_features.py         ← nächster Schritt
-    entities.py
-    apply_overrides.py
-    export_viz.py
+  src/berchronik/
+    ingest_docx.py                    ← Schritt 1
+    parse_features.py                 ← Schritt 2a
+    classify_events.py                ← Schritt 2b (Mistral via Ollama)
+    entities.py                       ← Schritt 4
+    export_viz.py                     ← Schritt 5 (data.json + Summaries)
 
   viz/
-    index.html                ← Timeline
-    network.html              ← Akteursnetz
+    index.html                        ← Timeline + Netzwerk (eine Datei)
+    data.json                         ← 949 Absätze
+    entities_summary.json             ← 69 Mistral-Zusammenfassungen
+    entities_seed.csv                 ← Kopie für self-contained Deployment
 
   overrides/
-    paragraphs_overrides.csv  ← deine manuellen Korrekturen
-    notes.md                  ← Beobachtungen während Review
+    notes.md                          ← Entscheidungen und Beobachtungen
+
+  .github/workflows/
+    deploy.yml                        ← GitHub Pages Deployment
 ```
 
-**Gitignore:** `data/raw/` bleibt lokal (Urheberrecht). Alles andere wird versioniert.
+---
+
+## Lokale Entwicklung
+
+### Voraussetzungen
+
+- Python 3.11 (via pyenv empfohlen)
+- [Ollama](https://ollama.com) mit `mistral`-Modell für LLM-Klassifikation und Zusammenfassungen
+
+### Setup
+
+```bash
+# Repository klonen
+git clone git@github.com:Jkoeppens/ber_chronik.git
+cd ber_chronik
+
+# Virtuelle Umgebung erstellen (Python 3.11 explizit)
+python3.11 -m venv .venv
+source .venv/bin/activate
+
+# Dependencies installieren
+pip install -r requirements.txt
+
+# spaCy-Modell laden
+python -m spacy download de_core_news_sm
+```
+
+### Pipeline ausführen
+
+```bash
+# Schritt 1 – DOCX einlesen (data/raw/ muss das Original enthalten)
+PYTHONPATH=src python -m berchronik.ingest_docx
+
+# Schritt 2a – Regex-Features extrahieren
+PYTHONPATH=src python -m berchronik.parse_features
+
+# Schritt 2b – Ereignistypen klassifizieren (Ollama muss laufen: ollama serve)
+PYTHONPATH=src python -m berchronik.classify_events
+
+# Schritt 4 – Akteure matchen
+PYTHONPATH=src python -m berchronik.entities
+
+# Schritt 5a – Daten für Visualisierung exportieren
+PYTHONPATH=src python -m berchronik.export_viz
+
+# Schritt 5b – Mistral-Zusammenfassungen generieren (resume-fähig)
+PYTHONPATH=src python -m berchronik.export_viz --summaries
+```
+
+### Visualisierung lokal starten
+
+```bash
+# Server aus dem Projektroot starten
+python3 -m http.server 8765
+
+# Dann im Browser öffnen:
+# http://localhost:8765/viz/
+```
+
+### Nur Visualisierung (ohne Pipeline)
+
+Alle nötigen Dateien liegen bereits im Repo (`viz/data.json`, `viz/entities_summary.json`).
+Direkt Server starten und `http://localhost:8765/viz/` öffnen.
 
 ---
 
-## Arbeitsweise
+## Phase 2: Öffentliche Erzählung (später)
 
-**Du steuerst, ich schreibe Code.**  
-Du verstehst was jedes Skript tut – ich erkläre bevor ich schreibe, nicht danach.  
-Experimente passieren in Notebooks (`notebooks/`), sauberer Code landet in `src/`.  
-Jede manuelle Korrektur geht in `overrides/`, nie in generierte Dateien.
+Erst wenn Phase 1 stabil ist. Die Datenbasis bleibt dieselbe.
 
-**Nächster konkreter Schritt:** `parse_features.py`
-
----
-
-## Offene Fragen (zu entscheiden, nicht jetzt)
-
-- Soll das Dokument selbst im Repo sein, oder nur die abgeleiteten CSVs?
-- Sollen Geickes eigene Kommentare (`is_geicke = True`) anders behandelt werden als belegte Ereignisse?
-- Welche Akteure sind für das Netzwerk wirklich interessant – alle, oder nur die mit >3 Nennungen?
+- **Kuratierte Narrative** – 5–10 Schlüsselmomente in der CSV markieren
+- **Chat-Interface** – Frage stellen, Antwort mit verlinkten Originalquellen (Embeddings auf enriched CSV)
+- **Öffentliches Deployment** – GitHub Pages ✅ bereits eingerichtet
