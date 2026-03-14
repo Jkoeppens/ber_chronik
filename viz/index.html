@@ -273,27 +273,15 @@
       color: #1a1a1a;
       white-space: pre-wrap;
     }
-    .chat-sources {
-      margin-top: 8px;
-      padding-top: 7px;
+    .chat-sources-header {
+      margin-top: 14px;
+      padding-top: 10px;
       border-top: 1px solid #eee;
-      font-size: 0.7rem;
-      color: #888;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 8px;
     }
-    .chat-source-link {
-      background: #f0f0ee;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      padding: 1px 6px;
-      font-size: 0.68rem;
-      cursor: pointer;
-      color: #444;
-    }
-    .chat-source-link:hover { background: #e0e0de; color: #111; }
     .chat-params {
       margin-top: 6px;
       font-size: 0.66rem;
@@ -873,20 +861,22 @@ function renderChatAnswer(viewEl, question, mode, content) {
     : `<span class="chat-mode chat-mode-local">Volltextsuche</span>`;
 
   if (mode === "ai") {
-    const { data, sourceLinks } = content;
+    const { data } = content;
+    // Collect source entries (deduplicated, in order)
+    const sourceEntries = (data.sources || [])
+      .map(anchor => entriesByAnchor.get(anchor))
+      .filter(Boolean);
+
+    const sourcesHTML = sourceEntries.length ? `
+      <div class="chat-sources-header">Verwendete Quellen (${sourceEntries.length})</div>
+      <div class="chat-hits">${renderParaList(sourceEntries)}</div>` : "";
+
     viewEl.innerHTML = `
       <div class="chat-meta">${modeLabel}<span class="chat-question-label">${escapeHtml(question)}</span></div>
-      <div class="chat-answer-text">${escapeHtml(data.answer)}</div>
-      ${data.sources?.length ? `<div class="chat-sources"><span>Quellen:</span>${sourceLinks}</div>` : ""}
+      <div class="chat-answer-text">${highlightEntities(data.answer)}</div>
       ${data.keywords?.length ? `<div class="chat-params">Keywords: ${data.keywords.join(", ")}</div>` : ""}
+      ${sourcesHTML}
     `;
-    viewEl.querySelectorAll(".chat-source-link").forEach(el => {
-      el.addEventListener("click", () => {
-        const entry = entriesByAnchor.get(el.dataset.anchor);
-        if (entry) showView("timeline", el.dataset.anchor,
-          v => { v.innerHTML = renderParaList([entry]); });
-      });
-    });
   } else {
     const { hits, keywords } = content;
     const cards = hits.length
@@ -943,11 +933,7 @@ async function sendChat() {
       throw new Error(err.detail || res.statusText);
     }
     const data = await res.json();
-    const sourceLinks = (data.sources || []).map(anchor => {
-      const entry = entriesByAnchor.get(anchor);
-      return `<span class="chat-source-link" data-anchor="${anchor}" title="${entry ? escapeHtml((entry.text||"").slice(0,80)) : ""}">${anchor}</span>`;
-    }).join("");
-    renderChatAnswer(viewEl, question, "ai", { data, sourceLinks });
+    renderChatAnswer(viewEl, question, "ai", { data });
   } catch {
     usedFallback = true;
     const result = fulltextSearch(question);
