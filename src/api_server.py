@@ -1,6 +1,6 @@
 """
 BER Chronik Chat API
-POST /chat  →  { answer, sources, params }
+POST /chat  →  { answer, sources, keywords }
 
 Run with:
     pip install fastapi uvicorn requests
@@ -18,63 +18,53 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # ── Config ────────────────────────────────────────────────────────────────────
-OLLAMA_URL    = "http://localhost:11434/api/generate"
-MODEL         = "mistral"
+OLLAMA_URL     = "http://localhost:11434/api/generate"
+MODEL          = "mistral"
 MAX_PARAGRAPHS = 20
-DATA_PATH     = Path(__file__).parent.parent / "viz" / "data.json"
+DATA_PATH      = Path(__file__).parent.parent / "viz" / "data.json"
 
-VALID_EVENT_TYPES = {
-    "Beschluss", "Vertrag", "Klage", "Personalie",
-    "Kosten", "Termin", "Technik", "Planung", "Claim",
-}
-
-# ── Prompts ───────────────────────────────────────────────────────────────────
-SEARCH_PROMPT = """\
-You are a search assistant for a German chronology of Berlin Brandenburg Airport (BER), 1989–2017.
-
-Given a user question, extract search parameters to filter the chronology entries.
-
-Valid event_type values: Beschluss, Vertrag, Klage, Personalie, Kosten, Termin, Technik, Planung, Claim
-
-Return ONLY valid JSON, no explanation:
-{{
-  "event_type": "<one valid type, or null>",
-  "keywords":   ["<word>", ...],
-  "year_from":  <integer or null>,
-  "year_to":    <integer or null>
-}}
-
-Rules:
-- keywords: 1–4 German words that should appear in matching paragraphs
-- Set event_type null if the question spans multiple types or is unclear
-- Set year range null if not implied by the question
-
-User question: "{question}"\
-"""
-
+# ── Prompt ────────────────────────────────────────────────────────────────────
 ANSWER_PROMPT = """\
-You are answering a question about the history of Berlin Brandenburg Airport (BER) \
-based on excerpts from a German chronology (1989–2017).
+Du beantwortest eine Frage zur Geschichte des Flughafens Berlin Brandenburg (BER) \
+auf Basis von Auszügen aus einer deutschen Chronik (1989–2017).
 
-Question: {question}
+Frage: {question}
 
-Relevant excerpts ({count} total):
+Gefundene Auszüge ({count} gesamt):
 {paragraphs}
 
-Write a concise answer in German (4–7 sentences).
-- Base your answer strictly on the excerpts above, do not invent facts
-- Mention specific dates, persons, and decisions where relevant
-- If the excerpts do not contain enough information, say so briefly
+Antworte auf Deutsch. Gliedere deine Antwort nach den relevanten thematischen \
+Kategorien die sich aus den Auszügen ergeben – z.B. „Zeitlicher Verlauf", \
+„Beteiligte Personen", „Kosten", „Entscheidungen". Nenne konkrete Daten, Personen \
+und Beschlüsse. Halte dich strikt an die Auszüge, erfinde keine Fakten. \
+Falls die Auszüge nicht genug Information enthalten, sage das kurz.
 
-Reply with plain text only, no headings, no bullet points.\
+Antworte mit Fließtext und kurzen Überschriften (##), keine JSON-Ausgabe.\
 """
+
+# ── German stopwords for keyword extraction ───────────────────────────────────
+STOPWORDS = {
+    "aber", "alle", "allem", "allen", "aller", "alles", "also", "als", "am",
+    "an", "auch", "auf", "aus", "bei", "beim", "bin", "bis", "bitte", "da",
+    "damit", "dann", "dass", "dem", "den", "denn", "der", "des", "dessen",
+    "die", "dies", "dieser", "dieses", "doch", "dort", "durch", "ein", "eine",
+    "einem", "einen", "einer", "eines", "er", "es", "etwa", "euch", "euer",
+    "gibt", "haben", "hatte", "hier", "ihm", "ihn", "ihnen", "ihr", "ihre",
+    "im", "immer", "ist", "kann", "kein", "keine", "mal", "man", "mehr",
+    "mich", "mir", "mit", "nach", "nicht", "noch", "nun", "nur", "oder",
+    "ohne", "sehr", "sein", "sich", "sie", "sind", "soll", "sowie", "über",
+    "um", "und", "unter", "uns", "vom", "von", "vor", "war", "waren", "warum",
+    "was", "weil", "wenn", "wer", "werden", "wie", "wird", "wir", "wird",
+    "worden", "wurde", "wurden", "wäre", "würde", "wird", "ziel", "zu",
+    "zum", "zur", "zwischen",
+}
 
 # ── Data ─────────────────────────────────────────────────────────────────────
 with open(DATA_PATH, encoding="utf-8") as _f:
     ENTRIES: list[dict] = json.load(_f)["entries"]
 
 # ── App ───────────────────────────────────────────────────────────────────────
-app = FastAPI(title="BER Chronik Chat API", version="1.0")
+app = FastAPI(title="BER Chronik Chat API", version="2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -90,9 +80,9 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    answer:  str
-    sources: list[str]
-    params:  dict[str, Any]
+    answer:   str
+    sources:  list[str]
+    keywords: list[str]
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -109,42 +99,25 @@ def call_ollama(prompt: str) -> str:
         raise HTTPException(status_code=502, detail=f"Ollama unreachable: {exc}")
 
 
-def extract_json(text: str) -> dict:
-    """Pull the first {...} block out of a possibly noisy LLM response."""
-    m = re.search(r"\{[^{}]+\}", text, re.DOTALL)
-    if not m:
-        raise ValueError("No JSON object found in response")
-    return json.loads(m.group(0))
+def extract_keywords(question: str, min_len: int = 4, max_kw: int = 6) -> list[str]:
+    """Tokenize question, drop stopwords, return up to max_kw content words."""
+    tokens = re.findall(r"[A-Za-zÄÖÜäöüß]+", question)
+    return [
+        t.lower() for t in tokens
+        if len(t) >= min_len and t.lower() not in STOPWORDS
+    ][:max_kw]
 
 
-def filter_entries(entries: list[dict], params: dict) -> list[dict]:
-    event_type = params.get("event_type")
-    keywords   = [k.lower() for k in (params.get("keywords") or [])]
-    year_from  = params.get("year_from")
-    year_to    = params.get("year_to")
-
-    results = []
+def search_entries(entries: list[dict], keywords: list[str]) -> list[dict]:
+    """Return entries where at least one keyword appears in the text (OR logic)."""
+    if not keywords:
+        return []
+    hits = []
     for e in entries:
-        # event_type (only if valid)
-        if event_type and event_type in VALID_EVENT_TYPES:
-            if e.get("event_type") != event_type:
-                continue
-
-        # year range
-        year = e.get("year")
-        if year_from and year and year < year_from:
-            continue
-        if year_to and year and year > year_to:
-            continue
-
-        # keywords – OR logic: at least one must appear in text
-        if keywords:
-            text_lower = (e.get("text") or "").lower()
-            if not any(kw in text_lower for kw in keywords):
-                continue
-
-        results.append(e)
-    return results
+        text_lower = (e.get("text") or "").lower()
+        if any(kw in text_lower for kw in keywords):
+            hits.append(e)
+    return hits
 
 
 # ── Endpoint ──────────────────────────────────────────────────────────────────
@@ -154,31 +127,21 @@ def chat(req: ChatRequest) -> ChatResponse:
     if not question:
         raise HTTPException(status_code=400, detail="question must not be empty")
 
-    # Step 1: extract search params from question
-    search_raw = call_ollama(SEARCH_PROMPT.format(question=question))
-    try:
-        params = extract_json(search_raw)
-    except (ValueError, json.JSONDecodeError):
-        params = {"event_type": None, "keywords": [], "year_from": None, "year_to": None}
+    # Step 1: extract keywords from question (no LLM call)
+    keywords = extract_keywords(question)
 
-    # Step 2: filter entries
-    hits = filter_entries(ENTRIES, params)
-
-    # Fallback: if event_type was set but yielded nothing, retry without it
-    if not hits and params.get("event_type"):
-        hits = filter_entries(ENTRIES, {**params, "event_type": None})
-
-    # Cap to MAX_PARAGRAPHS
+    # Step 2: OR search over all entries
+    hits = search_entries(ENTRIES, keywords)
     hits = hits[:MAX_PARAGRAPHS]
 
     if not hits:
         return ChatResponse(
             answer="Zu dieser Frage wurden keine passenden Einträge in der Chronik gefunden.",
             sources=[],
-            params=params,
+            keywords=keywords,
         )
 
-    # Step 3: synthesise answer
+    # Step 3: synthesise structured answer via Mistral
     para_block = "\n\n".join(
         f"[{e['doc_anchor']}, {e.get('year', '?')}] {e.get('text', '')}"
         for e in hits
@@ -190,9 +153,9 @@ def chat(req: ChatRequest) -> ChatResponse:
         answer = "Die Zusammenfassung konnte nicht generiert werden."
 
     sources = [e["doc_anchor"] for e in hits if e.get("doc_anchor")]
-    return ChatResponse(answer=answer, sources=sources, params=params)
+    return ChatResponse(answer=answer, sources=sources, keywords=keywords)
 
 
 @app.get("/health")
-def health() -> dict:
+def health() -> dict[str, Any]:
     return {"status": "ok", "entries": len(ENTRIES)}

@@ -848,13 +848,10 @@ document.getElementById("tab-network").addEventListener("click",  () => {
 // ── Chat ──────────────────────────────────────────────────────────────────────
 const API_URL = "http://localhost:8000";  // change for production deployment
 
-function formatParams(p) {
-  const parts = [];
-  if (p.event_type) parts.push(`Typ: ${p.event_type}`);
-  if (p.keywords?.length) parts.push(`Keywords: ${p.keywords.join(", ")}`);
-  if (p.year_from || p.year_to)
-    parts.push(`Jahre: ${p.year_from || "?"} – ${p.year_to || "?"}`);
-  return parts.length ? parts.join(" · ") : "keine Filter";
+function formatParams(data) {
+  return data.keywords?.length
+    ? `Keywords: ${data.keywords.join(", ")}`
+    : "keine Keywords extrahiert";
 }
 
 async function sendChat() {
@@ -904,7 +901,7 @@ async function sendChat() {
         <div class="chat-sources">
           <span>Quellen:</span>${sourceLinks}
         </div>` : ""}
-      <div class="chat-params">${formatParams(data.params)}</div>
+      <div class="chat-params">${formatParams(data)}</div>
     `;
 
     result.appendChild(block);
