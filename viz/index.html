@@ -694,6 +694,13 @@ document.getElementById("panel-content").addEventListener("click", e => {
     if (hlState.mode !== "none") setHighlight("single", hlState.anchors, anchor);
     return;
   }
+  // Source card click: highlight that single dot on the timeline
+  const card = e.target.closest(".ep-para[id^='src-']");
+  if (card && hlState.mode !== "none") {
+    const anchor = card.id.replace(/^src-/, "");
+    setHighlight("single", hlState.anchors, anchor);
+    return;
+  }
   // Entity highlight click
   const ent = e.target.closest(".entity");
   if (!ent) return;
