@@ -43,6 +43,13 @@ Kategorien die sich aus den Auszügen ergeben – z.B. „Zeitlicher Verlauf", \
 und Beschlüsse. Halte dich strikt an die Auszüge, erfinde keine Fakten. \
 Falls die Auszüge nicht genug Information enthalten, sage das kurz.
 
+Zitierregeln (zwingend einzuhalten):
+- Zitiere Quellen ausschließlich im Format [pXXX] – wobei pXXX die doc_anchor-ID \
+des jeweiligen Auszugs ist (z.B. [p59], [p134]).
+- Keine anderen Quellenformate (keine Fußnoten, keine URLs, keine Jahreszahlen allein).
+- Jede sachliche Behauptung die auf einem Auszug basiert muss unmittelbar mit [pXXX] belegt sein.
+- Mehrere Quellen für eine Aussage: [p12][p34] direkt hintereinander.
+
 Antworte mit Fließtext und kurzen Überschriften (##), keine JSON-Ausgabe.\
 """
 

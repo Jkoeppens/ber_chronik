@@ -603,7 +603,7 @@ function goHome() {
   viewStack      = [];
   selectedEntity = null;
   applyNetworkHighlight(null);
-  applyTimelineHighlight(null);
+  // Timeline highlight is intentionally preserved – cleared only by clicking empty chart area
   if (activeDot) { activeDot.classList.remove("active"); activeDot = null; }
   currentView = { type: "chat", title: "Suche", renderFn: null, entityKey: null };
   _renderView(currentView);
