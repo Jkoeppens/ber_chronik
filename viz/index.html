@@ -745,6 +745,10 @@ function drawChart(series, years) {
           viewEl => { viewEl.innerHTML = renderParaList(sorted); });
       });
   });
+
+  // Store dot selection for highlight; re-apply any active highlight after redraw
+  chartDotSelection = svg.selectAll("circle.dot");
+  if (highlightedAnchors) applyTimelineHighlight(highlightedAnchors);
 }
 
 // ── Network graph ─────────────────────────────────────────────────────────────
@@ -1073,10 +1077,6 @@ Promise.all([
   drawChart(series, years);
   new ResizeObserver(() => drawChart(series, years)).observe(
     document.getElementById("chart"));
-
-  // Store dot selection for timeline highlighting; re-apply active highlight after redraw
-  chartDotSelection = svg.selectAll("circle.dot");
-  if (highlightedAnchors) applyTimelineHighlight(highlightedAnchors);
 
   const legend = document.getElementById("legend");
   EVENT_TYPES.forEach(et => {
