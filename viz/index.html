@@ -593,17 +593,21 @@ function showView(type, title, renderFn, entityKey) {
     if (renderFn) renderFn(document.getElementById(`view-${type}`));
     return;
   }
-  if (currentView) viewStack.push(currentView);
+  // Save current highlight state so goBack can restore it
+  if (currentView) viewStack.push({ ...currentView, hlSnapshot: { ...hlState } });
   currentView = { type, title, renderFn, entityKey };
   _renderView(currentView);
 }
 
 function goBack() {
   if (!viewStack.length) return;
-  currentView = viewStack.pop();
+  const { hlSnapshot, ...view } = viewStack.pop();
+  currentView = view;
   _renderView(currentView);
   selectedEntity = currentView.entityKey || null;
   applyNetworkHighlight(selectedEntity);
+  // Restore highlight that was active before we navigated away
+  if (hlSnapshot) setHighlight(hlSnapshot.mode, hlSnapshot.anchors, hlSnapshot.active);
 }
 
 function goHome() {
@@ -680,6 +684,11 @@ function selectEntity(normalform) {
   selectedEntity = normalform;
   applyNetworkHighlight(normalform);
   showView("entity", normalform, viewEl => renderEntityView(normalform, viewEl), normalform);
+  // Highlight timeline dots for all paragraphs this entity appears in
+  const anchors = new Set(
+    (entriesByActor.get(normalform) || []).map(e => e.doc_anchor).filter(Boolean)
+  );
+  setHighlight("answer", anchors);
 }
 
 document.getElementById("panel-content").addEventListener("click", e => {
