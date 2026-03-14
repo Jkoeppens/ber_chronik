@@ -517,18 +517,26 @@ const DIM = 0.35;  // opacity for "rest" nodes when something is highlighted
 
 // ── Timeline highlight ────────────────────────────────────────────────────────
 let chartDotSelection  = null;   // D3 selection of all .dot circles, set in drawChart
-let highlightedAnchors = null;   // Set<string> of active doc_anchors, or null
+let highlightedAnchors = null;   // Set<string> of active source anchors, or null
+let focusedAnchor      = null;   // single anchor being focused via src-ref click, or null
 
-function applyTimelineHighlight(anchorSet) {
-  highlightedAnchors = anchorSet || null;
+function applyTimelineHighlight(anchorSet, focused) {
+  highlightedAnchors = anchorSet ?? null;
+  focusedAnchor      = focused ?? null;
   if (!chartDotSelection) return;
   if (!anchorSet || anchorSet.size === 0) {
-    chartDotSelection.attr("r", 4).attr("opacity", null);
+    chartDotSelection
+      .attr("r", 4).attr("opacity", null)
+      .attr("stroke", "#fff").attr("stroke-width", 1.5);
     return;
   }
+  const isSource  = v => v.anchorSet && [...anchorSet].some(a => v.anchorSet.has(a));
+  const isFocused = v => focused && v.anchorSet?.has(focused);
   chartDotSelection
-    .attr("r",       v => v.anchorSet && [...anchorSet].some(a => v.anchorSet.has(a)) ? 7 : 4)
-    .attr("opacity", v => v.anchorSet && [...anchorSet].some(a => v.anchorSet.has(a)) ? 1 : DIM);
+    .attr("r",            v => isFocused(v) ? 9 : isSource(v) ? 7 : 4)
+    .attr("opacity",      v => isSource(v) ? 1 : DIM)
+    .attr("stroke",       v => isFocused(v) ? "#f5c518" : "#fff")
+    .attr("stroke-width", v => isFocused(v) ? 2.5 : 1.5);
 }
 
 function _baseStroke(d) {
@@ -568,6 +576,8 @@ function _renderView({ type, title, renderFn, entityKey }) {
   document.getElementById(`view-${type}`).classList.add("active");
   if (renderFn) renderFn(document.getElementById(`view-${type}`));
   document.getElementById("panel-content").scrollTop = 0;
+  // Returning to chat: restore base highlight without any single-ref focus
+  if (type === "chat" && highlightedAnchors) applyTimelineHighlight(highlightedAnchors, null);
 }
 
 function showView(type, title, renderFn, entityKey) {
@@ -673,6 +683,8 @@ document.getElementById("panel-content").addEventListener("click", e => {
     const targetId = ref.getAttribute("href").slice(1); // strip leading #
     document.getElementById(targetId)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const anchor = targetId.replace(/^src-/, "");
+    if (highlightedAnchors) applyTimelineHighlight(highlightedAnchors, anchor);
     return;
   }
   // Entity highlight click
@@ -748,7 +760,12 @@ function drawChart(series, years) {
 
   // Store dot selection for highlight; re-apply any active highlight after redraw
   chartDotSelection = svg.selectAll("circle.dot");
-  if (highlightedAnchors) applyTimelineHighlight(highlightedAnchors);
+  if (highlightedAnchors) applyTimelineHighlight(highlightedAnchors, focusedAnchor);
+
+  // Click on empty chart area resets all timeline highlighting
+  svg.on("click.reset", (event) => {
+    if (event.target.tagName !== "circle") applyTimelineHighlight(null);
+  });
 }
 
 // ── Network graph ─────────────────────────────────────────────────────────────
