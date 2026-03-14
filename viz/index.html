@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>BER Chronik 1989–2017</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -273,6 +274,26 @@
       color: #1a1a1a;
       white-space: pre-wrap;
     }
+    /* Rendered markdown in AI answer */
+    .chat-answer-text h2 { font-size: 0.88rem; font-weight: 700; margin: 14px 0 4px; color: #111; }
+    .chat-answer-text h3 { font-size: 0.82rem; font-weight: 700; margin: 10px 0 3px; color: #333; }
+    .chat-answer-text p  { margin: 0 0 8px; }
+    .chat-answer-text ul,
+    .chat-answer-text ol { margin: 0 0 8px; padding-left: 18px; }
+    .chat-answer-text li { margin-bottom: 3px; }
+    .chat-answer-text strong { font-weight: 700; }
+
+    /* Inline source references [p59, 1992] */
+    a.src-ref {
+      color: #888;
+      font-size: 0.72em;
+      text-decoration: none;
+      border-bottom: 1px dashed #bbb;
+      vertical-align: super;
+      line-height: 0;
+    }
+    a.src-ref:hover { color: #111; border-bottom-color: #555; }
+
     .chat-sources-header {
       margin-top: 14px;
       padding-top: 10px;
@@ -403,6 +424,9 @@
 <div id="tooltip"></div>
 
 <script>
+// ── marked.js config ──────────────────────────────────────────────────────────
+marked.use({ breaks: true, gfm: true });
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 const EVENT_TYPES = [
   "Kosten","Termin","Klage","Technik",
@@ -862,18 +886,38 @@ function renderChatAnswer(viewEl, question, mode, content) {
 
   if (mode === "ai") {
     const { data } = content;
-    // Collect source entries (deduplicated, in order)
+
+    // Render Markdown, then linkify [pXX, YYYY] as anchor refs to source cards
+    const answerHtml = marked.parse(data.answer)
+      .replace(/\[([pP]\d+),\s*(\d+|\?)\]/g,
+        (_, anchor, year) =>
+          `<a href="#src-${anchor.toLowerCase()}" class="src-ref">[${anchor}, ${year}]</a>`);
+
+    // Source cards with anchor IDs for in-page scrolling
     const sourceEntries = (data.sources || [])
       .map(anchor => entriesByAnchor.get(anchor))
       .filter(Boolean);
 
+    const sourceCards = sourceEntries.map(p => {
+      const et    = p.event_type || "?";
+      const color = COLOR[et] || "#999";
+      const date  = p.date_raw || String(p.year || "");
+      const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
+      return `<div class="ep-para" id="src-${p.doc_anchor}">
+        <div class="para-date">${escapeHtml(date)}</div>
+        <span class="para-label" style="background:${color}">${et}</span>
+        <div class="para-text">${highlightEntities(p.text || "")}</div>
+        ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
+      </div>`;
+    }).join("");
+
     const sourcesHTML = sourceEntries.length ? `
       <div class="chat-sources-header">Verwendete Quellen (${sourceEntries.length})</div>
-      <div class="chat-hits">${renderParaList(sourceEntries)}</div>` : "";
+      <div class="chat-hits">${sourceCards}</div>` : "";
 
     viewEl.innerHTML = `
       <div class="chat-meta">${modeLabel}<span class="chat-question-label">${escapeHtml(question)}</span></div>
-      <div class="chat-answer-text">${highlightEntities(data.answer)}</div>
+      <div class="chat-answer-text">${answerHtml}</div>
       ${data.keywords?.length ? `<div class="chat-params">Keywords: ${data.keywords.join(", ")}</div>` : ""}
       ${sourcesHTML}
     `;
