@@ -1,49 +1,24 @@
 text,label,count
-SPD,ORG,30
-CDU,ORG,15
-Lufthansa,ORG,11
-Siemens,ORG,11
-Air Berlin,ORG,9
 Mill,PER,7
-EU-Kommission,ORG,7
-FDP,ORG,5
 “ Spiegel,ORG,5
-PDS,ORG,5
 …,PER,5
-Berliner Flughafengesellschaft,ORG,5
-BER-Untersuchungsausschuss,ORG,5
-DDR,ORG,4
-BFG,ORG,4
-Berliner Senats,ORG,4
 Grüne,ORG,4
-Hochtief-Konsortium,ORG,4
-Deutsche Bahn,ORG,4
 Entrauchungsanlage,PER,4
-Linke,ORG,4
 BER-Eröffnung,ORG,4
-Bosch,ORG,4
-Berliner Senat,ORG,3
 Ministerium,ORG,3
 Berliner SPD,ORG,3
 SLB,ORG,3
 PPS-Geschäftsführer,ORG,3
 BBF-Gesellschafter,ORG,3
-die Grünen,ORG,3
 Konsortiums,ORG,3
-Bundesverkehrsministerium,ORG,3
 Willy Brandt,PER,3
 BER-Aufsichtsratschef,ORG,3
-Wowereits,PER,3
-Bundesanstalt für Immobilienaufgaben,ORG,3
-BImA,ORG,3
 Berliner Flughafen-Gesellschaft,ORG,2
 Berlins Regierender,PER,2
 MinPräs Stolpe,ORG,2
 RegBürgermeister Diepgen,PER,2
-Deutsche Bank,ORG,2
 Platzecks,PER,2
 DDR-Zeiten,ORG,2
-ÖTV,ORG,2
 Gegner,PER,2
 Sperenberg,PER,2
 Verseuchung,ORG,2
@@ -54,13 +29,7 @@ SPIEGEL-Interview,ORG,2
 RWE,ORG,2
 Wilmer,PER,2
 Cutler & Pickering,ORG,2
-Volker Kähne,PER,2
 BBF-Aufsichtsratsvorsitzender,ORG,2
-Credit Suisse,ORG,2
-IVG Holding,ORG,2
-BBIP,ORG,2
-Leyerle,PER,2
-Die Grünen,ORG,2
 IVG-Konsortium,ORG,2
 Landesentwicklungsplan,PER,2
 PPS-Aufsichtsrat,ORG,2
@@ -72,16 +41,9 @@ Gebhardt,PER,2
 Deutschen Flugsicherung,ORG,2
 Brandenburgs Wirtschaftsminister,PER,2
 Intern,PER,2
-IGK-IGR Ingenieurgesellschaft,ORG,2
-Bundestag,ORG,2
-Europäische Kommission,ORG,2
-Frank Welskop,PER,2
 Regierungsterminal,PER,2
 Ludwig,PER,2
 Flughafensprecher Ralf Kunkel,PER,2
-McKinsey,PER,2
-Michael Odenwald,PER,2
-PG BBI,ORG,2
 FBB-Aufsichtsrat,ORG,2
 BER-Technikchef,ORG,2
 Planfeststellungsbeschlusses,PER,2
@@ -89,16 +51,13 @@ SPD-Politiker,ORG,2
 BER-Terminals,ORG,2
 BER-Südbahn,ORG,2
 Kabeltrassen,PER,2
-Harald Siegle,PER,2
 Schönefeld-Alt,PER,2
 Imtech,PER,2
 BER-Aufsichtsrat,ORG,2
 Abgeordneten,ORG,2
 Francis G.,PER,2
 EU,ORG,2
-Matthias Kollatz-Ahnen,PER,2
 Masterplan,PER,2
-Eisenbahn-Bundesamt,ORG,2
 BER-Finanzierung,ORG,2
 07.03.2017,PER,2
 Spreeplan,PER,2

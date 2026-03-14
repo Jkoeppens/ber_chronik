@@ -264,7 +264,6 @@
     #entity-panel { display: none; flex-direction: column; gap: 10px; }
     #panel.entity-mode #entity-panel  { display: flex; }
     #panel.entity-mode #para-card     { display: none; }
-    #panel.entity-mode #entity-box    { display: none !important; }
     #panel.entity-mode #panel-nav     { display: none; }
 
     .ep-summary {
@@ -462,17 +461,19 @@ document.getElementById("panel-body").addEventListener("click", e => {
   if (!ent) return;
   const norm = ent.dataset.name;
 
-  // Entity-panel mode (network): clicking an entity navigates to that entity
-  if (document.getElementById("panel").classList.contains("entity-mode")) {
+  // Click inside entity summary text (network panel) → navigate to that entity
+  if (ent.closest("#ep-summary")) {
     openEntityPanel(norm);
     return;
   }
 
-  // Timeline mode: toggle entity summary box
+  // Click inside entity-box summary → Wikipedia-navigate
   if (ent.closest("#entity-box-summary")) {
     showEntityBox(norm);
     return;
   }
+
+  // Click in any paragraph text → toggle entity box
   const box = document.getElementById("entity-box");
   if (box.classList.contains("visible") && currentEntity === norm) {
     closeEntityBox();
@@ -481,42 +482,38 @@ document.getElementById("panel-body").addEventListener("click", e => {
   }
 });
 
-// ── Para card ─────────────────────────────────────────────────────────────────
-let paraIndex = 0, parasForPanel = [], activeDot = null, dimmedTypes = new Set();
+// ── Para list helpers ─────────────────────────────────────────────────────────
+let activeDot = null, dimmedTypes = new Set();
 
-function showPara(index) {
-  const p = parasForPanel[index];
-  if (!p) return;
-  paraIndex = index;
-  closeEntityBox();
-
-  const et    = p.event_type || "?";
-  const color = COLOR[et] || "#999";
-  const date  = p.date_raw || String(p.year || "");
-  const text  = p.text || "";
-  const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
-
-  document.getElementById("para-card").innerHTML = `
-    <div class="para-date">${escapeHtml(date)}</div>
-    <span class="para-label" style="background:${color}">${et}</span>
-    <div class="para-text">${highlightEntities(text)}</div>
-    ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
-  `;
-
-  document.getElementById("para-counter").textContent = `${index + 1} / ${parasForPanel.length}`;
-  document.getElementById("btn-prev").disabled = index === 0;
-  document.getElementById("btn-next").disabled = index === parasForPanel.length - 1;
+function renderParaList(entries) {
+  return entries.map(p => {
+    const et    = p.event_type || "?";
+    const color = COLOR[et] || "#999";
+    const date  = p.date_raw || String(p.year || "");
+    const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
+    return `<div class="ep-para">
+      <div class="para-date">${escapeHtml(date)}</div>
+      <span class="para-label" style="background:${color}">${et}</span>
+      <div class="para-text">${highlightEntities(p.text || "")}</div>
+      ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
+    </div>`;
+  }).join("");
 }
 
 function openPanel(title, entries) {
-  document.getElementById("panel").classList.remove("entity-mode");
-  parasForPanel = entries;
-  paraIndex = 0;
+  const sorted = [...entries].sort((a, b) =>
+    (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
+
   document.getElementById("panel-title").textContent = title;
   document.getElementById("panel-subtitle").textContent =
-    `${entries.length} Eintr${entries.length === 1 ? "ag" : "äge"}`;
-  document.getElementById("panel").classList.add("open");
-  showPara(0);
+    `${sorted.length} Eintr${sorted.length === 1 ? "ag" : "äge"}`;
+  document.getElementById("ep-summary").innerHTML = "";
+  document.getElementById("ep-paras").innerHTML   = renderParaList(sorted);
+
+  const panel = document.getElementById("panel");
+  panel.classList.add("open", "entity-mode");
+  document.getElementById("panel-body").scrollTop = 0;
+  closeEntityBox();
 }
 
 function openEntityPanel(normalform) {
@@ -537,18 +534,7 @@ function openEntityPanel(normalform) {
     </div>` : "";
 
   // Paragraph list, chronologically
-  document.getElementById("ep-paras").innerHTML = sorted.map(p => {
-    const et    = p.event_type || "?";
-    const color = COLOR[et] || "#999";
-    const date  = p.date_raw || String(p.year || "");
-    const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
-    return `<div class="ep-para">
-      <div class="para-date">${escapeHtml(date)}</div>
-      <span class="para-label" style="background:${color}">${et}</span>
-      <div class="para-text">${highlightEntities(p.text || "")}</div>
-      ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
-    </div>`;
-  }).join("");
+  document.getElementById("ep-paras").innerHTML = renderParaList(sorted);
 
   const panel = document.getElementById("panel");
   panel.classList.add("open", "entity-mode");
@@ -562,14 +548,10 @@ function closePanel() {
 }
 
 document.getElementById("panel-close").onclick = closePanel;
-document.getElementById("btn-prev").onclick = () => showPara(paraIndex - 1);
-document.getElementById("btn-next").onclick = () => showPara(paraIndex + 1);
 
 document.addEventListener("keydown", e => {
   if (!document.getElementById("panel").classList.contains("open")) return;
-  if (e.key === "ArrowRight") showPara(Math.min(paraIndex + 1, parasForPanel.length - 1));
-  if (e.key === "ArrowLeft")  showPara(Math.max(paraIndex - 1, 0));
-  if (e.key === "Escape")     closePanel();
+  if (e.key === "Escape") closePanel();
 });
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
@@ -687,7 +669,7 @@ function drawNetwork(nodes, links, entriesByActor) {
     .attr("class", "net-label")
     .attr("dy",           d => nodeRadius(d) + 11)
     .attr("text-anchor", "middle")
-    .text(d => d.id.split(" ").slice(-1)[0]);
+    .text(d => d.id);
 
   node
     .on("mouseenter", (event, d) =>
@@ -739,7 +721,7 @@ document.getElementById("tab-network").addEventListener("click", () => {
 // ── Boot ──────────────────────────────────────────────────────────────────────
 Promise.all([
   fetch("data.json").then(r => r.json()),
-  fetch("../config/entities_seed.csv").then(r => r.text())
+  fetch("entities_seed.csv").then(r => r.text())
     .catch(() => ""),
   fetch("entities_summary.json").then(r => r.json())
     .catch(() => ({})),

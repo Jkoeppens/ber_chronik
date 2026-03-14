@@ -1,0 +1,214 @@
+alias,normalform,typ
+Air Berlin,Air Berlin,Org
+BBF,Berlin Brandenburg Flughafen Holding GmbH,Org
+Berlin Brandenburg Flughafen Holding,Berlin Brandenburg Flughafen Holding GmbH,Org
+BBIP,Berlin Brandenburg International Partner,Org
+BFG,Berliner Flughafengesellschaft,Org
+Bosch,Bosch,Org
+BImA,Bundesanstalt für Immobilienaufgaben,Org
+Bundesverkehrsministerium,Bundesverkehrsministerium,Org
+die Grünen,Bündnis90/die Grünen,Org
+CDU,Christlich Demokratische Union,Org
+Credit Suisse,Credit Suisse,Org
+DB,Deutsche Bahn,Org
+Deutsche Bank,Deutsche Bank,Org
+DDR,Deutsche Demokratische Republik,Org
+DFS,Deutsche Flugsicherung,Org
+Linke,Die Linke,Org
+EU-Kommission,EU-Kommission,Org
+EBA,Eisenbahn-Bundesamt,Org
+Europäische Kommission,Europäische Kommission,Org
+BBI,Flughafen Berlin Brandenburg,Org
+BER,Flughafen Berlin Brandenburg,Org
+Flughafen Berlin Brandenburg,Flughafen Berlin Brandenburg,Org
+FBB,Flughafen Berlin Brandenburg GmbH,Org
+Flughafen Berlin Brandenburg GmbH,Flughafen Berlin Brandenburg GmbH,Org
+FBS,Flughafen Berlin-Schönefeld GmbH,Org
+Flughafen Berlin-Schönefeld,Flughafen Berlin-Schönefeld GmbH,Org
+FDP,Freie Demokratische Partei,Org
+GMP,Gerkan Marg und Partner,Org
+Gerkan Marg und Partner,Gerkan Marg und Partner,Org
+gmp,Gerkan Marg und Partner,Org
+ÖTV,Gewerkschaft öffentliche Dienste,Org
+Hochtief,Hochtief AG,Org
+Hochtief-Konsortium,Hochtief-Konsortium,Org
+IGK-IGR Ingenieurgesellschaft,IGK-IGR Ingenieurgesellschaft,Org
+IVG Holding,IVG Holding,Org
+IVG,IVG Immobilien AG,Org
+LEG,Landesentwicklungsgesellschaft Brandenburg,Org
+Lufthansa,Lufthansa,Org
+McKinsey,McKinsey,Org
+PEG,PEG,Org
+PDS,Partei des Demokratischen Sozialismus,Org
+Planfeststellungsbeschluss,Planfeststellungsbeschluss,Org
+PG BBI,Planungsgesellschaft Berlin-Brandenburg-International,Org
+PPS,Projekt-Planungsgesellschaft Schönefeld,Org
+Projekt-Planungsgesellschaft Schönefeld,Projekt-Planungsgesellschaft Schönefeld,Org
+Siemens,Siemens,Org
+SPD,Sozialdemokratische Partei Deutschlands,Org
+CBP,WSP CBP Airport GmbH,Org
+WSP,WSP CBP Airport GmbH,Org
+WCP,Wilmer Cutler Pickering,Org
+Alexander Dobrindt,Alexander Dobrindt,Person
+Dobrindt,Alexander Dobrindt,Person
+Alfredo di Mauro,Alfredo di Mauro,Person
+di Mauro,Alfredo di Mauro,Person
+Andreas Otto,Andreas Otto,Person
+Otto,Andreas Otto,Person
+Annette Fugmann-Heesing,Annette Fugmann-Heesing,Person
+Fugmann-Heesing,Annette Fugmann-Heesing,Person
+Armin Bechmann,Armin Bechmann,Person
+Bechmann,Armin Bechmann,Person
+Carl-Heinz Klinkmüller,Carl-Heinz Klinkmüller,Person
+Klinkmüller,Carl-Heinz Klinkmüller,Person
+Christian Manninger,Christian Manninger,Person
+Manninger,Christian Manninger,Person
+Dieter Johannsen-Roth,Dieter Johannsen-Roth,Person
+Johannsen-Roth,Dieter Johannsen-Roth,Person
+Dietmar Woidke,Dietmar Woidke,Person
+Woidke,Dietmar Woidke,Person
+Diepgen,Eberhard Diepgen,Person
+Eberhard Diepgen,Eberhard Diepgen,Person
+Eckart John von Freyend,Eckart John von Freyend,Person
+John von Freyend,Eckart John von Freyend,Person
+Elke Schaefer,Elke Schaefer,Person
+Schaefer,Elke Schaefer,Person
+Elmar Pieroth,Elmar Pieroth,Person
+Pieroth,Elmar Pieroth,Person
+Engelbert Lütke Daldrup,Engelbert Lütke Daldrup,Person
+Lütke Daldrup,Engelbert Lütke Daldrup,Person
+Frank Röbbelen,Frank Röbbelen,Person
+Röbbelen,Frank Röbbelen,Person
+Frank Welskop,Frank Welskop,Person
+Franz Müntefering,Franz Müntefering,Person
+Müntefering,Franz Müntefering,Person
+Friedrich Zimmermann,Friedrich Zimmermann,Person
+Zimmermann,Friedrich Zimmermann,Person
+Gerd Kronmüller,Gerd Kronmüller,Person
+Kronmüller,Gerd Kronmüller,Person
+Egger,Gottfried Egger,Person
+Gottfried Egger,Gottfried Egger,Person
+Götz Herberg,Götz Herberg,Person
+Herberg,Götz Herberg,Person
+Günther Krause,Günther Krause,Person
+Krause,Günther Krause,Person
+Hans Joachim Paap,Hans Joachim Paap,Person
+Hans-Joachim Paap,Hans Joachim Paap,Person
+Paap,Hans Joachim Paap,Person
+Hans-Olaf Henkel,Hans-Olaf Henkel,Person
+Henkel,Hans-Olaf Henkel,Person
+Hans-Peter Keitel,Hans-Peter Keitel,Person
+Keitel,Hans-Peter Keitel,Person
+Harald Siegle,Harald Siegle,Person
+Grohmann,Hartmut Grohmann,Person
+Hartmut Grohmann,Hartmut Grohmann,Person
+Hartmut Mehdorn,Hartmut Mehdorn,Person
+Mehdorn,Hartmut Mehdorn,Person
+Fölster,Heike Fölster,Person
+Heike Fölster,Heike Fölster,Person
+Heinz Ruhnau,Heinz Ruhnau,Person
+Ruhnau,Heinz Ruhnau,Person
+Helmuth Markov,Helmuth Markov,Person
+Markov,Helmuth Markov,Person
+Haase,Herwig Haase,Person
+Herwig Haase,Herwig Haase,Person
+Amann,Horst Amann,Person
+Horst Amann,Horst Amann,Person
+Hubert Nienhoff,Hubert Nienhoff,Person
+Nienhoff,Hubert Nienhoff,Person
+Joachim Korkhaus,Joachim Korkhaus,Person
+Korkhaus,Joachim Korkhaus,Person
+Leyerle,Joachim Leyerle,Person
+Großmann,Jochen Großmann,Person
+Jochen Großmann,Jochen Großmann,Person
+Jutta Matuschek,Jutta Matuschek,Person
+Matuschek,Jutta Matuschek,Person
+Jörg Marks,Jörg Marks,Person
+Marks,Jörg Marks,Person
+Jürgen Linde,Jürgen Linde,Person
+Linde,Jürgen Linde,Person
+Ehlerding,Karl Ehlerding,Person
+Karl Ehlerding,Karl Ehlerding,Person
+Karsten Mühlenfeld,Karsten Mühlenfeld,Person
+Mühlenfeld,Karsten Mühlenfeld,Person
+Kilian Krieger,Kilian Krieger,Person
+Krieger,Kilian Krieger,Person
+Klaus Kurpjuweit,Klaus Kurpjuweit,Person
+Kurpjuweit,Klaus Kurpjuweit,Person
+Klaus Wowereit,Klaus Wowereit,Person
+Wowereit,Klaus Wowereit,Person
+Wowereits,Klaus Wowereit,Person
+Bodewig,Kurt Bodewig,Person
+Kurt Bodewig,Kurt Bodewig,Person
+Henne,Kurt Henne,Person
+Kurt Henne,Kurt Henne,Person
+Hölzel,Manfred Hölzel,Person
+Manfred Hölzel,Manfred Hölzel,Person
+Körtgen,Manfred Körtgen,Person
+Manfred Körtgen,Manfred Körtgen,Person
+Manfred Stolpe,Manfred Stolpe,Person
+Stolpe,Manfred Stolpe,Person
+Delius,Martin Delius,Person
+Martin Delius,Martin Delius,Person
+Matthias Kollatz-Ahnen,Matthias Kollatz-Ahnen,Person
+Matthias Platzeck,Matthias Platzeck,Person
+Platzeck,Matthias Platzeck,Person
+Matthias Prokoph,Matthias Prokoph,Person
+Prokoph,Matthias Prokoph,Person
+Matthias Wissmann,Matthias Wissmann,Person
+Wissmann,Matthias Wissmann,Person
+Gerkan,Meinhard von Gerkan,Person
+Meinhard von Gerkan,Meinhard von Gerkan,Person
+von Gerkan,Meinhard von Gerkan,Person
+Cramer,Michael Cramer,Person
+Michael Cramer,Michael Cramer,Person
+Michael Müller,Michael Müller,Person
+Müller,Michael Müller,Person
+Michael Odenwald,Michael Odenwald,Person
+Michael Pieper,Michael Pieper,Person
+Pieper,Michael Pieper,Person
+Meisner,Norbert Meisner,Person
+Norbert Meisner,Norbert Meisner,Person
+Nozon,Olaf Nozon,Person
+Olaf Nozon,Olaf Nozon,Person
+Peter Ramsauer,Peter Ramsauer,Person
+Ramsauer,Peter Ramsauer,Person
+Bomba,Rainer Bomba,Person
+Rainer Bomba,Rainer Bomba,Person
+Bretschneider,Rainer Bretschneider,Person
+Rainer Bretschneider,Rainer Bretschneider,Person
+Rainer Schwarz,Rainer Schwarz,Person
+Schwarz,Rainer Schwarz,Person
+Kunkel,Ralf Kunkel,Person
+Ralf Kunkel,Ralf Kunkel,Person
+Regina Töpfer,Regina Töpfer,Person
+Töpfer,Regina Töpfer,Person
+Klimmt,Reinhard Klimmt,Person
+Reinhard Klimmt,Reinhard Klimmt,Person
+Grosch,Robert Grosch,Person
+Robert Grosch,Robert Grosch,Person
+Paetow,Stefan Paetow,Person
+Stefan Paetow,Stefan Paetow,Person
+Loge,Stephan Loge,Person
+Stephan Loge,Stephan Loge,Person
+Thomas Weyer,Thomas Weyer,Person
+Weyer,Thomas Weyer,Person
+Schindler,Ulrich Schindler,Person
+Ulrich Schindler,Ulrich Schindler,Person
+Volker Kähne,Volker Kähne,Person
+Hirche,Walter Hirche,Person
+Walter Hirche,Walter Hirche,Person
+Momper,Walter Momper,Person
+Walter Momper,Walter Momper,Person
+Gatzer,Werner Gatzer,Person
+Werner Gatzer,Werner Gatzer,Person
+Bender,Wilhelm Bender,Person
+Wilhelm Bender,Wilhelm Bender,Person
+Fürniß,Wolfgang Fürniß,Person
+Wolfgang Fürniß,Wolfgang Fürniß,Person
+Tiefensee,Wolfgang Tiefensee,Person
+Wolfgang Tiefensee,Wolfgang Tiefensee,Person
+BER-Untersuchungsausschuss,BER-Untersuchungsausschuss,Gremium
+Berliner Senat,Berliner Senat,Gremium
+Berliner Senats,Berliner Senat,Gremium
+Bundestag,Bundestag,Gremium

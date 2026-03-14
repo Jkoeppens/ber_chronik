@@ -1,4 +1,5 @@
 import argparse
+import re
 from collections import Counter
 from pathlib import Path
 
@@ -16,38 +17,82 @@ def load_seed(seed_path: Path) -> pd.DataFrame:
 
 
 def build_phrase_matcher(nlp, seed: pd.DataFrame) -> PhraseMatcher:
-    """Build PhraseMatcher from seed aliases. Match key = normalform.
-
-    For single-word aliases, also registers a parenthesised pattern so that
-    e.g. '(BBF)' is matched in addition to 'BBF'.
-    """
+    """PhraseMatcher for multi-word aliases only (alias contains a space)."""
     matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
     for _, row in seed.iterrows():
         alias = row["alias"]
-        norm  = row["normalform"]
-        patterns = [nlp.make_doc(alias)]
         if " " not in alias:
-            patterns.append(nlp.make_doc(f"({alias})"))
-        matcher.add(norm, patterns)
+            continue  # single-word aliases handled by regex
+        matcher.add(row["normalform"], [nlp.make_doc(alias)])
     return matcher
+
+
+def build_regex_map(seed: pd.DataFrame) -> dict[str, str]:
+    """Map alias_lower → normalform for all single-word aliases."""
+    return {
+        row["alias"].lower(): row["normalform"]
+        for _, row in seed.iterrows()
+        if " " not in row["alias"]
+    }
+
+
+def build_regex(regex_map: dict[str, str]) -> re.Pattern | None:
+    """Single compiled regex covering all single-word aliases.
+
+    Matches both bare form (\\bSPD\\b) and parenthesised form (\\(SPD\\))
+    so that abbreviations in brackets are also caught.
+    """
+    if not regex_map:
+        return None
+    parts = []
+    for alias in sorted(regex_map, key=len, reverse=True):  # longest first
+        esc = re.escape(alias)
+        parts.append(r"\(" + esc + r"\)")   # (SPD)
+        parts.append(r"\b" + esc + r"\b")   # SPD
+    return re.compile("|".join(parts), re.IGNORECASE)
 
 
 # ---------------------------------------------------------------------------
 # Stufe 1 – Dictionary matching
 # ---------------------------------------------------------------------------
 
-def run_dictionary_matching(texts: list[str], nlp, matcher: PhraseMatcher) -> list[str]:
-    """Return ';'-joined normalforms per text ('' if none matched)."""
+def run_dictionary_matching(
+    texts: list[str],
+    nlp,
+    matcher: PhraseMatcher,
+    regex_pat: re.Pattern | None,
+    regex_map: dict[str, str],
+) -> list[str]:
+    """Return ';'-joined normalforms per text ('' if none matched).
+
+    Multi-word aliases → PhraseMatcher on spaCy doc.
+    Single-word aliases → regex on raw text (catches SPD inside SPD-Fraktion etc.).
+    """
     results = []
     with nlp.select_pipes(disable=["ner"]):
-        for doc in tqdm(nlp.pipe(texts, batch_size=64), total=len(texts), desc="Dictionary matching"):
+        for text, doc in tqdm(
+            zip(texts, nlp.pipe(texts, batch_size=64)),
+            total=len(texts), desc="Dictionary matching",
+        ):
             seen: set[str] = set()
             actors: list[str] = []
+
+            # Multi-word: PhraseMatcher
             for match_id, _start, _end in matcher(doc):
                 norm = nlp.vocab.strings[match_id]
                 if norm not in seen:
                     seen.add(norm)
                     actors.append(norm)
+
+            # Single-word: regex on raw text
+            if regex_pat:
+                for m in regex_pat.finditer(text):
+                    key  = m.group(0).strip("()").lower()
+                    norm = regex_map.get(key)
+                    if norm and norm not in seen:
+                        seen.add(norm)
+                        actors.append(norm)
+
             results.append(";".join(actors))
     return results
 
@@ -118,11 +163,15 @@ def main():
     print("Loading spaCy model de_core_news_sm …")
     nlp = spacy.load("de_core_news_sm")
 
-    matcher = build_phrase_matcher(nlp, seed)
+    matcher   = build_phrase_matcher(nlp, seed)
+    regex_map = build_regex_map(seed)
+    regex_pat = build_regex(regex_map)
+    print(f"  PhraseMatcher: {sum(1 for _, r in seed.iterrows() if ' ' in r['alias'])} multi-word aliases")
+    print(f"  Regex:         {len(regex_map)} single-word aliases")
 
     # Stufe 1
     print("\nStufe 1: Dictionary matching …")
-    df["actors"] = run_dictionary_matching(texts, nlp, matcher)
+    df["actors"] = run_dictionary_matching(texts, nlp, matcher, regex_pat, regex_map)
     n_matched = (df["actors"] != "").sum()
     print(f"  {n_matched}/{len(df)} Absätze mit mindestens einem Akteur")
 

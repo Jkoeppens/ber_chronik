@@ -65,7 +65,8 @@
       "is_geicke": true,
       "actors": [
         "Eberhard Diepgen",
-        "Walter Momper"
+        "Walter Momper",
+        "Rainer Schwarz"
       ],
       "causal_theme": []
     },
@@ -82,7 +83,9 @@
       "source_date": "05.04.1989",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Deutsche Demokratische Republik"
+      ],
       "causal_theme": []
     },
     {
@@ -116,7 +119,10 @@
       "source_date": "05.12.1989",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Sozialdemokratische Partei Deutschlands",
+        "Deutsche Demokratische Republik"
+      ],
       "causal_theme": []
     },
     {
@@ -148,7 +154,9 @@
       "source_date": "22.01.1990",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Deutsche Demokratische Republik"
+      ],
       "causal_theme": []
     },
     {
@@ -164,7 +172,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Sozialdemokratische Partei Deutschlands"
+      ],
       "causal_theme": []
     },
     {
@@ -233,7 +243,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Manfred Stolpe"
+        "Manfred Stolpe",
+        "Sozialdemokratische Partei Deutschlands",
+        "Freie Demokratische Partei"
       ],
       "causal_theme": []
     },
@@ -348,7 +360,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Sozialdemokratische Partei Deutschlands"
+      ],
       "causal_theme": []
     },
     {
@@ -365,9 +379,11 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Heinz Ruhnau",
         "Manfred Stolpe",
-        "Eberhard Diepgen"
+        "Eberhard Diepgen",
+        "Lufthansa",
+        "Heinz Ruhnau",
+        "Deutsche Demokratische Republik"
       ],
       "causal_theme": []
     },
@@ -385,7 +401,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Eberhard Diepgen"
+        "Eberhard Diepgen",
+        "Christlich Demokratische Union",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -459,7 +477,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin-Schönefeld GmbH"
+        "Flughafen Berlin-Schönefeld GmbH",
+        "Deutsche Bank"
       ],
       "causal_theme": []
     },
@@ -546,7 +565,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Lufthansa"
+      ],
       "causal_theme": []
     },
     {
@@ -695,7 +716,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin-Schönefeld GmbH"
+        "Flughafen Berlin-Schönefeld GmbH",
+        "Berliner Flughafengesellschaft"
       ],
       "causal_theme": []
     },
@@ -765,7 +787,9 @@
       "source_date": "09.03.1992",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berliner Senat"
+      ],
       "causal_theme": []
     },
     {
@@ -847,7 +871,9 @@
       "source_date": "19.03.1992",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berliner Senat"
+      ],
       "causal_theme": []
     },
     {
@@ -916,6 +942,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Air Berlin",
         "Eberhard Diepgen",
         "Berlin Brandenburg Flughafen Holding GmbH",
         "Günther Krause"
@@ -1001,7 +1028,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -1017,7 +1046,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -1070,7 +1101,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Günther Krause"
+        "Günther Krause",
+        "Deutsche Demokratische Republik"
       ],
       "causal_theme": []
     },
@@ -1231,8 +1263,9 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Heinz Ruhnau",
         "Landesentwicklungsgesellschaft Brandenburg",
-        "Heinz Ruhnau"
+        "Berlin Brandenburg Flughafen Holding GmbH"
       ],
       "causal_theme": []
     },
@@ -1250,10 +1283,12 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Hans-Olaf Henkel",
+        "Berlin Brandenburg Flughafen Holding GmbH",
         "Eberhard Diepgen",
         "Walter Hirche",
-        "Hans-Olaf Henkel",
-        "Norbert Meisner"
+        "Norbert Meisner",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -1272,7 +1307,9 @@
       "is_geicke": false,
       "actors": [
         "Norbert Meisner",
-        "Eberhard Diepgen"
+        "Eberhard Diepgen",
+        "Sozialdemokratische Partei Deutschlands",
+        "Christlich Demokratische Union"
       ],
       "causal_theme": []
     },
@@ -1290,7 +1327,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Norbert Meisner"
+        "Norbert Meisner",
+        "Gewerkschaft öffentliche Dienste"
       ],
       "causal_theme": []
     },
@@ -1326,7 +1364,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Manfred Stolpe"
+        "Manfred Stolpe",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -1343,7 +1382,9 @@
       "source_date": "30.10.2000;08.10.1994",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -1361,6 +1402,7 @@
       "is_geicke": false,
       "actors": [
         "Norbert Meisner",
+        "Sozialdemokratische Partei Deutschlands",
         "Berlin Brandenburg Flughafen Holding GmbH"
       ],
       "causal_theme": []
@@ -1430,7 +1472,9 @@
       "source_date": "05.06.2000",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Lufthansa"
+      ],
       "causal_theme": []
     },
     {
@@ -1510,7 +1554,12 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Christlich Demokratische Union",
+        "Sozialdemokratische Partei Deutschlands",
+        "Hans-Olaf Henkel",
+        "Berlin Brandenburg Flughafen Holding GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -1542,7 +1591,9 @@
       "source_date": "01.06.1995",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Bundesverkehrsministerium"
+      ],
       "causal_theme": []
     },
     {
@@ -1558,7 +1609,10 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Deutsche Bank",
+        "Lufthansa"
+      ],
       "causal_theme": []
     },
     {
@@ -1612,7 +1666,9 @@
       "source_date": "03.06.1995",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Deutsche Demokratische Republik"
+      ],
       "causal_theme": []
     },
     {
@@ -1647,7 +1703,9 @@
       "source_date": "26.06.1995",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Lufthansa"
+      ],
       "causal_theme": []
     },
     {
@@ -1699,7 +1757,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -1716,6 +1776,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Sozialdemokratische Partei Deutschlands",
         "Manfred Stolpe"
       ],
       "causal_theme": []
@@ -1750,7 +1811,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Matthias Wissmann"
+        "Matthias Wissmann",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -1768,7 +1830,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "IVG Immobilien AG"
+        "IVG Immobilien AG",
+        "Siemens"
       ],
       "causal_theme": []
     },
@@ -1891,7 +1954,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Berlin Brandenburg Flughafen Holding GmbH"
+        "Berlin Brandenburg Flughafen Holding GmbH",
+        "Deutsche Demokratische Republik"
       ],
       "causal_theme": []
     },
@@ -1924,7 +1988,9 @@
       "source_date": "03.07.1996",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -2107,9 +2173,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Götz Herberg",
         "Berlin Brandenburg Flughafen Holding GmbH",
-        "Projekt-Planungsgesellschaft Schönefeld",
-        "Götz Herberg"
+        "Projekt-Planungsgesellschaft Schönefeld"
       ],
       "causal_theme": []
     },
@@ -2145,7 +2211,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Eberhard Diepgen"
+        "Eberhard Diepgen",
+        "Lufthansa"
       ],
       "causal_theme": []
     },
@@ -2287,7 +2354,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Berlin Brandenburg Flughafen Holding GmbH"
+        "Berlin Brandenburg Flughafen Holding GmbH",
+        "Gewerkschaft öffentliche Dienste"
       ],
       "causal_theme": []
     },
@@ -2373,10 +2441,10 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Jürgen Linde",
         "Hochtief AG",
         "Eberhard Diepgen",
         "Berlin Brandenburg Flughafen Holding GmbH",
-        "Jürgen Linde",
         "IVG Immobilien AG"
       ],
       "causal_theme": []
@@ -2394,7 +2462,10 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Christlich Demokratische Union",
+        "Freie Demokratische Partei"
+      ],
       "causal_theme": []
     },
     {
@@ -2467,8 +2538,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
         "Franz Müntefering",
+        "Flughafen Berlin Brandenburg",
         "Eberhard Diepgen",
         "Manfred Stolpe"
       ],
@@ -2488,7 +2559,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Berlin Brandenburg Flughafen Holding GmbH"
+        "Berlin Brandenburg Flughafen Holding GmbH",
+        "Hochtief-Konsortium"
       ],
       "causal_theme": []
     },
@@ -2560,7 +2632,9 @@
       "source_date": "23.06.1999",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Hochtief-Konsortium"
+      ],
       "causal_theme": []
     },
     {
@@ -2576,7 +2650,11 @@
       "source_date": "03.07.1999",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Credit Suisse",
+        "Hochtief AG",
+        "Berlin Brandenburg Flughafen Holding GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -2629,7 +2707,12 @@
       "source_date": "08.12.2001",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Hochtief-Konsortium",
+        "Berlin Brandenburg Flughafen Holding GmbH",
+        "Sozialdemokratische Partei Deutschlands",
+        "Partei des Demokratischen Sozialismus"
+      ],
       "causal_theme": []
     },
     {
@@ -2646,6 +2729,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH",
         "Annette Fugmann-Heesing"
       ],
       "causal_theme": []
@@ -2664,8 +2748,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Wilmer Cutler Pickering",
-        "Matthias Wissmann"
+        "Matthias Wissmann",
+        "Wilmer Cutler Pickering"
       ],
       "causal_theme": []
     },
@@ -2683,7 +2767,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Jürgen Linde"
+        "Jürgen Linde",
+        "Projekt-Planungsgesellschaft Schönefeld"
       ],
       "causal_theme": []
     },
@@ -2721,9 +2806,10 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Volker Kähne",
         "Projekt-Planungsgesellschaft Schönefeld",
-        "Berlin Brandenburg Flughafen Holding GmbH",
         "Kilian Krieger",
+        "Berlin Brandenburg Flughafen Holding GmbH",
         "Manfred Stolpe"
       ],
       "causal_theme": []
@@ -2826,7 +2912,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Manfred Stolpe"
+        "Manfred Stolpe",
+        "Sozialdemokratische Partei Deutschlands",
+        "Christlich Demokratische Union"
       ],
       "causal_theme": []
     },
@@ -2876,6 +2964,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Credit Suisse",
         "Hochtief AG"
       ],
       "causal_theme": []
@@ -2894,7 +2983,10 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Hochtief AG"
+        "Credit Suisse",
+        "Hochtief AG",
+        "Gewerkschaft öffentliche Dienste",
+        "Hochtief-Konsortium"
       ],
       "causal_theme": []
     },
@@ -2913,6 +3005,7 @@
       "is_geicke": true,
       "actors": [
         "Wolfgang Fürniß",
+        "Christlich Demokratische Union",
         "Berlin Brandenburg Flughafen Holding GmbH"
       ],
       "causal_theme": []
@@ -2949,7 +3042,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Michael Pieper"
+        "Michael Pieper",
+        "Freie Demokratische Partei",
+        "Projekt-Planungsgesellschaft Schönefeld"
       ],
       "causal_theme": []
     },
@@ -2985,7 +3080,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Götz Herberg"
+        "Götz Herberg",
+        "Berlin Brandenburg Flughafen Holding GmbH"
       ],
       "causal_theme": []
     },
@@ -3085,6 +3181,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Credit Suisse",
         "Berlin Brandenburg Flughafen Holding GmbH",
         "Projekt-Planungsgesellschaft Schönefeld"
       ],
@@ -3104,7 +3201,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH",
         "Projekt-Planungsgesellschaft Schönefeld",
+        "Hochtief-Konsortium",
         "IVG Immobilien AG",
         "PEG"
       ],
@@ -3144,6 +3243,7 @@
       "actors": [
         "IVG Immobilien AG",
         "Projekt-Planungsgesellschaft Schönefeld",
+        "Berlin Brandenburg Flughafen Holding GmbH",
         "PEG",
         "Eberhard Diepgen"
       ],
@@ -3178,7 +3278,10 @@
       "source_date": "14.03.2000",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Bündnis90/die Grünen",
+        "Partei des Demokratischen Sozialismus"
+      ],
       "causal_theme": []
     },
     {
@@ -3210,7 +3313,9 @@
       "source_date": "08.04.2000",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -3260,7 +3365,9 @@
       "source_date": "08.06.2000;27.08.2000;30.10.2000",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Lufthansa"
+      ],
       "causal_theme": []
     },
     {
@@ -3294,7 +3401,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Hochtief-Konsortium"
+      ],
       "causal_theme": []
     },
     {
@@ -3311,6 +3420,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Volker Kähne",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -3329,12 +3439,12 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Eckart John von Freyend",
+        "Eberhard Diepgen",
+        "Manfred Stolpe",
         "Hochtief AG",
         "IVG Immobilien AG",
-        "Eckart John von Freyend",
-        "Hans-Peter Keitel",
-        "Eberhard Diepgen",
-        "Manfred Stolpe"
+        "Hans-Peter Keitel"
       ],
       "causal_theme": []
     },
@@ -3388,7 +3498,8 @@
       "is_geicke": false,
       "actors": [
         "Hochtief AG",
-        "IVG Immobilien AG"
+        "IVG Immobilien AG",
+        "Berlin Brandenburg International Partner"
       ],
       "causal_theme": []
     },
@@ -3476,9 +3587,12 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "IVG Holding",
+        "EU-Kommission",
         "Berlin Brandenburg Flughafen Holding GmbH",
         "Hochtief AG",
-        "IVG Immobilien AG"
+        "IVG Immobilien AG",
+        "Berlin Brandenburg International Partner"
       ],
       "causal_theme": []
     },
@@ -3545,7 +3659,9 @@
       "source_date": "24.04.2001",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Joachim Leyerle"
+      ],
       "causal_theme": []
     },
     {
@@ -3562,8 +3678,10 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "IVG Holding",
         "Hochtief AG",
         "IVG Immobilien AG",
+        "Berlin Brandenburg International Partner",
         "Berlin Brandenburg Flughafen Holding GmbH"
       ],
       "causal_theme": []
@@ -3581,7 +3699,9 @@
       "source_date": "15.06.2001",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Joachim Leyerle"
+      ],
       "causal_theme": []
     },
     {
@@ -3597,7 +3717,9 @@
       "source_date": "20.06.2001",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Joachim Leyerle"
+      ],
       "causal_theme": []
     },
     {
@@ -3614,8 +3736,11 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Eberhard Diepgen",
-        "Klaus Wowereit"
+        "Bündnis90/die Grünen",
+        "Klaus Wowereit",
+        "Sozialdemokratische Partei Deutschlands",
+        "Partei des Demokratischen Sozialismus",
+        "Eberhard Diepgen"
       ],
       "causal_theme": []
     },
@@ -3632,7 +3757,9 @@
       "source_date": "22.06.2001",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -3651,7 +3778,9 @@
       "actors": [
         "Hochtief AG",
         "IVG Immobilien AG",
-        "Berlin Brandenburg Flughafen Holding GmbH"
+        "Berlin Brandenburg International Partner",
+        "Berlin Brandenburg Flughafen Holding GmbH",
+        "Hochtief-Konsortium"
       ],
       "causal_theme": []
     },
@@ -3722,6 +3851,8 @@
       "is_geicke": false,
       "actors": [
         "Michael Müller",
+        "Christlich Demokratische Union",
+        "Sozialdemokratische Partei Deutschlands",
         "Klaus Wowereit"
       ],
       "causal_theme": []
@@ -3758,7 +3889,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Projekt-Planungsgesellschaft Schönefeld"
+      ],
       "causal_theme": []
     },
     {
@@ -3774,7 +3907,9 @@
       "source_date": "20.09.2001",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg International Partner"
+      ],
       "causal_theme": []
     },
     {
@@ -3792,9 +3927,11 @@
       "is_geicke": false,
       "actors": [
         "Klaus Wowereit",
+        "Berlin Brandenburg Flughafen Holding GmbH",
         "Hochtief AG",
         "IVG Immobilien AG",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -3828,7 +3965,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Klaus Wowereit"
+        "Klaus Wowereit",
+        "Sozialdemokratische Partei Deutschlands",
+        "Partei des Demokratischen Sozialismus"
       ],
       "causal_theme": []
     },
@@ -3862,6 +4001,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Berlin Brandenburg International Partner",
         "Projekt-Planungsgesellschaft Schönefeld"
       ],
       "causal_theme": []
@@ -3879,7 +4019,9 @@
       "source_date": "30.11.2001",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Bundesverkehrsministerium"
+      ],
       "causal_theme": []
     },
     {
@@ -3896,6 +4038,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Berlin Brandenburg International Partner",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -3913,7 +4056,11 @@
       "source_date": "11.12.2001;09.12.2001",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Sozialdemokratische Partei Deutschlands",
+        "Partei des Demokratischen Sozialismus",
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -3996,6 +4143,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Partei des Demokratischen Sozialismus",
         "Manfred Stolpe"
       ],
       "causal_theme": []
@@ -4102,9 +4250,12 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Sozialdemokratische Partei Deutschlands",
         "Manfred Stolpe",
         "Klaus Wowereit",
-        "Kurt Bodewig"
+        "Kurt Bodewig",
+        "Projekt-Planungsgesellschaft Schönefeld",
+        "Berlin Brandenburg International Partner"
       ],
       "causal_theme": []
     },
@@ -4218,6 +4369,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Flughafen Berlin Brandenburg",
         "Hochtief AG",
         "IVG Immobilien AG"
       ],
@@ -4238,7 +4390,8 @@
       "is_geicke": false,
       "actors": [
         "Hochtief AG",
-        "IVG Immobilien AG"
+        "IVG Immobilien AG",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -4255,7 +4408,10 @@
       "source_date": "22.06.2002",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Christlich Demokratische Union",
+        "Freie Demokratische Partei"
+      ],
       "causal_theme": []
     },
     {
@@ -4273,7 +4429,8 @@
       "is_geicke": true,
       "actors": [
         "Manfred Stolpe",
-        "Matthias Platzeck"
+        "Matthias Platzeck",
+        "Bundesverkehrsministerium"
       ],
       "causal_theme": []
     },
@@ -4290,7 +4447,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg International Partner"
+      ],
       "causal_theme": []
     },
     {
@@ -4307,9 +4466,9 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Eckart John von Freyend",
         "Hochtief AG",
-        "IVG Immobilien AG",
-        "Eckart John von Freyend"
+        "IVG Immobilien AG"
       ],
       "causal_theme": []
     },
@@ -4444,7 +4603,10 @@
       "source_date": "21.11.2002",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Christlich Demokratische Union",
+        "Freie Demokratische Partei"
+      ],
       "causal_theme": []
     },
     {
@@ -4494,6 +4656,9 @@
       "is_geicke": false,
       "actors": [
         "Heinz Ruhnau",
+        "Lufthansa",
+        "Berlin Brandenburg Flughafen Holding GmbH",
+        "Flughafen Berlin Brandenburg",
         "Götz Herberg"
       ],
       "causal_theme": []
@@ -4511,7 +4676,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg International Partner"
+      ],
       "causal_theme": []
     },
     {
@@ -4528,7 +4695,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Dieter Johannsen-Roth"
+        "Dieter Johannsen-Roth",
+        "Berlin Brandenburg Flughafen Holding GmbH"
       ],
       "causal_theme": []
     },
@@ -4564,6 +4732,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH",
         "Klaus Wowereit"
       ],
       "causal_theme": []
@@ -4581,7 +4750,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg International Partner"
+      ],
       "causal_theme": []
     },
     {
@@ -4629,7 +4800,10 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH",
+        "Berlin Brandenburg International Partner"
+      ],
       "causal_theme": []
     },
     {
@@ -4646,9 +4820,10 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Klaus Wowereit",
         "Matthias Platzeck",
-        "Manfred Stolpe"
+        "Manfred Stolpe",
+        "Klaus Wowereit",
+        "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
     },
@@ -4718,8 +4893,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Gerd Kronmüller",
         "Michael Pieper",
-        "Gerd Kronmüller"
+        "Projekt-Planungsgesellschaft Schönefeld"
       ],
       "causal_theme": []
     },
@@ -4736,7 +4912,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg Flughafen Holding GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -4753,8 +4931,11 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "IVG Immobilien AG",
+        "Berlin Brandenburg International Partner",
         "Hochtief AG",
-        "Klaus Wowereit"
+        "Klaus Wowereit",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -4810,8 +4991,10 @@
       "is_geicke": false,
       "actors": [
         "Klaus Wowereit",
+        "Sozialdemokratische Partei Deutschlands",
         "Hochtief AG",
-        "IVG Immobilien AG"
+        "IVG Immobilien AG",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -4929,11 +5112,12 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Berlin Brandenburg Flughafen Holding GmbH",
-        "Projekt-Planungsgesellschaft Schönefeld",
         "Flughafen Berlin-Schönefeld GmbH",
         "Flughafen Berlin Brandenburg",
-        "Flughafen Berlin Brandenburg GmbH"
+        "Flughafen Berlin Brandenburg GmbH",
+        "Berlin Brandenburg Flughafen Holding GmbH",
+        "Projekt-Planungsgesellschaft Schönefeld",
+        "Berliner Flughafengesellschaft"
       ],
       "causal_theme": []
     },
@@ -4951,7 +5135,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Ulrich Schindler"
+        "Ulrich Schindler",
+        "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
     },
@@ -5017,10 +5202,10 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Thomas Weyer",
         "Flughafen Berlin Brandenburg",
         "Hochtief AG",
-        "IVG Immobilien AG",
-        "Thomas Weyer"
+        "IVG Immobilien AG"
       ],
       "causal_theme": []
     },
@@ -5054,7 +5239,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Manfred Stolpe"
+        "Manfred Stolpe",
+        "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
     },
@@ -5124,6 +5310,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Planfeststellungsbeschluss",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -5160,7 +5347,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Matthias Platzeck"
+        "Matthias Platzeck",
+        "Sozialdemokratische Partei Deutschlands",
+        "Christlich Demokratische Union"
       ],
       "causal_theme": []
     },
@@ -5177,7 +5366,9 @@
       "source_date": "25.09.2004",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berliner Senat"
+      ],
       "causal_theme": []
     },
     {
@@ -5193,7 +5384,10 @@
       "source_date": "28.09.2004",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Sozialdemokratische Partei Deutschlands",
+        "Partei des Demokratischen Sozialismus"
+      ],
       "causal_theme": []
     },
     {
@@ -5227,7 +5421,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Bundesverkehrsministerium"
+      ],
       "causal_theme": []
     },
     {
@@ -5357,7 +5553,10 @@
       "source_date": "02.11.2004",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berliner Senat",
+        "Planfeststellungsbeschluss"
+      ],
       "causal_theme": []
     },
     {
@@ -5373,7 +5572,9 @@
       "source_date": "07.05.2011",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Sozialdemokratische Partei Deutschlands"
+      ],
       "causal_theme": []
     },
     {
@@ -5458,6 +5659,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "IGK-IGR Ingenieurgesellschaft",
         "Meinhard von Gerkan"
       ],
       "causal_theme": []
@@ -5596,9 +5798,9 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Dieter Johannsen-Roth",
         "Flughafen Berlin-Schönefeld GmbH",
-        "Flughafen Berlin Brandenburg",
-        "Dieter Johannsen-Roth"
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -5666,8 +5868,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Stefan Paetow"
+        "Stefan Paetow",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -5756,8 +5958,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Thomas Weyer"
+        "Thomas Weyer",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -5808,7 +6010,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Planfeststellungsbeschluss"
+      ],
       "causal_theme": []
     },
     {
@@ -5912,7 +6116,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Klaus Wowereit"
+        "Klaus Wowereit",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -5929,7 +6134,9 @@
       "source_date": "03.12.2007",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Rainer Schwarz"
+      ],
       "causal_theme": []
     },
     {
@@ -6031,7 +6238,9 @@
       "source_date": "07.11.2006",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -6047,7 +6256,9 @@
       "source_date": "11.12.2006",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -6064,6 +6275,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Flughafen Berlin Brandenburg",
         "Hochtief AG"
       ],
       "causal_theme": []
@@ -6162,8 +6374,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Ralf Kunkel"
+        "Ralf Kunkel",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -6317,6 +6529,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Air Berlin",
+        "Lufthansa",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -6351,6 +6565,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "IGK-IGR Ingenieurgesellschaft",
         "Flughafen Berlin Brandenburg",
         "Gerkan Marg und Partner"
       ],
@@ -6420,8 +6635,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Thomas Weyer"
+        "Thomas Weyer",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -6504,7 +6719,9 @@
       "source_date": "15.03.2008",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Planfeststellungsbeschluss"
+      ],
       "causal_theme": []
     },
     {
@@ -6520,7 +6737,10 @@
       "source_date": "28.04.2008;19.04.2008",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Christlich Demokratische Union",
+        "Freie Demokratische Partei"
+      ],
       "causal_theme": []
     },
     {
@@ -6587,9 +6807,9 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
         "Klaus Wowereit",
-        "Ralf Kunkel"
+        "Ralf Kunkel",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -6627,8 +6847,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Manfred Körtgen"
+        "Manfred Körtgen",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -6645,7 +6865,10 @@
       "source_date": "09.07.2008",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg",
+        "EU-Kommission"
+      ],
       "causal_theme": []
     },
     {
@@ -6661,7 +6884,9 @@
       "source_date": "18.06.2012",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Bundestag"
+      ],
       "causal_theme": []
     },
     {
@@ -6693,7 +6918,9 @@
       "source_date": "31.10.2008",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Lufthansa"
+      ],
       "causal_theme": []
     },
     {
@@ -6742,6 +6969,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Europäische Kommission",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -6776,7 +7004,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Manfred Körtgen"
+        "Manfred Körtgen",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -6844,8 +7073,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Klaus Wowereit",
-        "Rainer Schwarz"
+        "Rainer Schwarz",
+        "Klaus Wowereit"
       ],
       "causal_theme": []
     },
@@ -6882,6 +7111,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Frank Welskop",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -6919,6 +7149,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Planungsgesellschaft Berlin-Brandenburg-International",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -6953,7 +7184,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Matthias Platzeck"
+        "Matthias Platzeck",
+        "Sozialdemokratische Partei Deutschlands",
+        "Christlich Demokratische Union"
       ],
       "causal_theme": []
     },
@@ -6971,7 +7204,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
     },
@@ -7007,7 +7241,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Peter Ramsauer"
+        "Peter Ramsauer",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -7090,7 +7325,9 @@
       "source_date": "20.01.2010",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Lufthansa"
+      ],
       "causal_theme": []
     },
     {
@@ -7242,8 +7479,9 @@
       "is_geicke": false,
       "actors": [
         "Manfred Körtgen",
-        "Flughafen Berlin Brandenburg",
-        "Klaus Wowereit"
+        "Planungsgesellschaft Berlin-Brandenburg-International",
+        "Klaus Wowereit",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -7333,12 +7571,15 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Matthias Wissmann",
+        "Eberhard Diepgen",
+        "Manfred Stolpe",
         "Flughafen Berlin Brandenburg",
         "Klaus Wowereit",
         "Matthias Platzeck",
-        "Matthias Wissmann",
-        "Eberhard Diepgen",
-        "Manfred Stolpe"
+        "Christlich Demokratische Union",
+        "Sozialdemokratische Partei Deutschlands",
+        "Lufthansa"
       ],
       "causal_theme": []
     },
@@ -7374,7 +7615,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
     },
@@ -7407,7 +7649,9 @@
       "source_date": "14.12.2010;19.12.2010",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -7423,7 +7667,9 @@
       "source_date": "28.12.2010;29.12.2010",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Planfeststellungsbeschluss"
+      ],
       "causal_theme": []
     },
     {
@@ -7508,7 +7754,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Rainer Schwarz"
+        "Rainer Schwarz",
+        "Christlich Demokratische Union"
       ],
       "causal_theme": []
     },
@@ -7542,7 +7789,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Klaus Wowereit"
+        "Klaus Wowereit",
+        "Die Linke"
       ],
       "causal_theme": []
     },
@@ -7559,7 +7807,9 @@
       "source_date": "01.04.2011",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Planfeststellungsbeschluss"
+      ],
       "causal_theme": []
     },
     {
@@ -7596,6 +7846,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Lufthansa",
         "Heinz Ruhnau"
       ],
       "causal_theme": []
@@ -7663,7 +7914,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -7750,7 +8003,9 @@
       "source_date": "24.08.2011",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Christlich Demokratische Union"
+      ],
       "causal_theme": []
     },
     {
@@ -7767,7 +8022,10 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Klaus Wowereit"
+        "Klaus Wowereit",
+        "Die Linke",
+        "Sozialdemokratische Partei Deutschlands",
+        "Christlich Demokratische Union"
       ],
       "causal_theme": []
     },
@@ -7800,7 +8058,9 @@
       "source_date": null,
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Planfeststellungsbeschluss"
+      ],
       "causal_theme": []
     },
     {
@@ -7833,8 +8093,9 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Hartmut Mehdorn"
+        "Air Berlin",
+        "Hartmut Mehdorn",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -7852,8 +8113,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Ralf Kunkel"
+        "Ralf Kunkel",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -7887,6 +8148,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Bosch",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -7905,6 +8167,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Sozialdemokratische Partei Deutschlands",
+        "Christlich Demokratische Union",
         "Klaus Wowereit"
       ],
       "causal_theme": []
@@ -7957,6 +8221,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Frank Welskop",
         "Rainer Schwarz"
       ],
       "causal_theme": []
@@ -8107,6 +8372,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Flughafen Berlin Brandenburg",
         "Gerkan Marg und Partner"
       ],
       "causal_theme": []
@@ -8158,6 +8424,8 @@
       "is_geicke": false,
       "actors": [
         "Rainer Schwarz",
+        "McKinsey",
+        "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit"
       ],
       "causal_theme": []
@@ -8177,7 +8445,9 @@
       "is_geicke": false,
       "actors": [
         "Rainer Schwarz",
-        "Klaus Wowereit"
+        "McKinsey",
+        "Klaus Wowereit",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -8227,9 +8497,9 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Ralf Kunkel",
         "Rainer Schwarz",
-        "Klaus Wowereit",
-        "Ralf Kunkel"
+        "Klaus Wowereit"
       ],
       "causal_theme": []
     },
@@ -8333,6 +8603,7 @@
       "is_geicke": true,
       "actors": [
         "Rainer Schwarz",
+        "Flughafen Berlin Brandenburg GmbH",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -8386,10 +8657,10 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Manfred Körtgen",
         "Rainer Schwarz",
         "Klaus Wowereit",
-        "Matthias Platzeck",
-        "Manfred Körtgen"
+        "Matthias Platzeck"
       ],
       "causal_theme": []
     },
@@ -8475,6 +8746,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Planungsgesellschaft Berlin-Brandenburg-International",
         "Flughafen Berlin Brandenburg",
         "Meinhard von Gerkan",
         "Gerkan Marg und Partner"
@@ -8494,7 +8766,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Klaus Wowereit"
+      ],
       "causal_theme": []
     },
     {
@@ -8548,6 +8822,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Michael Odenwald",
         "Peter Ramsauer",
         "Flughafen Berlin Brandenburg"
       ],
@@ -8637,6 +8912,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Planungsgesellschaft Berlin-Brandenburg-International",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -8689,7 +8965,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg GmbH"
+        "Flughafen Berlin Brandenburg GmbH",
+        "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
     },
@@ -8722,7 +8999,9 @@
       "source_date": "18.06.2012",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Air Berlin"
+      ],
       "causal_theme": []
     },
     {
@@ -8791,6 +9070,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Planungsgesellschaft Berlin-Brandenburg-International",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -8896,7 +9176,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -9028,7 +9310,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -9117,7 +9401,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Martin Delius"
+        "Martin Delius",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -9238,7 +9523,12 @@
       "source_date": "03.11.2012",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Bündnis90/die Grünen",
+        "Flughafen Berlin Brandenburg",
+        "Sozialdemokratische Partei Deutschlands",
+        "Christlich Demokratische Union"
+      ],
       "causal_theme": []
     },
     {
@@ -9320,7 +9610,10 @@
       "source_date": "24.12.2012",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Michael Odenwald",
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -9373,7 +9666,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Horst Amann"
+        "Horst Amann",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -9390,7 +9684,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -9461,8 +9757,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Matthias Platzeck",
         "Klaus Wowereit",
-        "Matthias Platzeck"
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -9515,6 +9812,7 @@
       "is_geicke": false,
       "actors": [
         "Meinhard von Gerkan",
+        "Planungsgesellschaft Berlin-Brandenburg-International",
         "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH"
       ],
@@ -9660,7 +9958,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Matthias Platzeck"
+        "Matthias Platzeck",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -9679,7 +9978,8 @@
       "is_geicke": false,
       "actors": [
         "Matthias Platzeck",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Klaus Wowereit"
       ],
       "causal_theme": []
     },
@@ -9697,7 +9997,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Horst Amann"
+        "Horst Amann",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -9771,10 +10072,10 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Klaus Wowereit",
         "Hartmut Mehdorn",
         "Flughafen Berlin Brandenburg",
-        "Gerkan Marg und Partner",
-        "Klaus Wowereit"
+        "Gerkan Marg und Partner"
       ],
       "causal_theme": []
     },
@@ -9813,8 +10114,9 @@
       "actors": [
         "Matthias Platzeck",
         "Meinhard von Gerkan",
-        "Gerkan Marg und Partner",
-        "Flughafen Berlin Brandenburg"
+        "Planungsgesellschaft Berlin-Brandenburg-International",
+        "Flughafen Berlin Brandenburg",
+        "Gerkan Marg und Partner"
       ],
       "causal_theme": []
     },
@@ -9849,6 +10151,7 @@
       "is_geicke": false,
       "actors": [
         "Flughafen Berlin Brandenburg",
+        "Planfeststellungsbeschluss",
         "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
@@ -9867,7 +10170,9 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Gottfried Egger"
+        "Gottfried Egger",
+        "Flughafen Berlin Brandenburg GmbH",
+        "BER-Untersuchungsausschuss"
       ],
       "causal_theme": []
     },
@@ -9991,7 +10296,8 @@
       "is_geicke": false,
       "actors": [
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
     },
@@ -10028,7 +10334,10 @@
       "is_geicke": false,
       "actors": [
         "Klaus Wowereit",
-        "Rainer Schwarz"
+        "Rainer Schwarz",
+        "BER-Untersuchungsausschuss",
+        "Sozialdemokratische Partei Deutschlands",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -10065,7 +10374,9 @@
       "source_date": "31.05.2013",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "EU-Kommission"
+      ],
       "causal_theme": []
     },
     {
@@ -10135,6 +10446,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Flughafen Berlin Brandenburg",
         "Hartmut Mehdorn",
         "Matthias Platzeck"
       ],
@@ -10172,7 +10484,9 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Matthias Platzeck"
+        "Matthias Platzeck",
+        "Sozialdemokratische Partei Deutschlands",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -10190,8 +10504,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Hartmut Mehdorn",
-        "Horst Amann"
+        "Horst Amann",
+        "Hartmut Mehdorn"
       ],
       "causal_theme": []
     },
@@ -10210,6 +10524,7 @@
       "is_geicke": false,
       "actors": [
         "Hartmut Mehdorn",
+        "Deutsche Demokratische Republik",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -10228,8 +10543,9 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Andreas Otto",
         "Hartmut Mehdorn",
-        "Andreas Otto"
+        "BER-Untersuchungsausschuss"
       ],
       "causal_theme": []
     },
@@ -10299,11 +10615,11 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Hartmut Mehdorn",
         "Horst Amann",
         "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH",
-        "Klaus Wowereit"
+        "Klaus Wowereit",
+        "Hartmut Mehdorn"
       ],
       "causal_theme": []
     },
@@ -10338,7 +10654,9 @@
       "source_date": "16.10.2013;09.01.2014",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Siemens"
+      ],
       "causal_theme": []
     },
     {
@@ -10409,6 +10727,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Siemens",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -10445,7 +10764,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Horst Amann"
+        "Horst Amann",
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10465,9 +10785,10 @@
       "actors": [
         "Horst Amann",
         "Andreas Otto",
+        "Hartmut Mehdorn",
+        "Flughafen Berlin Brandenburg",
         "Klaus Wowereit",
-        "Matthias Platzeck",
-        "Hartmut Mehdorn"
+        "Matthias Platzeck"
       ],
       "causal_theme": []
     },
@@ -10504,7 +10825,9 @@
       "is_geicke": false,
       "actors": [
         "Rainer Bomba",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Christlich Demokratische Union",
+        "Bundesverkehrsministerium"
       ],
       "causal_theme": []
     },
@@ -10559,6 +10882,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Flughafen Berlin Brandenburg",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -10617,7 +10941,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Hartmut Mehdorn"
+        "Hartmut Mehdorn",
+        "Klaus Wowereit"
       ],
       "causal_theme": []
     },
@@ -10755,7 +11080,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Hartmut Mehdorn"
+        "Hartmut Mehdorn",
+        "Flughafen Berlin Brandenburg",
+        "Siemens"
       ],
       "causal_theme": []
     },
@@ -10773,7 +11100,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
     },
@@ -10807,9 +11135,10 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Hartmut Mehdorn",
         "Regina Töpfer",
-        "Horst Amann"
+        "Horst Amann",
+        "Hartmut Mehdorn",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -10828,6 +11157,7 @@
       "is_geicke": false,
       "actors": [
         "Hartmut Mehdorn",
+        "Deutsche Demokratische Republik",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -10862,7 +11192,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Olaf Nozon"
+        "Olaf Nozon",
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11006,7 +11337,9 @@
       "source_date": "27.02.2014",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Siemens"
+      ],
       "causal_theme": []
     },
     {
@@ -11022,7 +11355,9 @@
       "source_date": "01.03.2014",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Siemens"
+      ],
       "causal_theme": []
     },
     {
@@ -11039,6 +11374,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Berliner Senat",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -11057,7 +11393,9 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Dietmar Woidke"
+        "Dietmar Woidke",
+        "Sozialdemokratische Partei Deutschlands",
+        "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
     },
@@ -11075,6 +11413,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Harald Siegle",
         "Flughafen Berlin Brandenburg",
         "Hartmut Mehdorn"
       ],
@@ -11185,8 +11524,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Hartmut Mehdorn"
+        "Hartmut Mehdorn",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -11220,8 +11559,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Hartmut Mehdorn",
-        "Jochen Großmann"
+        "Jochen Großmann",
+        "Hartmut Mehdorn"
       ],
       "causal_theme": []
     },
@@ -11304,7 +11643,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "EU-Kommission"
+      ],
       "causal_theme": []
     },
     {
@@ -11321,7 +11662,9 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Jörg Marks"
+        "Jörg Marks",
+        "Siemens",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -11357,7 +11700,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Alfredo di Mauro"
+        "Alfredo di Mauro",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -11376,7 +11720,8 @@
       "is_geicke": true,
       "actors": [
         "Christian Manninger",
-        "WSP CBP Airport GmbH"
+        "WSP CBP Airport GmbH",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -11503,7 +11848,8 @@
       "is_geicke": true,
       "actors": [
         "Klaus Wowereit",
-        "Hartmut Mehdorn"
+        "Hartmut Mehdorn",
+        "Deutsche Demokratische Republik"
       ],
       "causal_theme": []
     },
@@ -11521,7 +11867,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Dietmar Woidke"
+        "Dietmar Woidke",
+        "Sozialdemokratische Partei Deutschlands",
+        "Die Linke"
       ],
       "causal_theme": []
     },
@@ -11539,7 +11887,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Jörg Marks"
+        "Jörg Marks",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -11592,7 +11941,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Rainer Schwarz"
+        "Rainer Schwarz",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -11610,7 +11960,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Gottfried Egger"
+        "Gottfried Egger",
+        "Flughafen Berlin Brandenburg GmbH",
+        "BER-Untersuchungsausschuss"
       ],
       "causal_theme": []
     },
@@ -11628,7 +11980,9 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Gottfried Egger"
+        "Air Berlin",
+        "Gottfried Egger",
+        "Lufthansa"
       ],
       "causal_theme": []
     },
@@ -11663,7 +12017,10 @@
       "source_date": "19.11.2014",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berliner Senat",
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -11681,10 +12038,12 @@
       "is_geicke": false,
       "actors": [
         "Manfred Körtgen",
+        "Bündnis90/die Grünen",
         "Andreas Otto",
+        "Martin Delius",
+        "BER-Untersuchungsausschuss",
         "Rainer Schwarz",
-        "Klaus Wowereit",
-        "Martin Delius"
+        "Klaus Wowereit"
       ],
       "causal_theme": []
     },
@@ -11738,7 +12097,10 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Rainer Bretschneider"
+        "Rainer Bretschneider",
+        "Flughafen Berlin Brandenburg",
+        "Klaus Wowereit",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -11845,7 +12207,8 @@
       "actors": [
         "Hartmut Mehdorn",
         "Heike Fölster",
-        "Jörg Marks"
+        "Jörg Marks",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -11863,8 +12226,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Hartmut Mehdorn",
-        "Dietmar Woidke"
+        "Dietmar Woidke",
+        "Hartmut Mehdorn"
       ],
       "causal_theme": []
     },
@@ -12026,6 +12389,7 @@
       "is_geicke": true,
       "actors": [
         "Karsten Mühlenfeld",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -12044,8 +12408,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Ralf Kunkel"
+        "Ralf Kunkel",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -12063,6 +12427,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Flughafen Berlin Brandenburg",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -12096,7 +12461,9 @@
       "source_date": "13.03.2015",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "EU-Kommission"
+      ],
       "causal_theme": []
     },
     {
@@ -12166,8 +12533,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Jörg Marks"
+        "Jörg Marks",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -12184,7 +12551,9 @@
       "source_date": "19.03.2015",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -12200,7 +12569,10 @@
       "source_date": "03.06.2015",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Bundesverkehrsministerium",
+        "EU-Kommission"
+      ],
       "causal_theme": []
     },
     {
@@ -12289,7 +12661,10 @@
       "is_geicke": false,
       "actors": [
         "Klaus Wowereit",
-        "Michael Müller"
+        "Michael Müller",
+        "Freie Demokratische Partei",
+        "Flughafen Berlin Brandenburg",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -12379,7 +12754,9 @@
       "source_date": "26.05.2015",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -12395,7 +12772,9 @@
       "source_date": "29.05.2015",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -12444,6 +12823,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Bundesverkehrsministerium",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -12461,7 +12841,9 @@
       "source_date": "01.06.2015",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Bundesverkehrsministerium"
+      ],
       "causal_theme": []
     },
     {
@@ -12513,8 +12895,9 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Michael Müller",
-        "Engelbert Lütke Daldrup"
+        "Engelbert Lütke Daldrup",
+        "Flughafen Berlin Brandenburg",
+        "Michael Müller"
       ],
       "causal_theme": []
     },
@@ -12532,8 +12915,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Karsten Mühlenfeld"
+        "Karsten Mühlenfeld",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -12550,7 +12933,9 @@
       "source_date": "22.06.2015",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Matthias Kollatz-Ahnen"
+      ],
       "causal_theme": []
     },
     {
@@ -12601,7 +12986,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Michael Müller"
+        "Michael Müller",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -12618,7 +13004,10 @@
       "source_date": "07.07.2015",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Lufthansa",
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -12668,7 +13057,9 @@
       "source_date": "18.08.2015",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Siemens"
+      ],
       "causal_theme": []
     },
     {
@@ -12792,7 +13183,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Michael Müller"
+        "Michael Müller",
+        "Siemens"
       ],
       "causal_theme": []
     },
@@ -12844,7 +13236,9 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Jörg Marks"
+        "Jörg Marks",
+        "BER-Untersuchungsausschuss",
+        "Siemens"
       ],
       "causal_theme": []
     },
@@ -12878,7 +13272,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Karsten Mühlenfeld"
+        "Karsten Mühlenfeld",
+        "Air Berlin"
       ],
       "causal_theme": []
     },
@@ -12912,7 +13307,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Jörg Marks"
+        "Jörg Marks",
+        "Siemens"
       ],
       "causal_theme": []
     },
@@ -12982,7 +13378,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "BER-Untersuchungsausschuss"
+      ],
       "causal_theme": []
     },
     {
@@ -13016,7 +13414,9 @@
       "source_date": "08.11.2015",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -13087,8 +13487,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Karsten Mühlenfeld",
-        "Heike Fölster"
+        "Heike Fölster",
+        "Karsten Mühlenfeld"
       ],
       "causal_theme": []
     },
@@ -13159,6 +13559,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Deutsche Demokratische Republik",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -13226,7 +13627,9 @@
       "source_date": "03.03.2016",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Berliner Senat"
+      ],
       "causal_theme": []
     },
     {
@@ -13277,6 +13680,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Harald Siegle",
+        "Flughafen Berlin Brandenburg",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -13313,8 +13718,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg GmbH",
-        "Engelbert Lütke Daldrup"
+        "Engelbert Lütke Daldrup",
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13331,7 +13736,9 @@
       "source_date": "23.04.2016",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -13347,7 +13754,9 @@
       "source_date": "26.04.2016;17.05.2016",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "EU-Kommission"
+      ],
       "causal_theme": []
     },
     {
@@ -13363,7 +13772,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -13415,7 +13826,9 @@
       "is_geicke": true,
       "actors": [
         "Rainer Schwarz",
-        "Manfred Körtgen"
+        "Manfred Körtgen",
+        "Sozialdemokratische Partei Deutschlands",
+        "Christlich Demokratische Union"
       ],
       "causal_theme": []
     },
@@ -13433,7 +13846,9 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Martin Delius"
+        "Martin Delius",
+        "Sozialdemokratische Partei Deutschlands",
+        "Christlich Demokratische Union"
       ],
       "causal_theme": []
     },
@@ -13452,6 +13867,7 @@
       "is_geicke": false,
       "actors": [
         "Andreas Otto",
+        "Bündnis90/die Grünen",
         "Klaus Wowereit",
         "Hans-Olaf Henkel"
       ],
@@ -13488,7 +13904,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Sozialdemokratische Partei Deutschlands"
+      ],
       "causal_theme": []
     },
     {
@@ -13505,12 +13923,13 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Karsten Mühlenfeld",
         "Jörg Marks",
         "Engelbert Lütke Daldrup",
+        "Rainer Bretschneider",
+        "Karsten Mühlenfeld",
         "Michael Müller",
         "Flughafen Berlin Brandenburg",
-        "Rainer Bretschneider"
+        "Die Linke"
       ],
       "causal_theme": []
     },
@@ -13546,9 +13965,10 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Michael Müller",
         "Dietmar Woidke",
-        "Rainer Bomba"
+        "Rainer Bomba",
+        "Michael Müller",
+        "Christlich Demokratische Union"
       ],
       "causal_theme": []
     },
@@ -13631,7 +14051,9 @@
       "source_date": "05.07.2016",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -13648,6 +14070,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Europäische Kommission",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -13681,7 +14104,9 @@
       "source_date": "19.08.2016",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -13838,7 +14263,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Sozialdemokratische Partei Deutschlands"
+      ],
       "causal_theme": []
     },
     {
@@ -13872,7 +14299,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Freie Demokratische Partei"
+      ],
       "causal_theme": []
     },
     {
@@ -13905,7 +14334,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Dietmar Woidke"
+        "Dietmar Woidke",
+        "Die Linke"
       ],
       "causal_theme": []
     },
@@ -14036,7 +14466,9 @@
       "source_date": "12.03.2016",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -14087,6 +14519,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Deutsche Demokratische Republik",
         "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
@@ -14140,6 +14573,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Flughafen Berlin Brandenburg",
         "Karsten Mühlenfeld"
       ],
       "causal_theme": []
@@ -14157,7 +14591,9 @@
       "source_date": null,
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -14191,6 +14627,7 @@
       "is_geicke": false,
       "actors": [
         "Karsten Mühlenfeld",
+        "Bundesanstalt für Immobilienaufgaben",
         "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
@@ -14245,7 +14682,10 @@
       "actors": [
         "Michael Müller",
         "Karsten Mühlenfeld",
-        "Engelbert Lütke Daldrup"
+        "Engelbert Lütke Daldrup",
+        "Flughafen Berlin Brandenburg GmbH",
+        "Flughafen Berlin Brandenburg",
+        "Bundesanstalt für Immobilienaufgaben"
       ],
       "causal_theme": []
     },
@@ -14297,7 +14737,9 @@
       "source_date": "10.11.2016",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -14345,7 +14787,9 @@
       "source_date": "19.11.2016",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Die Linke"
+      ],
       "causal_theme": []
     },
     {
@@ -14499,6 +14943,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Bosch",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -14569,7 +15014,10 @@
       "source_date": "18.01.2017;19.01.2017",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg GmbH",
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -14604,7 +15052,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Michael Müller"
+        "Michael Müller",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -14638,6 +15087,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Planfeststellungsbeschluss",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -14711,9 +15161,11 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Karsten Mühlenfeld",
         "Jörg Marks",
-        "Rainer Bretschneider"
+        "Karsten Mühlenfeld",
+        "Rainer Bretschneider",
+        "Deutsche Bahn",
+        "Siemens"
       ],
       "causal_theme": []
     },
@@ -14731,9 +15183,11 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Karsten Mühlenfeld",
         "Dietmar Woidke",
-        "Hartmut Mehdorn"
+        "Hartmut Mehdorn",
+        "Flughafen Berlin Brandenburg GmbH",
+        "Karsten Mühlenfeld",
+        "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
     },
@@ -14770,9 +15224,10 @@
       "is_geicke": true,
       "actors": [
         "Engelbert Lütke Daldrup",
-        "Flughafen Berlin Brandenburg",
         "Michael Müller",
-        "Jörg Marks"
+        "Jörg Marks",
+        "Flughafen Berlin Brandenburg",
+        "Die Linke"
       ],
       "causal_theme": []
     },
@@ -14829,10 +15284,10 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
+        "Engelbert Lütke Daldrup",
         "Michael Müller",
         "Karsten Mühlenfeld",
-        "Flughafen Berlin Brandenburg",
-        "Engelbert Lütke Daldrup"
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -14849,7 +15304,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg"
+      ],
       "causal_theme": []
     },
     {
@@ -14901,6 +15358,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Flughafen Berlin Brandenburg GmbH",
         "Karsten Mühlenfeld"
       ],
       "causal_theme": []
@@ -14919,8 +15377,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Michael Müller",
-        "Engelbert Lütke Daldrup"
+        "Engelbert Lütke Daldrup",
+        "Flughafen Berlin Brandenburg GmbH",
+        "Michael Müller"
       ],
       "causal_theme": []
     },
@@ -14938,9 +15397,10 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Matthias Kollatz-Ahnen",
+        "Klaus Wowereit",
         "Flughafen Berlin Brandenburg",
-        "Michael Müller",
-        "Klaus Wowereit"
+        "Michael Müller"
       ],
       "causal_theme": []
     },
@@ -14976,7 +15436,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Engelbert Lütke Daldrup"
+        "Engelbert Lütke Daldrup",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -15025,7 +15486,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berliner Senat"
+      ],
       "causal_theme": []
     },
     {
@@ -15058,8 +15521,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Engelbert Lütke Daldrup"
+        "Engelbert Lütke Daldrup",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -15093,6 +15556,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Sozialdemokratische Partei Deutschlands",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -15216,7 +15680,9 @@
       "source_date": "22.05.2017",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Sozialdemokratische Partei Deutschlands"
+      ],
       "causal_theme": []
     },
     {
@@ -15268,7 +15734,9 @@
       "source_date": "26.06.2017",
       "is_quote": false,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Bosch"
+      ],
       "causal_theme": []
     },
     {
@@ -15374,7 +15842,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Horst Amann"
+        "Horst Amann",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -15443,6 +15912,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Air Berlin",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -15460,7 +15930,9 @@
       "source_date": "17.08.2017",
       "is_quote": true,
       "is_geicke": false,
-      "actors": [],
+      "actors": [
+        "Flughafen Berlin Brandenburg GmbH"
+      ],
       "causal_theme": []
     },
     {
@@ -15493,8 +15965,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Engelbert Lütke Daldrup"
+        "Engelbert Lütke Daldrup",
+        "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
     },
@@ -15583,6 +16055,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Air Berlin",
+        "Lufthansa",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -15601,6 +16075,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Berliner Senat",
         "Stefan Paetow"
       ],
       "causal_theme": []
@@ -15741,7 +16216,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15812,8 +16288,10 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Engelbert Lütke Daldrup",
         "Flughafen Berlin Brandenburg",
-        "Engelbert Lütke Daldrup"
+        "Siemens",
+        "Bosch"
       ],
       "causal_theme": []
     },
@@ -15850,7 +16328,8 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Bosch"
       ],
       "causal_theme": []
     },
@@ -15920,6 +16399,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
+        "Bundestag",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -16040,7 +16520,8 @@
       "actors": [
         "Projekt-Planungsgesellschaft Schönefeld",
         "Flughafen Berlin-Schönefeld GmbH",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Berliner Flughafengesellschaft"
       ],
       "causal_theme": []
     },
@@ -16057,7 +16538,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berliner Flughafengesellschaft"
+      ],
       "causal_theme": []
     },
     {
@@ -16198,8 +16681,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg GmbH",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16266,7 +16749,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "IVG Immobilien AG"
+      ],
       "causal_theme": []
     },
     {
@@ -16283,6 +16768,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "IVG Holding",
+        "Deutsche Bank",
         "IVG Immobilien AG"
       ],
       "causal_theme": []
@@ -16300,7 +16787,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Berlin Brandenburg International Partner"
+      ],
       "causal_theme": []
     },
     {
@@ -16354,6 +16843,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "Planungsgesellschaft Berlin-Brandenburg-International",
         "Flughafen Berlin Brandenburg"
       ],
       "causal_theme": []
@@ -16372,6 +16862,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
+        "IGK-IGR Ingenieurgesellschaft",
         "Meinhard von Gerkan",
         "Gerkan Marg und Partner"
       ],
@@ -16406,7 +16897,9 @@
       "source_date": null,
       "is_quote": false,
       "is_geicke": true,
-      "actors": [],
+      "actors": [
+        "Bundesanstalt für Immobilienaufgaben"
+      ],
       "causal_theme": []
     },
     {

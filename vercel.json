@@ -1,0 +1,17 @@
+{
+  "outputDirectory": "viz",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    },
+    {
+      "source": "/:file.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" }
+      ]
+    }
+  ]
+}
