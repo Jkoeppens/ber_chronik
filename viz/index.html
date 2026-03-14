@@ -100,7 +100,7 @@
       overflow: hidden;
       min-width: 0;
       position: relative;
-      background: #fafaf8;
+      background: #f5f3ef;
     }
     #network-area.active { display: flex; }
     #network { width: 100%; height: 100%; }
@@ -437,7 +437,14 @@ const COLOR = {
   Personalie:"#4e79a7", Beschluss:"#59a14f", Vertrag:"#8cd17d",
   Planung:"#ff9da7", Claim:"#999",
 };
+// Pastel tones for rest state; full saturation for hover / highlight
 const NODE_COLOR = {
+  Person:  "#7fa8c9",
+  Org:     "#c9a87a",
+  Gremium: "#a08ab5",
+  Partei:  "#c47a7a",
+};
+const NODE_COLOR_ACTIVE = {
   Person:  "#4e79a7",
   Org:     "#f28e2b",
   Gremium: "#9467bd",
@@ -560,7 +567,8 @@ function _applyNetworkHighlight() {
   if (mode === "none" || !anchors || anchors.size === 0) {
     netNodeSelection.attr("opacity", 1);
     netNodeSelection.select("circle")
-      .attr("stroke",           _baseStroke)
+      .attr("fill",             d => NODE_COLOR[d.typ] || "#bbb")
+      .attr("stroke",           "#fff")
       .attr("stroke-width",     1.5)
       .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
     return;
@@ -570,15 +578,14 @@ function _applyNetworkHighlight() {
   const activeActors = active ? (actorsByAnchor.get(active) || new Set()) : new Set();
   netNodeSelection.attr("opacity", d => answerActors.has(d.id) ? 1 : DIM);
   netNodeSelection.select("circle")
+    .attr("fill",         d => answerActors.has(d.id) ? (NODE_COLOR_ACTIVE[d.typ] || "#999") : (NODE_COLOR[d.typ] || "#bbb"))
     .attr("r",            d => activeActors.has(d.id) ? nodeRadius(d) * 1.25 : nodeRadius(d))
-    .attr("stroke",       d => activeActors.has(d.id) ? "#f5c518" : _baseStroke(d))
+    .attr("stroke",       d => activeActors.has(d.id) ? "#f5c518" : "#fff")
     .attr("stroke-width", d => activeActors.has(d.id) ? 2.5 : 1.5)
     .attr("stroke-dasharray", d => activeActors.has(d.id) ? null : (summaryMap[d.id] ? null : "4,3"));
 }
 
-function _baseStroke(d) {
-  return summaryMap[d.id] ? "#fff" : "#888";
-}
+function _baseStroke(_d) { return "#fff"; }
 
 // ── Panel view state machine ──────────────────────────────────────────────────
 let viewStack   = [];
@@ -824,12 +831,14 @@ function drawNetwork(nodes, links, entriesByActor) {
     .force("link",    d3.forceLink(links).id(d => d.id).distance(80).strength(0.4))
     .force("charge",  d3.forceManyBody().strength(-220))
     .force("center",  d3.forceCenter(W / 2, H / 2))
-    .force("collide", d3.forceCollide(d => nodeRadius(d) + 4));
+    // Label width (~name.length * 6px) drives collision for labelled nodes (count ≥ 5)
+    .force("collide", d3.forceCollide(d =>
+      d.count >= 5 ? Math.max(nodeRadius(d), d.id.length * 3) + 8 : nodeRadius(d) + 6));
 
   const link = g.append("g")
     .selectAll("line").data(links).join("line")
-    .attr("stroke", "#ccc")
-    .attr("stroke-opacity", 0.6)
+    .attr("stroke", "#bbb")
+    .attr("stroke-opacity", 0.15)
     .attr("stroke-width", d => Math.min(5, 0.8 + Math.log(d.count + 1)));
 
   const node = g.append("g")
@@ -841,11 +850,10 @@ function drawNetwork(nodes, links, entriesByActor) {
       .on("end",   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
 
   node.append("circle")
-    .attr("r",              nodeRadius)
-    .attr("fill",           d => NODE_COLOR[d.typ] || "#999")
-    .attr("fill-opacity",   d => summaryMap[d.id] ? 1 : 0.5)
-    .attr("stroke",         _baseStroke)
-    .attr("stroke-width",   1.5)
+    .attr("r",                nodeRadius)
+    .attr("fill",             d => NODE_COLOR[d.typ] || "#bbb")
+    .attr("stroke",           "#fff")
+    .attr("stroke-width",     1.5)
     .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
 
   // Labels for nodes with ≥5 mentions
@@ -859,17 +867,26 @@ function drawNetwork(nodes, links, entriesByActor) {
   node
     .on("mouseenter", (event, d) => {
       showTip(`${d.count} Nennungen`, event);
-      if (hlState.mode !== "none") return;  // don't override active highlight
+      if (hlState.mode !== "none") return;
       const nbrs = neighbors.get(d.id) || new Set();
       node.attr("opacity", n => (n.id === d.id || nbrs.has(n.id)) ? 1 : DIM);
-      d3.select(event.currentTarget).select("circle").attr("r", nodeRadius(d) * 1.25);
+      d3.select(event.currentTarget).select("circle")
+        .attr("r",    nodeRadius(d) * 1.25)
+        .attr("fill", NODE_COLOR_ACTIVE[d.typ] || "#999");
+      link.attr("stroke-opacity", l => {
+        const s = l.source.id ?? l.source, t = l.target.id ?? l.target;
+        return (s === d.id || t === d.id) ? 0.6 : 0.05;
+      });
     })
     .on("mousemove", moveTip)
     .on("mouseleave", (event, d) => {
       hideTip();
-      if (hlState.mode !== "none") { _applyHighlight(); return; }  // restore highlight state
-      d3.select(event.currentTarget).select("circle").attr("r", nodeRadius(d));
+      if (hlState.mode !== "none") { _applyHighlight(); return; }
+      d3.select(event.currentTarget).select("circle")
+        .attr("r",    nodeRadius(d))
+        .attr("fill", NODE_COLOR[d.typ] || "#bbb");
       node.attr("opacity", 1);
+      link.attr("stroke-opacity", 0.15);
     })
     .on("click", (event, d) => {
       hideTip();
@@ -889,7 +906,7 @@ function drawNetwork(nodes, links, entriesByActor) {
   });
 
   const netLegendEl = document.getElementById("net-legend");
-  netLegendEl.innerHTML = Object.entries(NODE_COLOR).map(([typ, color]) => `
+  netLegendEl.innerHTML = Object.entries(NODE_COLOR_ACTIVE).map(([typ, color]) => `
     <div class="net-legend-item">
       <div class="net-legend-dot" style="background:${color}"></div>${typ}
     </div>`).join("");
