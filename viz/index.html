@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>BER Chronik 1989–2017</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f5f5f3;
+      color: #1a1a1a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 12px 24px 10px;
+      border-bottom: 1px solid #ddd;
+      background: #fff;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; }
+    header p  { font-size: 0.8rem; color: #666; margin-top: 2px; }
+
+    /* ── Tabs ── */
+    #tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .tab {
+      background: none; border: none;
+      padding: 9px 18px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: #666;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab:hover { color: #111; }
+    .tab.active { color: #111; border-bottom-color: #111; font-weight: 600; }
+
+    #main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Chart ── */
+    #chart-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 24px 16px;
+      overflow: hidden;
+      min-width: 0;
+    }
+    #chart-area.hidden { display: none; }
+    #chart-area svg { flex: 1; overflow: visible; }
+
+    #legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #e0e0e0;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #444;
+      cursor: pointer;
+      user-select: none;
+    }
+    .legend-item.dimmed { opacity: 0.35; }
+    .legend-swatch { width: 24px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+
+    .axis text { font-size: 11px; fill: #555; }
+    .axis path, .axis line { stroke: #ccc; }
+    .grid line { stroke: #e8e8e8; }
+    .grid path { stroke: none; }
+
+    .line-path { fill: none; stroke-width: 2px; transition: opacity 0.15s; }
+    .line-path.dimmed { opacity: 0.1; }
+
+    .dot { cursor: pointer; }
+    .dot.dimmed { opacity: 0.1; pointer-events: none; }
+    .dot.active { stroke: #111 !important; stroke-width: 2px !important; }
+
+    /* ── Network ── */
+    #network-area {
+      flex: 1;
+      display: none;
+      overflow: hidden;
+      min-width: 0;
+      position: relative;
+      background: #fafaf8;
+    }
+    #network-area.active { display: flex; }
+    #network { width: 100%; height: 100%; }
+
+    .net-label {
+      font-size: 10px; fill: #333;
+      pointer-events: none; user-select: none;
+    }
+
+    /* Network type legend */
+    #net-legend {
+      position: absolute;
+      bottom: 14px; left: 16px;
+      background: rgba(255,255,255,0.88);
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 8px 12px;
+      font-size: 0.72rem;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .net-legend-item { display: flex; align-items: center; gap: 6px; }
+    .net-legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%; flex-shrink: 0;
+    }
+    #net-hint {
+      position: absolute;
+      top: 12px; left: 16px;
+      font-size: 0.72rem; color: #888;
+    }
+
+    /* ── Tooltip ── */
+    #tooltip {
+      position: fixed;
+      background: rgba(20,20,20,0.85);
+      color: #fff;
+      font-size: 0.72rem;
+      padding: 5px 9px;
+      border-radius: 4px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+      z-index: 100;
+    }
+
+    /* ── Panel ── */
+    #panel {
+      width: 360px;
+      flex-shrink: 0;
+      background: #fff;
+      border-left: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.2s ease;
+    }
+    #panel.open { transform: translateX(0); }
+
+    #panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-shrink: 0;
+    }
+    #panel-title    { font-weight: 600; font-size: 0.95rem; }
+    #panel-subtitle { font-size: 0.75rem; color: #888; margin-top: 2px; }
+
+    #panel-close {
+      background: none; border: none;
+      font-size: 1.2rem; cursor: pointer;
+      color: #888; line-height: 1; padding: 0 2px; flex-shrink: 0;
+    }
+    #panel-close:hover { color: #111; }
+
+    #panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Paragraph card */
+    #para-card {}
+    .para-date   { font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+    .para-label  {
+      display: inline-block; padding: 2px 7px; border-radius: 3px;
+      font-size: 0.7rem; font-weight: 600; color: #fff; margin-bottom: 10px;
+    }
+    .para-text   { font-size: 0.85rem; line-height: 1.6; color: #222; }
+    .para-source { margin-top: 10px; font-size: 0.72rem; color: #888; }
+
+    /* Entity highlights */
+    .entity {
+      border-radius: 2px;
+      padding: 0 2px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: filter 0.1s;
+    }
+    .entity:hover { filter: brightness(0.88); }
+    .entity[data-typ="Person"]  { background: #cce0ff; color: #003580; }
+    .entity[data-typ="Org"]     { background: #ffe4c0; color: #7a3500; }
+    .entity[data-typ="Gremium"] { background: #ead5f5; color: #5a0080; }
+    .entity[data-typ="Partei"]  { background: #ffd5d5; color: #800000; }
+
+    /* Entity summary box */
+    #entity-box {
+      background: #f9f9f7;
+      border: 1px solid #e0ddd8;
+      border-radius: 6px;
+      padding: 12px 14px;
+      display: none;
+    }
+    #entity-box.visible { display: block; }
+    #entity-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    #entity-box-name { font-weight: 600; font-size: 0.88rem; }
+    #entity-box-close {
+      background: none; border: none;
+      color: #999; cursor: pointer; font-size: 1rem; line-height: 1;
+    }
+    #entity-box-close:hover { color: #333; }
+    #entity-box-back {
+      display: none;
+      background: none; border: none;
+      color: #888; cursor: pointer; font-size: 0.72rem;
+      padding: 0 0 8px 0; margin-bottom: 2px;
+    }
+    #entity-box-back:hover { color: #111; }
+    #entity-box-summary { font-size: 0.8rem; line-height: 1.55; color: #333; }
+    #entity-box-count   { margin-top: 8px; font-size: 0.7rem; color: #888; }
+
+    /* Nav */
+    #panel-nav {
+      padding: 12px 16px;
+      border-top: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    #panel-nav button {
+      background: #f0f0f0; border: 1px solid #ddd;
+      border-radius: 4px; padding: 4px 14px;
+      cursor: pointer; font-size: 1rem;
+    }
+    #panel-nav button:hover:not(:disabled) { background: #e0e0e0; }
+    #panel-nav button:disabled { opacity: 0.3; cursor: default; }
+    #para-counter { font-size: 0.8rem; color: #555; }
+
+    /* ── Entity panel mode (network click) ── */
+    #entity-panel { display: none; flex-direction: column; gap: 10px; }
+    #panel.entity-mode #entity-panel  { display: flex; }
+    #panel.entity-mode #para-card     { display: none; }
+    #panel.entity-mode #entity-box    { display: none !important; }
+    #panel.entity-mode #panel-nav     { display: none; }
+
+    .ep-summary {
+      background: #f9f9f7;
+      border: 1px solid #e0ddd8;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 0.8rem;
+      line-height: 1.55;
+      color: #333;
+    }
+    .ep-summary-count { margin-top: 6px; font-size: 0.7rem; color: #888; }
+
+    .ep-para {
+      border: 1px solid #e8e8e6;
+      border-radius: 5px;
+      padding: 10px 12px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>BER Chronik 1989–2017</h1>
+  <p>Klick auf einen Punkt für Absätze · Klick auf markierte Namen für Zusammenfassungen · Legende zum Ein-/Ausblenden</p>
+</header>
+
+<nav id="tabs">
+  <button class="tab active" id="tab-timeline">Timeline</button>
+  <button class="tab"        id="tab-network">Netzwerk</button>
+</nav>
+
+<div id="main">
+  <div id="chart-area">
+    <svg id="chart"></svg>
+    <div id="legend"></div>
+  </div>
+
+  <div id="network-area">
+    <svg id="network"></svg>
+    <div id="net-hint">Scrollen zum Zoomen · Ziehen zum Verschieben · Knoten ziehbar</div>
+    <div id="net-legend"></div>
+  </div>
+
+  <aside id="panel">
+    <div id="panel-header">
+      <div>
+        <div id="panel-title"></div>
+        <div id="panel-subtitle"></div>
+      </div>
+      <button id="panel-close">×</button>
+    </div>
+
+    <div id="panel-body">
+      <div id="para-card"></div>
+      <div id="entity-panel">
+        <div id="ep-summary"></div>
+        <div id="ep-paras"></div>
+      </div>
+      <div id="entity-box">
+        <div id="entity-box-header">
+          <span id="entity-box-name"></span>
+          <button id="entity-box-close">×</button>
+        </div>
+        <button id="entity-box-back">← zurück</button>
+        <div id="entity-box-summary"></div>
+        <div id="entity-box-count"></div>
+      </div>
+    </div>
+
+    <div id="panel-nav">
+      <button id="btn-prev">←</button>
+      <span id="para-counter"></span>
+      <button id="btn-next">→</button>
+    </div>
+  </aside>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────────────────────────
+const EVENT_TYPES = [
+  "Kosten","Termin","Klage","Technik",
+  "Personalie","Beschluss","Vertrag","Planung","Claim",
+];
+const COLOR = {
+  Kosten:"#f28e2b", Termin:"#e15759", Klage:"#b07aa1", Technik:"#17becf",
+  Personalie:"#4e79a7", Beschluss:"#59a14f", Vertrag:"#8cd17d",
+  Planung:"#ff9da7", Claim:"#999",
+};
+const NODE_COLOR = {
+  Person:  "#4e79a7",
+  Org:     "#f28e2b",
+  Gremium: "#9467bd",
+  Partei:  "#e15759",
+};
+
+// ── Entity lookup ─────────────────────────────────────────────────────────────
+let aliasMap      = {};   // alias (lowercase) → { normalform, typ }
+let aliasesSorted = [];   // sorted longest-first for greedy matching
+let summaryMap    = {};   // normalform → { summary, count }
+
+function buildAliasMap(csvText) {
+  const lines = csvText.split("\n").slice(1);
+  let loaded = 0;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const parts = trimmed.split(",");
+    if (parts.length < 3) { console.warn("[entity] skipping line:", trimmed); continue; }
+    const alias      = parts[0].trim();
+    const normalform = parts.slice(1, parts.length - 1).join(",").trim();
+    const typ        = parts[parts.length - 1].trim();
+    if (!alias || !normalform || !typ) continue;
+    aliasMap[alias.toLowerCase()] = { normalform, typ };
+    loaded++;
+  }
+  aliasesSorted = Object.keys(aliasMap).sort((a, b) => b.length - a.length);
+  console.log(`[entity] aliasMap built: ${loaded} aliases`);
+}
+
+// ── Text helpers ──────────────────────────────────────────────────────────────
+function escapeHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function highlightEntities(text) {
+  if (!aliasesSorted.length) return escapeHtml(text);
+  const pattern = aliasesSorted.map(escapeRegex).join("|");
+  const re = new RegExp(`(?<![\\p{L}\\d])(?:${pattern})(?![\\p{L}\\d])`, "giu");
+
+  let result = "", lastIdx = 0;
+  for (const match of text.matchAll(re)) {
+    const info = aliasMap[match[0].toLowerCase()];
+    if (!info) continue;
+    result += escapeHtml(text.slice(lastIdx, match.index));
+    result += `<span class="entity" data-typ="${info.typ}" data-name="${escapeHtml(info.normalform)}">${escapeHtml(match[0])}</span>`;
+    lastIdx = match.index + match[0].length;
+  }
+  return result + escapeHtml(text.slice(lastIdx));
+}
+
+// ── Entity summary box ────────────────────────────────────────────────────────
+let currentEntity  = null;
+let previousEntity = null;
+
+function showEntityBox(normalform, isBack = false) {
+  if (isBack) {
+    previousEntity = null;
+  } else if (currentEntity && currentEntity !== normalform) {
+    previousEntity = currentEntity;
+  }
+  currentEntity = normalform;
+
+  document.getElementById("entity-box-back").style.display = previousEntity ? "block" : "none";
+  document.getElementById("entity-box-name").textContent = normalform;
+
+  const info      = summaryMap[normalform];
+  const summaryEl = document.getElementById("entity-box-summary");
+  const countEl   = document.getElementById("entity-box-count");
+
+  if (info && info.summary) {
+    summaryEl.innerHTML = highlightEntities(info.summary);
+    countEl.textContent = `${info.count} Nennungen in der Chronik`;
+    summaryEl.style.display = "";
+    countEl.style.display   = "";
+  } else {
+    summaryEl.textContent = "Keine Zusammenfassung verfügbar (< 3 Nennungen).";
+    countEl.style.display = "none";
+  }
+
+  const box = document.getElementById("entity-box");
+  box.classList.add("visible");
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function closeEntityBox() {
+  document.getElementById("entity-box").classList.remove("visible");
+  currentEntity  = null;
+  previousEntity = null;
+}
+
+document.getElementById("entity-box-close").onclick = closeEntityBox;
+document.getElementById("entity-box-back").onclick  = () => {
+  if (previousEntity) showEntityBox(previousEntity, true);
+};
+
+document.getElementById("panel-body").addEventListener("click", e => {
+  const ent = e.target.closest(".entity");
+  if (!ent) return;
+  const norm = ent.dataset.name;
+
+  // Entity-panel mode (network): clicking an entity navigates to that entity
+  if (document.getElementById("panel").classList.contains("entity-mode")) {
+    openEntityPanel(norm);
+    return;
+  }
+
+  // Timeline mode: toggle entity summary box
+  if (ent.closest("#entity-box-summary")) {
+    showEntityBox(norm);
+    return;
+  }
+  const box = document.getElementById("entity-box");
+  if (box.classList.contains("visible") && currentEntity === norm) {
+    closeEntityBox();
+  } else {
+    showEntityBox(norm);
+  }
+});
+
+// ── Para card ─────────────────────────────────────────────────────────────────
+let paraIndex = 0, parasForPanel = [], activeDot = null, dimmedTypes = new Set();
+
+function showPara(index) {
+  const p = parasForPanel[index];
+  if (!p) return;
+  paraIndex = index;
+  closeEntityBox();
+
+  const et    = p.event_type || "?";
+  const color = COLOR[et] || "#999";
+  const date  = p.date_raw || String(p.year || "");
+  const text  = p.text || "";
+  const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
+
+  document.getElementById("para-card").innerHTML = `
+    <div class="para-date">${escapeHtml(date)}</div>
+    <span class="para-label" style="background:${color}">${et}</span>
+    <div class="para-text">${highlightEntities(text)}</div>
+    ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
+  `;
+
+  document.getElementById("para-counter").textContent = `${index + 1} / ${parasForPanel.length}`;
+  document.getElementById("btn-prev").disabled = index === 0;
+  document.getElementById("btn-next").disabled = index === parasForPanel.length - 1;
+}
+
+function openPanel(title, entries) {
+  document.getElementById("panel").classList.remove("entity-mode");
+  parasForPanel = entries;
+  paraIndex = 0;
+  document.getElementById("panel-title").textContent = title;
+  document.getElementById("panel-subtitle").textContent =
+    `${entries.length} Eintr${entries.length === 1 ? "ag" : "äge"}`;
+  document.getElementById("panel").classList.add("open");
+  showPara(0);
+}
+
+function openEntityPanel(normalform) {
+  const entries = entriesByActor.get(normalform) || [];
+  const sorted  = [...entries].sort((a, b) =>
+    (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
+
+  document.getElementById("panel-title").textContent = normalform;
+  document.getElementById("panel-subtitle").textContent =
+    `${sorted.length} Eintr${sorted.length === 1 ? "ag" : "äge"}`;
+
+  // Summary block (only if Mistral summary exists)
+  const info = summaryMap[normalform];
+  document.getElementById("ep-summary").innerHTML = (info && info.summary) ? `
+    <div class="ep-summary">
+      ${highlightEntities(info.summary)}
+      <div class="ep-summary-count">${info.count} Nennungen in der Chronik</div>
+    </div>` : "";
+
+  // Paragraph list, chronologically
+  document.getElementById("ep-paras").innerHTML = sorted.map(p => {
+    const et    = p.event_type || "?";
+    const color = COLOR[et] || "#999";
+    const date  = p.date_raw || String(p.year || "");
+    const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
+    return `<div class="ep-para">
+      <div class="para-date">${escapeHtml(date)}</div>
+      <span class="para-label" style="background:${color}">${et}</span>
+      <div class="para-text">${highlightEntities(p.text || "")}</div>
+      ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
+    </div>`;
+  }).join("");
+
+  const panel = document.getElementById("panel");
+  panel.classList.add("open", "entity-mode");
+  document.getElementById("panel-body").scrollTop = 0;
+}
+
+function closePanel() {
+  document.getElementById("panel").classList.remove("open", "entity-mode");
+  closeEntityBox();
+  if (activeDot) { activeDot.classList.remove("active"); activeDot = null; }
+}
+
+document.getElementById("panel-close").onclick = closePanel;
+document.getElementById("btn-prev").onclick = () => showPara(paraIndex - 1);
+document.getElementById("btn-next").onclick = () => showPara(paraIndex + 1);
+
+document.addEventListener("keydown", e => {
+  if (!document.getElementById("panel").classList.contains("open")) return;
+  if (e.key === "ArrowRight") showPara(Math.min(paraIndex + 1, parasForPanel.length - 1));
+  if (e.key === "ArrowLeft")  showPara(Math.max(paraIndex - 1, 0));
+  if (e.key === "Escape")     closePanel();
+});
+
+// ── Tooltip ───────────────────────────────────────────────────────────────────
+const tip = document.getElementById("tooltip");
+function showTip(html, e) { tip.innerHTML = html; tip.style.opacity = 1; moveTip(e); }
+function moveTip(e) {
+  tip.style.left = (e.clientX + 12) + "px";
+  tip.style.top  = (e.clientY - 28) + "px";
+}
+function hideTip() { tip.style.opacity = 0; }
+
+// ── Timeline chart ────────────────────────────────────────────────────────────
+function drawChart(series, years) {
+  const svg    = d3.select("#chart");
+  const margin = { top: 16, right: 20, bottom: 36, left: 38 };
+  svg.selectAll("*").remove();
+
+  const W = svg.node().clientWidth  || 800;
+  const H = svg.node().clientHeight || 380;
+  const w = W - margin.left - margin.right;
+  const h = H - margin.top  - margin.bottom;
+
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+  const x = d3.scaleLinear().domain([1989, 2017]).range([0, w]);
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(series, s => d3.max(s.values, v => v.count))]).nice()
+    .range([h, 0]);
+
+  g.append("g").attr("class","grid")
+    .call(d3.axisLeft(y).ticks(5).tickSize(-w).tickFormat(""));
+  g.append("g").attr("class","axis").attr("transform",`translate(0,${h})`)
+    .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(15).tickSize(4));
+  g.append("g").attr("class","axis")
+    .call(d3.axisLeft(y).ticks(5).tickSize(4));
+
+  const line = d3.line()
+    .x(v => x(v.year)).y(v => y(v.count))
+    .curve(d3.curveMonotoneX);
+
+  series.forEach(s => {
+    g.append("path").datum(s.values)
+      .attr("class", "line-path" + (dimmedTypes.has(s.et) ? " dimmed" : ""))
+      .attr("id", `line-${s.et}`)
+      .attr("stroke", COLOR[s.et])
+      .attr("d", line);
+
+    g.selectAll(null)
+      .data(s.values.filter(v => v.count > 0))
+      .join("circle")
+      .attr("class", "dot" + (dimmedTypes.has(s.et) ? " dimmed" : ""))
+      .attr("cx", v => x(v.year)).attr("cy", v => y(v.count))
+      .attr("r", 4)
+      .attr("fill", COLOR[s.et]).attr("stroke", "#fff").attr("stroke-width", 1.5)
+      .on("mouseenter", (event, v) => showTip(`<b>${v.year}</b> · ${s.et}: ${v.count}`, event))
+      .on("mousemove", moveTip).on("mouseleave", hideTip)
+      .on("click", (event, v) => {
+        hideTip();
+        if (activeDot) activeDot.classList.remove("active");
+        activeDot = event.currentTarget;
+        activeDot.classList.add("active");
+        openPanel(`${v.year} · ${s.et}`, v.entries);
+      });
+  });
+}
+
+// ── Network graph ─────────────────────────────────────────────────────────────
+function nodeRadius(d) { return Math.max(5, Math.sqrt(d.count) * 3); }
+
+function drawNetwork(nodes, links, entriesByActor) {
+  const svg = d3.select("#network");
+  svg.selectAll("*").remove();
+
+  const W = svg.node().clientWidth  || 800;
+  const H = svg.node().clientHeight || 600;
+
+  const g = svg.append("g");
+
+  svg.call(d3.zoom()
+    .scaleExtent([0.15, 5])
+    .on("zoom", e => g.attr("transform", e.transform)));
+
+  const sim = d3.forceSimulation(nodes)
+    .force("link",    d3.forceLink(links).id(d => d.id).distance(80).strength(0.4))
+    .force("charge",  d3.forceManyBody().strength(-220))
+    .force("center",  d3.forceCenter(W / 2, H / 2))
+    .force("collide", d3.forceCollide(d => nodeRadius(d) + 4));
+
+  // Edges
+  const link = g.append("g")
+    .selectAll("line").data(links).join("line")
+    .attr("stroke", "#ccc")
+    .attr("stroke-opacity", 0.6)
+    .attr("stroke-width", d => Math.min(5, 0.8 + Math.log(d.count + 1)));
+
+  // Node groups
+  const node = g.append("g")
+    .selectAll("g").data(nodes).join("g")
+    .attr("cursor", "pointer")
+    .call(d3.drag()
+      .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on("drag",  (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on("end",   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+  node.append("circle")
+    .attr("r",              nodeRadius)
+    .attr("fill",           d => NODE_COLOR[d.typ] || "#999")
+    .attr("fill-opacity",   d => summaryMap[d.id] ? 1 : 0.5)
+    .attr("stroke",         d => summaryMap[d.id] ? "#fff" : "#888")
+    .attr("stroke-width",   1.5)
+    .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
+
+  // Labels: only for nodes with enough mentions (surname only to save space)
+  node.filter(d => d.count >= 5)
+    .append("text")
+    .attr("class", "net-label")
+    .attr("dy",           d => nodeRadius(d) + 11)
+    .attr("text-anchor", "middle")
+    .text(d => d.id.split(" ").slice(-1)[0]);
+
+  node
+    .on("mouseenter", (event, d) =>
+      showTip(`<b>${escapeHtml(d.id)}</b> · ${d.count} Nennungen`, event))
+    .on("mousemove", moveTip)
+    .on("mouseleave", hideTip)
+    .on("click", (event, d) => {
+      hideTip();
+      openEntityPanel(d.id);
+    });
+
+  sim.on("tick", () => {
+    link
+      .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+  });
+
+  // Type legend
+  const netLegendEl = document.getElementById("net-legend");
+  netLegendEl.innerHTML = Object.entries(NODE_COLOR).map(([typ, color]) => `
+    <div class="net-legend-item">
+      <div class="net-legend-dot" style="background:${color}"></div>${typ}
+    </div>`).join("");
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+let networkDrawn  = false;
+let netNodes = [], netLinks = [], entriesByActor = new Map();
+
+document.getElementById("tab-timeline").addEventListener("click", () => {
+  document.getElementById("tab-timeline").classList.add("active");
+  document.getElementById("tab-network").classList.remove("active");
+  document.getElementById("chart-area").classList.remove("hidden");
+  document.getElementById("network-area").classList.remove("active");
+});
+
+document.getElementById("tab-network").addEventListener("click", () => {
+  document.getElementById("tab-network").classList.add("active");
+  document.getElementById("tab-timeline").classList.remove("active");
+  document.getElementById("chart-area").classList.add("hidden");
+  document.getElementById("network-area").classList.add("active");
+  if (!networkDrawn) {
+    drawNetwork(netNodes, netLinks, entriesByActor);
+    networkDrawn = true;
+  }
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+Promise.all([
+  fetch("data.json").then(r => r.json()),
+  fetch("../config/entities_seed.csv").then(r => r.text())
+    .catch(() => ""),
+  fetch("entities_summary.json").then(r => r.json())
+    .catch(() => ({})),
+]).then(([{ entries }, csvText, summaries]) => {
+
+  buildAliasMap(csvText);
+  summaryMap = summaries;
+
+  // ── Timeline series ──
+  const years  = d3.range(1989, 2018);
+  const byYear = d3.group(entries.filter(e => e.year), e => e.year);
+
+  const series = EVENT_TYPES.map(et => ({
+    et,
+    values: years.map(year => ({
+      year,
+      count:   (byYear.get(year) || []).filter(e => e.event_type === et).length,
+      entries: (byYear.get(year) || []).filter(e => e.event_type === et),
+    })),
+  }));
+
+  drawChart(series, years);
+  new ResizeObserver(() => drawChart(series, years)).observe(
+    document.getElementById("chart"));
+
+  const legend = document.getElementById("legend");
+  EVENT_TYPES.forEach(et => {
+    const item = document.createElement("div");
+    item.className = "legend-item";
+    item.innerHTML = `<div class="legend-swatch" style="background:${COLOR[et]}"></div>${et}`;
+    item.addEventListener("click", () => {
+      dimmedTypes.has(et) ? dimmedTypes.delete(et) : dimmedTypes.add(et);
+      drawChart(series, years);
+      document.querySelectorAll(".legend-item").forEach((el, i) =>
+        el.classList.toggle("dimmed", dimmedTypes.has(EVENT_TYPES[i])));
+    });
+    legend.appendChild(item);
+  });
+
+  // ── Network data ──
+  const nodeCounts = new Map();
+  const edgeCounts = new Map();
+
+  for (const entry of entries) {
+    const actors = Array.isArray(entry.actors) ? entry.actors : [];
+    for (const a of actors) {
+      nodeCounts.set(a, (nodeCounts.get(a) || 0) + 1);
+      if (!entriesByActor.has(a)) entriesByActor.set(a, []);
+      entriesByActor.get(a).push(entry);
+    }
+    for (let i = 0; i < actors.length; i++) {
+      for (let j = i + 1; j < actors.length; j++) {
+        const key = [actors[i], actors[j]].sort().join("\x00");
+        edgeCounts.set(key, (edgeCounts.get(key) || 0) + 1);
+      }
+    }
+  }
+
+  netNodes = [...nodeCounts.entries()].map(([id, count]) => ({
+    id, count,
+    typ: aliasMap[id.toLowerCase()]?.typ || "Org",
+  }));
+
+  // Only edges with ≥ 2 co-occurrences to reduce clutter
+  netLinks = [...edgeCounts.entries()]
+    .filter(([, count]) => count >= 2)
+    .map(([key, count]) => {
+      const [source, target] = key.split("\x00");
+      return { source, target, count };
+    });
+
+}).catch(err => {
+  document.getElementById("chart-area").innerHTML =
+    `<p style="color:#c00;padding:20px">
+      Fehler: ${err.message}<br><br>
+      Starte mit: <code>python3 -m http.server 8765</code> (aus dem Projektordner)
+    </p>`;
+});
+</script>
+</body>
+</html>
