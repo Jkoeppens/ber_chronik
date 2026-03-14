@@ -515,6 +515,22 @@ let netNeighbors     = null;   // Map<id, Set<id>> built in drawNetwork
 
 const DIM = 0.35;  // opacity for "rest" nodes when something is highlighted
 
+// ── Timeline highlight ────────────────────────────────────────────────────────
+let chartDotSelection  = null;   // D3 selection of all .dot circles, set in drawChart
+let highlightedAnchors = null;   // Set<string> of active doc_anchors, or null
+
+function applyTimelineHighlight(anchorSet) {
+  highlightedAnchors = anchorSet || null;
+  if (!chartDotSelection) return;
+  if (!anchorSet || anchorSet.size === 0) {
+    chartDotSelection.attr("r", 4).attr("opacity", null);
+    return;
+  }
+  chartDotSelection
+    .attr("r",       v => v.anchorSet && [...anchorSet].some(a => v.anchorSet.has(a)) ? 7 : 4)
+    .attr("opacity", v => v.anchorSet && [...anchorSet].some(a => v.anchorSet.has(a)) ? 1 : DIM);
+}
+
 function _baseStroke(d) {
   return summaryMap[d.id] ? "#fff" : "#888";
 }
@@ -577,6 +593,7 @@ function goHome() {
   viewStack      = [];
   selectedEntity = null;
   applyNetworkHighlight(null);
+  applyTimelineHighlight(null);
   if (activeDot) { activeDot.classList.remove("active"); activeDot = null; }
   currentView = { type: "chat", title: "Suche", renderFn: null, entityKey: null };
   _renderView(currentView);
@@ -940,6 +957,7 @@ function renderChatAnswer(viewEl, question, mode, content) {
       ${data.keywords?.length ? `<div class="chat-params">Keywords: ${data.keywords.join(", ")}</div>` : ""}
       ${sourcesHTML}
     `;
+    applyTimelineHighlight(new Set(data.sources || []));
   } else {
     const { hits, keywords } = content;
     const cards = hits.length
@@ -963,6 +981,7 @@ function renderChatAnswer(viewEl, question, mode, content) {
       ${hits.length ? `<div class="chat-params">${hits.length} Treffer · Keywords: ${keywords.join(", ")}</div>` : ""}
       <div class="chat-hits">${cards}</div>
     `;
+    applyTimelineHighlight(new Set(hits.map(h => h.doc_anchor).filter(Boolean)));
   }
 }
 
@@ -1040,16 +1059,24 @@ Promise.all([
 
   const series = EVENT_TYPES.map(et => ({
     et,
-    values: years.map(year => ({
-      year,
-      count:   (byYear.get(year) || []).filter(e => e.event_type === et).length,
-      entries: (byYear.get(year) || []).filter(e => e.event_type === et),
-    })),
+    values: years.map(year => {
+      const ents = (byYear.get(year) || []).filter(e => e.event_type === et);
+      return {
+        year,
+        count:     ents.length,
+        entries:   ents,
+        anchorSet: new Set(ents.map(e => e.doc_anchor).filter(Boolean)),
+      };
+    }),
   }));
 
   drawChart(series, years);
   new ResizeObserver(() => drawChart(series, years)).observe(
     document.getElementById("chart"));
+
+  // Store dot selection for timeline highlighting; re-apply active highlight after redraw
+  chartDotSelection = svg.selectAll("circle.dot");
+  if (highlightedAnchors) applyTimelineHighlight(highlightedAnchors);
 
   const legend = document.getElementById("legend");
   EVENT_TYPES.forEach(et => {
