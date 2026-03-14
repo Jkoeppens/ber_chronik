@@ -498,21 +498,33 @@ function highlightWithKeywords(text, keywords) {
 // ── Entity + network highlight ────────────────────────────────────────────────
 let selectedEntity   = null;
 let netNodeSelection = null;
+let netNeighbors     = null;   // Map<id, Set<id>> built in drawNetwork
+
+const DIM = 0.35;  // opacity for "rest" nodes when something is highlighted
+
+function _baseStroke(d) {
+  return summaryMap[d.id] ? "#fff" : "#888";
+}
 
 function applyNetworkHighlight(normalform) {
   if (!netNodeSelection) return;
+  // Restore base radius first (hover may have enlarged it)
+  netNodeSelection.select("circle").attr("r", nodeRadius);
   if (!normalform) {
+    // Rest state: everything fully visible
     netNodeSelection.attr("opacity", 1);
     netNodeSelection.select("circle")
-      .attr("stroke",           d => summaryMap[d.id] ? "#fff" : "#888")
+      .attr("stroke",           _baseStroke)
       .attr("stroke-width",     1.5)
       .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
     return;
   }
-  netNodeSelection.attr("opacity", d => d.id === normalform ? 1 : 0.15);
+  const nbrs = netNeighbors?.get(normalform) || new Set();
+  netNodeSelection.attr("opacity", d =>
+    (d.id === normalform || nbrs.has(d.id)) ? 1 : DIM);
   netNodeSelection.select("circle")
-    .attr("stroke",           d => d.id === normalform ? "#f5c518" : (summaryMap[d.id] ? "#fff" : "#888"))
-    .attr("stroke-width",     d => d.id === normalform ? 3.5 : 1.5)
+    .attr("stroke",           d => d.id === normalform ? "#f5c518" : _baseStroke(d))
+    .attr("stroke-width",     d => d.id === normalform ? 3 : 1.5)
     .attr("stroke-dasharray", d => d.id === normalform ? null : (summaryMap[d.id] ? null : "4,3"));
 }
 
@@ -698,6 +710,16 @@ function drawNetwork(nodes, links, entriesByActor) {
     .scaleExtent([0.15, 5])
     .on("zoom", e => g.attr("transform", e.transform)));
 
+  // Build adjacency map before D3 mutates link source/target to objects
+  const neighbors = new Map();
+  nodes.forEach(d => neighbors.set(d.id, new Set()));
+  links.forEach(l => {
+    const sid = typeof l.source === "object" ? l.source.id : l.source;
+    const tid = typeof l.target === "object" ? l.target.id : l.target;
+    if (neighbors.has(sid)) neighbors.get(sid).add(tid);
+    if (neighbors.has(tid)) neighbors.get(tid).add(sid);
+  });
+
   const sim = d3.forceSimulation(nodes)
     .force("link",    d3.forceLink(links).id(d => d.id).distance(80).strength(0.4))
     .force("charge",  d3.forceManyBody().strength(-220))
@@ -722,30 +744,44 @@ function drawNetwork(nodes, links, entriesByActor) {
     .attr("r",              nodeRadius)
     .attr("fill",           d => NODE_COLOR[d.typ] || "#999")
     .attr("fill-opacity",   d => summaryMap[d.id] ? 1 : 0.5)
-    .attr("stroke",         d => summaryMap[d.id] ? "#fff" : "#888")
+    .attr("stroke",         _baseStroke)
     .attr("stroke-width",   1.5)
     .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
 
+  // Labels for nodes with ≥5 mentions
   node.filter(d => d.count >= 5)
     .append("text")
     .attr("class", "net-label")
-    .attr("dy",           d => nodeRadius(d) + 11)
+    .attr("dy",          d => nodeRadius(d) + 11)
     .attr("text-anchor", "middle")
     .text(d => d.id);
 
   node
-    .on("mouseenter", (event, d) =>
-      showTip(`<b>${escapeHtml(d.id)}</b> · ${d.count} Nennungen`, event))
+    .on("mouseenter", (event, d) => {
+      // Tooltip: only count (name is already on the label)
+      showTip(`${d.count} Nennungen`, event);
+      if (selectedEntity) return;
+      const nbrs = neighbors.get(d.id) || new Set();
+      node.attr("opacity", n => (n.id === d.id || nbrs.has(n.id)) ? 1 : DIM);
+      d3.select(event.currentTarget).select("circle")
+        .attr("r", nodeRadius(d) * 1.25);
+    })
     .on("mousemove", moveTip)
-    .on("mouseleave", hideTip)
+    .on("mouseleave", (event, d) => {
+      hideTip();
+      d3.select(event.currentTarget).select("circle").attr("r", nodeRadius(d));
+      if (selectedEntity) return;
+      node.attr("opacity", 1);
+    })
     .on("click", (event, d) => {
       hideTip();
       selectEntity(d.id);
     });
 
-  // Store selection for external highlight updates
+  // Store for applyNetworkHighlight
   netNodeSelection = node;
-  // Re-apply any existing selection after redraw
+  netNeighbors     = neighbors;
+  // Re-apply any active selection after redraw
   if (selectedEntity) applyNetworkHighlight(selectedEntity);
 
   sim.on("tick", () => {
