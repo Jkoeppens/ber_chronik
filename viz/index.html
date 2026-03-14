@@ -649,6 +649,16 @@ function selectEntity(normalform) {
 }
 
 document.getElementById("panel-content").addEventListener("click", e => {
+  // Source-ref anchor: scroll target into view inside the panel container
+  const ref = e.target.closest("a.src-ref");
+  if (ref) {
+    e.preventDefault();
+    const targetId = ref.getAttribute("href").slice(1); // strip leading #
+    document.getElementById(targetId)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  // Entity highlight click
   const ent = e.target.closest(".entity");
   if (!ent) return;
   selectEntity(ent.dataset.name);
