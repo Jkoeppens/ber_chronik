@@ -27,7 +27,7 @@ load_dotenv()
 # ── Config ────────────────────────────────────────────────────────────────────
 MODEL          = "claude-haiku-4-5-20251001"
 MAX_PARAGRAPHS = 20
-DATA_PATH      = Path(__file__).parent.parent / "viz" / "data.json"
+DATA_PATH      = Path(__file__).resolve().parent.parent / "viz" / "data.json"
 
 client  = anthropic.Anthropic()
 limiter = Limiter(key_func=get_remote_address)
@@ -188,4 +188,4 @@ def chat(req: ChatRequest, request: Request) -> ChatResponse:
 
 @app.get("/health")
 def health() -> dict[str, Any]:
-    return {"status": "ok", "entries": len(ENTRIES)}
+    return {"status": "ok"}
