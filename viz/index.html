@@ -106,7 +106,7 @@
     #network { width: 100%; height: 100%; }
 
     .net-label {
-      font-size: 10px; fill: #333;
+      fill: #333;
       pointer-events: none; user-select: none;
     }
 
@@ -831,6 +831,7 @@ function drawChart(series, years) {
 
 // ── Network graph ─────────────────────────────────────────────────────────────
 function nodeRadius(d) { return Math.max(5, Math.sqrt(d.count) * 3); }
+function labelSize(d)  { return Math.max(7.5, Math.min(12, nodeRadius(d) * 0.4 + 5.5)); }
 
 function drawNetwork(nodes, links, entriesByActor) {
   const svg = d3.select("#network");
@@ -859,9 +860,9 @@ function drawNetwork(nodes, links, entriesByActor) {
     .force("link",    d3.forceLink(links).id(d => d.id).distance(80).strength(0.4))
     .force("charge",  d3.forceManyBody().strength(-220))
     .force("center",  d3.forceCenter(W / 2, H / 2))
-    // Label width (~name.length * 6px) drives collision for labelled nodes (count ≥ 5)
+    // Label half-width (chars × ~0.32 × fontSize) drives collision for all nodes
     .force("collide", d3.forceCollide(d =>
-      d.count >= 5 ? Math.max(nodeRadius(d), d.id.length * 3) + 8 : nodeRadius(d) + 6));
+      Math.max(nodeRadius(d), d.id.length * labelSize(d) * 0.32) + 6));
 
   const link = g.append("g")
     .selectAll("line").data(links).join("line")
@@ -884,12 +885,11 @@ function drawNetwork(nodes, links, entriesByActor) {
     .attr("stroke-width",     1.5)
     .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
 
-  // Labels for nodes with ≥5 mentions
-  node.filter(d => d.count >= 5)
-    .append("text")
-    .attr("class", "net-label")
-    .attr("dy",          d => nodeRadius(d) + 11)
+  node.append("text")
+    .attr("class",       "net-label")
+    .attr("dy",          d => nodeRadius(d) + labelSize(d) + 2)
     .attr("text-anchor", "middle")
+    .style("font-size",  d => `${labelSize(d)}px`)
     .text(d => d.id);
 
   node
