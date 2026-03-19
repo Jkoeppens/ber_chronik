@@ -366,10 +366,11 @@
       transition: filter 0.1s;
     }
     .entity:hover { filter: brightness(0.88); }
-    .entity[data-typ="Person"]  { background: #cce0ff; color: #003580; }
-    .entity[data-typ="Org"]     { background: #ffe4c0; color: #7a3500; }
-    .entity[data-typ="Gremium"] { background: #ead5f5; color: #5a0080; }
-    .entity[data-typ="Partei"]  { background: #ffd5d5; color: #800000; }
+    .entity[data-typ="Person"],  .entity-self[data-typ="Person"]  { background: #cce0ff; color: #003580; }
+    .entity[data-typ="Org"],     .entity-self[data-typ="Org"]     { background: #ffe4c0; color: #7a3500; }
+    .entity[data-typ="Gremium"], .entity-self[data-typ="Gremium"] { background: #ead5f5; color: #5a0080; }
+    .entity[data-typ="Partei"],  .entity-self[data-typ="Partei"]  { background: #ffd5d5; color: #800000; }
+    .entity-self { border-radius: 2px; padding: 0 2px; font-weight: 500; pointer-events: none; }
 
 
     .ep-summary {
@@ -519,7 +520,7 @@ function highlightEntityOnly(text, normalform) {
   let result = "", lastIdx = 0;
   for (const match of text.matchAll(re)) {
     result += escapeHtml(text.slice(lastIdx, match.index));
-    result += `<span class="entity" data-typ="${info.typ}" data-name="${escapeHtml(normalform)}">${escapeHtml(match[0])}</span>`;
+    result += `<span class="entity-self" data-typ="${info.typ}">${escapeHtml(match[0])}</span>`;
     lastIdx = match.index + match[0].length;
   }
   return result + escapeHtml(text.slice(lastIdx));
