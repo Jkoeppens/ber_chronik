@@ -18,9 +18,9 @@ Linke,Die Linke,Org
 EU-Kommission,EU-Kommission,Org
 EBA,Eisenbahn-Bundesamt,Org
 Europäische Kommission,Europäische Kommission,Org
-BBI,Flughafen Berlin Brandenburg,Org
-BER,Flughafen Berlin Brandenburg,Org
-Flughafen Berlin Brandenburg,Flughafen Berlin Brandenburg,Org
+BBI,Flughafen Berlin Brandenburg GmbH,Org
+BER,Flughafen Berlin Brandenburg GmbH,Org
+Flughafen Berlin Brandenburg,Flughafen Berlin Brandenburg GmbH,Org
 FBB,Flughafen Berlin Brandenburg GmbH,Org
 Flughafen Berlin Brandenburg GmbH,Flughafen Berlin Brandenburg GmbH,Org
 FBS,Flughafen Berlin-Schönefeld GmbH,Org
@@ -33,8 +33,9 @@ gmp,Gerkan Marg und Partner,Org
 Hochtief,Hochtief AG,Org
 Hochtief-Konsortium,Hochtief-Konsortium,Org
 IGK-IGR Ingenieurgesellschaft,IGK-IGR Ingenieurgesellschaft,Org
-IVG Holding,IVG Holding,Org
-IVG,IVG Immobilien AG,Org
+IVG Holding,IVG,Org
+IVG,IVG,Org
+IVG Immobilien AG,IVG,Org
 LEG,Landesentwicklungsgesellschaft Brandenburg,Org
 Lufthansa,Lufthansa,Org
 McKinsey,McKinsey,Org

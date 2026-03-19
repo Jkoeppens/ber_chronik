@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-14",
+  "generated": "2026-03-19",
   "count": 949,
   "entries": [
     {
@@ -1830,7 +1830,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "IVG Immobilien AG",
+        "IVG",
         "Siemens"
       ],
       "causal_theme": []
@@ -1904,7 +1904,7 @@
       "is_geicke": true,
       "actors": [
         "Michael Müller",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -2280,7 +2280,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Berlin Brandenburg Flughafen Holding GmbH"
       ],
       "causal_theme": []
@@ -2299,7 +2299,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -2336,7 +2336,7 @@
       "is_geicke": false,
       "actors": [
         "Hochtief AG",
-        "IVG Immobilien AG"
+        "IVG"
       ],
       "causal_theme": []
     },
@@ -2445,7 +2445,7 @@
         "Hochtief AG",
         "Eberhard Diepgen",
         "Berlin Brandenburg Flughafen Holding GmbH",
-        "IVG Immobilien AG"
+        "IVG"
       ],
       "causal_theme": []
     },
@@ -2539,7 +2539,7 @@
       "is_geicke": false,
       "actors": [
         "Franz Müntefering",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Eberhard Diepgen",
         "Manfred Stolpe"
       ],
@@ -2597,7 +2597,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -2615,7 +2615,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "IVG Immobilien AG"
+        "IVG"
       ],
       "causal_theme": []
     },
@@ -2687,7 +2687,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "IVG Immobilien AG",
+        "IVG",
         "Hochtief AG",
         "Annette Fugmann-Heesing",
         "Berlin Brandenburg Flughafen Holding GmbH"
@@ -2787,7 +2787,7 @@
       "is_geicke": false,
       "actors": [
         "Hochtief AG",
-        "IVG Immobilien AG",
+        "IVG",
         "Hans-Peter Keitel"
       ],
       "causal_theme": []
@@ -3204,7 +3204,7 @@
         "Berlin Brandenburg Flughafen Holding GmbH",
         "Projekt-Planungsgesellschaft Schönefeld",
         "Hochtief-Konsortium",
-        "IVG Immobilien AG",
+        "IVG",
         "PEG"
       ],
       "causal_theme": []
@@ -3241,7 +3241,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "IVG Immobilien AG",
+        "IVG",
         "Projekt-Planungsgesellschaft Schönefeld",
         "Berlin Brandenburg Flughafen Holding GmbH",
         "PEG",
@@ -3421,7 +3421,7 @@
       "is_geicke": false,
       "actors": [
         "Volker Kähne",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -3443,7 +3443,7 @@
         "Eberhard Diepgen",
         "Manfred Stolpe",
         "Hochtief AG",
-        "IVG Immobilien AG",
+        "IVG",
         "Hans-Peter Keitel"
       ],
       "causal_theme": []
@@ -3479,7 +3479,7 @@
       "is_geicke": false,
       "actors": [
         "Hochtief AG",
-        "IVG Immobilien AG"
+        "IVG"
       ],
       "causal_theme": []
     },
@@ -3498,7 +3498,7 @@
       "is_geicke": false,
       "actors": [
         "Hochtief AG",
-        "IVG Immobilien AG",
+        "IVG",
         "Berlin Brandenburg International Partner"
       ],
       "causal_theme": []
@@ -3587,11 +3587,10 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "IVG Holding",
+        "IVG",
         "EU-Kommission",
         "Berlin Brandenburg Flughafen Holding GmbH",
         "Hochtief AG",
-        "IVG Immobilien AG",
         "Berlin Brandenburg International Partner"
       ],
       "causal_theme": []
@@ -3642,7 +3641,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -3678,9 +3677,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "IVG Holding",
+        "IVG",
         "Hochtief AG",
-        "IVG Immobilien AG",
         "Berlin Brandenburg International Partner",
         "Berlin Brandenburg Flughafen Holding GmbH"
       ],
@@ -3777,7 +3775,7 @@
       "is_geicke": false,
       "actors": [
         "Hochtief AG",
-        "IVG Immobilien AG",
+        "IVG",
         "Berlin Brandenburg International Partner",
         "Berlin Brandenburg Flughafen Holding GmbH",
         "Hochtief-Konsortium"
@@ -3929,8 +3927,8 @@
         "Klaus Wowereit",
         "Berlin Brandenburg Flughafen Holding GmbH",
         "Hochtief AG",
-        "IVG Immobilien AG",
-        "Flughafen Berlin Brandenburg",
+        "IVG",
+        "Flughafen Berlin Brandenburg GmbH",
         "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
@@ -4039,7 +4037,7 @@
       "is_geicke": true,
       "actors": [
         "Berlin Brandenburg International Partner",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -4059,7 +4057,7 @@
       "actors": [
         "Sozialdemokratische Partei Deutschlands",
         "Partei des Demokratischen Sozialismus",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -4212,7 +4210,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "IVG Immobilien AG",
+        "IVG",
         "Hochtief AG"
       ],
       "causal_theme": []
@@ -4231,7 +4229,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Berlin Brandenburg Flughafen Holding GmbH"
       ],
       "causal_theme": []
@@ -4369,9 +4367,9 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hochtief AG",
-        "IVG Immobilien AG"
+        "IVG"
       ],
       "causal_theme": []
     },
@@ -4390,7 +4388,7 @@
       "is_geicke": false,
       "actors": [
         "Hochtief AG",
-        "IVG Immobilien AG",
+        "IVG",
         "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
@@ -4468,7 +4466,7 @@
       "actors": [
         "Eckart John von Freyend",
         "Hochtief AG",
-        "IVG Immobilien AG"
+        "IVG"
       ],
       "causal_theme": []
     },
@@ -4503,7 +4501,7 @@
       "is_geicke": false,
       "actors": [
         "Klaus Wowereit",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Berlin Brandenburg Flughafen Holding GmbH"
       ],
       "causal_theme": []
@@ -4658,7 +4656,7 @@
         "Heinz Ruhnau",
         "Lufthansa",
         "Berlin Brandenburg Flughafen Holding GmbH",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Götz Herberg"
       ],
       "causal_theme": []
@@ -4931,7 +4929,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "IVG Immobilien AG",
+        "IVG",
         "Berlin Brandenburg International Partner",
         "Hochtief AG",
         "Klaus Wowereit",
@@ -4953,7 +4951,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit"
       ],
       "causal_theme": []
@@ -4993,8 +4991,8 @@
         "Klaus Wowereit",
         "Sozialdemokratische Partei Deutschlands",
         "Hochtief AG",
-        "IVG Immobilien AG",
-        "Flughafen Berlin Brandenburg"
+        "IVG",
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5094,7 +5092,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5113,7 +5111,6 @@
       "is_geicke": false,
       "actors": [
         "Flughafen Berlin-Schönefeld GmbH",
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH",
         "Berlin Brandenburg Flughafen Holding GmbH",
         "Projekt-Planungsgesellschaft Schönefeld",
@@ -5203,9 +5200,9 @@
       "is_geicke": true,
       "actors": [
         "Thomas Weyer",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hochtief AG",
-        "IVG Immobilien AG"
+        "IVG"
       ],
       "causal_theme": []
     },
@@ -5258,7 +5255,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5276,7 +5273,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5311,7 +5308,7 @@
       "is_geicke": false,
       "actors": [
         "Planfeststellungsbeschluss",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5641,7 +5638,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5762,7 +5759,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5780,7 +5777,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5800,7 +5797,7 @@
       "actors": [
         "Dieter Johannsen-Roth",
         "Flughafen Berlin-Schönefeld GmbH",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5869,7 +5866,7 @@
       "is_geicke": false,
       "actors": [
         "Stefan Paetow",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5903,7 +5900,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5921,7 +5918,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5959,7 +5956,7 @@
       "is_geicke": false,
       "actors": [
         "Thomas Weyer",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -5993,7 +5990,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6029,7 +6026,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6047,7 +6044,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6082,7 +6079,7 @@
       "is_geicke": false,
       "actors": [
         "Rainer Schwarz",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6153,7 +6150,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6171,7 +6168,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6221,7 +6218,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6239,7 +6236,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6257,7 +6254,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6275,7 +6272,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hochtief AG"
       ],
       "causal_theme": []
@@ -6375,7 +6372,7 @@
       "is_geicke": false,
       "actors": [
         "Ralf Kunkel",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6459,7 +6456,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6493,7 +6490,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6511,7 +6508,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6531,7 +6528,7 @@
       "actors": [
         "Air Berlin",
         "Lufthansa",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6566,7 +6563,7 @@
       "is_geicke": false,
       "actors": [
         "IGK-IGR Ingenieurgesellschaft",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Gerkan Marg und Partner"
       ],
       "causal_theme": []
@@ -6636,7 +6633,7 @@
       "is_geicke": false,
       "actors": [
         "Thomas Weyer",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6654,7 +6651,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6789,7 +6786,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6809,7 +6806,7 @@
       "actors": [
         "Klaus Wowereit",
         "Ralf Kunkel",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6828,7 +6825,7 @@
       "is_geicke": false,
       "actors": [
         "Thomas Weyer",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit"
       ],
       "causal_theme": []
@@ -6848,7 +6845,7 @@
       "is_geicke": true,
       "actors": [
         "Manfred Körtgen",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -6866,7 +6863,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "EU-Kommission"
       ],
       "causal_theme": []
@@ -6970,7 +6967,7 @@
       "is_geicke": true,
       "actors": [
         "Europäische Kommission",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7005,7 +7002,7 @@
       "is_geicke": false,
       "actors": [
         "Manfred Körtgen",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7039,7 +7036,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7093,7 +7090,7 @@
       "is_geicke": false,
       "actors": [
         "Manfred Körtgen",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7112,7 +7109,7 @@
       "is_geicke": false,
       "actors": [
         "Frank Welskop",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7131,7 +7128,7 @@
       "is_geicke": false,
       "actors": [
         "Ralf Kunkel",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7150,7 +7147,7 @@
       "is_geicke": false,
       "actors": [
         "Planungsgesellschaft Berlin-Brandenburg-International",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7204,7 +7201,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
@@ -7260,7 +7257,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7481,7 +7478,7 @@
         "Manfred Körtgen",
         "Planungsgesellschaft Berlin-Brandenburg-International",
         "Klaus Wowereit",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7500,7 +7497,7 @@
       "is_geicke": false,
       "actors": [
         "Deutsche Flugsicherung",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7574,7 +7571,7 @@
         "Matthias Wissmann",
         "Eberhard Diepgen",
         "Manfred Stolpe",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit",
         "Matthias Platzeck",
         "Christlich Demokratische Union",
@@ -7615,7 +7612,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
@@ -7650,7 +7647,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7826,7 +7823,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit",
         "Manfred Stolpe"
       ],
@@ -7897,7 +7894,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7915,7 +7912,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -7986,7 +7983,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8095,7 +8092,7 @@
       "actors": [
         "Air Berlin",
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8114,7 +8111,7 @@
       "is_geicke": false,
       "actors": [
         "Ralf Kunkel",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8149,7 +8146,7 @@
       "is_geicke": true,
       "actors": [
         "Bosch",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8203,7 +8200,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8322,7 +8319,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8372,7 +8369,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Gerkan Marg und Partner"
       ],
       "causal_theme": []
@@ -8447,7 +8444,7 @@
         "Rainer Schwarz",
         "McKinsey",
         "Klaus Wowereit",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8517,7 +8514,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8603,8 +8600,7 @@
       "is_geicke": true,
       "actors": [
         "Rainer Schwarz",
-        "Flughafen Berlin Brandenburg GmbH",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8747,7 +8743,7 @@
       "is_geicke": false,
       "actors": [
         "Planungsgesellschaft Berlin-Brandenburg-International",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Meinhard von Gerkan",
         "Gerkan Marg und Partner"
       ],
@@ -8785,7 +8781,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8804,7 +8800,7 @@
       "is_geicke": false,
       "actors": [
         "WSP CBP Airport GmbH",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8824,7 +8820,7 @@
       "actors": [
         "Michael Odenwald",
         "Peter Ramsauer",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8894,7 +8890,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8913,7 +8909,7 @@
       "is_geicke": false,
       "actors": [
         "Planungsgesellschaft Berlin-Brandenburg-International",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -8931,7 +8927,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9071,7 +9067,7 @@
       "is_geicke": false,
       "actors": [
         "Planungsgesellschaft Berlin-Brandenburg-International",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9089,7 +9085,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9159,7 +9155,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9349,7 +9345,7 @@
       "actors": [
         "Ralf Kunkel",
         "Joachim Korkhaus",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9402,7 +9398,7 @@
       "is_geicke": true,
       "actors": [
         "Martin Delius",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9506,7 +9502,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9525,7 +9521,7 @@
       "is_geicke": false,
       "actors": [
         "Bündnis90/die Grünen",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Sozialdemokratische Partei Deutschlands",
         "Christlich Demokratische Union"
       ],
@@ -9561,7 +9557,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9612,7 +9608,7 @@
       "is_geicke": false,
       "actors": [
         "Michael Odenwald",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9667,7 +9663,7 @@
       "is_geicke": false,
       "actors": [
         "Horst Amann",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9685,7 +9681,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9759,7 +9755,7 @@
       "actors": [
         "Matthias Platzeck",
         "Klaus Wowereit",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9813,7 +9809,6 @@
       "actors": [
         "Meinhard von Gerkan",
         "Planungsgesellschaft Berlin-Brandenburg-International",
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
@@ -9906,7 +9901,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9924,7 +9919,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9959,7 +9954,7 @@
       "is_geicke": false,
       "actors": [
         "Matthias Platzeck",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -9978,7 +9973,7 @@
       "is_geicke": false,
       "actors": [
         "Matthias Platzeck",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit"
       ],
       "causal_theme": []
@@ -9998,7 +9993,7 @@
       "is_geicke": false,
       "actors": [
         "Horst Amann",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10016,7 +10011,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10035,7 +10030,6 @@
       "is_geicke": false,
       "actors": [
         "Wilhelm Bender",
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
@@ -10054,7 +10048,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10074,7 +10068,7 @@
       "actors": [
         "Klaus Wowereit",
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Gerkan Marg und Partner"
       ],
       "causal_theme": []
@@ -10093,7 +10087,6 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
@@ -10115,7 +10108,7 @@
         "Matthias Platzeck",
         "Meinhard von Gerkan",
         "Planungsgesellschaft Berlin-Brandenburg-International",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Gerkan Marg und Partner"
       ],
       "causal_theme": []
@@ -10150,9 +10143,8 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
-        "Planfeststellungsbeschluss",
-        "Flughafen Berlin Brandenburg GmbH"
+        "Flughafen Berlin Brandenburg GmbH",
+        "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
     },
@@ -10227,7 +10219,7 @@
       "is_geicke": false,
       "actors": [
         "Gerkan Marg und Partner",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10296,7 +10288,7 @@
       "is_geicke": false,
       "actors": [
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
@@ -10315,7 +10307,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10337,7 +10329,7 @@
         "Rainer Schwarz",
         "BER-Untersuchungsausschuss",
         "Sozialdemokratische Partei Deutschlands",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10357,7 +10349,7 @@
       "actors": [
         "Klaus Wowereit",
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10411,7 +10403,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -10446,7 +10438,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hartmut Mehdorn",
         "Matthias Platzeck"
       ],
@@ -10486,7 +10478,7 @@
       "actors": [
         "Matthias Platzeck",
         "Sozialdemokratische Partei Deutschlands",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10525,7 +10517,7 @@
       "actors": [
         "Hartmut Mehdorn",
         "Deutsche Demokratische Republik",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10616,7 +10608,6 @@
       "is_geicke": false,
       "actors": [
         "Horst Amann",
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit",
         "Hartmut Mehdorn"
@@ -10637,7 +10628,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10673,7 +10664,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10691,7 +10682,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10786,7 +10777,7 @@
         "Horst Amann",
         "Andreas Otto",
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit",
         "Matthias Platzeck"
       ],
@@ -10825,7 +10816,7 @@
       "is_geicke": false,
       "actors": [
         "Rainer Bomba",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Christlich Demokratische Union",
         "Bundesverkehrsministerium"
       ],
@@ -10845,7 +10836,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10864,7 +10855,7 @@
       "is_geicke": false,
       "actors": [
         "Heike Fölster",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -10882,7 +10873,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -10901,7 +10892,6 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit",
         "Matthias Platzeck"
@@ -10923,7 +10913,7 @@
       "is_geicke": false,
       "actors": [
         "Klaus Wowereit",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11012,7 +11002,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11081,7 +11071,7 @@
       "is_geicke": true,
       "actors": [
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Siemens"
       ],
       "causal_theme": []
@@ -11100,7 +11090,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Planfeststellungsbeschluss"
       ],
       "causal_theme": []
@@ -11138,7 +11128,7 @@
         "Regina Töpfer",
         "Horst Amann",
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11158,7 +11148,7 @@
       "actors": [
         "Hartmut Mehdorn",
         "Deutsche Demokratische Republik",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11212,7 +11202,7 @@
       "is_geicke": false,
       "actors": [
         "Frank Röbbelen",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11267,7 +11257,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11285,7 +11275,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -11414,7 +11404,7 @@
       "is_geicke": false,
       "actors": [
         "Harald Siegle",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -11433,7 +11423,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -11525,7 +11515,7 @@
       "is_geicke": false,
       "actors": [
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11664,7 +11654,7 @@
       "actors": [
         "Jörg Marks",
         "Siemens",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11682,7 +11672,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11701,7 +11691,7 @@
       "is_geicke": true,
       "actors": [
         "Alfredo di Mauro",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11721,7 +11711,7 @@
       "actors": [
         "Christian Manninger",
         "WSP CBP Airport GmbH",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11774,7 +11764,7 @@
       "is_geicke": false,
       "actors": [
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11792,7 +11782,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11811,7 +11801,7 @@
       "is_geicke": false,
       "actors": [
         "Hartmut Mehdorn",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11888,7 +11878,7 @@
       "is_geicke": true,
       "actors": [
         "Jörg Marks",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11907,7 +11897,7 @@
       "is_geicke": false,
       "actors": [
         "Jörg Marks",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -11942,7 +11932,7 @@
       "is_geicke": false,
       "actors": [
         "Rainer Schwarz",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12000,7 +11990,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12019,7 +12009,7 @@
       "is_geicke": false,
       "actors": [
         "Berliner Senat",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12098,7 +12088,7 @@
       "is_geicke": true,
       "actors": [
         "Rainer Bretschneider",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit",
         "Sozialdemokratische Partei Deutschlands"
       ],
@@ -12208,7 +12198,7 @@
         "Hartmut Mehdorn",
         "Heike Fölster",
         "Jörg Marks",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12263,7 +12253,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -12282,7 +12272,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12300,7 +12290,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12409,7 +12399,7 @@
       "is_geicke": true,
       "actors": [
         "Ralf Kunkel",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12427,7 +12417,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -12497,7 +12487,7 @@
       "is_geicke": false,
       "actors": [
         "Karsten Mühlenfeld",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12534,7 +12524,7 @@
       "is_geicke": false,
       "actors": [
         "Jörg Marks",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12552,7 +12542,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12589,7 +12579,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12607,7 +12597,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12663,7 +12653,7 @@
         "Klaus Wowereit",
         "Michael Müller",
         "Freie Demokratische Partei",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Sozialdemokratische Partei Deutschlands"
       ],
       "causal_theme": []
@@ -12682,7 +12672,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12700,7 +12690,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12718,7 +12708,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12736,7 +12726,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Karsten Mühlenfeld"
       ],
       "causal_theme": []
@@ -12755,7 +12745,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12773,7 +12763,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12824,7 +12814,7 @@
       "is_geicke": false,
       "actors": [
         "Bundesverkehrsministerium",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12896,7 +12886,7 @@
       "is_geicke": false,
       "actors": [
         "Engelbert Lütke Daldrup",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Michael Müller"
       ],
       "causal_theme": []
@@ -12916,7 +12906,7 @@
       "is_geicke": false,
       "actors": [
         "Karsten Mühlenfeld",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12952,7 +12942,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -12987,7 +12977,7 @@
       "is_geicke": true,
       "actors": [
         "Michael Müller",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13006,7 +12996,7 @@
       "is_geicke": false,
       "actors": [
         "Lufthansa",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13040,7 +13030,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13094,7 +13084,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13129,7 +13119,7 @@
       "is_geicke": false,
       "actors": [
         "Martin Delius",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13326,7 +13316,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Karsten Mühlenfeld"
       ],
       "causal_theme": []
@@ -13397,7 +13387,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13415,7 +13405,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13433,7 +13423,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13451,7 +13441,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13522,7 +13512,6 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH",
         "Klaus Wowereit",
         "Matthias Platzeck"
@@ -13560,7 +13549,7 @@
       "is_geicke": false,
       "actors": [
         "Deutsche Demokratische Republik",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13646,7 +13635,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13681,7 +13670,7 @@
       "is_geicke": false,
       "actors": [
         "Harald Siegle",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Hartmut Mehdorn"
       ],
       "causal_theme": []
@@ -13737,7 +13726,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13773,7 +13762,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -13928,7 +13917,7 @@
         "Rainer Bretschneider",
         "Karsten Mühlenfeld",
         "Michael Müller",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Die Linke"
       ],
       "causal_theme": []
@@ -14052,7 +14041,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14071,7 +14060,7 @@
       "is_geicke": false,
       "actors": [
         "Europäische Kommission",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14105,7 +14094,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14193,7 +14182,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14211,7 +14200,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14230,7 +14219,7 @@
       "is_geicke": false,
       "actors": [
         "Karsten Mühlenfeld",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14433,7 +14422,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14467,7 +14456,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14485,7 +14474,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14538,7 +14527,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Karsten Mühlenfeld"
       ],
       "causal_theme": []
@@ -14573,7 +14562,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Karsten Mühlenfeld"
       ],
       "causal_theme": []
@@ -14592,7 +14581,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14646,7 +14635,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14684,7 +14673,6 @@
         "Karsten Mühlenfeld",
         "Engelbert Lütke Daldrup",
         "Flughafen Berlin Brandenburg GmbH",
-        "Flughafen Berlin Brandenburg",
         "Bundesanstalt für Immobilienaufgaben"
       ],
       "causal_theme": []
@@ -14720,7 +14708,7 @@
       "is_geicke": false,
       "actors": [
         "Jörg Marks",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14738,7 +14726,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14824,7 +14812,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14925,7 +14913,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14944,7 +14932,7 @@
       "is_geicke": false,
       "actors": [
         "Bosch",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -14980,7 +14968,6 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
@@ -15015,8 +15002,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg GmbH",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15034,7 +15020,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15088,7 +15074,7 @@
       "is_geicke": false,
       "actors": [
         "Planfeststellungsbeschluss",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15143,7 +15129,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15226,7 +15212,7 @@
         "Engelbert Lütke Daldrup",
         "Michael Müller",
         "Jörg Marks",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Die Linke"
       ],
       "causal_theme": []
@@ -15245,7 +15231,6 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH",
         "Engelbert Lütke Daldrup",
         "Heike Fölster"
@@ -15287,7 +15272,7 @@
         "Engelbert Lütke Daldrup",
         "Michael Müller",
         "Karsten Mühlenfeld",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15305,7 +15290,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15324,7 +15309,7 @@
       "is_geicke": false,
       "actors": [
         "Deutsche Flugsicherung",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15399,7 +15384,7 @@
       "actors": [
         "Matthias Kollatz-Ahnen",
         "Klaus Wowereit",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Michael Müller"
       ],
       "causal_theme": []
@@ -15437,7 +15422,7 @@
       "is_geicke": true,
       "actors": [
         "Engelbert Lütke Daldrup",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15522,7 +15507,7 @@
       "is_geicke": false,
       "actors": [
         "Engelbert Lütke Daldrup",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15557,7 +15542,7 @@
       "is_geicke": false,
       "actors": [
         "Sozialdemokratische Partei Deutschlands",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15575,7 +15560,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15594,7 +15579,7 @@
       "is_geicke": false,
       "actors": [
         "Rainer Bretschneider",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15628,7 +15613,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15646,7 +15631,6 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
@@ -15717,7 +15701,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15754,7 +15738,7 @@
       "is_geicke": false,
       "actors": [
         "Engelbert Lütke Daldrup",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15788,7 +15772,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15806,7 +15790,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15824,7 +15808,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15843,7 +15827,7 @@
       "is_geicke": false,
       "actors": [
         "Horst Amann",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15878,7 +15862,7 @@
       "is_geicke": false,
       "actors": [
         "Alexander Dobrindt",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15913,7 +15897,7 @@
       "is_geicke": true,
       "actors": [
         "Air Berlin",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15966,7 +15950,7 @@
       "is_geicke": false,
       "actors": [
         "Engelbert Lütke Daldrup",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -15985,7 +15969,7 @@
       "is_geicke": false,
       "actors": [
         "Engelbert Lütke Daldrup",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16037,7 +16021,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16057,7 +16041,7 @@
       "actors": [
         "Air Berlin",
         "Lufthansa",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16180,7 +16164,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16216,7 +16200,6 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
@@ -16236,7 +16219,7 @@
       "is_geicke": false,
       "actors": [
         "Engelbert Lütke Daldrup",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16270,7 +16253,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16289,7 +16272,7 @@
       "is_geicke": false,
       "actors": [
         "Engelbert Lütke Daldrup",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Siemens",
         "Bosch"
       ],
@@ -16328,7 +16311,7 @@
       "is_quote": false,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Bosch"
       ],
       "causal_theme": []
@@ -16347,7 +16330,7 @@
       "is_quote": true,
       "is_geicke": false,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16381,7 +16364,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16400,7 +16383,7 @@
       "is_geicke": false,
       "actors": [
         "Bundestag",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16466,7 +16449,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16520,7 +16503,7 @@
       "actors": [
         "Projekt-Planungsgesellschaft Schönefeld",
         "Flughafen Berlin-Schönefeld GmbH",
-        "Flughafen Berlin Brandenburg",
+        "Flughafen Berlin Brandenburg GmbH",
         "Berliner Flughafengesellschaft"
       ],
       "causal_theme": []
@@ -16681,7 +16664,6 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg",
         "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
@@ -16750,7 +16732,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "IVG Immobilien AG"
+        "IVG"
       ],
       "causal_theme": []
     },
@@ -16768,9 +16750,8 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "IVG Holding",
-        "Deutsche Bank",
-        "IVG Immobilien AG"
+        "IVG",
+        "Deutsche Bank"
       ],
       "causal_theme": []
     },
@@ -16807,7 +16788,7 @@
       "is_geicke": true,
       "actors": [
         "Hochtief AG",
-        "IVG Immobilien AG"
+        "IVG"
       ],
       "causal_theme": []
     },
@@ -16844,7 +16825,7 @@
       "is_geicke": true,
       "actors": [
         "Planungsgesellschaft Berlin-Brandenburg-International",
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -16934,7 +16915,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -17002,7 +16983,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },
@@ -17036,7 +17017,7 @@
       "is_quote": false,
       "is_geicke": true,
       "actors": [
-        "Flughafen Berlin Brandenburg"
+        "Flughafen Berlin Brandenburg GmbH"
       ],
       "causal_theme": []
     },

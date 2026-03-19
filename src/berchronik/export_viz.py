@@ -10,25 +10,38 @@ import requests
 from tqdm import tqdm
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "mistral"
+MODEL = "llama3.1:8b"
 MAX_PARAGRAPHS = 30  # cap per entity before sampling
 
 SUMMARY_PROMPT = """\
-You are summarizing the role of a person or organization in the history of \
-Berlin Brandenburg Airport (BER), based on excerpts from a German chronology \
-covering 1989–2017.
+Du fasst die Rolle einer Person oder Organisation in der Geschichte des \
+Flughafens Berlin Brandenburg (BER) zusammen, auf Basis von Auszügen aus \
+einer deutschen Chronik (1989–2017).
 
-Entity: {name}
+Person/Organisation: {name}
 
-Relevant excerpts ({count} total, showing {shown}):
+Relevante Auszüge ({count} gesamt, {shown} gezeigt):
 {paragraphs}
 
-Write a concise summary in German (3–5 sentences) describing:
-- Who or what this entity is
-- Their role and significance in the BER project
-- Key events or decisions they were involved in
+Schreibe eine Zusammenfassung auf Deutsch mit genau dieser Struktur \
+(drei Absätze, keine Überschriften, kein JSON):
 
-Reply with plain text only, no JSON, no headings.\
+Absatz 1 – Wer: Wer ist diese Person oder Organisation? \
+Welchen Hintergrund und welche Funktion hatten sie allgemein?
+
+Absatz 2 – Rolle beim BER: Welche konkreten Aufgaben, Entscheidungen \
+und Beiträge hatten sie beim BER-Projekt? \
+Nenne mindestens drei konkrete Jahreszahlen aus den Auszügen. \
+Nenne mindestens zwei andere beteiligte Personen oder Organisationen \
+mit denen sie zusammenarbeiteten oder in Beziehung standen.
+
+Absatz 3 – Konflikte und Wendepunkte: Welche Konflikte, Krisen oder \
+Kursänderungen waren mit dieser Person/Organisation verbunden? \
+Was hat sich durch ihr Handeln verändert oder verschlechtert?
+
+Schreibe ausschließlich was explizit in den Auszügen steht. \
+Wenn du unsicher bist ob ein Detail in den Auszügen vorkommt, lass es weg. \
+Maximal zwei Absätze.\
 """
 
 
@@ -120,10 +133,10 @@ def call_ollama(prompt: str) -> str | None:
         return None
 
 
-def build_summaries(entries: list[dict], out_path: Path, min_mentions: int = 3) -> None:
+def build_summaries(entries: list[dict], out_path: Path, min_mentions: int = 3, force: bool = False) -> None:
     # Load existing summaries to allow resuming interrupted runs
     existing: dict = {}
-    if out_path.exists():
+    if not force and out_path.exists():
         try:
             existing = json.loads(out_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
@@ -189,6 +202,8 @@ def main():
     ap.add_argument("--summaries-output", default="viz/entities_summary.json")
     ap.add_argument("--min-mentions", type=int, default=3,
                     help="Minimum paragraph mentions for an entity to get a summary")
+    ap.add_argument("--force", action="store_true",
+                    help="Regenerate all summaries, ignore existing entries")
     args = ap.parse_args()
 
     in_path  = Path(args.input).expanduser().resolve()
@@ -198,7 +213,7 @@ def main():
     if args.summaries:
         print(f"Loaded {len(entries):,} entries. Building entity summaries …")
         build_summaries(entries, Path(args.summaries_output).expanduser().resolve(),
-                        min_mentions=args.min_mentions)
+                        min_mentions=args.min_mentions, force=args.force)
         return
 
     out_path = Path(args.output).expanduser().resolve()
