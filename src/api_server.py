@@ -80,6 +80,7 @@ STOPWORDS = {
     "ohne", "sehr", "sein", "sich", "sie", "sind", "soll", "sowie", "über",
     "um", "und", "unter", "uns", "vom", "von", "vor", "war", "waren", "warum",
     "was", "weil", "wenn", "wer", "werden", "wie", "wird", "wir", "wird",
+    "wann", "woher", "wohin", "womit", "worüber", "worum", "wobei",
     "worden", "wurde", "wurden", "wäre", "würde", "wird", "ziel", "zu",
     "zum", "zur", "zwischen",
 }
@@ -138,15 +139,17 @@ def extract_keywords(question: str, min_len: int = 4, max_kw: int = 6) -> list[s
 
 
 def search_entries(entries: list[dict], keywords: list[str]) -> list[dict]:
-    """Return entries where at least one keyword appears in the text (OR logic)."""
+    """Return entries scored by keyword hit count, sorted by relevance descending."""
     if not keywords:
         return []
     hits = []
     for e in entries:
         text_lower = (e.get("text") or "").lower()
-        if any(kw in text_lower for kw in keywords):
-            hits.append(e)
-    return hits
+        score = sum(1 for kw in keywords if kw in text_lower)
+        if score > 0:
+            hits.append((score, e))
+    hits.sort(key=lambda x: -x[0])
+    return [e for _, e in hits]
 
 
 # ── Endpoint ──────────────────────────────────────────────────────────────────
