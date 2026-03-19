@@ -508,6 +508,23 @@ function highlightEntities(text) {
   return highlightWithKeywords(text, []);
 }
 
+function highlightEntityOnly(text, normalform) {
+  // Collect only aliases that resolve to this normalform, longest first
+  const aliases = aliasesSorted.filter(a => aliasMap[a]?.normalform === normalform);
+  if (!aliases.length) return escapeHtml(text);
+  const re = new RegExp(
+    `(?<![\\p{L}\\d])(?:${aliases.map(escapeRegex).join("|")})(?![\\p{L}\\d])`, "giu"
+  );
+  const info = aliasMap[normalform.toLowerCase()] || { typ: "Person", normalform };
+  let result = "", lastIdx = 0;
+  for (const match of text.matchAll(re)) {
+    result += escapeHtml(text.slice(lastIdx, match.index));
+    result += `<span class="entity" data-typ="${info.typ}" data-name="${escapeHtml(normalform)}">${escapeHtml(match[0])}</span>`;
+    lastIdx = match.index + match[0].length;
+  }
+  return result + escapeHtml(text.slice(lastIdx));
+}
+
 function highlightWithKeywords(text, keywords) {
   const kwSet = new Set(keywords.map(k => k.toLowerCase()));
   const allPatterns = [
@@ -716,7 +733,7 @@ function renderEntityView(normalform, viewEl) {
   const info = summaryMap[normalform];
   const summaryHTML = (info && info.summary) ? `
     <div class="ep-summary">
-      ${highlightEntities(info.summary)}
+      ${highlightEntityOnly(info.summary, normalform)}
       <div class="ep-summary-count">${info.count} Nennungen in der Chronik</div>
     </div>` : "";
   viewEl.innerHTML = summaryHTML + renderParaList(sorted);
