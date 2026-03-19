@@ -554,7 +554,7 @@ function _applyTimelineHighlight() {
   const isFocused = v => active && v.anchorSet?.has(active);
   chartDotSelection
     .attr("r",            v => isFocused(v) ? 9 : isSource(v) ? 7 : 4)
-    .attr("opacity",      v => isSource(v) ? 1 : DIM)
+    .attr("opacity",      v => isFocused(v) ? 1 : isSource(v) ? (mode === "single" ? 0.4 : 1) : DIM)
     .attr("stroke",       v => isFocused(v) ? "#f5c518" : "#fff")
     .attr("stroke-width", v => isFocused(v) ? 2.5 : 1.5);
 }
@@ -711,8 +711,10 @@ document.getElementById("panel-content").addEventListener("click", e => {
     const targetId = ref.getAttribute("href").slice(1); // strip leading #
     document.getElementById(targetId)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    const anchor = targetId.replace(/^src-/, "");
-    if (hlState.mode !== "none") setHighlight("single", hlState.anchors, anchor);
+    const anchor   = targetId.replace(/^src-/, "");
+    const allCards = document.querySelectorAll("#panel-content .ep-para[data-anchor], #panel-content .ep-para[id^='src-']");
+    const anchors  = new Set([...allCards].map(c => c.dataset.anchor || c.id.replace(/^src-/, "")).filter(Boolean));
+    setHighlight("single", anchors, anchor);
     return;
   }
   // Entity highlight click (checked before card so entities inside cards still work)
@@ -720,9 +722,14 @@ document.getElementById("panel-content").addEventListener("click", e => {
   if (ent) { selectEntity(ent.dataset.name); return; }
   // Para card click (source cards and entity view cards): single-dot highlight
   const card = e.target.closest(".ep-para[data-anchor], .ep-para[id^='src-']");
-  if (card && hlState.mode !== "none") {
+  if (card) {
     const anchor = card.dataset.anchor || card.id.replace(/^src-/, "");
-    if (anchor) setHighlight("single", hlState.anchors, anchor);
+    if (anchor) {
+      // Collect anchors from all visible cards in the panel (works even without prior answer state)
+      const allCards = document.querySelectorAll("#panel-content .ep-para[data-anchor], #panel-content .ep-para[id^='src-']");
+      const anchors  = new Set([...allCards].map(c => c.dataset.anchor || c.id.replace(/^src-/, "")).filter(Boolean));
+      setHighlight("single", anchors, anchor);
+    }
   }
 });
 
