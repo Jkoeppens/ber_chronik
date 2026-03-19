@@ -141,10 +141,15 @@ async function sendChat() {
     return;
   }
 
-  viewEl.innerHTML = `<div class="chat-spinner">KI denkt nach …</div>`;
+  viewEl.innerHTML = `
+    <div class="chat-meta">
+      <span class="chat-mode chat-mode-ai">KI-Antwort</span>
+      <span class="chat-question-label">${escapeHtml(question)}</span>
+    </div>
+    <div class="chat-answer-text" id="stream-target"></div>`;
   let usedFallback = false;
   try {
-    const res = await fetch(`${API_URL}/chat`, {
+    const res = await fetch(`${API_URL}/chat/stream`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ question }),
@@ -154,8 +159,36 @@ async function sendChat() {
       const err = await res.json().catch(() => ({ detail: res.statusText }));
       throw new Error(err.detail || res.statusText);
     }
-    const data = await res.json();
-    renderChatAnswer(viewEl, question, "ai", { data });
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let rawText = "";
+    let buffer  = "";
+
+    outer: while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        let parsed;
+        try { parsed = JSON.parse(line.slice(6)); } catch { continue; }
+        if (typeof parsed === "string") {
+          rawText += parsed;
+          const target = document.getElementById("stream-target");
+          if (target) target.textContent = rawText;
+        } else if (parsed.type === "done") {
+          renderChatAnswer(viewEl, question, "ai", {
+            data: { answer: rawText, sources: parsed.sources, keywords: parsed.keywords },
+          });
+          break outer;
+        } else if (parsed.type === "error") {
+          throw new Error(parsed.message);
+        }
+      }
+    }
   } catch (err) {
     console.warn("[chat] API nicht erreichbar, Fallback aktiv:", err?.message ?? err);
     usedFallback = true;

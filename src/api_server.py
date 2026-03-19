@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -187,6 +187,50 @@ def chat(req: ChatRequest, request: Request) -> ChatResponse:
 
     sources = [e["doc_anchor"] for e in hits if e.get("doc_anchor")]
     return ChatResponse(answer=answer, sources=sources, keywords=keywords)
+
+
+@app.post("/chat/stream")
+@limiter.limit("50/hour")
+def chat_stream(req: ChatRequest, request: Request) -> StreamingResponse:
+    question = req.question.strip()
+    if not question:
+        raise HTTPException(status_code=400, detail="question must not be empty")
+
+    keywords = extract_keywords(question)
+    hits = search_entries(ENTRIES, keywords)[:MAX_PARAGRAPHS]
+    sources = [e["doc_anchor"] for e in hits if e.get("doc_anchor")]
+
+    if not hits:
+        def no_hits():
+            yield f"data: {json.dumps('Zu dieser Frage wurden keine passenden Einträge in der Chronik gefunden.')}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'sources': [], 'keywords': keywords})}\n\n"
+        return StreamingResponse(no_hits(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+    para_block = "\n\n".join(
+        f"[{e['doc_anchor']}, {e.get('year', '?')}] {e.get('text', '')}"
+        for e in hits
+    )
+    prompt = ANSWER_PROMPT.format(question=question, count=len(hits), paragraphs=para_block)
+
+    def generate():
+        try:
+            with client.messages.stream(
+                model=MODEL,
+                max_tokens=1024,
+                messages=[{"role": "user", "content": prompt}],
+                timeout=55.0,
+            ) as stream:
+                for text in stream.text_stream:
+                    yield f"data: {json.dumps(text)}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'sources': sources, 'keywords': keywords})}\n\n"
+        except anthropic.APITimeoutError:
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Claude API timeout – bitte erneut versuchen.'})}\n\n"
+        except anthropic.APIError as exc:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Claude API error: {exc}'})}\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @app.get("/health")
