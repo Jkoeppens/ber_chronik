@@ -183,17 +183,35 @@
       border-radius: 4px;
     }
     #panel-min:hover { color: #111; background: #f0f0f0; }
-    #chat-input {
+    #chat-input-wrap {
       flex: 1;
-      padding: 6px 9px;
+      position: relative;
+      min-width: 0;
+    }
+    #chat-input {
+      width: 100%;
+      padding: 6px 88px 6px 9px;
       border: 1px solid #ccc;
       border-radius: 5px;
       font-size: 0.82rem;
       font-family: inherit;
       outline: none;
-      min-width: 0;
     }
     #chat-input:focus { border-color: #999; }
+    #input-mode-label {
+      position: absolute;
+      right: 7px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      pointer-events: none;
+      white-space: nowrap;
+      opacity: 0;
+    }
+    #input-mode-label.mode-local { opacity:1; background:#e8e8e8; color:#555; }
+    #input-mode-label.mode-ai    { opacity:1; background:#ede9f6; color:#6c5ce7; font-weight:600; }
     #chat-send {
       padding: 6px 11px;
       background: #1a1a1a;
@@ -401,7 +419,10 @@
     <!-- Row 1: collapse toggle + chat input – always visible -->
     <div id="panel-topbar">
       <button id="panel-min" title="Ausklappen">←</button>
-      <input id="chat-input" type="text" placeholder="Frage zur BER-Chronik …" autocomplete="off">
+      <div id="chat-input-wrap">
+        <input id="chat-input" type="text" placeholder="Frage zur BER-Chronik …" autocomplete="off">
+        <span id="input-mode-label"></span>
+      </div>
       <button id="chat-send">→</button>
     </div>
 
@@ -1069,8 +1090,19 @@ async function sendChat() {
   const viewEl = document.getElementById("view-chat");
   sendBtn.disabled = true;
   input.disabled   = true;
-  viewEl.innerHTML = `<div class="chat-spinner">Suche …</div>`;
 
+  if (!isAiMode(question)) {
+    // Local keyword search – no API call
+    viewEl.innerHTML = `<div class="chat-spinner">Suche …</div>`;
+    const result = fulltextSearch(question);
+    renderChatAnswer(viewEl, question, "local", result);
+    sendBtn.disabled = false;
+    input.disabled   = false;
+    input.focus();
+    return;
+  }
+
+  viewEl.innerHTML = `<div class="chat-spinner">KI denkt nach …</div>`;
   let usedFallback = false;
   try {
     const res = await fetch(`${API_URL}/chat`, {
@@ -1098,6 +1130,25 @@ async function sendChat() {
     input.focus();
   }
 }
+
+function isAiMode(text) {
+  return text.includes("?") || text.trim().split(/\s+/).length > 4;
+}
+
+const modeLabel = document.getElementById("input-mode-label");
+document.getElementById("chat-input").addEventListener("input", e => {
+  const val = e.target.value.trim();
+  if (!val) {
+    modeLabel.className = "";
+    modeLabel.textContent = "";
+  } else if (isAiMode(val)) {
+    modeLabel.className = "mode-ai";
+    modeLabel.textContent = "KI-Frage ✦";
+  } else {
+    modeLabel.className = "mode-local";
+    modeLabel.textContent = "Suche ⌕";
+  }
+});
 
 document.getElementById("chat-send").addEventListener("click", sendChat);
 document.getElementById("chat-input").addEventListener("keydown", e => {
