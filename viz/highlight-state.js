@@ -12,10 +12,10 @@ const DIM = 0.35;  // opacity for "rest" nodes when something is highlighted
 //   "answer" – source dots highlighted, rest dimmed
 //   "single" – one dot extra-prominent, other source dots normal-highlighted, rest dimmed
 let chartDotSelection = null;  // D3 selection of all .dot circles; refreshed after each drawChart
-let hlState = { mode: "none", anchors: null, active: null };
+let hlState = { mode: "none", anchors: null, active: null, focusEntity: null };
 
-function setHighlight(mode, anchors = null, active = null) {
-  hlState = { mode, anchors, active };
+function setHighlight(mode, anchors = null, active = null, focusEntity = null) {
+  hlState = { mode, anchors, active, focusEntity };
   _applyHighlight();
 }
 
@@ -57,15 +57,16 @@ function _applyNetworkHighlight() {
     return;
   }
   // Build actor sets for answer anchors and the focused single anchor
+  const { focusEntity } = hlState;
   const answerActors = new Set([...anchors].flatMap(a => [...(actorsByAnchor.get(a) || [])]));
   const activeActors = active ? (actorsByAnchor.get(active) || new Set()) : new Set();
   netNodeSelection.attr("opacity", d => answerActors.has(d.id) ? 1 : DIM);
   netNodeSelection.select("circle")
     .attr("fill",         d => answerActors.has(d.id) ? (NODE_COLOR_ACTIVE[d.typ] || "#999") : (NODE_COLOR[d.typ] || "#bbb"))
-    .attr("r",            d => activeActors.has(d.id) ? nodeRadius(d) * 1.25 : nodeRadius(d))
-    .attr("stroke",       d => activeActors.has(d.id) ? "#f5c518" : "#fff")
-    .attr("stroke-width", d => activeActors.has(d.id) ? 2.5 : 1.5)
-    .attr("stroke-dasharray", d => activeActors.has(d.id) ? null : (summaryMap[d.id] ? null : "4,3"));
+    .attr("r",            d => d.id === focusEntity ? nodeRadius(d) * 1.4 : activeActors.has(d.id) ? nodeRadius(d) * 1.25 : nodeRadius(d))
+    .attr("stroke",       d => d.id === focusEntity ? "#f5c518" : activeActors.has(d.id) ? "#f5c518" : "#fff")
+    .attr("stroke-width", d => d.id === focusEntity ? 3 : activeActors.has(d.id) ? 2.5 : 1.5)
+    .attr("stroke-dasharray", d => (d.id === focusEntity || activeActors.has(d.id)) ? null : (summaryMap[d.id] ? null : "4,3"));
 }
 
 function _baseStroke(_d) { return "#fff"; }

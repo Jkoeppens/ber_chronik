@@ -109,9 +109,11 @@ function renderParaList(entries, focusEntity = null) {
 }
 
 function renderEntityView(normalform, viewEl) {
+  console.log("[renderEntityView] normalform=", normalform);
   const entries = entriesByActor.get(normalform) || [];
   const sorted  = [...entries].sort((a, b) =>
     (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
+  console.log("[renderEntityView] calling renderParaList with focusEntity=", normalform, "entries=", sorted.length);
   const info = summaryMap[normalform];
   let summaryHTML = "";
   if (info && info.summary) {
@@ -121,6 +123,7 @@ function renderEntityView(normalform, viewEl) {
     summaryHTML = `<div class="ep-summary">${bodyHTML}<div class="ep-summary-count">${info.count} Nennungen in der Chronik</div></div>`;
   }
   viewEl.innerHTML = summaryHTML + renderParaList(sorted, normalform);
+  console.log("[renderEntityView] entity-focus spans in DOM:", viewEl.querySelectorAll(".entity-focus").length, "entity spans:", viewEl.querySelectorAll(".entity").length);
 }
 
 function selectEntity(normalform) {
@@ -130,7 +133,7 @@ function selectEntity(normalform) {
   const anchors = new Set(
     (entriesByActor.get(normalform) || []).map(e => e.doc_anchor).filter(Boolean)
   );
-  setHighlight("answer", anchors);
+  setHighlight("answer", anchors, null, normalform);
 }
 
 document.getElementById("panel-content").addEventListener("click", e => {
