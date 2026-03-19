@@ -686,11 +686,19 @@ panelMin.addEventListener("click", () => {
 // ── Para list helpers ─────────────────────────────────────────────────────────
 let activeDot = null, dimmedTypes = new Set();
 
+function formatDate(p) {
+  const raw  = p.date_raw || "";
+  const year = p.year ? String(p.year) : "";
+  if (!raw) return year;
+  if (/\d{4}/.test(raw)) return raw;   // date_raw already contains a year
+  return year ? `${raw} ${year}` : raw; // e.g. "März" + " 2013"
+}
+
 function renderParaList(entries) {
   return entries.map(p => {
     const et    = p.event_type || "?";
     const color = COLOR[et] || "#999";
-    const date  = p.date_raw || String(p.year || "");
+    const date  = formatDate(p);
     const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
     return `<div class="ep-para" data-anchor="${escapeHtml(p.doc_anchor || '')}">
       <div class="para-date">${escapeHtml(date)}</div>
@@ -1026,7 +1034,7 @@ function renderChatAnswer(viewEl, question, mode, content) {
     const sourceCards = sourceEntries.map(p => {
       const et    = p.event_type || "?";
       const color = COLOR[et] || "#999";
-      const date  = p.date_raw || String(p.year || "");
+      const date  = formatDate(p);
       const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
       return `<div class="ep-para" id="src-${p.doc_anchor}">
         <div class="para-date">${escapeHtml(date)}</div>
@@ -1053,7 +1061,7 @@ function renderChatAnswer(viewEl, question, mode, content) {
       ? hits.map(p => {
           const et    = p.event_type || "?";
           const color = COLOR[et] || "#999";
-          const date  = p.date_raw || String(p.year || "");
+          const date  = formatDate(p);
           const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
           return `<div class="ep-para">
             <div class="para-date">${escapeHtml(date)}</div>
