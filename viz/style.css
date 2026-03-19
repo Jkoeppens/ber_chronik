@@ -362,7 +362,8 @@ a.src-ref:hover { color: #111; border-bottom-color: #555; }
 .entity[data-typ="Org"],     .entity-self[data-typ="Org"]     { background: #ffe4c0; color: #7a3500; }
 .entity[data-typ="Gremium"], .entity-self[data-typ="Gremium"] { background: #ead5f5; color: #5a0080; }
 .entity[data-typ="Partei"],  .entity-self[data-typ="Partei"]  { background: #ffd5d5; color: #800000; }
-.entity-self { border-radius: 2px; padding: 0 2px; font-weight: 500; pointer-events: none; }
+.entity-self  { border-radius: 2px; padding: 0 2px; font-weight: 500; pointer-events: none; }
+.entity-focus { border-radius: 2px; padding: 0 2px; font-weight: 700; background: #fef08a; color: #1a1a1a; pointer-events: none; }
 
 
 .ep-summary {

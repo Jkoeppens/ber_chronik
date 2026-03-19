@@ -90,16 +90,19 @@ function formatDate(p) {
   return year ? `${raw} ${year}` : raw; // e.g. "März" + " 2013"
 }
 
-function renderParaList(entries) {
+function renderParaList(entries, focusEntity = null) {
   return entries.map(p => {
     const et    = p.event_type || "?";
     const color = COLOR[et] || "#999";
     const date  = formatDate(p);
     const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
+    const textHtml = focusEntity
+      ? highlightWithKeywords(p.text || "", [], focusEntity)
+      : highlightEntities(p.text || "");
     return `<div class="ep-para" data-anchor="${escapeHtml(p.doc_anchor || '')}">
       <div class="para-date">${escapeHtml(date)}</div>
       <span class="para-label" style="background:${color}">${et}</span>
-      <div class="para-text">${highlightEntities(p.text || "")}</div>
+      <div class="para-text">${textHtml}</div>
       ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
     </div>`;
   }).join("");
@@ -117,7 +120,7 @@ function renderEntityView(normalform, viewEl) {
     catch (err) { console.error("[highlightEntityOnly]", err); bodyHTML = escapeHtml(info.summary); }
     summaryHTML = `<div class="ep-summary">${bodyHTML}<div class="ep-summary-count">${info.count} Nennungen in der Chronik</div></div>`;
   }
-  viewEl.innerHTML = summaryHTML + renderParaList(sorted);
+  viewEl.innerHTML = summaryHTML + renderParaList(sorted, normalform);
 }
 
 function selectEntity(normalform) {

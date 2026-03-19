@@ -78,7 +78,7 @@ function highlightEntityOnly(text, normalform) {
   return result + escapeHtml(text.slice(lastIdx));
 }
 
-function highlightWithKeywords(text, keywords) {
+function highlightWithKeywords(text, keywords, focusNormalform = null) {
   const kwSet = new Set(keywords.map(k => k.toLowerCase()));
   const allPatterns = [
     ...aliasesSorted.map(escapeRegex),
@@ -95,7 +95,11 @@ function highlightWithKeywords(text, keywords) {
     const info = aliasMap[m.toLowerCase()];
     result += escapeHtml(text.slice(lastIdx, match.index));
     if (info) {
-      result += `<span class="entity" data-typ="${info.typ}" data-name="${escapeHtml(info.normalform)}">${escapeHtml(m)}</span>`;
+      if (focusNormalform && info.normalform === focusNormalform) {
+        result += `<span class="entity-focus" data-typ="${info.typ}" data-name="${escapeHtml(info.normalform)}">${escapeHtml(m)}</span>`;
+      } else {
+        result += `<span class="entity" data-typ="${info.typ}" data-name="${escapeHtml(info.normalform)}">${escapeHtml(m)}</span>`;
+      }
     } else if (kwSet.has(m.toLowerCase())) {
       result += `<mark class="kw-hit">${escapeHtml(m)}</mark>`;
     } else {
