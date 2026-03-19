@@ -630,12 +630,18 @@ function _baseStroke(_d) { return "#fff"; }
 let viewStack   = [];
 let currentView = { type: "chat", title: "Suche", renderFn: null, entityKey: null };
 
+function _safeRender(renderFn, el) {
+  if (!renderFn) return;
+  try { renderFn(el); }
+  catch (err) { console.error("[panel] render error:", err); }
+}
+
 function _renderView({ type, title, renderFn, entityKey }) {
   document.getElementById("panel-title").textContent = title;
   document.getElementById("panel-back").classList.toggle("visible", viewStack.length > 0);
   document.querySelectorAll(".panel-view").forEach(el => el.classList.remove("active"));
   document.getElementById(`view-${type}`).classList.add("active");
-  if (renderFn) renderFn(document.getElementById(`view-${type}`));
+  _safeRender(renderFn, document.getElementById(`view-${type}`));
   document.getElementById("panel-content").scrollTop = 0;
   // Returning to chat: drop single-ref focus but keep answer highlight
   if (type === "chat" && hlState.mode === "single") setHighlight("answer", hlState.anchors);
@@ -644,7 +650,7 @@ function _renderView({ type, title, renderFn, entityKey }) {
 function showView(type, title, renderFn, entityKey) {
   // Same entity already showing – just re-render in place
   if (currentView && currentView.type === type && currentView.entityKey === entityKey && entityKey) {
-    if (renderFn) renderFn(document.getElementById(`view-${type}`));
+    _safeRender(renderFn, document.getElementById(`view-${type}`));
     return;
   }
   // Save current highlight state so goBack can restore it
@@ -732,11 +738,13 @@ function renderEntityView(normalform, viewEl) {
   const sorted  = [...entries].sort((a, b) =>
     (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
   const info = summaryMap[normalform];
-  const summaryHTML = (info && info.summary) ? `
-    <div class="ep-summary">
-      ${highlightEntityOnly(info.summary, normalform)}
-      <div class="ep-summary-count">${info.count} Nennungen in der Chronik</div>
-    </div>` : "";
+  let summaryHTML = "";
+  if (info && info.summary) {
+    let bodyHTML;
+    try { bodyHTML = highlightEntityOnly(info.summary, normalform); }
+    catch (err) { console.error("[highlightEntityOnly]", err); bodyHTML = escapeHtml(info.summary); }
+    summaryHTML = `<div class="ep-summary">${bodyHTML}<div class="ep-summary-count">${info.count} Nennungen in der Chronik</div></div>`;
+  }
   viewEl.innerHTML = summaryHTML + renderParaList(sorted);
 }
 
