@@ -118,7 +118,7 @@ function renderEntityView(normalform, viewEl) {
   let summaryHTML = "";
   if (info && info.summary) {
     let bodyHTML;
-    try { bodyHTML = highlightEntityOnly(info.summary, normalform); }
+    try { bodyHTML = highlightWithKeywords(info.summary, [], normalform); }
     catch (err) { console.error("[highlightEntityOnly]", err); bodyHTML = escapeHtml(info.summary); }
     summaryHTML = `<div class="ep-summary">${bodyHTML}<div class="ep-summary-count">${info.count} Nennungen in der Chronik</div></div>`;
   }
