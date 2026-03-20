@@ -2,6 +2,10 @@
 function nodeRadius(d) { return Math.max(5, Math.sqrt(d.count) * 3); }
 function labelSize(d)  { return Math.max(7.5, Math.min(12, nodeRadius(d) * 0.4 + 5.5)); }
 
+// Fetch precomputed layout eagerly so it's ready before first tab-open
+let _networkLayout = null;
+fetch("network_layout.json").then(r => r.json()).then(l => { _networkLayout = l; }).catch(() => {});
+
 function drawNetwork(nodes, links, entriesByActor) {
   const svg = d3.select("#network");
   svg.selectAll("*").remove();
@@ -15,7 +19,7 @@ function drawNetwork(nodes, links, entriesByActor) {
     .scaleExtent([0.15, 5])
     .on("zoom", e => g.attr("transform", e.transform)));
 
-  // Build adjacency map before D3 mutates link source/target to objects
+  // Build adjacency map
   const neighbors = new Map();
   nodes.forEach(d => neighbors.set(d.id, new Set()));
   links.forEach(l => {
@@ -25,13 +29,29 @@ function drawNetwork(nodes, links, entriesByActor) {
     if (neighbors.has(tid)) neighbors.get(tid).add(sid);
   });
 
-  const sim = d3.forceSimulation(nodes)
-    .force("link",    d3.forceLink(links).id(d => d.id).distance(80).strength(0.4))
-    .force("charge",  d3.forceManyBody().strength(-220))
-    .force("center",  d3.forceCenter(W / 2, H / 2))
-    // Label half-width (chars × ~0.32 × fontSize) drives collision for all nodes
-    .force("collide", d3.forceCollide(d =>
-      Math.max(nodeRadius(d), d.id.length * labelSize(d) * 0.32) + 6));
+  // Apply precomputed positions, scaled from reference canvas to actual viewport
+  const nodeById = new Map(nodes.map(n => [n.id, n]));
+  if (_networkLayout) {
+    const sx = W / _networkLayout.width;
+    const sy = H / _networkLayout.height;
+    const posMap = new Map(_networkLayout.nodes.map(n => [n.id, n]));
+    nodes.forEach(d => {
+      const p = posMap.get(d.id);
+      if (p) { d.x = p.x * sx; d.y = p.y * sy; }
+      else   { d.x = W / 2;    d.y = H / 2;    }
+    });
+  } else {
+    nodes.forEach(d => { d.x = W / 2 + (Math.random() - 0.5) * W * 0.8;
+                         d.y = H / 2 + (Math.random() - 0.5) * H * 0.8; });
+  }
+
+  // Resolve link source/target strings → node objects (normally done by forceLink)
+  links.forEach(l => {
+    if (typeof l.source === "string") l.source = nodeById.get(l.source);
+    if (typeof l.target === "string") l.target = nodeById.get(l.target);
+  });
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   const link = g.append("g")
     .selectAll("line").data(links).join("line")
@@ -39,13 +59,20 @@ function drawNetwork(nodes, links, entriesByActor) {
     .attr("stroke-opacity", 0.15)
     .attr("stroke-width", d => Math.min(5, 0.8 + Math.log(d.count + 1)));
 
+  function rerender() {
+    link
+      .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+  }
+
   const node = g.append("g")
     .selectAll("g").data(nodes).join("g")
     .attr("cursor", "pointer")
     .call(d3.drag()
-      .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on("drag",  (e, d) => { d.fx = e.x; d.fy = e.y; })
-      .on("end",   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+      .on("start", (e, d) => { d.x = e.x; d.y = e.y; })
+      .on("drag",  (e, d) => { d.x = e.x; d.y = e.y; rerender(); })
+      .on("end",   () => {}));
 
   node.append("circle")
     .attr("r",                nodeRadius)
@@ -90,17 +117,11 @@ function drawNetwork(nodes, links, entriesByActor) {
       selectEntity(d.id);
     });
 
-  // Store selections; re-apply current highlight state after redraw
+  // Initial render + store selections for highlight system
+  rerender();
   netNodeSelection = node;
   netNeighbors     = neighbors;
   _applyHighlight();
-
-  sim.on("tick", () => {
-    link
-      .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-      .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-    node.attr("transform", d => `translate(${d.x},${d.y})`);
-  });
 
   const netLegendEl = document.getElementById("net-legend");
   netLegendEl.innerHTML = Object.entries(NODE_COLOR_ACTIVE).map(([typ, color]) => `

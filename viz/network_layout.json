@@ -1,0 +1,556 @@
+{
+  "width": 1100,
+  "height": 600,
+  "nodes": [
+    {
+      "id": "Eberhard Diepgen",
+      "x": 262.41,
+      "y": 333.8
+    },
+    {
+      "id": "Walter Momper",
+      "x": 755.57,
+      "y": 1600.39
+    },
+    {
+      "id": "Rainer Schwarz",
+      "x": 105.43,
+      "y": 35.65
+    },
+    {
+      "id": "Deutsche Demokratische Republik",
+      "x": -192.12,
+      "y": -61.07
+    },
+    {
+      "id": "Friedrich Zimmermann",
+      "x": 2242.36,
+      "y": 1322.21
+    },
+    {
+      "id": "Sozialdemokratische Partei Deutschlands",
+      "x": 139.6,
+      "y": 554.72
+    },
+    {
+      "id": "Matthias Prokoph",
+      "x": 1718.2,
+      "y": 1292.29
+    },
+    {
+      "id": "Manfred Stolpe",
+      "x": -39.38,
+      "y": 426.72
+    },
+    {
+      "id": "Freie Demokratische Partei",
+      "x": 134.51,
+      "y": 790.18
+    },
+    {
+      "id": "Lufthansa",
+      "x": 314.88,
+      "y": 483.56
+    },
+    {
+      "id": "Heinz Ruhnau",
+      "x": 677.84,
+      "y": 429.59
+    },
+    {
+      "id": "Christlich Demokratische Union",
+      "x": 157.72,
+      "y": 195.91
+    },
+    {
+      "id": "Günther Krause",
+      "x": 469.29,
+      "y": 1418.6
+    },
+    {
+      "id": "Flughafen Berlin-Schönefeld GmbH",
+      "x": 114.18,
+      "y": -275.76
+    },
+    {
+      "id": "Deutsche Bank",
+      "x": 1472.76,
+      "y": 1335.57
+    },
+    {
+      "id": "Robert Grosch",
+      "x": -34.87,
+      "y": -1077.24
+    },
+    {
+      "id": "Berlin Brandenburg Flughafen Holding GmbH",
+      "x": 483.14,
+      "y": 377.22
+    },
+    {
+      "id": "Matthias Platzeck",
+      "x": -74.26,
+      "y": 608.36
+    },
+    {
+      "id": "Berliner Flughafengesellschaft",
+      "x": -34.85,
+      "y": -160.51
+    },
+    {
+      "id": "Berliner Senat",
+      "x": 2428.71,
+      "y": 830.62
+    },
+    {
+      "id": "Air Berlin",
+      "x": 89,
+      "y": -52.58
+    },
+    {
+      "id": "Matthias Wissmann",
+      "x": 255.74,
+      "y": 731.11
+    },
+    {
+      "id": "Walter Hirche",
+      "x": 708.33,
+      "y": 94.54
+    },
+    {
+      "id": "Landesentwicklungsgesellschaft Brandenburg",
+      "x": 1366.38,
+      "y": -1490.34
+    },
+    {
+      "id": "Hans-Olaf Henkel",
+      "x": 353.67,
+      "y": 546.57
+    },
+    {
+      "id": "Norbert Meisner",
+      "x": 544.09,
+      "y": 575.24
+    },
+    {
+      "id": "Gewerkschaft öffentliche Dienste",
+      "x": 2951.56,
+      "y": 358.05
+    },
+    {
+      "id": "Bundesverkehrsministerium",
+      "x": -71.13,
+      "y": -314.84
+    },
+    {
+      "id": "IVG",
+      "x": 327.46,
+      "y": 293.4
+    },
+    {
+      "id": "Siemens",
+      "x": -4.61,
+      "y": 666.9
+    },
+    {
+      "id": "Michael Müller",
+      "x": -124.1,
+      "y": 500.68
+    },
+    {
+      "id": "Flughafen Berlin Brandenburg GmbH",
+      "x": -85.97,
+      "y": 225.71
+    },
+    {
+      "id": "Götz Herberg",
+      "x": 588.75,
+      "y": 209.59
+    },
+    {
+      "id": "Projekt-Planungsgesellschaft Schönefeld",
+      "x": 255,
+      "y": -80.56
+    },
+    {
+      "id": "Hochtief AG",
+      "x": 160.74,
+      "y": 355.67
+    },
+    {
+      "id": "Meinhard von Gerkan",
+      "x": -321.18,
+      "y": -158.11
+    },
+    {
+      "id": "Jürgen Linde",
+      "x": 551.17,
+      "y": 1241.37
+    },
+    {
+      "id": "Franz Müntefering",
+      "x": 2171.08,
+      "y": 1079.41
+    },
+    {
+      "id": "Wilmer Cutler Pickering",
+      "x": 385.75,
+      "y": 916.84
+    },
+    {
+      "id": "Hochtief-Konsortium",
+      "x": 669.37,
+      "y": 256.04
+    },
+    {
+      "id": "Credit Suisse",
+      "x": 683.76,
+      "y": 352.57
+    },
+    {
+      "id": "Annette Fugmann-Heesing",
+      "x": 761.92,
+      "y": 179.79
+    },
+    {
+      "id": "Partei des Demokratischen Sozialismus",
+      "x": 454.55,
+      "y": 761.78
+    },
+    {
+      "id": "Hans-Peter Keitel",
+      "x": 646.97,
+      "y": 151.65
+    },
+    {
+      "id": "Volker Kähne",
+      "x": 2293.86,
+      "y": -1008.93
+    },
+    {
+      "id": "Kilian Krieger",
+      "x": 2143.53,
+      "y": 1562.09
+    },
+    {
+      "id": "Reinhard Klimmt",
+      "x": 191.7,
+      "y": 1375.93
+    },
+    {
+      "id": "Wolfgang Fürniß",
+      "x": 2463.73,
+      "y": 449.79
+    },
+    {
+      "id": "Michael Pieper",
+      "x": 225.7,
+      "y": -371.59
+    },
+    {
+      "id": "PEG",
+      "x": 339.84,
+      "y": 39.95
+    },
+    {
+      "id": "Bündnis90/die Grünen",
+      "x": 332.24,
+      "y": 647.68
+    },
+    {
+      "id": "Eckart John von Freyend",
+      "x": 640.97,
+      "y": 536.68
+    },
+    {
+      "id": "Berlin Brandenburg International Partner",
+      "x": 481.6,
+      "y": 79.61
+    },
+    {
+      "id": "Kurt Bodewig",
+      "x": 1710.25,
+      "y": 1766.24
+    },
+    {
+      "id": "Michael Cramer",
+      "x": -410.39,
+      "y": -645.67
+    },
+    {
+      "id": "EU-Kommission",
+      "x": 3127.84,
+      "y": 149.85
+    },
+    {
+      "id": "Joachim Leyerle",
+      "x": -101.99,
+      "y": 1202.7
+    },
+    {
+      "id": "Klaus Wowereit",
+      "x": 53.68,
+      "y": 356.53
+    },
+    {
+      "id": "Armin Bechmann",
+      "x": 1863.59,
+      "y": 1474.7
+    },
+    {
+      "id": "Dieter Johannsen-Roth",
+      "x": -655.16,
+      "y": 421.31
+    },
+    {
+      "id": "Planfeststellungsbeschluss",
+      "x": 473.51,
+      "y": -148.1
+    },
+    {
+      "id": "Gerd Kronmüller",
+      "x": 1045.85,
+      "y": 1744.89
+    },
+    {
+      "id": "Ulrich Schindler",
+      "x": 1658.87,
+      "y": -1257.01
+    },
+    {
+      "id": "Thomas Weyer",
+      "x": -163.09,
+      "y": 75.19
+    },
+    {
+      "id": "Manfred Körtgen",
+      "x": 314.25,
+      "y": 158.93
+    },
+    {
+      "id": "IGK-IGR Ingenieurgesellschaft",
+      "x": -452.76,
+      "y": -194.22
+    },
+    {
+      "id": "Wolfgang Tiefensee",
+      "x": 2130.39,
+      "y": 1818.22
+    },
+    {
+      "id": "Stefan Paetow",
+      "x": -451.17,
+      "y": -865.08
+    },
+    {
+      "id": "Ralf Kunkel",
+      "x": 299.72,
+      "y": 244.5
+    },
+    {
+      "id": "Gerkan Marg und Partner",
+      "x": -291.19,
+      "y": 219.38
+    },
+    {
+      "id": "Bundestag",
+      "x": 1144.86,
+      "y": -1679.3
+    },
+    {
+      "id": "Europäische Kommission",
+      "x": -168.68,
+      "y": -219.76
+    },
+    {
+      "id": "Frank Welskop",
+      "x": -563.13,
+      "y": 191.49
+    },
+    {
+      "id": "Planungsgesellschaft Berlin-Brandenburg-International",
+      "x": -430.88,
+      "y": 37.78
+    },
+    {
+      "id": "Peter Ramsauer",
+      "x": 1243.56,
+      "y": 1906.5
+    },
+    {
+      "id": "Hartmut Mehdorn",
+      "x": -180.52,
+      "y": 397.74
+    },
+    {
+      "id": "Deutsche Flugsicherung",
+      "x": -418.53,
+      "y": 269.1
+    },
+    {
+      "id": "Die Linke",
+      "x": -40.59,
+      "y": 515.67
+    },
+    {
+      "id": "Hans Joachim Paap",
+      "x": 1810.47,
+      "y": -1525.55
+    },
+    {
+      "id": "Bosch",
+      "x": 406.84,
+      "y": -54.53
+    },
+    {
+      "id": "McKinsey",
+      "x": 38.17,
+      "y": -83.97
+    },
+    {
+      "id": "WSP CBP Airport GmbH",
+      "x": 444.32,
+      "y": 594.91
+    },
+    {
+      "id": "Michael Odenwald",
+      "x": 24.77,
+      "y": 733.17
+    },
+    {
+      "id": "Horst Amann",
+      "x": 38.1,
+      "y": 102.84
+    },
+    {
+      "id": "Joachim Korkhaus",
+      "x": 2888.79,
+      "y": 917.08
+    },
+    {
+      "id": "Martin Delius",
+      "x": -225.14,
+      "y": 121.7
+    },
+    {
+      "id": "Rainer Bretschneider",
+      "x": -193.05,
+      "y": 651.98
+    },
+    {
+      "id": "Christian Manninger",
+      "x": 743.95,
+      "y": 490.63
+    },
+    {
+      "id": "Wilhelm Bender",
+      "x": 7.77,
+      "y": -1296.7
+    },
+    {
+      "id": "Gottfried Egger",
+      "x": 85.64,
+      "y": -129.85
+    },
+    {
+      "id": "BER-Untersuchungsausschuss",
+      "x": -23.28,
+      "y": -1.97
+    },
+    {
+      "id": "Andreas Otto",
+      "x": 281.71,
+      "y": 424.06
+    },
+    {
+      "id": "Dietmar Woidke",
+      "x": -65.33,
+      "y": 719.28
+    },
+    {
+      "id": "Rainer Bomba",
+      "x": 378.44,
+      "y": 213.53
+    },
+    {
+      "id": "Heike Fölster",
+      "x": 259.49,
+      "y": -254.67
+    },
+    {
+      "id": "Alexander Dobrindt",
+      "x": 783.38,
+      "y": 1929.92
+    },
+    {
+      "id": "Regina Töpfer",
+      "x": 743.9,
+      "y": -1533.97
+    },
+    {
+      "id": "Olaf Nozon",
+      "x": 2652.86,
+      "y": 1010.87
+    },
+    {
+      "id": "Frank Röbbelen",
+      "x": -184.08,
+      "y": 1444.25
+    },
+    {
+      "id": "Stephan Loge",
+      "x": 1932.69,
+      "y": -1225.5
+    },
+    {
+      "id": "Harald Siegle",
+      "x": 309.91,
+      "y": 75.02
+    },
+    {
+      "id": "Jochen Großmann",
+      "x": -679.01,
+      "y": -251.94
+    },
+    {
+      "id": "Alfredo di Mauro",
+      "x": 2765.18,
+      "y": 155.78
+    },
+    {
+      "id": "Jörg Marks",
+      "x": -232.17,
+      "y": 309.75
+    },
+    {
+      "id": "Karsten Mühlenfeld",
+      "x": -326.34,
+      "y": 372.21
+    },
+    {
+      "id": "Engelbert Lütke Daldrup",
+      "x": -264.63,
+      "y": 522.05
+    },
+    {
+      "id": "Matthias Kollatz-Ahnen",
+      "x": -495.42,
+      "y": 850.57
+    },
+    {
+      "id": "Hubert Nienhoff",
+      "x": 2367.07,
+      "y": -450.15
+    },
+    {
+      "id": "Bundesanstalt für Immobilienaufgaben",
+      "x": -442.67,
+      "y": 493.83
+    },
+    {
+      "id": "Deutsche Bahn",
+      "x": 392.8,
+      "y": -1435.58
+    }
+  ]
+}

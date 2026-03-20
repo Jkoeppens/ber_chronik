@@ -15,3 +15,4 @@ data/raw/
 
 # Logs
 logs/
+node_modules

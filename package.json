@@ -1,0 +1,12 @@
+{
+  "name": "ber-chronik-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "precompute-network": "node src/precompute_network.js"
+  },
+  "dependencies": {
+    "d3-force": "^3.0.0"
+  }
+}
