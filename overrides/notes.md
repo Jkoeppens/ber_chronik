@@ -64,3 +64,61 @@
 - Vertrag (6) und Planung (363) aus Mistral-Lauf stichprobenartig prüfen
 - Merge-Logik bei --dry-run löscht bestehende Spalten für nicht klassifizierte
   Zeilen (known bug, irrelevant für vollen Lauf)
+
+## Ideen & Priorisierung (März 2026)
+
+### Kontext
+Tool ist navigierbar, aber noch nicht gut demonstrierbar ohne Erklärung.
+Kontakt zu Correctiv vorhanden. Nächster Schritt: zeigen statt erklären.
+Kernfrage an Correctiv: "Welcher Schritt in eurer Arbeit kostet am meisten Zeit?"
+
+---
+
+### Ideen nach Aufwand und Nutzen
+
+| Idee | Aufwand | Nutzen | Priorität |
+|------|---------|--------|-----------|
+| Geführter Einstieg mit Geickes Schlüsselmomenten | 1 Tag | Sofort demonstrierbar | ⭐ Jetzt |
+| Favoriten + einfacher Export | 2 Tage | Direkt in Redaktionsworkflow | ⭐ Jetzt |
+| Schneller Capture für Insider-Infos | 1 Woche | Löst echtes Problem | Bald |
+| Kompositions-Layer (Drag & Drop wie Photoshop) | 1 Monat | Innovativ aber riskant | Später |
+| Automatischer flexibler Ingest anderer Dokumente | 2 Monate | Größter Hebel | Später |
+| Multi-User mit eigenen Versionen | Monate | Plattform-Sprung | Offen |
+| Kollaborative Annotation | Monate | Relevant für Redaktionen | Offen |
+| Zeitungsarchiv-Anbindung | unklar | Großer Hebel | Offen |
+
+---
+
+### Drei Richtungen langfristig
+
+**Richtung 1 – Großer Ingest**
+Wahnsinnig viele Dokumente zu einem Thema (Zeitungsartikel, Behördendokumente).
+Problem: Flexibler automatischer Ingest ist schwer, Fehlerquote höher als bei kuratiertem Material.
+
+**Richtung 2 – Insider-Capture**
+Journalisten tragen eigene Infos ein, niedrige Hürde.
+Problem: Tools scheitern oft an der Übertragungshürde (vgl. Zotero, Obsidian).
+Lösung: So wenig Felder wie möglich, sofortiger Mehrwert beim ersten Eintrag.
+
+**Richtung 3 – Komposition**
+Gefundenes Material räumlich zusammensetzen wie Photoshop-Ebenen.
+Favoriten sammeln → Drag & Drop auf Leinwand → gruppieren → Export als Text.
+Das ist das ungelöste Problem: Schreiben hat linearen Output aber nichtlinearen Denkprozess.
+Scrivener versucht es, aber ohne semantisches Verständnis des Inhalts.
+Mit klassifizierten, verknüpften Absätzen wäre das ein echter Schritt vorwärts.
+
+---
+
+### Für Correctiv-Gespräch vorbereiten
+
+- BER-Tool zeigen mit Geickes Schlüsselmomenten markiert
+- Nicht fragen "wäre das nützlich" sondern "welcher Schritt kostet euch am meisten Zeit"
+- Konkret: wie arbeiten die heute mit großem Archivmaterial?
+
+---
+
+### Offene technische Fragen
+
+- Wie macht man Ingest flexibel für verschiedene Dokumenttypen?
+- Wie niedrig kann die Capture-Hürde sein?
+- Ist Komposition ein Feature dieses Tools oder ein eigenes Produkt?

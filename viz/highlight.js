@@ -84,7 +84,7 @@ function highlightWithKeywords(text, keywords, focusNormalform = null) {
     ...aliasesSorted.map(escapeRegex),
     ...keywords.map(escapeRegex),
   ];
-  if (!allPatterns.length) return escapeHtml(text);
+  if (!allPatterns.length) { console.warn("[highlightWithKeywords] allPatterns empty – aliasMap not loaded?"); return escapeHtml(text); }
 
   const pattern = allPatterns.join("|");
   const re = new RegExp(`(?<![\\p{L}\\d])(?:${pattern})(?![\\p{L}\\d])`, "giu");
