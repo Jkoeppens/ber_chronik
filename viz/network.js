@@ -53,11 +53,19 @@ function drawNetwork(nodes, links, entriesByActor) {
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
+  const sim = d3.forceSimulation(nodes)
+    .force("link",    d3.forceLink(links).id(d => d.id).distance(80).strength(0.4))
+    .force("charge",  d3.forceManyBody().strength(-220))
+    .force("center",  d3.forceCenter(W / 2, H / 2))
+    .force("collide", d3.forceCollide(d =>
+      Math.max(nodeRadius(d), d.id.length * labelSize(d) * 0.32) + 6))
+    .alpha(0).stop();
+
   const link = g.append("g")
     .selectAll("line").data(links).join("line")
     .attr("stroke", "#bbb")
-    .attr("stroke-opacity", 0.15)
-    .attr("stroke-width", d => Math.min(5, 0.8 + Math.log(d.count + 1)));
+    .attr("stroke-opacity", 0.4)
+    .attr("stroke-width", d => Math.max(1, Math.log(d.count + 1)));
 
   function rerender() {
     link
@@ -70,9 +78,9 @@ function drawNetwork(nodes, links, entriesByActor) {
     .selectAll("g").data(nodes).join("g")
     .attr("cursor", "pointer")
     .call(d3.drag()
-      .on("start", (e, d) => { d.x = e.x; d.y = e.y; })
-      .on("drag",  (e, d) => { d.x = e.x; d.y = e.y; rerender(); })
-      .on("end",   () => {}));
+      .on("start", (e, d) => { if (!e.active) sim.alpha(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on("drag",  (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on("end",   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
 
   node.append("circle")
     .attr("r",                nodeRadius)
@@ -99,7 +107,7 @@ function drawNetwork(nodes, links, entriesByActor) {
         .attr("fill", NODE_COLOR_ACTIVE[d.typ] || "#999");
       link.attr("stroke-opacity", l => {
         const s = l.source.id ?? l.source, t = l.target.id ?? l.target;
-        return (s === d.id || t === d.id) ? 0.6 : 0.05;
+        return (s === d.id || t === d.id) ? 0.8 : 0.05;
       });
     })
     .on("mousemove", moveTip)
@@ -110,12 +118,14 @@ function drawNetwork(nodes, links, entriesByActor) {
         .attr("r",    nodeRadius(d))
         .attr("fill", NODE_COLOR[d.typ] || "#bbb");
       node.attr("opacity", 1);
-      link.attr("stroke-opacity", 0.15);
+      link.attr("stroke-opacity", 0.4);
     })
     .on("click", (event, d) => {
       hideTip();
       selectEntity(d.id);
     });
+
+  sim.on("tick", rerender);
 
   // Initial render + store selections for highlight system
   rerender();
