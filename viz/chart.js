@@ -72,7 +72,10 @@ function drawChart(series, years) {
       .attr("cx", v => x(v.year)).attr("cy", v => y(v.count))
       .attr("r", 4)
       .attr("fill", COLOR[s.et]).attr("stroke", "#fff").attr("stroke-width", 1.5)
-      .on("mouseenter", (event, v) => showTip(`<b>${v.year}</b> · ${s.et}: ${v.count}`, event))
+      .on("mouseenter", (event, v) => {
+        const c = COLOR[s.et] || "#999";
+        showTip(`<div class="tip-year">${v.year}</div><div class="tip-entry"><span class="tip-dot" style="background:${c}"></span><span>${s.et} · ${v.count}</span></div>`, event);
+      })
       .on("mousemove", moveTip).on("mouseleave", hideTip)
       .on("click", (event, v) => {
         hideTip();

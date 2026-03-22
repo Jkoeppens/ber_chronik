@@ -133,16 +133,25 @@ header p  { font-size: 12px; color: #888; margin-top: 4px; }
 /* ── Tooltip ── */
 #tooltip {
   position: fixed;
-  background: rgba(20,20,20,0.85);
-  color: #fff;
-  font-size: 0.72rem;
-  padding: 5px 9px;
+  background: #fff;
+  border: 0.5px solid #ccc;
   border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #333;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.1s;
-  white-space: nowrap;
   z-index: 100;
+  min-width: 120px;
+}
+.tip-year { font-size: 11px; color: #888; margin-bottom: 4px; }
+.tip-entry { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #222; }
+.tip-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+@media (prefers-color-scheme: dark) {
+  #tooltip { background: #1a1a1a; border-color: #444; color: #eee; }
+  .tip-year { color: #888; }
+  .tip-entry { color: #ddd; }
 }
 
 /* ── Panel (overlays right side) ── */
