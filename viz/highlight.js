@@ -7,9 +7,15 @@ const EVENT_TYPES = [
   "Personalie","Beschluss","Vertrag","Planung","Claim",
 ];
 const COLOR = {
-  Kosten:"#f28e2b", Termin:"#e15759", Klage:"#b07aa1", Technik:"#17becf",
-  Personalie:"#4e79a7", Beschluss:"#59a14f", Vertrag:"#8cd17d",
-  Planung:"#ff9da7", Claim:"#999",
+  Kosten:    "#B84040",
+  Termin:    "#3A6EA8",
+  Klage:     "#4A8F5C",
+  Technik:   "#B87A30",
+  Personalie:"#7A5A9A",
+  Planung:   "#2A8A9A",
+  Vertrag:   "#7A4A30",
+  Beschluss: "#5A7A30",
+  Claim:     "#888880",
 };
 // Pastel tones for rest state; full saturation for hover / highlight
 const NODE_COLOR = {
