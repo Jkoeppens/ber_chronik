@@ -22,6 +22,7 @@ function setHighlight(mode, anchors = null, active = null, focusEntity = null) {
 function _applyHighlight() {
   _applyTimelineHighlight();
   _applyNetworkHighlight();
+  if (typeof _applyChartEntityHighlight === "function") _applyChartEntityHighlight();
 }
 
 function _applyTimelineHighlight() {

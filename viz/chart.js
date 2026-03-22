@@ -1,4 +1,7 @@
 // ── Timeline chart ────────────────────────────────────────────────────────────
+let _chartG = null, _x = null, _y = null, _w = 0, _h = 0;
+let _series = [], _area = null, _defs = null;
+
 function drawChart(series, years) {
   const svg    = d3.select("#chart");
   const margin = { top: 16, right: 90, bottom: 36, left: 38 };
@@ -120,6 +123,9 @@ function drawChart(series, years) {
       .text(l.et);
   });
 
+  _chartG = g; _x = x; _y = y; _w = w; _h = h;
+  _series = series; _defs = defs; _area = area;
+
   // Store dot selection; re-apply current highlight state after redraw
   chartDotSelection = svg.selectAll("circle.dot");
   _applyHighlight();
@@ -127,5 +133,84 @@ function drawChart(series, years) {
   // Click on empty chart area resets timeline highlighting
   svg.on("click.reset", (event) => {
     if (event.target.tagName !== "circle") setHighlight("none");
+  });
+}
+
+function _applyChartEntityHighlight() {
+  if (!_chartG) return;
+  const normalform = hlState.focusEntity;
+
+  // Remove previous segment overlays
+  _chartG.selectAll(".hl-area, .hl-line").remove();
+
+  if (!normalform || hlState.mode === "none") {
+    // Restore all lines
+    _chartG.selectAll(".line-path").style("opacity", null).style("stroke", null);
+    _chartG.selectAll(".area-path").style("opacity", null);
+    return;
+  }
+
+  // Which event types does this entity appear in?
+  const entries = (typeof entriesByActor !== "undefined" ? entriesByActor : new Map())
+    .get(normalform) || [];
+  const byType = {};
+  entries.forEach(e => {
+    if (!e.year || !e.event_type) return;
+    if (!byType[e.event_type]) byType[e.event_type] = [e.year, e.year];
+    else {
+      byType[e.event_type][0] = Math.min(byType[e.event_type][0], e.year);
+      byType[e.event_type][1] = Math.max(byType[e.event_type][1], e.year);
+    }
+  });
+
+  const relevantTypes = new Set(Object.keys(byType));
+
+  // Dim all lines and areas
+  _chartG.selectAll(".line-path")
+    .style("opacity", function() {
+      const id = this.id.replace("line-", "");
+      return relevantTypes.has(id) ? 1 : 0.08;
+    })
+    .style("stroke", function() {
+      const id = this.id.replace("line-", "");
+      return relevantTypes.has(id) ? null : "#bbb";
+    });
+  _chartG.selectAll(".area-path")
+    .style("opacity", function() {
+      const id = this.id.replace("area-", "");
+      return relevantTypes.has(id) ? 1 : 0.05;
+    });
+
+  // Add highlighted segments
+  Object.entries(byType).forEach(([et, [startYear, endYear]]) => {
+    const color = COLOR[et] || "#999";
+    const s = _series.find(s => s.et === et);
+    if (!s) return;
+
+    const segData = s.values.filter(v => v.year >= startYear && v.year <= endYear);
+    if (!segData.length) return;
+
+    // Gradient for segment
+    const gradId = `hl-grad-${et}`;
+    let grad = _defs.select(`#${gradId}`);
+    if (grad.empty()) {
+      grad = _defs.append("linearGradient")
+        .attr("id", gradId)
+        .attr("x1","0").attr("y1","0").attr("x2","0").attr("y2","1");
+      grad.append("stop").attr("offset","0%").attr("stop-color", color).attr("stop-opacity", 0.28);
+      grad.append("stop").attr("offset","100%").attr("stop-color", color).attr("stop-opacity", 0.02);
+    }
+
+    _chartG.append("path").datum(segData)
+      .attr("class", "hl-area")
+      .attr("fill", `url(#${gradId})`)
+      .attr("d", _area);
+
+    _chartG.append("path").datum(segData)
+      .attr("class", "hl-line")
+      .attr("fill", "none")
+      .attr("stroke", color)
+      .attr("stroke-width", 2.5)
+      .attr("d", d3.line().x(v => _x(v.year)).y(v => _y(v.count)).curve(d3.curveMonotoneX));
   });
 }

@@ -38,7 +38,7 @@ function goBack() {
   _renderView(currentView);
   selectedEntity = currentView.entityKey || null;
   // Restore highlight that was active before we navigated away (covers both timeline + network)
-  if (hlSnapshot) setHighlight(hlSnapshot.mode, hlSnapshot.anchors, hlSnapshot.active);
+  if (hlSnapshot) setHighlight(hlSnapshot.mode, hlSnapshot.anchors, hlSnapshot.active, hlSnapshot.focusEntity || null);
 }
 
 function goHome() {
@@ -48,6 +48,7 @@ function goHome() {
   if (activeDot) { activeDot.classList.remove("active"); activeDot = null; }
   currentView = { type: "chat", title: "Suche", renderFn: null, entityKey: null };
   _renderView(currentView);
+  setHighlight("none");  // reset chart entity highlight
 }
 
 document.getElementById("panel-back").addEventListener("click", goBack);
