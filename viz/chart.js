@@ -4,6 +4,19 @@ function drawChart(series, years) {
   const margin = { top: 16, right: 20, bottom: 36, left: 38 };
   svg.selectAll("*").remove();
 
+  const defs = svg.append("defs");
+  series.forEach(s => {
+    const color = COLOR[s.et] || "#999";
+    const gradId = `grad-${s.et}`;
+    const grad = defs.append("linearGradient")
+      .attr("id", gradId)
+      .attr("x1","0").attr("y1","0").attr("x2","0").attr("y2","1");
+    grad.append("stop").attr("offset","0%")
+      .attr("stop-color", color).attr("stop-opacity", 0.18);
+    grad.append("stop").attr("offset","100%")
+      .attr("stop-color", color).attr("stop-opacity", 0.02);
+  });
+
   const W = svg.node().clientWidth  || 800;
   const H = svg.node().clientHeight || 380;
   const w = W - margin.left - margin.right;
@@ -30,6 +43,20 @@ function drawChart(series, years) {
   const line = d3.line()
     .x(v => x(v.year)).y(v => y(v.count))
     .curve(d3.curveMonotoneX);
+
+  const area = d3.area()
+    .x(v => x(v.year)).y0(y(0)).y1(v => y(v.count))
+    .curve(d3.curveMonotoneX);
+
+  // First pass: area fills (behind lines)
+  series.forEach(s => {
+    if (dimmedTypes.has(s.et)) return;
+    g.append("path").datum(s.values)
+      .attr("class", "area-path")
+      .attr("id", `area-${s.et}`)
+      .attr("fill", `url(#grad-${s.et})`)
+      .attr("d", area);
+  });
 
   series.forEach(s => {
     g.append("path").datum(s.values)
