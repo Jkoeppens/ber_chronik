@@ -2,6 +2,20 @@
 let _chartG = null, _x = null, _y = null, _w = 0, _h = 0;
 let _series = [], _area = null, _defs = null;
 
+// Returns [{start, end}] for runs of years with no gap > 1
+function getContiguousSegments(years) {
+  if (!years || years.length === 0) return [];
+  const sorted = [...years].sort((a, b) => a - b);
+  const segs = [];
+  let s = sorted[0], e = sorted[0];
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] - sorted[i - 1] <= 1) { e = sorted[i]; }
+    else { segs.push({ start: s, end: e }); s = e = sorted[i]; }
+  }
+  segs.push({ start: s, end: e });
+  return segs;
+}
+
 function drawChart(series, years) {
   const svg    = d3.select("#chart");
   const margin = { top: 16, right: 90, bottom: 36, left: 38 };
@@ -71,7 +85,7 @@ function drawChart(series, years) {
     g.selectAll(null)
       .data(s.values.filter(v => v.count > 0))
       .join("circle")
-      .attr("class", "dot" + (dimmedTypes.has(s.et) ? " dimmed" : ""))
+      .attr("class", `dot dot-${s.et.replace(/\s/g, '-')}` + (dimmedTypes.has(s.et) ? " dimmed" : ""))
       .attr("cx", v => x(v.year)).attr("cy", v => y(v.count))
       .attr("r", 4)
       .attr("fill", COLOR[s.et]).attr("stroke", "#fff").attr("stroke-width", 1.5)
@@ -148,26 +162,24 @@ function _applyChartEntityHighlight() {
     _chartG.selectAll(".line-path").style("opacity", null).style("stroke", null);
     _chartG.selectAll(".area-path").style("opacity", null);
     _chartG.selectAll(".line-label").style("opacity", null);
+    _chartG.selectAll(".dot").style("opacity", null);
     return;
   }
 
-  // Which event types does this entity appear in?
+  // Collect all years per event type (as a Set for contiguous-segment analysis)
   const entries = (typeof entriesByActor !== "undefined" ? entriesByActor : new Map())
     .get(normalform) || [];
-  const byType = {};
+  const byType = {};  // et → Set<year>
   entries.forEach(e => {
     if (!e.year || !e.event_type) return;
-    if (!byType[e.event_type]) byType[e.event_type] = [e.year, e.year];
-    else {
-      byType[e.event_type][0] = Math.min(byType[e.event_type][0], e.year);
-      byType[e.event_type][1] = Math.max(byType[e.event_type][1], e.year);
-    }
+    if (!byType[e.event_type]) byType[e.event_type] = new Set();
+    byType[e.event_type].add(e.year);
   });
 
   const relevantTypes = new Set(Object.keys(byType));
   const step = _x(1990) - _x(1989);  // one year in pixels
 
-  // Dim non-relevant lines and collapse their areas completely
+  // Dim non-relevant lines, collapse their areas, hide their dots
   _chartG.selectAll(".line-path")
     .style("opacity", function() {
       return relevantTypes.has(this.id.replace("line-", "")) ? 1 : 0.06;
@@ -179,6 +191,10 @@ function _applyChartEntityHighlight() {
     .style("opacity", function() {
       return relevantTypes.has(this.id.replace("area-", "")) ? 1 : 0;
     });
+  _chartG.selectAll(".dot").style("opacity", 0);
+  relevantTypes.forEach(et => {
+    _chartG.selectAll(`.dot-${et.replace(/\s/g, '-')}`).style("opacity", null);
+  });
 
   // Dim all labels; restore only relevant ones
   _chartG.selectAll(".line-label").style("opacity", 0.1);
@@ -186,26 +202,11 @@ function _applyChartEntityHighlight() {
     _chartG.selectAll(`.line-label-${et.replace(/\s/g, '-')}`).style("opacity", 1);
   });
 
-  // Add highlighted segments with half-year clipPath for clean boundaries
-  Object.entries(byType).forEach(([et, [startYear, endYear]]) => {
+  // Per event type: split years into contiguous segments, one clipPath each
+  Object.entries(byType).forEach(([et, yearSet]) => {
     const color = COLOR[et] || "#999";
     const s = _series.find(s => s.et === et);
     if (!s) return;
-
-    // Include one data point beyond range so the curve doesn't abruptly end
-    const segData = s.values.filter(v => v.year >= startYear - 1 && v.year <= endYear + 1);
-    if (!segData.length) return;
-
-    // ClipPath cuts exactly at ±half-year around the relevant range
-    const clipId = `hl-clip-${et.replace(/\s/g, '-')}`;
-    _defs.append("clipPath")
-      .attr("class", "hl-clip")
-      .attr("id", clipId)
-      .append("rect")
-        .attr("x",      _x(startYear) - step / 2)
-        .attr("y",      -10)
-        .attr("width",  _x(endYear) - _x(startYear) + step)
-        .attr("height", _h + 20);
 
     // Gradient (created once per event type, reused across entity changes)
     const gradId = `hl-grad-${et}`;
@@ -217,18 +218,34 @@ function _applyChartEntityHighlight() {
       grad.append("stop").attr("offset","100%").attr("stop-color", color).attr("stop-opacity", 0.02);
     }
 
-    _chartG.append("path").datum(segData)
-      .attr("class", "hl-area")
-      .attr("clip-path", `url(#${clipId})`)
-      .attr("fill", `url(#${gradId})`)
-      .attr("d", _area);
+    getContiguousSegments([...yearSet]).forEach(({ start, end }) => {
+      const segData = s.values.filter(v => v.year >= start - 1 && v.year <= end + 1);
+      if (!segData.length) return;
 
-    _chartG.append("path").datum(segData)
-      .attr("class", "hl-line")
-      .attr("clip-path", `url(#${clipId})`)
-      .attr("fill", "none")
-      .attr("stroke", color)
-      .attr("stroke-width", 2.5)
-      .attr("d", d3.line().x(v => _x(v.year)).y(v => _y(v.count)).curve(d3.curveMonotoneX));
+      // Unique clipPath id per segment
+      const clipId = `hl-clip-${et.replace(/\s/g, '-')}-${start}-${end}`;
+      _defs.append("clipPath")
+        .attr("class", "hl-clip")
+        .attr("id", clipId)
+        .append("rect")
+          .attr("x",      _x(start) - step / 2)
+          .attr("y",      -10)
+          .attr("width",  _x(end) - _x(start) + step)
+          .attr("height", _h + 20);
+
+      _chartG.append("path").datum(segData)
+        .attr("class", "hl-area")
+        .attr("clip-path", `url(#${clipId})`)
+        .attr("fill", `url(#${gradId})`)
+        .attr("d", _area);
+
+      _chartG.append("path").datum(segData)
+        .attr("class", "hl-line")
+        .attr("clip-path", `url(#${clipId})`)
+        .attr("fill", "none")
+        .attr("stroke", color)
+        .attr("stroke-width", 2.5)
+        .attr("d", d3.line().x(v => _x(v.year)).y(v => _y(v.count)).curve(d3.curveMonotoneX));
+    });
   });
 }

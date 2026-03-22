@@ -147,6 +147,7 @@ async function sendChat() {
       <span class="chat-question-label">${escapeHtml(question)}</span>
     </div>
     <div class="chat-answer-text" id="stream-target"></div>`;
+  setHighlight("none");  // clear entity focus while answer loads
   let usedFallback = false;
   try {
     const res = await fetch(`${API_URL}/chat/stream`, {
