@@ -1,7 +1,7 @@
 // ── Timeline chart ────────────────────────────────────────────────────────────
 function drawChart(series, years) {
   const svg    = d3.select("#chart");
-  const margin = { top: 16, right: 20, bottom: 36, left: 38 };
+  const margin = { top: 16, right: 90, bottom: 36, left: 38 };
   svg.selectAll("*").remove();
 
   const defs = svg.append("defs");
@@ -84,6 +84,37 @@ function drawChart(series, years) {
         showView("timeline", `${v.year} · ${s.et}`,
           viewEl => { viewEl.innerHTML = renderParaList(sorted); });
       });
+  });
+
+  // Inline labels at line ends
+  const labelData = series
+    .filter(s => !dimmedTypes.has(s.et))
+    .map(s => {
+      const last = [...s.values].reverse().find(v => v.count > 0);
+      if (!last) return null;
+      return { et: s.et, x: x(last.year) + 8, y: y(last.count) };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.y - b.y);
+
+  // Collision resolution: push overlapping labels down
+  for (let i = 1; i < labelData.length; i++) {
+    if (labelData[i].y - labelData[i-1].y < 14)
+      labelData[i].y = labelData[i-1].y + 14;
+  }
+  // Clamp to chart height
+  for (let i = 0; i < labelData.length; i++) {
+    if (labelData[i].y > h - 5) labelData[i].y = h - 5;
+  }
+
+  labelData.forEach(l => {
+    g.append("text")
+      .attr("class", "line-label")
+      .attr("x", l.x)
+      .attr("y", l.y)
+      .attr("dominant-baseline", "central")
+      .attr("fill", COLOR[l.et] || "#999")
+      .text(l.et);
   });
 
   // Store dot selection; re-apply current highlight state after redraw
