@@ -115,7 +115,7 @@ function drawChart(series, years) {
 
   labelData.forEach(l => {
     g.append("text")
-      .attr("class", "line-label")
+      .attr("class", `line-label line-label-${l.et.replace(/\s/g, '-')}`)
       .attr("x", l.x)
       .attr("y", l.y)
       .attr("dominant-baseline", "central")
@@ -140,13 +140,14 @@ function _applyChartEntityHighlight() {
   if (!_chartG) return;
   const normalform = hlState.focusEntity;
 
-  // Remove previous segment overlays
+  // Remove previous segment overlays and clip paths
   _chartG.selectAll(".hl-area, .hl-line").remove();
+  _defs.selectAll(".hl-clip").remove();
 
   if (!normalform || hlState.mode === "none") {
-    // Restore all lines
     _chartG.selectAll(".line-path").style("opacity", null).style("stroke", null);
     _chartG.selectAll(".area-path").style("opacity", null);
+    _chartG.selectAll(".line-label").style("opacity", null);
     return;
   }
 
@@ -164,37 +165,52 @@ function _applyChartEntityHighlight() {
   });
 
   const relevantTypes = new Set(Object.keys(byType));
+  const step = _x(1990) - _x(1989);  // one year in pixels
 
-  // Dim all lines and areas
+  // Dim non-relevant lines and collapse their areas completely
   _chartG.selectAll(".line-path")
     .style("opacity", function() {
-      const id = this.id.replace("line-", "");
-      return relevantTypes.has(id) ? 1 : 0.08;
+      return relevantTypes.has(this.id.replace("line-", "")) ? 1 : 0.06;
     })
     .style("stroke", function() {
-      const id = this.id.replace("line-", "");
-      return relevantTypes.has(id) ? null : "#bbb";
+      return relevantTypes.has(this.id.replace("line-", "")) ? null : "#cccccc";
     });
   _chartG.selectAll(".area-path")
     .style("opacity", function() {
-      const id = this.id.replace("area-", "");
-      return relevantTypes.has(id) ? 1 : 0.05;
+      return relevantTypes.has(this.id.replace("area-", "")) ? 1 : 0;
     });
 
-  // Add highlighted segments
+  // Dim all labels; restore only relevant ones
+  _chartG.selectAll(".line-label").style("opacity", 0.1);
+  relevantTypes.forEach(et => {
+    _chartG.selectAll(`.line-label-${et.replace(/\s/g, '-')}`).style("opacity", 1);
+  });
+
+  // Add highlighted segments with half-year clipPath for clean boundaries
   Object.entries(byType).forEach(([et, [startYear, endYear]]) => {
     const color = COLOR[et] || "#999";
     const s = _series.find(s => s.et === et);
     if (!s) return;
 
-    const segData = s.values.filter(v => v.year >= startYear && v.year <= endYear);
+    // Include one data point beyond range so the curve doesn't abruptly end
+    const segData = s.values.filter(v => v.year >= startYear - 1 && v.year <= endYear + 1);
     if (!segData.length) return;
 
-    // Gradient for segment
+    // ClipPath cuts exactly at ±half-year around the relevant range
+    const clipId = `hl-clip-${et.replace(/\s/g, '-')}`;
+    _defs.append("clipPath")
+      .attr("class", "hl-clip")
+      .attr("id", clipId)
+      .append("rect")
+        .attr("x",      _x(startYear) - step / 2)
+        .attr("y",      -10)
+        .attr("width",  _x(endYear) - _x(startYear) + step)
+        .attr("height", _h + 20);
+
+    // Gradient (created once per event type, reused across entity changes)
     const gradId = `hl-grad-${et}`;
-    let grad = _defs.select(`#${gradId}`);
-    if (grad.empty()) {
-      grad = _defs.append("linearGradient")
+    if (_defs.select(`#${gradId}`).empty()) {
+      const grad = _defs.append("linearGradient")
         .attr("id", gradId)
         .attr("x1","0").attr("y1","0").attr("x2","0").attr("y2","1");
       grad.append("stop").attr("offset","0%").attr("stop-color", color).attr("stop-opacity", 0.28);
@@ -203,11 +219,13 @@ function _applyChartEntityHighlight() {
 
     _chartG.append("path").datum(segData)
       .attr("class", "hl-area")
+      .attr("clip-path", `url(#${clipId})`)
       .attr("fill", `url(#${gradId})`)
       .attr("d", _area);
 
     _chartG.append("path").datum(segData)
       .attr("class", "hl-line")
+      .attr("clip-path", `url(#${clipId})`)
       .attr("fill", "none")
       .attr("stroke", color)
       .attr("stroke-width", 2.5)
