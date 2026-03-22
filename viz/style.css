@@ -11,12 +11,11 @@ body {
 
 header {
   padding: 12px 24px 10px;
-  border-bottom: 1px solid #ddd;
   background: #fff;
   flex-shrink: 0;
 }
-header h1 { font-size: 1.1rem; font-weight: 600; }
-header p  { font-size: 0.8rem; color: #666; margin-top: 2px; }
+header h1 { font-size: 18px; font-weight: 500; }
+header p  { font-size: 12px; color: #888; margin-top: 4px; }
 
 /* ── Tabs ── */
 #tabs {
