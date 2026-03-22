@@ -20,7 +20,12 @@ function drawChart(series, years) {
   g.append("g").attr("class","axis").attr("transform",`translate(0,${h})`)
     .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(15).tickSize(4));
   g.append("g").attr("class","axis")
-    .call(d3.axisLeft(y).ticks(5).tickSize(4));
+    .call(d3.axisLeft(y).ticks(5).tickSize(4).tickPadding(6));
+  g.append("line")
+    .attr("class", "baseline")
+    .attr("x1", 0).attr("x2", w)
+    .attr("y1", h).attr("y2", h)
+    .attr("stroke", "#999").attr("stroke-width", 0.75);
 
   const line = d3.line()
     .x(v => x(v.year)).y(v => y(v.count))
