@@ -256,21 +256,18 @@ function _applyChartEntityHighlight() {
           .attr("width",  _x(end) - _x(start) + step)
           .attr("height", _h + 20);
 
-      // Both area and line use the generators saved at draw time — guaranteed
-      // identical curve shape (fixes line/area divergence on repeated redraws)
+      // Single path with fill + stroke: stroke follows the fill's top edge
+      // exactly (same element, same path) — divergence is impossible.
+      // Baseline stroke (y=h) is hidden below the x-axis; the path's
+      // own vertical sides (at year±1) fall outside the clipRect.
       _chartG.append("path").datum(segData)
         .attr("class", "hl-area")
         .attr("clip-path", `url(#${clipId})`)
         .attr("fill", `url(#${gradId})`)
-        .attr("d", _area);
-
-      _chartG.append("path").datum(segData)
-        .attr("class", "hl-line")
-        .attr("clip-path", `url(#${clipId})`)
-        .attr("fill", "none")
         .attr("stroke", color)
         .attr("stroke-width", 2.5)
-        .attr("d", _line);
+        .attr("stroke-linejoin", "round")
+        .attr("d", _area);
     });
   });
 }
