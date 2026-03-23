@@ -243,9 +243,6 @@ function _applyChartEntityHighlight() {
     }
 
     getContiguousSegments([...yearSet]).forEach(({ start, end }) => {
-      const segData = s.values.filter(v => v.year >= start - 1 && v.year <= end + 1);
-      if (!segData.length) return;
-
       const clipId = `hl-clip-${et.replace(/\s/g, '-')}-${start}-${end}`;
       _defs.append("clipPath")
         .attr("class", "hl-clip")
@@ -256,11 +253,12 @@ function _applyChartEntityHighlight() {
           .attr("width",  _x(end) - _x(start) + step)
           .attr("height", _h + 20);
 
-      // Single path with fill + stroke: stroke follows the fill's top edge
-      // exactly (same element, same path) — divergence is impossible.
-      // Baseline stroke (y=h) is hidden below the x-axis; the path's
-      // own vertical sides (at year±1) fall outside the clipRect.
-      _chartG.append("path").datum(segData)
+      // Use the FULL s.values so curveMonotoneX computes tangents with the
+      // same neighbour context as the background line-path. A subset would
+      // make segment endpoints use the single-neighbour tangent rule, causing
+      // the highlighted curve to diverge from the background curve.
+      // The clipPath already limits what's visible to the relevant window.
+      _chartG.append("path").datum(s.values)
         .attr("class", "hl-area")
         .attr("clip-path", `url(#${clipId})`)
         .attr("fill", `url(#${gradId})`)
