@@ -251,13 +251,14 @@ function _applyChartEntityHighlight() {
       // right at the line, y2 at the baseline. Low and high segments get
       // identical fill intensity directly under the line.
       const peakCount = d3.max(s.values.filter(v => v.year >= start && v.year <= end), v => v.count) || 0;
+      const gradY1 = _y(peakCount);
       const grad = _defs.append("linearGradient")
         .attr("class", "hl-grad")
         .attr("id", gradId)
         .attr("gradientUnits", "userSpaceOnUse")
-        .attr("x1", 0).attr("y1", _y(peakCount)).attr("x2", 0).attr("y2", _h);
-      grad.append("stop").attr("offset","0%").attr("stop-color", color).attr("stop-opacity", 0.28);
-      grad.append("stop").attr("offset","100%").attr("stop-color", color).attr("stop-opacity", 0.02);
+        .attr("x1", 0).attr("y1", gradY1).attr("x2", 0).attr("y2", gradY1 + 80);
+      grad.append("stop").attr("offset","0%").attr("stop-color", color).attr("stop-opacity", 0.25);
+      grad.append("stop").attr("offset","100%").attr("stop-color", color).attr("stop-opacity", 0);
 
       // Full s.values so curveMonotoneX tangents match the background line-path
       _chartG.append("path").datum(s.values)
