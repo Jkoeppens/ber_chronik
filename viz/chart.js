@@ -1,6 +1,6 @@
 // ── Timeline chart ────────────────────────────────────────────────────────────
 let _chartG = null, _x = null, _y = null, _w = 0, _h = 0;
-let _series = [], _area = null, _defs = null;
+let _series = [], _area = null, _line = null, _defs = null;
 
 // Returns [{start, end}] for runs of years with no gap > 1
 function getContiguousSegments(years) {
@@ -138,7 +138,7 @@ function drawChart(series, years) {
   });
 
   _chartG = g; _x = x; _y = y; _w = w; _h = h;
-  _series = series; _defs = defs; _area = area;
+  _series = series; _defs = defs; _area = area; _line = line;
 
   // Store dot selection; re-apply current highlight state after redraw
   chartDotSelection = svg.selectAll("circle.dot");
@@ -152,13 +152,13 @@ function drawChart(series, years) {
 
 function _applyChartEntityHighlight() {
   if (!_chartG) return;
-  const normalform = hlState.focusEntity;
+  const { focusEntity, mode, anchors } = hlState;
 
-  // Remove previous segment overlays and clip paths
   _chartG.selectAll(".hl-area, .hl-line").remove();
   _defs.selectAll(".hl-clip").remove();
 
-  if (!normalform || hlState.mode === "none") {
+  // ── Full reset ──────────────────────────────────────────────────────────────
+  if (mode === "none") {
     _chartG.selectAll(".line-path").style("opacity", null).style("stroke", null);
     _chartG.selectAll(".area-path").style("opacity", null);
     _chartG.selectAll(".line-label").style("opacity", null);
@@ -166,20 +166,38 @@ function _applyChartEntityHighlight() {
     return;
   }
 
-  // Collect all years per event type (as a Set for contiguous-segment analysis)
-  const entries = (typeof entriesByActor !== "undefined" ? entriesByActor : new Map())
-    .get(normalform) || [];
-  const byType = {};  // et → Set<year>
-  entries.forEach(e => {
+  // ── Gather relevant entries — entity click OR answer anchors ────────────────
+  let relevantEntries;
+  if (focusEntity) {
+    relevantEntries = (typeof entriesByActor !== "undefined" ? entriesByActor : new Map())
+      .get(focusEntity) || [];
+  } else if (anchors && anchors.size > 0) {
+    const ea = typeof entriesByAnchor !== "undefined" ? entriesByAnchor : new Map();
+    relevantEntries = [...anchors].map(a => ea.get(a)).filter(Boolean);
+  } else {
+    relevantEntries = [];
+  }
+
+  if (!relevantEntries.length) {
+    _chartG.selectAll(".line-path").style("opacity", null).style("stroke", null);
+    _chartG.selectAll(".area-path").style("opacity", null);
+    _chartG.selectAll(".line-label").style("opacity", null);
+    _chartG.selectAll(".dot").style("opacity", null);
+    return;
+  }
+
+  // Collect years per event type
+  const byType = {};
+  relevantEntries.forEach(e => {
     if (!e.year || !e.event_type) return;
     if (!byType[e.event_type]) byType[e.event_type] = new Set();
     byType[e.event_type].add(e.year);
   });
 
   const relevantTypes = new Set(Object.keys(byType));
-  const step = _x(1990) - _x(1989);  // one year in pixels
+  const step = _x(1990) - _x(1989);
 
-  // Dim non-relevant lines, collapse their areas, hide their dots
+  // ── Unified dimming (entity click + answer mode both reach this code) ───────
   _chartG.selectAll(".line-path")
     .style("opacity", function() {
       return relevantTypes.has(this.id.replace("line-", "")) ? 1 : 0.06;
@@ -191,24 +209,31 @@ function _applyChartEntityHighlight() {
     .style("opacity", function() {
       return relevantTypes.has(this.id.replace("area-", "")) ? 1 : 0;
     });
-  _chartG.selectAll(".dot").style("opacity", 0);
-  relevantTypes.forEach(et => {
-    _chartG.selectAll(`.dot-${et.replace(/\s/g, '-')}`).style("opacity", null);
-  });
-
-  // Dim all labels; restore only relevant ones
   _chartG.selectAll(".line-label").style("opacity", 0.1);
   relevantTypes.forEach(et => {
     _chartG.selectAll(`.line-label-${et.replace(/\s/g, '-')}`).style("opacity", 1);
   });
 
-  // Per event type: split years into contiguous segments, one clipPath each
+  // Dot dimming: entity focus hides non-relevant dots; answer mode lets
+  // _applyTimelineHighlight handle dots (it sizes/dims by anchor, not category)
+  if (focusEntity) {
+    _chartG.selectAll(".dot").style("opacity", 0);
+    relevantTypes.forEach(et => {
+      _chartG.selectAll(`.dot-${et.replace(/\s/g, '-')}`).style("opacity", null);
+    });
+  } else {
+    _chartG.selectAll(".dot").style("opacity", null);
+  }
+
+  // ── Segment overlays (entity focus only) ────────────────────────────────────
+  if (!focusEntity) return;
+
   Object.entries(byType).forEach(([et, yearSet]) => {
     const color = COLOR[et] || "#999";
     const s = _series.find(s => s.et === et);
     if (!s) return;
 
-    // Gradient (created once per event type, reused across entity changes)
+    // Gradient created once per event type, reused across entity changes
     const gradId = `hl-grad-${et}`;
     if (_defs.select(`#${gradId}`).empty()) {
       const grad = _defs.append("linearGradient")
@@ -222,7 +247,6 @@ function _applyChartEntityHighlight() {
       const segData = s.values.filter(v => v.year >= start - 1 && v.year <= end + 1);
       if (!segData.length) return;
 
-      // Unique clipPath id per segment
       const clipId = `hl-clip-${et.replace(/\s/g, '-')}-${start}-${end}`;
       _defs.append("clipPath")
         .attr("class", "hl-clip")
@@ -233,6 +257,8 @@ function _applyChartEntityHighlight() {
           .attr("width",  _x(end) - _x(start) + step)
           .attr("height", _h + 20);
 
+      // Both area and line use the generators saved at draw time — guaranteed
+      // identical curve shape (fixes line/area divergence on repeated redraws)
       _chartG.append("path").datum(segData)
         .attr("class", "hl-area")
         .attr("clip-path", `url(#${clipId})`)
@@ -245,7 +271,7 @@ function _applyChartEntityHighlight() {
         .attr("fill", "none")
         .attr("stroke", color)
         .attr("stroke-width", 2.5)
-        .attr("d", d3.line().x(v => _x(v.year)).y(v => _y(v.count)).curve(d3.curveMonotoneX));
+        .attr("d", _line);
     });
   });
 }
