@@ -198,25 +198,25 @@ function _applyChartEntityHighlight() {
   const step = _x(1990) - _x(1989);
 
   // ── Three-level dimming ──────────────────────────────────────────────────────
-  // Level 1 (hl-area overlay): relevant category + relevant timespan — full color, 2.5px, area
-  // Level 2: relevant category + non-relevant timespan — original color, 0.25 opacity, 1px, no area
-  // Level 3: non-relevant category — grey, 0.06 opacity, still interactive
+  // Level 1 (hl-area overlay): relevant category + relevant timespan — full color, 2.5px, full area
+  // Level 2: relevant category + non-relevant timespan — original color, 0.35 opacity, 1px, area ~0.3
+  // Level 3: non-relevant category — grey, 0.2 opacity, pointer-events untouched (fully interactive)
   _chartG.selectAll(".line-path")
-    .style("opacity",      function() { return relevantTypes.has(this.id.replace("line-", "")) ? 0.25 : 0.06; })
+    .style("opacity",      function() { return relevantTypes.has(this.id.replace("line-", "")) ? 0.35 : 0.2; })
     .style("stroke",       function() { return relevantTypes.has(this.id.replace("line-", "")) ? null : "#cccccc"; })
     .style("stroke-width", function() { return relevantTypes.has(this.id.replace("line-", "")) ? "1px" : null; });
-  // All background areas hidden; hl-area provides fill for relevant segments only
-  _chartG.selectAll(".area-path").style("opacity", 0);
+  _chartG.selectAll(".area-path")
+    .style("opacity", function() { return relevantTypes.has(this.id.replace("area-", "")) ? 0.3 : 0; });
 
   _chartG.selectAll(".line-label").style("opacity", 0.1);
   relevantTypes.forEach(et => {
     _chartG.selectAll(`.line-label-${et.replace(/\s/g, '-')}`).style("opacity", 1);
   });
 
-  // Non-relevant dots: keep at 0.06 (matches their line) and remain interactive.
+  // Non-relevant dots at 0.2 — no pointer-events change, tooltip and click stay active.
   // Relevant dots: clear inline style so _applyTimelineHighlight's attr takes over.
   if (focusEntity) {
-    _chartG.selectAll(".dot").style("opacity", 0.06);
+    _chartG.selectAll(".dot").style("opacity", 0.2);
     relevantTypes.forEach(et => {
       _chartG.selectAll(`.dot-${et.replace(/\s/g, '-')}`).style("opacity", null);
     });
