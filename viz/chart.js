@@ -225,8 +225,7 @@ function _applyChartEntityHighlight() {
     _chartG.selectAll(".dot").style("opacity", null);
   }
 
-  // ── Segment overlays (entity focus only) ────────────────────────────────────
-  if (!focusEntity) return;
+  // ── Segment overlays (entity focus + answer mode) ───────────────────────────
 
   Object.entries(byType).forEach(([et, yearSet]) => {
     const color = COLOR[et] || "#999";
