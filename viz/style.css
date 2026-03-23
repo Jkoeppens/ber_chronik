@@ -82,7 +82,8 @@ header p  { font-size: 12px; color: #888; margin-top: 4px; }
 .grid line { stroke: #e0e0e0; stroke-width: 0.5px; }
 .grid path { stroke: none; }
 
-.line-path { fill: none; stroke-width: 2px; transition: opacity 0.15s; }
+.line-path { fill: none; stroke-width: 1.5px; cursor: pointer; transition: opacity 0.15s; }
+.area-path { opacity: 0; }
 .line-path.dimmed { opacity: 0.1; }
 
 .dot { cursor: pointer; }

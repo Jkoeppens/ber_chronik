@@ -80,7 +80,15 @@ function drawChart(series, years) {
       .attr("class", "line-path" + (dimmedTypes.has(s.et) ? " dimmed" : ""))
       .attr("id", `line-${s.et}`)
       .attr("stroke", COLOR[s.et])
-      .attr("d", line);
+      .attr("d", line)
+      // Click on a line in highlight mode: open category panel, keep current highlight
+      .on("click", (event) => {
+        if (hlState.mode === "none") return;
+        event.stopPropagation();
+        const entries = s.values.flatMap(v => v.entries)
+          .sort((a, b) => (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
+        showView("timeline", s.et, viewEl => { viewEl.innerHTML = renderParaList(entries); });
+      });
 
     g.selectAll(null)
       .data(s.values.filter(v => v.count > 0))
@@ -96,6 +104,7 @@ function drawChart(series, years) {
       .on("mousemove", moveTip).on("mouseleave", hideTip)
       .on("click", (event, v) => {
         hideTip();
+        event.stopPropagation();
         if (activeDot) activeDot.classList.remove("active");
         activeDot = event.currentTarget;
         activeDot.classList.add("active");
@@ -103,6 +112,8 @@ function drawChart(series, years) {
           (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
         showView("timeline", `${v.year} · ${s.et}`,
           viewEl => { viewEl.innerHTML = renderParaList(sorted); });
+        // Replace current highlight with this dot's entries
+        setHighlight("answer", v.anchorSet);
       });
   });
 
@@ -144,9 +155,13 @@ function drawChart(series, years) {
   chartDotSelection = svg.selectAll("circle.dot");
   _applyHighlight();
 
-  // Click on empty chart area resets timeline highlighting
+  // Click on empty chart area: reset highlight + close panel.
+  // Dot and line clicks stop propagation so they never reach this handler.
+  // hl-area (highlight overlay) clicks are also ignored here.
   svg.on("click.reset", (event) => {
-    if (event.target.tagName !== "circle") setHighlight("none");
+    const tgt = event.target;
+    if (tgt.classList?.contains("hl-area")) return;
+    goHome();
   });
 }
 
