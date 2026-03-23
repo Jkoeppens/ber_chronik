@@ -155,7 +155,7 @@ function _applyChartEntityHighlight() {
   const { focusEntity, mode, anchors } = hlState;
 
   _chartG.selectAll(".hl-area, .hl-line").remove();
-  _defs.selectAll(".hl-clip").remove();
+  _defs.selectAll(".hl-clip, .hl-grad").remove();
 
   // ── Full reset ──────────────────────────────────────────────────────────────
   if (mode === "none") {
@@ -232,20 +232,12 @@ function _applyChartEntityHighlight() {
     const s = _series.find(s => s.et === et);
     if (!s) return;
 
-    // Gradient in userSpaceOnUse so intensity is independent of segment height.
-    // y1=0 / y2=_h matches the _chartG coordinate system (top of content → baseline).
-    const gradId = `hl-grad-${et}`;
-    if (_defs.select(`#${gradId}`).empty()) {
-      const grad = _defs.append("linearGradient")
-        .attr("id", gradId)
-        .attr("gradientUnits", "userSpaceOnUse")
-        .attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", _h);
-      grad.append("stop").attr("offset","0%").attr("stop-color", color).attr("stop-opacity", 0.28);
-      grad.append("stop").attr("offset","100%").attr("stop-color", color).attr("stop-opacity", 0.02);
-    }
-
     getContiguousSegments([...yearSet]).forEach(({ start, end }) => {
-      const clipId = `hl-clip-${et.replace(/\s/g, '-')}-${start}-${end}`;
+      const etSafe  = et.replace(/\s/g, '-');
+      const clipId  = `hl-clip-${etSafe}-${start}-${end}`;
+      const gradId  = `hl-grad-${etSafe}-${start}-${end}`;
+
+      // clipPath: ±half-year around the segment
       _defs.append("clipPath")
         .attr("class", "hl-clip")
         .attr("id", clipId)
@@ -255,11 +247,19 @@ function _applyChartEntityHighlight() {
           .attr("width",  _x(end) - _x(start) + step)
           .attr("height", _h + 20);
 
-      // Use the FULL s.values so curveMonotoneX computes tangents with the
-      // same neighbour context as the background line-path. A subset would
-      // make segment endpoints use the single-neighbour tangent rule, causing
-      // the highlighted curve to diverge from the background curve.
-      // The clipPath already limits what's visible to the relevant window.
+      // Per-segment gradient: y1 at the segment's peak so opacity 0.28 starts
+      // right at the line, y2 at the baseline. Low and high segments get
+      // identical fill intensity directly under the line.
+      const peakCount = d3.max(s.values.filter(v => v.year >= start && v.year <= end), v => v.count) || 0;
+      const grad = _defs.append("linearGradient")
+        .attr("class", "hl-grad")
+        .attr("id", gradId)
+        .attr("gradientUnits", "userSpaceOnUse")
+        .attr("x1", 0).attr("y1", _y(peakCount)).attr("x2", 0).attr("y2", _h);
+      grad.append("stop").attr("offset","0%").attr("stop-color", color).attr("stop-opacity", 0.28);
+      grad.append("stop").attr("offset","100%").attr("stop-color", color).attr("stop-opacity", 0.02);
+
+      // Full s.values so curveMonotoneX tangents match the background line-path
       _chartG.append("path").datum(s.values)
         .attr("class", "hl-area")
         .attr("clip-path", `url(#${clipId})`)
