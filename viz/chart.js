@@ -232,12 +232,14 @@ function _applyChartEntityHighlight() {
     const s = _series.find(s => s.et === et);
     if (!s) return;
 
-    // Gradient created once per event type, reused across entity changes
+    // Gradient in userSpaceOnUse so intensity is independent of segment height.
+    // y1=0 / y2=_h matches the _chartG coordinate system (top of content → baseline).
     const gradId = `hl-grad-${et}`;
     if (_defs.select(`#${gradId}`).empty()) {
       const grad = _defs.append("linearGradient")
         .attr("id", gradId)
-        .attr("x1","0").attr("y1","0").attr("x2","0").attr("y2","1");
+        .attr("gradientUnits", "userSpaceOnUse")
+        .attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", _h);
       grad.append("stop").attr("offset","0%").attr("stop-color", color).attr("stop-opacity", 0.28);
       grad.append("stop").attr("offset","100%").attr("stop-color", color).attr("stop-opacity", 0.02);
     }
