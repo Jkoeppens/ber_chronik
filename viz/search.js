@@ -286,10 +286,11 @@ Promise.all([
 
   // ── Network data ──
   const nodeCounts = new Map();
-  const edgeCounts = new Map();
+  const edgesByType = new Map();  // "A\x00B" → Map<event_type, count>
 
   for (const entry of entries) {
     const actors = Array.isArray(entry.actors) ? entry.actors : [];
+    const et = entry.event_type || "?";
     for (const a of actors) {
       nodeCounts.set(a, (nodeCounts.get(a) || 0) + 1);
       if (!entriesByActor.has(a)) entriesByActor.set(a, []);
@@ -298,7 +299,9 @@ Promise.all([
     for (let i = 0; i < actors.length; i++) {
       for (let j = i + 1; j < actors.length; j++) {
         const key = [actors[i], actors[j]].sort().join("\x00");
-        edgeCounts.set(key, (edgeCounts.get(key) || 0) + 1);
+        if (!edgesByType.has(key)) edgesByType.set(key, new Map());
+        const byType = edgesByType.get(key);
+        byType.set(et, (byType.get(et) || 0) + 1);
       }
     }
   }
@@ -308,12 +311,28 @@ Promise.all([
     typ: aliasMap[id.toLowerCase()]?.typ || "Org",
   }));
 
-  netLinks = [...edgeCounts.entries()]
-    .filter(([, count]) => count >= 2)
-    .map(([key, count]) => {
-      const [source, target] = key.split("\x00");
-      return { source, target, count };
-    });
+  // One link per (pair, event_type); include all pairs (threshold = 1)
+  netLinks = [];
+  for (const [key, byType] of edgesByType) {
+    const total = [...byType.values()].reduce((s, c) => s + c, 0);
+    if (total < 1) continue;
+    const [source, target] = key.split("\x00");
+    for (const [event_type, count] of byType) {
+      netLinks.push({ source, target, event_type, count });
+    }
+  }
+
+  // ── Diagnose Deutsche Bahn ─────────────────────────────────────────────────
+  const DB = "Deutsche Bahn";
+  const dbNode = netNodes.find(n => n.id === DB);
+  console.log(`[diag] "${DB}" in netNodes:`, !!dbNode, dbNode);
+  const dbLinks = netLinks.filter(l => l.source === DB || l.target === DB);
+  console.log(`[diag] "${DB}" links in netLinks (${dbLinks.length}):`, dbLinks);
+  // Check for whitespace/encoding ghosts
+  const dbRaw = [...nodeCounts.keys()].filter(k => k.toLowerCase().includes("bahn"));
+  console.log(`[diag] keys in nodeCounts containing "bahn":`, dbRaw.map(k => JSON.stringify(k)));
+  const dbEdgeKeys = [...edgesByType.keys()].filter(k => k.toLowerCase().includes("bahn"));
+  console.log(`[diag] keys in edgesByType containing "bahn":`, dbEdgeKeys.map(k => JSON.stringify(k)));
 
 }).catch(err => {
   document.getElementById("chart-area").innerHTML =

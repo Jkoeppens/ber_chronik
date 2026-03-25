@@ -6,11 +6,20 @@ let actorsByAnchor   = new Map();  // doc_anchor → Set<actor_name>; filled in 
 
 const DIM = 0.35;  // opacity for "rest" nodes when something is highlighted
 
-// ── Timeline highlight ────────────────────────────────────────────────────────
-// Three explicit states, one central setter:
-//   "none"   – all dots at rest
-//   "answer" – source dots highlighted, rest dimmed
-//   "single" – one dot extra-prominent, other source dots normal-highlighted, rest dimmed
+// ── Timeline highlight state ──────────────────────────────────────────────────
+// Three explicit modes, driven by a single central setter (setHighlight):
+//
+//   "none"   – all dots at rest; no dimming
+//   "answer" – dots whose anchor is in `anchors` are highlighted, rest dimmed;
+//              used for KI answers, entity selections, and edge-pair clicks
+//   "single" – one dot (active) is extra-prominent (large, gold stroke);
+//              other source dots are normal-highlighted; rest dimmed;
+//              used when the user clicks a single paragraph card or src-ref
+//
+// `focusEntity` (optional) further highlights one actor across all views:
+//   timeline: dots for that entity's articles get gold stroke
+//   network:  the entity node gets enlarged + gold stroke
+//   panel:    the entity's name spans in paragraph text use .entity-focus class
 let chartDotSelection = null;  // D3 selection of all .dot circles; refreshed after each drawChart
 let hlState = { mode: "none", anchors: null, active: null, focusEntity: null };
 
@@ -44,30 +53,5 @@ function _applyTimelineHighlight() {
 }
 
 function _applyNetworkHighlight() {
-  if (!netNodeSelection) return;
-  const { mode, anchors, active } = hlState;
-  // Reset radius first (hover or previous state may have changed it)
-  netNodeSelection.select("circle").attr("r", nodeRadius);
-  if (mode === "none" || !anchors || anchors.size === 0) {
-    netNodeSelection.attr("opacity", 1);
-    netNodeSelection.select("circle")
-      .attr("fill",             d => NODE_COLOR[d.typ] || "#bbb")
-      .attr("stroke",           "#fff")
-      .attr("stroke-width",     1.5)
-      .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
-    return;
-  }
-  // Build actor sets for answer anchors and the focused single anchor
-  const { focusEntity } = hlState;
-  const answerActors = new Set([...anchors].flatMap(a => [...(actorsByAnchor.get(a) || [])]));
-  const activeActors = active ? (actorsByAnchor.get(active) || new Set()) : new Set();
-  netNodeSelection.attr("opacity", d => answerActors.has(d.id) ? 1 : DIM);
-  netNodeSelection.select("circle")
-    .attr("fill",         d => answerActors.has(d.id) ? (NODE_COLOR_ACTIVE[d.typ] || "#999") : (NODE_COLOR[d.typ] || "#bbb"))
-    .attr("r",            d => d.id === focusEntity ? nodeRadius(d) * 1.4 : activeActors.has(d.id) ? nodeRadius(d) * 1.25 : nodeRadius(d))
-    .attr("stroke",       d => d.id === focusEntity ? "#f5c518" : activeActors.has(d.id) ? "#f5c518" : "#fff")
-    .attr("stroke-width", d => d.id === focusEntity ? 3 : activeActors.has(d.id) ? 2.5 : 1.5)
-    .attr("stroke-dasharray", d => (d.id === focusEntity || activeActors.has(d.id)) ? null : (summaryMap[d.id] ? null : "4,3"));
+  if (typeof applyNetworkState === "function") { applyNetworkState(); return; }
 }
-
-function _baseStroke(_d) { return "#fff"; }

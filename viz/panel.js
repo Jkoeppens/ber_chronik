@@ -58,26 +58,13 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") goHome(); })
 // ── Panel collapse/expand ─────────────────────────────────────────────────────
 const panelEl    = document.getElementById("panel");
 const panelMin   = document.getElementById("panel-min");
-const chartArea  = document.getElementById("chart-area");
-const networkArea = document.getElementById("network-area");
 let panelExpanded = false;
-
-function applyPanelWidth() {
-  const w = panelEl.offsetWidth;
-  chartArea.style.paddingRight  = `${w + 24}px`;
-  networkArea.style.paddingRight = `${w}px`;
-}
-
-// Set initial padding once layout is ready
-requestAnimationFrame(applyPanelWidth);
 
 panelMin.addEventListener("click", () => {
   panelExpanded = !panelExpanded;
   panelEl.classList.toggle("expanded", panelExpanded);
   panelMin.textContent = panelExpanded ? "→" : "←";
   panelMin.title       = panelExpanded ? "Einklappen" : "Ausklappen";
-  // After CSS transition ends, update padding (transition is 0.25s)
-  setTimeout(applyPanelWidth, 260);
 });
 
 // ── Para list helpers ─────────────────────────────────────────────────────────
@@ -110,31 +97,59 @@ function renderParaList(entries, focusEntity = null) {
 }
 
 function renderEntityView(normalform, viewEl) {
-  console.log("[renderEntityView] normalform=", normalform);
   const entries = entriesByActor.get(normalform) || [];
   const sorted  = [...entries].sort((a, b) =>
     (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
-  console.log("[renderEntityView] calling renderParaList with focusEntity=", normalform, "entries=", sorted.length);
   const info = summaryMap[normalform];
   let summaryHTML = "";
   if (info && info.summary) {
     let bodyHTML;
     try { bodyHTML = highlightWithKeywords(info.summary, [], normalform); }
-    catch (err) { console.error("[highlightEntityOnly]", err); bodyHTML = escapeHtml(info.summary); }
+    catch (err) { console.error("[renderEntityView:summary]", err); bodyHTML = escapeHtml(info.summary); }
     summaryHTML = `<div class="ep-summary">${bodyHTML}<div class="ep-summary-count">${info.count} Nennungen in der Chronik</div></div>`;
   }
   viewEl.innerHTML = summaryHTML + renderParaList(sorted, normalform);
-  console.log("[renderEntityView] entity-focus spans in DOM:", viewEl.querySelectorAll(".entity-focus").length, "entity spans:", viewEl.querySelectorAll(".entity").length);
 }
 
 function selectEntity(normalform) {
   selectedEntity = normalform;
-  showView("entity", normalform, viewEl => renderEntityView(normalform, viewEl), normalform);
-  // Highlight timeline dots for all paragraphs this entity appears in
+  const renderFn = viewEl => renderEntityView(normalform, viewEl);
+  // Always navigate to the entity view and always call _renderView.
+  // We do NOT go through showView() because its deduplication early-return
+  // only calls _safeRender (re-renders content) without calling _renderView
+  // (which sets the active class). If #view-entity was hidden but currentView
+  // already held this entity key, the view would silently stay invisible.
+  // Push current state to stack only if we're not already on this exact entity.
+  if (!(currentView.type === "entity" && currentView.entityKey === normalform)) {
+    viewStack.push({ ...currentView, hlSnapshot: { ...hlState } });
+  }
+  currentView = { type: "entity", title: normalform, renderFn, entityKey: normalform };
+  _renderView(currentView);
   const anchors = new Set(
     (entriesByActor.get(normalform) || []).map(e => e.doc_anchor).filter(Boolean)
   );
   setHighlight("answer", anchors, null, normalform);
+}
+
+// ── focusActor — chart/network sync without panel navigation ─────────────────────
+// Updates the network ego-graph and timeline highlight for `name` without pushing
+// a new panel view. Used when the calling context handles its own panel navigation
+// (e.g. the tutorial), or when only the external views need updating.
+// For entity-span clicks inside the panel use selectEntity() instead.
+function focusActor(name) {
+  // Network: ego-graph
+  netFocusNode = name;
+  if (typeof applyNetworkState === "function") applyNetworkState();
+
+  // Chart: preserve KI anchors if active, otherwise switch to entity highlight.
+  if (hlState.mode === "answer" && hlState.anchors?.size) {
+    setHighlight(hlState.mode, hlState.anchors, hlState.active, name);
+  } else {
+    const anchors = new Set(
+      (entriesByActor.get(name) || []).map(e => e.doc_anchor).filter(Boolean)
+    );
+    setHighlight("answer", anchors, null, name);
+  }
 }
 
 document.getElementById("panel-content").addEventListener("click", e => {
@@ -151,9 +166,18 @@ document.getElementById("panel-content").addEventListener("click", e => {
     setHighlight("single", anchors, anchor);
     return;
   }
-  // Entity highlight click (checked before card so entities inside cards still work)
+  // Entity span click: navigate panel to entity summary + enter ego-graph in network.
+  // Uses selectEntity() for panel navigation (same path as network node click).
+  // netFocusNode is set before selectEntity so the ego-graph branch wins when
+  // applyNetworkState fires inside setHighlight → _applyNetworkHighlight.
   const ent = e.target.closest(".entity");
-  if (ent) { selectEntity(ent.dataset.name); return; }
+  if (ent) {
+    const name = ent.dataset.name;
+    netFocusPair = null;
+    netFocusNode = name;
+    selectEntity(name);
+    return;
+  }
   // Para card click (source cards and entity view cards): single-dot highlight
   const card = e.target.closest(".ep-para[data-anchor], .ep-para[id^='src-']");
   if (card) {

@@ -17,18 +17,20 @@ const COLOR = {
   Beschluss: "#5A7A30",
   Claim:     "#888880",
 };
-// Pastel tones for rest state; full saturation for hover / highlight
+// Muted palette — same colors for rest and active states.
+// Visual distinction between highlighted and dimmed nodes comes from the
+// group opacity attribute (1 vs DIM=0.35) set in applyNetworkState.
 const NODE_COLOR = {
-  Person:  "#7fa8c9",
-  Org:     "#c9a87a",
-  Gremium: "#a08ab5",
-  Partei:  "#c47a7a",
+  Person:  "#3A6EA8",
+  Org:     "#B87A30",
+  Gremium: "#7A5A9A",
+  Partei:  "#B84040",
 };
 const NODE_COLOR_ACTIVE = {
-  Person:  "#4e79a7",
-  Org:     "#f28e2b",
-  Gremium: "#9467bd",
-  Partei:  "#e15759",
+  Person:  "#3A6EA8",
+  Org:     "#B87A30",
+  Gremium: "#7A5A9A",
+  Partei:  "#B84040",
 };
 
 // ── Entity lookup ─────────────────────────────────────────────────────────────
@@ -65,23 +67,6 @@ function escapeRegex(s) {
 
 function highlightEntities(text) {
   return highlightWithKeywords(text, []);
-}
-
-function highlightEntityOnly(text, normalform) {
-  // Collect only aliases that resolve to this normalform, longest first
-  const aliases = aliasesSorted.filter(a => aliasMap[a]?.normalform === normalform);
-  if (!aliases.length) return escapeHtml(text);
-  const re = new RegExp(
-    `(?<![\\p{L}\\d])(?:${aliases.map(escapeRegex).join("|")})(?![\\p{L}\\d])`, "giu"
-  );
-  const info = aliasMap[normalform.toLowerCase()] || { typ: "Person", normalform };
-  let result = "", lastIdx = 0;
-  for (const match of text.matchAll(re)) {
-    result += escapeHtml(text.slice(lastIdx, match.index));
-    result += `<span class="entity-self" data-typ="${info.typ}">${escapeHtml(match[0])}</span>`;
-    lastIdx = match.index + match[0].length;
-  }
-  return result + escapeHtml(text.slice(lastIdx));
 }
 
 function highlightWithKeywords(text, keywords, focusNormalform = null) {

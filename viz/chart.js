@@ -1,6 +1,6 @@
 // ── Timeline chart ────────────────────────────────────────────────────────────
 let _chartG = null, _x = null, _y = null, _w = 0, _h = 0;
-let _series = [], _area = null, _line = null, _defs = null;
+let _series = [], _area = null, _defs = null;
 
 // Returns [{start, end}] for runs of years with no gap > 1
 function getContiguousSegments(years) {
@@ -149,7 +149,7 @@ function drawChart(series, years) {
   });
 
   _chartG = g; _x = x; _y = y; _w = w; _h = h;
-  _series = series; _defs = defs; _area = area; _line = line;
+  _series = series; _defs = defs; _area = area;
 
   // Store dot selection; re-apply current highlight state after redraw
   chartDotSelection = svg.selectAll("circle.dot");
@@ -165,6 +165,13 @@ function drawChart(series, years) {
   });
 }
 
+function _resetChartStyles() {
+  _chartG.selectAll(".line-path").style("opacity", null).style("stroke", null).style("stroke-width", null);
+  _chartG.selectAll(".area-path").style("opacity", null);
+  _chartG.selectAll(".line-label").style("opacity", null);
+  _chartG.selectAll(".dot").style("opacity", null).style("fill", null);
+}
+
 function _applyChartEntityHighlight() {
   if (!_chartG) return;
   const { focusEntity, mode, anchors } = hlState;
@@ -173,13 +180,7 @@ function _applyChartEntityHighlight() {
   _defs.selectAll(".hl-clip, .hl-grad").remove();
 
   // ── Full reset ──────────────────────────────────────────────────────────────
-  if (mode === "none") {
-    _chartG.selectAll(".line-path").style("opacity", null).style("stroke", null).style("stroke-width", null);
-    _chartG.selectAll(".area-path").style("opacity", null);
-    _chartG.selectAll(".line-label").style("opacity", null);
-    _chartG.selectAll(".dot").style("opacity", null).style("fill", null);
-    return;
-  }
+  if (mode === "none") { _resetChartStyles(); return; }
 
   // ── Gather relevant entries — entity click OR answer anchors ────────────────
   let relevantEntries;
@@ -193,13 +194,7 @@ function _applyChartEntityHighlight() {
     relevantEntries = [];
   }
 
-  if (!relevantEntries.length) {
-    _chartG.selectAll(".line-path").style("opacity", null).style("stroke", null).style("stroke-width", null);
-    _chartG.selectAll(".area-path").style("opacity", null);
-    _chartG.selectAll(".line-label").style("opacity", null);
-    _chartG.selectAll(".dot").style("opacity", null).style("fill", null);
-    return;
-  }
+  if (!relevantEntries.length) { _resetChartStyles(); return; }
 
   // Collect years per event type
   const byType = {};

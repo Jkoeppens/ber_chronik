@@ -169,18 +169,6 @@ _style.textContent = `
 }
 .tut-skip:hover { color: #555; }
 .tut-progress { margin-left: auto; font-size: 0.72rem; color: #bbb; }
-#tutorial-btn {
-  padding: 3px 10px;
-  font-size: 0.75rem;
-  background: none;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #666;
-  margin-left: 12px;
-  vertical-align: middle;
-}
-#tutorial-btn:hover { background: #f0f0f0; color: #111; }
 `;
 document.head.appendChild(_style);
 
@@ -289,11 +277,7 @@ function tutorialStart() {
 
 // ── Header button ─────────────────────────────────────────────────────────────
 
-const _btn = document.createElement("button");
-_btn.id          = "tutorial-btn";
-_btn.textContent = "Tutorial";
-document.querySelector("header").appendChild(_btn);
-_btn.onclick = tutorialStart;
+document.getElementById("tutorial-btn").onclick = tutorialStart;
 
 // ── Auto-start on first visit ─────────────────────────────────────────────────
 

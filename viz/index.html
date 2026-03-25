@@ -9,26 +9,27 @@
 </head>
 <body>
 
-<header>
-  <h1>BER Chronik 1989–2017</h1>
-  <p>Klick auf einen Punkt für Absätze · Klick auf markierte Namen für Zusammenfassungen · Legende zum Ein-/Ausblenden</p>
-</header>
-
-<nav id="tabs">
-  <button class="tab active" id="tab-timeline">Timeline</button>
-  <button class="tab"        id="tab-network">Netzwerk</button>
-</nav>
-
 <div id="main">
-  <div id="chart-area">
-    <svg id="chart"></svg>
-    <div id="legend"></div>
-  </div>
+  <div id="left-col">
+    <header style="display:flex; align-items:center; height:44px; padding:0 20px; background:#F7F5F0; gap:24px; flex-shrink:0;">
+      <span style="font-size:15px; font-weight:500; white-space:nowrap;">BER Chronik 1989–2017</span>
+      <nav id="tabs" style="display:flex; gap:0; align-items:center;">
+        <button class="tab active" id="tab-timeline">Timeline</button>
+        <button class="tab"        id="tab-network">Netzwerk</button>
+      </nav>
+      <span id="tutorial-btn" title="Tutorial starten" style="margin-left:auto;">?</span>
+    </header>
 
-  <div id="network-area">
-    <svg id="network"></svg>
-    <div id="net-hint">Scrollen zum Zoomen · Ziehen zum Verschieben · Knoten ziehbar</div>
-    <div id="net-legend"></div>
+    <div id="chart-area">
+      <svg id="chart"></svg>
+      <div id="legend"></div>
+    </div>
+
+    <div id="network-area">
+      <svg id="network"></svg>
+      <div id="net-hint">Scrollen zum Zoomen · Ziehen zum Verschieben · Knoten ziehbar</div>
+      <div id="net-legend"></div>
+    </div>
   </div>
 
   <aside id="panel">
@@ -41,7 +42,6 @@
       </div>
       <button id="chat-send">→</button>
     </div>
-
     <!-- Row 2: back + title + close -->
     <div id="panel-navbar">
       <button id="panel-back" title="Zurück">←</button>
@@ -56,7 +56,7 @@
       <div id="view-entity"   class="panel-view"></div>
     </div>
   </aside>
-</div>
+</div> <!-- #main -->
 
 <div id="tooltip"></div>
 
