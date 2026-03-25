@@ -1,8 +1,29 @@
-# BER Chronik – Projektplan
+# BER Chronik
 
-**Quelle:** Chronik der Entwicklung 1989–2017, zusammengestellt von André Geicke
-**Ziel:** Interaktives Recherchetool (Phase 1) → öffentliche Erzählung (Phase 2)
-**Prinzip:** Reproduzierbar, verständlich, kein Blackbox-Code
+Ein interaktives Tool das 28 Jahre Planungs- und Baugeschichte des Berliner Flughafens BER durchsuchbar macht.
+
+## Was es kann
+
+- **Timeline** — alle Ereignisse von 1989 bis 2017 nach Jahr und Thema, klickbar und filterbar
+- **Akteursnetzwerk** — Personen, Organisationen und Gremien als Graph; Knotengröße zeigt Häufigkeit, Kanten entstehen aus gemeinsamen Erwähnungen
+- **KI-Suche** — Fragen in natürlicher Sprache werden gegen die Originalabsätze der Chronik beantwortet, mit klickbaren Quellenverweisen
+- **Ko-Navigation** — Timeline, Netzwerk und Panel sind synchronisiert: ein ausgewählter Akteur wird in allen Ansichten gleichzeitig hervorgehoben
+
+## Architektur
+
+Die Datenaufbereitung läuft lokal: spaCy extrahiert Personen, Organisationen und Gremien per Named Entity Recognition, Ollama mit einem lokalen Llama-Modell klassifiziert die Themen der einzelnen Absätze. Das aufbereitete Datenmaterial liegt als statisches JSON vor und wird direkt im Browser geladen. Die Visualisierung — Timeline und Netzwerkgraph — ist vollständig in D3.js im Browser implementiert. Für die KI-gestützte Suche läuft ein FastAPI-Backend auf einem externen Server; es nimmt Suchanfragen entgegen, wählt relevante Absätze per Volltextsuche aus und synthetisiert die Antwort über die Claude API.
+
+## Datengrundlage
+
+Grundlage ist das Protokoll des Berliner Untersuchungsausschusses zum BER, ca. 100 Seiten. Themenklassifikation und Entitätserkennung sind eigenständig durchgeführt und nicht mit dem Originaldokument ausgeliefert.
+
+## Tech Stack
+
+Python · spaCy · Ollama (Llama 3.1) · FastAPI · D3.js · Claude API (Anthropic)
+
+## Status
+
+Prototyp, in aktiver Entwicklung.
 
 ---
 
