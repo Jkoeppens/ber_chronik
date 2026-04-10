@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Planungsrecht",
+    "description": "Rechtliche Auseinandersetzungen um Standortentscheidungen, Planfeststellungsbeschlüsse und gerichtliche Überprüfungen des Flughafenprojekts.",
+    "keywords": [
+      "Planfeststellungsbeschluss",
+      "Oberverwaltungsgericht",
+      "Standortkür"
+    ]
+  },
+  {
+    "name": "Baukomplexität",
+    "description": "Technische Details und Herausforderungen der Bauausführung, insbesondere bei sicherheitsrelevanten Anlagen wie Brandschutz.",
+    "keywords": [
+      "Brandmelder",
+      "Sprinklerköpfe",
+      "Brandschutzanlage"
+    ]
+  },
+  {
+    "name": "Kostensteigerung",
+    "description": "Dokumentation der massiven Überschreitungen ursprünglich kalkulierter Baukosten und Finanzierungsänderungen.",
+    "keywords": [
+      "Millionen Euro",
+      "Kostenexplosion",
+      "Regierungsterminal"
+    ]
+  },
+  {
+    "name": "Privatisierung",
+    "description": "Versuche und Scheitern der privaten Finanzierung und Privatisierung der Flughafengesellschaft BBF.",
+    "keywords": [
+      "Privatisierung",
+      "BBF",
+      "Finanzierung"
+    ]
+  },
+  {
+    "name": "Vergabeverfahren",
+    "description": "Rechtsstreitigkeiten und Unregelmäßigkeiten bei der Auftragsvergabe an Baukonsortien wie Hochtief und IVG.",
+    "keywords": [
+      "Hochtief",
+      "IVG",
+      "Vergabe"
+    ]
+  },
+  {
+    "name": "Lärmschutz",
+    "description": "Konflikte um Nachtflugverbote, Schallschutzauflagen und die Rechte betroffener Anwohner.",
+    "keywords": [
+      "Nachtflugverbot",
+      "Schallschutz",
+      "Anwohner"
+    ]
+  },
+  {
+    "name": "Eröffnungsverzögerung",
+    "description": "Chronologie der immer wieder verschobenen Eröffnungstermine und der dafür verantwortlichen Faktoren.",
+    "keywords": [
+      "Winterflugplan",
+      "Verschiebung",
+      "Baugenehmigung"
+    ]
+  },
+  {
+    "name": "PolitischeAkteure",
+    "description": "Rolle und Einfluss politischer Entscheidungsträger auf Bundes-, Landes- und EU-Ebene im Projektverlauf.",
+    "keywords": [
+      "Woidke",
+      "Gesellschafter",
+      "Aufsichtsrat"
+    ]
+  }
+]

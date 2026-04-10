@@ -11,12 +11,12 @@ function labelSize(d)  { return nodeRadius(d) >= 12 ? 11 : 10; }
 
 // Fetch precomputed layout eagerly so it's ready before first tab-open
 let _networkLayout = null;
-fetch("network_layout.json").then(r => r.json()).then(l => { _networkLayout = l; }).catch(() => {});
+fetch(`${DATA_BASE}network_layout.json`).then(r => r.json()).then(l => { _networkLayout = l; }).catch(() => {});
 
 // ── Unified network state machine ─────────────────────────────────────────────
 // Priority order (highest wins):
 //
-//   1. Ego-graph   (netFocusNode set) — node click / focusActor().
+//   1. Ego-graph   (netFocusNode set) — node click.
 //      Clicked node + immediate neighbours visible; everything else dimmed.
 //      Ego node is pinned (fx/fy) so it stays put while forces settle.
 //
@@ -77,11 +77,11 @@ function applyNetworkState() {
       .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
     netLinkSelection
       .attr("stroke-opacity", l => {
-        const sk = [l.source?.id ?? l.source, l.target?.id ?? l.target].sort().join("\x00");
+        const sk = pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target);
         return sk === focusKey ? 0.85 : 0.05;
       })
       .attr("stroke-width", l => {
-        const sk = [l.source?.id ?? l.source, l.target?.id ?? l.target].sort().join("\x00");
+        const sk = pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target);
         return sk === focusKey ? Math.max(2, Math.log((l.count || 1) + 1) * 1.5) : defaultWidth(l);
       });
     return;
@@ -199,7 +199,7 @@ function drawNetwork(nodes, links) {
   const simLinks = links.filter(l => {
     const sid = l.source?.id ?? l.source;
     const tid = l.target?.id ?? l.target;
-    const k = [sid, tid].sort().join("\x00");
+    const k = pairKey(sid, tid);
     if (pairSeen.has(k)) return false;
     pairSeen.add(k); return true;
   });
@@ -220,20 +220,15 @@ function drawNetwork(nodes, links) {
   let _tempPinned     = [];  // nodes temporarily fixed during a transition
 
   // ── Parallel edge offsets ────────────────────────────────────────────────────
-  function pairKey(l) {
-    const sid = l.source?.id ?? l.source, tid = l.target?.id ?? l.target;
-    return [sid, tid].sort().join("\x00");
-  }
-
   function computeOffsets(visibleLinks) {
     const groups = new Map();
     visibleLinks.forEach(l => {
-      const k = pairKey(l);
+      const k = pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target);
       if (!groups.has(k)) groups.set(k, []);
       groups.get(k).push(l);
     });
     visibleLinks.forEach(l => {
-      const grp = groups.get(pairKey(l));
+      const grp = groups.get(pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target));
       l._offsetTotal = grp.length;
       l._offsetIndex = grp.indexOf(l);
     });
@@ -246,7 +241,7 @@ function drawNetwork(nodes, links) {
   const pairTotalCount = new Map(); // pairKey → total co-occurrence count
   const pairEventTypes = new Map(); // pairKey → Set<event_type>
   links.forEach(l => {
-    const k = pairKey(l);
+    const k = pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target);
     pairTotalCount.set(k, (pairTotalCount.get(k) || 0) + l.count);
     if (!pairEventTypes.has(k)) pairEventTypes.set(k, new Set());
     pairEventTypes.get(k).add(l.event_type);
@@ -254,7 +249,7 @@ function drawNetwork(nodes, links) {
   // Deduplicated: one representative link per pair
   const pairSeen2 = new Set();
   const hitLinks  = links.filter(l => {
-    const k = pairKey(l);
+    const k = pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target);
     if (pairSeen2.has(k)) return false;
     pairSeen2.add(k); return true;
   });
@@ -304,7 +299,7 @@ function drawNetwork(nodes, links) {
         netFocusNode = null;
       }
       const sid = d.source?.id ?? d.source, tid = d.target?.id ?? d.target;
-      const key = [sid, tid].sort().join("\x00");
+      const key = pairKey(sid, tid);
       netFocusPair = { key, sid, tid };
       const shared = (entriesByActor.get(sid) || [])
         .filter(e => Array.isArray(e.actors) && e.actors.includes(tid))
@@ -357,29 +352,6 @@ function drawNetwork(nodes, links) {
   let topN      = nodes.length;
   let minLinks  = 2;
 
-  // ── Diagnostic: why are specific nodes not connected? ────────────────────────
-  ["Gerkan Marg und Partner", "Karsten Mühlenfeld"].forEach(id => {
-    const n = nodes.find(d => d.id === id);
-    if (!n) { console.log(`[diag] "${id}" — not in nodes array`); return; }
-    const rank = rankById.get(id);
-    const nLinks = links.filter(l => {
-      const sid = l.source?.id ?? l.source, tid = l.target?.id ?? l.target;
-      return sid === id || tid === id;
-    });
-    console.log(`[diag] "${id}" — rank:${rank}/${nodes.length}, linkCount:${n.linkCount}, dataset links:${nLinks.length}`);
-    nLinks.forEach(l => {
-      const sid = l.source?.id ?? l.source, tid = l.target?.id ?? l.target;
-      const other = sid === id ? tid : sid;
-      const otherNode = nodes.find(d => d.id === other);
-      const otherRank = rankById.get(other);
-      const visNode  = n.linkCount > 0 && rank <= topN && activeNodeTypes.has(n.typ);
-      const visOther = otherNode && otherNode.linkCount > 0 && otherRank <= topN && activeNodeTypes.has(otherNode.typ);
-      const visEdge  = visNode && visOther && activeNetThemes.has(l.event_type);
-      console.log(`  → "${other}" rank:${otherRank} et:${l.event_type} count:${l.count}`
-        + (visEdge ? " ✓" : ` ✗ (self:${visNode} other:${visOther} theme:${activeNetThemes.has(l.event_type)})`));
-    });
-  });
-
   // Base visibility: rank + type filters only (edge-count checked separately)
   function baseVisible(d) {
     return d.linkCount > 0 && rankById.get(d.id) <= topN && activeNodeTypes.has(d.typ);
@@ -415,7 +387,7 @@ function drawNetwork(nodes, links) {
     // Sim links: one per pair
     const seen = new Set();
     const newSimLinks = visibleLinks.filter(l => {
-      const k = [l.source.id, l.target.id].sort().join("\x00");
+      const k = pairKey(l.source.id, l.target.id);
       if (seen.has(k)) return false;
       seen.add(k); return true;
     });
@@ -513,7 +485,7 @@ function drawNetwork(nodes, links) {
       node.attr("opacity", n => (n.id === d.id || nbrs.has(n.id)) ? 1 : DIM);
       d3.select(event.currentTarget).select("circle")
         .attr("r",    nodeRadius(d) * 1.25)
-        .attr("fill", NODE_COLOR_ACTIVE[d.typ] || "#999");
+        .attr("fill", NODE_COLOR[d.typ] || "#999");
       linkSel.attr("stroke-opacity", l => {
         const s = l.source?.id ?? l.source, t = l.target?.id ?? l.target;
         return (s === d.id || t === d.id) ? 0.85 : 0.05;
@@ -653,21 +625,3 @@ function drawNetwork(nodes, links) {
   });
 }
 
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-let networkDrawn  = false;
-let netNodes = [], netLinks = [], entriesByActor = new Map();
-let entriesByAnchor = new Map();
-
-function switchTab(active) {
-  ["timeline", "network"].forEach(id => {
-    document.getElementById(`tab-${id}`).classList.toggle("active", id === active);
-  });
-  document.getElementById("chart-area").classList.toggle("hidden",  active !== "timeline");
-  document.getElementById("network-area").classList.toggle("active", active === "network");
-}
-
-document.getElementById("tab-timeline").addEventListener("click", () => switchTab("timeline"));
-document.getElementById("tab-network").addEventListener("click",  () => {
-  switchTab("network");
-  if (!networkDrawn) { drawNetwork(netNodes, netLinks); networkDrawn = true; }
-});

@@ -78,22 +78,31 @@ function formatDate(p) {
   return year ? `${raw} ${year}` : raw; // e.g. "März" + " 2013"
 }
 
+// Renders a single paragraph card. `id` and `anchor` are mutually exclusive:
+//   id     → sets DOM id attribute (used for chat source cards, linked by AI answer text)
+//   anchor → sets data-anchor attribute (used for timeline/entity cards, supports highlight sync)
+function renderParaCard(p, { id = null, anchor = null, highlightFn = highlightEntities } = {}) {
+  const et    = p.event_type || "?";
+  const color = COLOR[et] || "#999";
+  const date  = formatDate(p);
+  const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
+  const idAttr     = id     ? ` id="${escapeHtml(id)}"` : "";
+  const anchorAttr = anchor ? ` data-anchor="${escapeHtml(anchor)}"` : "";
+  return `<div class="ep-para"${idAttr}${anchorAttr}>
+    <div class="para-date">${escapeHtml(date)}</div>
+    <span class="para-label" style="background:${color}">${et}</span>
+    <div class="para-text">${highlightFn(p.text || "")}</div>
+    ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
+  </div>`;
+}
+
 function renderParaList(entries, focusEntity = null) {
-  return entries.map(p => {
-    const et    = p.event_type || "?";
-    const color = COLOR[et] || "#999";
-    const date  = formatDate(p);
-    const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
-    const textHtml = focusEntity
-      ? highlightWithKeywords(p.text || "", [], focusEntity)
-      : highlightEntities(p.text || "");
-    return `<div class="ep-para" data-anchor="${escapeHtml(p.doc_anchor || '')}">
-      <div class="para-date">${escapeHtml(date)}</div>
-      <span class="para-label" style="background:${color}">${et}</span>
-      <div class="para-text">${textHtml}</div>
-      ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
-    </div>`;
-  }).join("");
+  return entries.map(p => renderParaCard(p, {
+    anchor:      p.doc_anchor || "",
+    highlightFn: focusEntity
+      ? text => highlightWithKeywords(text, [], focusEntity)
+      : highlightEntities,
+  })).join("");
 }
 
 function renderEntityView(normalform, viewEl) {
@@ -129,27 +138,6 @@ function selectEntity(normalform) {
     (entriesByActor.get(normalform) || []).map(e => e.doc_anchor).filter(Boolean)
   );
   setHighlight("answer", anchors, null, normalform);
-}
-
-// ── focusActor — chart/network sync without panel navigation ─────────────────────
-// Updates the network ego-graph and timeline highlight for `name` without pushing
-// a new panel view. Used when the calling context handles its own panel navigation
-// (e.g. the tutorial), or when only the external views need updating.
-// For entity-span clicks inside the panel use selectEntity() instead.
-function focusActor(name) {
-  // Network: ego-graph
-  netFocusNode = name;
-  if (typeof applyNetworkState === "function") applyNetworkState();
-
-  // Chart: preserve KI anchors if active, otherwise switch to entity highlight.
-  if (hlState.mode === "answer" && hlState.anchors?.size) {
-    setHighlight(hlState.mode, hlState.anchors, hlState.active, name);
-  } else {
-    const anchors = new Set(
-      (entriesByActor.get(name) || []).map(e => e.doc_anchor).filter(Boolean)
-    );
-    setHighlight("answer", anchors, null, name);
-  }
 }
 
 document.getElementById("panel-content").addEventListener("click", e => {

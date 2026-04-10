@@ -1,0 +1,102 @@
+{
+  "title": "BER Chronik 1989–2017",
+  "doc_type": "presseartikel",
+  "taxonomy": [
+    {
+      "name": "Planungsrecht",
+      "description": "Rechtliche Auseinandersetzungen um Standortentscheidungen, Planfeststellungsbeschlüsse und gerichtliche Überprüfungen des Flughafenprojekts.",
+      "keywords": [
+        "Planfeststellungsbeschluss",
+        "Oberverwaltungsgericht",
+        "Standortkür"
+      ]
+    },
+    {
+      "name": "Baukomplexität",
+      "description": "Technische Details und Herausforderungen der Bauausführung, insbesondere bei sicherheitsrelevanten Anlagen wie Brandschutz.",
+      "keywords": [
+        "Brandmelder",
+        "Sprinklerköpfe",
+        "Brandschutzanlage"
+      ]
+    },
+    {
+      "name": "Kostensteigerung",
+      "description": "Dokumentation der massiven Überschreitungen ursprünglich kalkulierter Baukosten und Finanzierungsänderungen.",
+      "keywords": [
+        "Millionen Euro",
+        "Kostenexplosion",
+        "Regierungsterminal"
+      ]
+    },
+    {
+      "name": "Privatisierung",
+      "description": "Versuche und Scheitern der privaten Finanzierung und Privatisierung der Flughafengesellschaft BBF.",
+      "keywords": [
+        "Privatisierung",
+        "BBF",
+        "Finanzierung"
+      ]
+    },
+    {
+      "name": "Vergabeverfahren",
+      "description": "Rechtsstreitigkeiten und Unregelmäßigkeiten bei der Auftragsvergabe an Baukonsortien wie Hochtief und IVG.",
+      "keywords": [
+        "Hochtief",
+        "IVG",
+        "Vergabe"
+      ]
+    },
+    {
+      "name": "Lärmschutz",
+      "description": "Konflikte um Nachtflugverbote, Schallschutzauflagen und die Rechte betroffener Anwohner.",
+      "keywords": [
+        "Nachtflugverbot",
+        "Schallschutz",
+        "Anwohner"
+      ]
+    },
+    {
+      "name": "Eröffnungsverzögerung",
+      "description": "Chronologie der immer wieder verschobenen Eröffnungstermine und der dafür verantwortlichen Faktoren.",
+      "keywords": [
+        "Winterflugplan",
+        "Verschiebung",
+        "Baugenehmigung"
+      ]
+    },
+    {
+      "name": "PolitischeAkteure",
+      "description": "Rolle und Einfluss politischer Entscheidungsträger auf Bundes-, Landes- und EU-Ebene im Projektverlauf.",
+      "keywords": [
+        "Woidke",
+        "Gesellschafter",
+        "Aufsichtsrat"
+      ]
+    }
+  ],
+  "entity_types": [
+    "Organisation",
+    "Ort",
+    "Person",
+    "Werk"
+  ],
+  "color_map": {
+    "Planungsrecht": "#3b82f6",
+    "Baukomplexität": "#f59e0b",
+    "Kostensteigerung": "#10b981",
+    "Privatisierung": "#8b5cf6",
+    "Vergabeverfahren": "#ef4444",
+    "Lärmschutz": "#06b6d4",
+    "Eröffnungsverzögerung": "#f97316",
+    "PolitischeAkteure": "#6366f1"
+  },
+  "node_color_map": {
+    "Organisation": "#60a5fa",
+    "Ort": "#fbbf24",
+    "Person": "#34d399",
+    "Werk": "#c084fc"
+  },
+  "year_min": 1989,
+  "year_max": 2017
+}

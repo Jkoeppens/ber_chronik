@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Taxonomy Editor</title>
+<style>
+{{APP_CSS}}
+#log{border-left:none;border-right:none;border-radius:0;border-top:none;
+     max-height:100px;padding:8px 24px;margin:0}
+#grid{padding:16px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+      gap:12px;align-items:start}
+.cat{padding:14px;display:flex;flex-direction:column;gap:10px;border-radius:8px}
+.cat-header{display:flex;align-items:center;gap:8px}
+.cat-name{flex:1;font-size:13px;font-weight:600;padding:4px 8px;border:1px solid transparent;
+          border-radius:3px;background:transparent;color:var(--c-text);font-family:inherit}
+.cat-name:hover{border-color:#d1d5db}
+.cat-name:focus{border-color:var(--c-primary);outline:none;background:var(--c-primary-bg)}
+.cat-desc{font-size:12px;line-height:1.5;padding:5px 8px;border:1px solid transparent;
+          border-radius:3px;resize:vertical;min-height:48px;font-family:inherit;
+          color:var(--c-text-2);background:transparent;width:100%}
+.cat-desc:hover{border-color:#d1d5db}
+.cat-desc:focus{border-color:var(--c-primary);outline:none;background:var(--c-primary-bg)}
+.kw-list{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.kw{display:flex;align-items:center;gap:3px;background:#f3f4f6;border:1px solid var(--c-code-border);
+    border-radius:12px;padding:2px 8px 2px 10px;font-size:11px;color:#374151}
+.kw input{border:none;background:transparent;font-size:11px;color:#374151;
+          font-family:inherit;width:80px;outline:none}
+.kw input:focus{width:110px}
+.kw-del{border:none;background:transparent;color:var(--c-text-4);cursor:pointer;
+        font-size:13px;line-height:1;padding:0 2px}
+.kw-del:hover{color:var(--c-danger)}
+.kw-add{border:none;background:transparent;color:var(--c-primary);cursor:pointer;
+        font-size:11px;padding:2px 6px;border-radius:12px;border:1px dashed var(--c-primary-ring)}
+.kw-add:hover{background:var(--c-primary-tint)}
+.cat-del{border:none;background:transparent;color:#d1d5db;cursor:pointer;font-size:16px;
+         padding:2px 4px;line-height:1;border-radius:3px;flex-shrink:0}
+.cat-del:hover{color:var(--c-danger);background:var(--c-danger-bg)}
+.empty{padding:40px;text-align:center;color:var(--c-text-4);font-size:13px;grid-column:1/-1}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <h1>Taxonomy Editor</h1>
+  <span class="app-status" id="status">Lade…</span>
+  <button class="btn" id="btn-add">+ Kategorie</button>
+  <button class="btn btn-outline" id="btn-propose">KI-Vorschlag generieren</button>
+  <button class="btn btn-success" id="btn-save" disabled>Speichern</button>
+</div>
+<div id="log" class="log-box"></div>
+<div id="log-toggle" class="log-toggle"></div>
+<div id="grid"></div>
+<script>
+const gridEl=document.getElementById("grid"),statusEl=document.getElementById("status"),
+      logEl=document.getElementById("log"),btnSave=document.getElementById("btn-save"),
+      btnProp=document.getElementById("btn-propose"),btnAdd=document.getElementById("btn-add");
+let taxonomy=[],dirty=false;
+async function load(){
+  const res=await fetch("/taxonomy/data");taxonomy=await res.json();render();
+  statusEl.textContent=taxonomy.length?`${taxonomy.length} Kategorien geladen`:"Noch keine Taxonomie";
+}
+function render(){
+  gridEl.innerHTML="";
+  if(!taxonomy.length){gridEl.innerHTML='<div class="empty">Keine Kategorien.</div>';btnSave.disabled=true;return;}
+  taxonomy.forEach((cat,idx)=>{
+    const card=document.createElement("div");card.className="cat";card.dataset.idx=idx;
+    const nameRow=document.createElement("div");nameRow.className="cat-header";
+    const ni=document.createElement("input");ni.className="cat-name";ni.value=cat.name;ni.placeholder="Kategoriename";
+    ni.addEventListener("input",e=>{taxonomy[idx].name=e.target.value;markDirty();});
+    const delBtn=document.createElement("button");delBtn.className="cat-del";delBtn.title="Löschen";delBtn.textContent="×";
+    delBtn.addEventListener("click",()=>{taxonomy.splice(idx,1);markDirty();render();});
+    nameRow.appendChild(ni);nameRow.appendChild(delBtn);
+    const desc=document.createElement("textarea");desc.className="cat-desc";desc.value=cat.description;desc.placeholder="Beschreibung…";
+    desc.addEventListener("input",e=>{taxonomy[idx].description=e.target.value;markDirty();});
+    const kwList=document.createElement("div");kwList.className="kw-list";
+    (cat.keywords||[]).forEach((kw,ki)=>kwList.appendChild(makeKwChip(idx,ki,kw)));
+    const addKw=document.createElement("button");addKw.className="kw-add";addKw.textContent="+ Keyword";
+    addKw.addEventListener("click",()=>{taxonomy[idx].keywords=taxonomy[idx].keywords||[];taxonomy[idx].keywords.push("");markDirty();render();
+      const chips=gridEl.querySelectorAll(`.cat[data-idx="${idx}"] .kw input`);if(chips.length)chips[chips.length-1].focus();});
+    kwList.appendChild(addKw);
+    card.appendChild(nameRow);card.appendChild(desc);card.appendChild(kwList);gridEl.appendChild(card);
+  });
+}
+function makeKwChip(ci,ki,val){
+  const chip=document.createElement("span");chip.className="kw";
+  const inp=document.createElement("input");inp.value=val;inp.placeholder="keyword";
+  inp.addEventListener("input",e=>{taxonomy[ci].keywords[ki]=e.target.value;markDirty();});
+  const del=document.createElement("button");del.className="kw-del";del.textContent="×";
+  del.addEventListener("click",()=>{taxonomy[ci].keywords.splice(ki,1);markDirty();render();});
+  chip.appendChild(inp);chip.appendChild(del);return chip;
+}
+function markDirty(){dirty=true;btnSave.disabled=false;statusEl.textContent="Ungespeicherte Änderungen";}
+btnAdd.addEventListener("click",()=>{taxonomy.push({name:"",description:"",keywords:[]});markDirty();render();
+  const cards=gridEl.querySelectorAll(".cat");if(cards.length)cards[cards.length-1].querySelector(".cat-name").focus();});
+btnSave.addEventListener("click",async()=>{
+  btnSave.disabled=true;btnSave.textContent="Speichere…";
+  const res=await fetch("/taxonomy/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(taxonomy)});
+  if(res.ok){dirty=false;statusEl.textContent=`${taxonomy.length} Kategorien gespeichert ✓`;}
+  btnSave.textContent="Speichern";if(!res.ok)btnSave.disabled=false;
+});
+btnProp.addEventListener("click",async()=>{
+  btnProp.disabled=true;btnProp.textContent="Läuft…";logEl.className="";logEl.textContent="";logEl.style.display="block";
+  const res=await fetch("/taxonomy/propose",{method:"POST"});
+  const reader=res.body.getReader(),decoder=new TextDecoder();let buf="";
+  while(true){
+    const{done,value}=await reader.read();if(done)break;
+    buf+=decoder.decode(value,{stream:true});const lines=buf.split("\\n");buf=lines.pop();
+    for(const line of lines){
+      if(!line.startsWith("data: "))continue;const msg=line.slice(6);
+      if(msg==="__done__"){logEl.textContent+="\\n✓ Fertig";await load();btnProp.disabled=false;btnProp.textContent="KI-Vorschlag neu generieren";return;}
+      if(msg.startsWith("__error__")){logEl.className="error";logEl.textContent+="\\n"+msg.slice(9);btnProp.disabled=false;btnProp.textContent="KI-Vorschlag neu generieren";return;}
+      logEl.textContent+=(logEl.textContent?"\\n":"")+msg;logEl.scrollTop=logEl.scrollHeight;
+    }
+  }
+});
+window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue="";}});
+load();
+</script>
+</body>
+</html>

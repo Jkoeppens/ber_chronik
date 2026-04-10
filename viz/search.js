@@ -1,5 +1,6 @@
 // ── Chat (in panel) ───────────────────────────────────────────────────────────
-const API_URL = "https://berchronik-production.up.railway.app";
+// API_URL is defined in config.js (loads first)
+// PAGE_PROJECT and DATA_BASE are defined in highlight.js (loads first)
 
 // German stopwords (mirrors api_server.py)
 const STOPWORDS = new Set([
@@ -62,18 +63,9 @@ function renderChatAnswer(viewEl, question, mode, content) {
       .map(anchor => entriesByAnchor.get(anchor))
       .filter(Boolean);
 
-    const sourceCards = sourceEntries.map(p => {
-      const et    = p.event_type || "?";
-      const color = COLOR[et] || "#999";
-      const date  = formatDate(p);
-      const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
-      return `<div class="ep-para" id="src-${p.doc_anchor}">
-        <div class="para-date">${escapeHtml(date)}</div>
-        <span class="para-label" style="background:${color}">${et}</span>
-        <div class="para-text">${highlightEntities(p.text || "")}</div>
-        ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
-      </div>`;
-    }).join("");
+    const sourceCards = sourceEntries.map(p =>
+      renderParaCard(p, { id: `src-${p.doc_anchor}`, highlightFn: highlightEntities })
+    ).join("");
 
     const sourcesHTML = sourceEntries.length ? `
       <div class="chat-sources-header">Verwendete Quellen (${sourceEntries.length})</div>
@@ -89,18 +81,9 @@ function renderChatAnswer(viewEl, question, mode, content) {
   } else {
     const { hits, keywords } = content;
     const cards = hits.length
-      ? hits.map(p => {
-          const et    = p.event_type || "?";
-          const color = COLOR[et] || "#999";
-          const date  = formatDate(p);
-          const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
-          return `<div class="ep-para">
-            <div class="para-date">${escapeHtml(date)}</div>
-            <span class="para-label" style="background:${color}">${et}</span>
-            <div class="para-text">${highlightWithKeywords(p.text || "", keywords)}</div>
-            ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
-          </div>`;
-        }).join("")
+      ? hits.map(p => renderParaCard(p, {
+          highlightFn: text => highlightWithKeywords(text, keywords),
+        })).join("")
       : `<div class="chat-params">Keine Treffer.</div>`;
 
     viewEl.innerHTML = `
@@ -153,7 +136,7 @@ async function sendChat() {
     const res = await fetch(`${API_URL}/chat/stream`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ question }),
+      body:    JSON.stringify({ question, ...(PAGE_PROJECT && { project_id: PAGE_PROJECT }) }),
       signal:  AbortSignal.timeout(60000),
     });
     if (!res.ok) {
@@ -228,116 +211,3 @@ document.getElementById("chat-input").addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
 });
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
-Promise.all([
-  fetch("data.json").then(r => r.json()),
-  fetch("entities_seed.csv").then(r => r.text())
-    .catch(() => ""),
-  fetch("entities_summary.json").then(r => r.json())
-    .catch(() => ({})),
-]).then(([{ entries }, csvText, summaries]) => {
-
-  buildAliasMap(csvText);
-  summaryMap = summaries;
-  allEntries = entries;
-
-  for (const e of entries) {
-    if (e.doc_anchor) {
-      entriesByAnchor.set(e.doc_anchor, e);
-      const actors = Array.isArray(e.actors) ? e.actors : [];
-      if (actors.length) actorsByAnchor.set(e.doc_anchor, new Set(actors));
-    }
-  }
-
-  // ── Timeline series ──
-  const years  = d3.range(1989, 2018);
-  const byYear = d3.group(entries.filter(e => e.year), e => e.year);
-
-  const series = EVENT_TYPES.map(et => ({
-    et,
-    values: years.map(year => {
-      const ents = (byYear.get(year) || []).filter(e => e.event_type === et);
-      return {
-        year,
-        count:     ents.length,
-        entries:   ents,
-        anchorSet: new Set(ents.map(e => e.doc_anchor).filter(Boolean)),
-      };
-    }),
-  }));
-
-  drawChart(series, years);
-  new ResizeObserver(() => drawChart(series, years)).observe(
-    document.getElementById("chart"));
-
-  const legend = document.getElementById("legend");
-  EVENT_TYPES.forEach(et => {
-    const item = document.createElement("div");
-    item.className = "legend-item";
-    item.innerHTML = `<div class="legend-swatch" style="background:${COLOR[et]}"></div>${et}`;
-    item.addEventListener("click", () => {
-      dimmedTypes.has(et) ? dimmedTypes.delete(et) : dimmedTypes.add(et);
-      drawChart(series, years);
-      document.querySelectorAll(".legend-item").forEach((el, i) =>
-        el.classList.toggle("dimmed", dimmedTypes.has(EVENT_TYPES[i])));
-    });
-    legend.appendChild(item);
-  });
-
-  // ── Network data ──
-  const nodeCounts = new Map();
-  const edgesByType = new Map();  // "A\x00B" → Map<event_type, count>
-
-  for (const entry of entries) {
-    const actors = Array.isArray(entry.actors) ? entry.actors : [];
-    const et = entry.event_type || "?";
-    for (const a of actors) {
-      nodeCounts.set(a, (nodeCounts.get(a) || 0) + 1);
-      if (!entriesByActor.has(a)) entriesByActor.set(a, []);
-      entriesByActor.get(a).push(entry);
-    }
-    for (let i = 0; i < actors.length; i++) {
-      for (let j = i + 1; j < actors.length; j++) {
-        const key = [actors[i], actors[j]].sort().join("\x00");
-        if (!edgesByType.has(key)) edgesByType.set(key, new Map());
-        const byType = edgesByType.get(key);
-        byType.set(et, (byType.get(et) || 0) + 1);
-      }
-    }
-  }
-
-  netNodes = [...nodeCounts.entries()].map(([id, count]) => ({
-    id, count,
-    typ: aliasMap[id.toLowerCase()]?.typ || "Org",
-  }));
-
-  // One link per (pair, event_type); include all pairs (threshold = 1)
-  netLinks = [];
-  for (const [key, byType] of edgesByType) {
-    const total = [...byType.values()].reduce((s, c) => s + c, 0);
-    if (total < 1) continue;
-    const [source, target] = key.split("\x00");
-    for (const [event_type, count] of byType) {
-      netLinks.push({ source, target, event_type, count });
-    }
-  }
-
-  // ── Diagnose Deutsche Bahn ─────────────────────────────────────────────────
-  const DB = "Deutsche Bahn";
-  const dbNode = netNodes.find(n => n.id === DB);
-  console.log(`[diag] "${DB}" in netNodes:`, !!dbNode, dbNode);
-  const dbLinks = netLinks.filter(l => l.source === DB || l.target === DB);
-  console.log(`[diag] "${DB}" links in netLinks (${dbLinks.length}):`, dbLinks);
-  // Check for whitespace/encoding ghosts
-  const dbRaw = [...nodeCounts.keys()].filter(k => k.toLowerCase().includes("bahn"));
-  console.log(`[diag] keys in nodeCounts containing "bahn":`, dbRaw.map(k => JSON.stringify(k)));
-  const dbEdgeKeys = [...edgesByType.keys()].filter(k => k.toLowerCase().includes("bahn"));
-  console.log(`[diag] keys in edgesByType containing "bahn":`, dbEdgeKeys.map(k => JSON.stringify(k)));
-
-}).catch(err => {
-  document.getElementById("chart-area").innerHTML =
-    `<p style="color:#c00;padding:20px">
-      Fehler: ${err.message}<br><br>
-      Starte mit: <code>python3 -m http.server 8765</code> (aus dem Projektordner)
-    </p>`;
-});

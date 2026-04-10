@@ -1,0 +1,434 @@
+[
+  {
+    "normalform": "abdülhamid",
+    "typ": "Person",
+    "aliases": [
+      "Abdülhamid"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Syrien",
+    "typ": "Ort",
+    "aliases": [
+      "Syrien"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "hohen pforte",
+    "typ": "Organisation",
+    "aliases": [
+      "Höhe Pforte"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "sevket",
+    "typ": "Person",
+    "aliases": [
+      "Sevket Pascha"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "damaskus",
+    "typ": "Ort",
+    "aliases": [
+      "Damascus",
+      "Damaskus"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "islam",
+    "typ": "Konzept",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "beirut",
+    "typ": "Ort",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "cup",
+    "typ": "Organisation",
+    "aliases": [
+      "CUP"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "arab-ottomanische bruderschaft",
+    "typ": "Organisation",
+    "aliases": [
+      "Arab-Ottoman Brotherhood"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "shafiq bey al-mu 'ayyad al-' azm",
+    "typ": "Person",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "nadra bey mutfiin",
+    "typ": "Person",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "shukri: bey al-i:iusaynI",
+    "typ": "Person",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "'arif bey al-mardInI",
+    "typ": "Person",
+    "aliases": [
+      "Arif Bey al-MardinI"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "shukri: pa§a al-ayyiibI",
+    "typ": "Person",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "saqiq pa§a al-mu'ayyad al- 'azm",
+    "typ": "Person",
+    "aliases": [
+      "Saqiq Pa§a al-Mu'ayyad al-' Azm"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "sharif ja'far pa§a",
+    "typ": "Person",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "muhammad pa§a al-makhzumI",
+    "typ": "Person",
+    "aliases": [
+      "Muhammad Pa§a al-MakhzumI"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Mahmud Şevket",
+    "typ": "Person",
+    "aliases": [
+      ""
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Enver",
+    "typ": "Person",
+    "aliases": [
+      "Pasha"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Talat",
+    "typ": "Person",
+    "aliases": [
+      ""
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Kıbrıslı Kâmil Pascha",
+    "typ": "Person",
+    "aliases": [
+      "Kâmil Pascha"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Sublime Porte",
+    "typ": "Organisation",
+    "aliases": [
+      ""
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Sheikh ‘Abd al-Qadir al-Khatib al-Mughrabi",
+    "typ": "Person",
+    "aliases": [
+      "’Abd al-Qadir al-Khatib al-Mughrabi"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Konzession",
+    "typ": "Konzept",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Edirne",
+    "typ": "Ort",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Kamils",
+    "typ": "Person",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Burhan Nuri",
+    "typ": "Person",
+    "aliases": [
+      "Itital: Armeinier"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Armenier",
+    "typ": "Konzept",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Sultan",
+    "typ": "Person",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Anatolischen Provinzen",
+    "typ": "Ort",
+    "aliases": [
+      "Provinzen"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Zionismus",
+    "typ": "Konzept",
+    "aliases": [
+      "Erst 1911"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Mazedonische Frage",
+    "typ": "Konzept",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Österreich",
+    "typ": "Ort",
+    "aliases": [
+      "Itital"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Afrika",
+    "typ": "Ort",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Polen",
+    "typ": "Ort",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Putsch",
+    "typ": "Konzept",
+    "aliases": [
+      "Kabinettsbenennungen"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Public Debt Administration",
+    "typ": "Organisation",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Finanzministerium",
+    "typ": "Organisation",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Ägypten",
+    "typ": "Ort",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "KEF/Jungtürken",
+    "typ": "Konzept",
+    "aliases": [
+      "Europäische Bezeichnung"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Tanin",
+    "typ": "Organisation",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Devlet nedir? gâyet nedir?",
+    "typ": "Konzept",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Meclis-i Mebusanda Azalarin Mıkdarı",
+    "typ": "Konzept",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Intihabatta Iki Derece",
+    "typ": "Konzept",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Hürriyet-i Matbuat",
+    "typ": "Konzept",
+    "aliases": [
+      "Freedom of press"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Civic religion",
+    "typ": "Konzept",
+    "aliases": [
+      "Versuch, zu gründen"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Anatolien",
+    "typ": "Ort",
+    "aliases": [
+      "Anatolien"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Deutschland",
+    "typ": "Ort",
+    "aliases": [
+      "Deutschland"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Tal\"at Bey",
+    "typ": "Person",
+    "aliases": [
+      "Talat Bey"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Ismail Enver",
+    "typ": "Person",
+    "aliases": [
+      "Enver Pasha",
+      "Ismail Enver"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Ahmed Riza",
+    "typ": "Person",
+    "aliases": [
+      "Ahmed Riza",
+      "Comte",
+      "Le Bon"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Armenische Nationalversammlung",
+    "typ": "Organisation",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Dashnaken",
+    "typ": "Konzept",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Juden",
+    "typ": "Konzept",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Kaymakam von Zabadani",
+    "typ": "Ort",
+    "aliases": [
+      "Zabadani"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "KEF",
+    "typ": "Organisation",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Mahmud Sevket",
+    "typ": "Person",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Papertanin",
+    "typ": "Ort",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Sabit Bey",
+    "typ": "Person",
+    "aliases": [
+      "Bey"
+    ],
+    "_status": "new"
+  },
+  {
+    "normalform": "Sabahaddin",
+    "typ": "Person",
+    "aliases": [],
+    "_status": "new"
+  },
+  {
+    "normalform": "Ulema-Klasse",
+    "typ": "Konzept",
+    "aliases": [],
+    "_status": "new"
+  }
+]

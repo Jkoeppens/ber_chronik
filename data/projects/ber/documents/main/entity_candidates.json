@@ -1,0 +1,1847 @@
+[
+  {
+    "text": "BER",
+    "label": "ORG",
+    "count": 133
+  },
+  {
+    "text": "Berlin",
+    "label": "LOC",
+    "count": 120
+  },
+  {
+    "text": "Schönefeld",
+    "label": "LOC",
+    "count": 115
+  },
+  {
+    "text": "BerlZtg",
+    "label": "PER",
+    "count": 76
+  },
+  {
+    "text": "Berliner",
+    "label": "MISC",
+    "count": 69
+  },
+  {
+    "text": "Brandenburg",
+    "label": "LOC",
+    "count": 67
+  },
+  {
+    "text": "Bund",
+    "label": "LOC",
+    "count": 59
+  },
+  {
+    "text": "BBI",
+    "label": "ORG",
+    "count": 59
+  },
+  {
+    "text": "BBF",
+    "label": "ORG",
+    "count": 50
+  },
+  {
+    "text": "Mehdorn",
+    "label": "PER",
+    "count": 47
+  },
+  {
+    "text": "Flughafen",
+    "label": "LOC",
+    "count": 31
+  },
+  {
+    "text": "SPD",
+    "label": "ORG",
+    "count": 30
+  },
+  {
+    "text": "FBB",
+    "label": "MISC",
+    "count": 27
+  },
+  {
+    "text": "Sperenberg",
+    "label": "LOC",
+    "count": 26
+  },
+  {
+    "text": "Berlins",
+    "label": "LOC",
+    "count": 25
+  },
+  {
+    "text": "BerlMopo",
+    "label": "LOC",
+    "count": 24
+  },
+  {
+    "text": "Tagesspiegel",
+    "label": "ORG",
+    "count": 24
+  },
+  {
+    "text": "Baustelle",
+    "label": "LOC",
+    "count": 23
+  },
+  {
+    "text": "Tempelhof",
+    "label": "LOC",
+    "count": 22
+  },
+  {
+    "text": "Tegel",
+    "label": "LOC",
+    "count": 18
+  },
+  {
+    "text": "Brandenburgs",
+    "label": "LOC",
+    "count": 18
+  },
+  {
+    "text": "Klaus Wowereit",
+    "label": "PER",
+    "count": 17
+  },
+  {
+    "text": "CDU",
+    "label": "ORG",
+    "count": 15
+  },
+  {
+    "text": "Berliner Zeitung",
+    "label": "ORG",
+    "count": 15
+  },
+  {
+    "text": "Spiegel",
+    "label": "ORG",
+    "count": 14
+  },
+  {
+    "text": "Rainer Schwarz",
+    "label": "PER",
+    "count": 14
+  },
+  {
+    "text": "Lütke Daldrup",
+    "label": "PER",
+    "count": 14
+  },
+  {
+    "text": "HB",
+    "label": "ORG",
+    "count": 13
+  },
+  {
+    "text": "PPS",
+    "label": "ORG",
+    "count": 13
+  },
+  {
+    "text": "Horst Amann",
+    "label": "PER",
+    "count": 13
+  },
+  {
+    "text": "Schönefelds",
+    "label": "LOC",
+    "count": 12
+  },
+  {
+    "text": "Platzeck",
+    "label": "PER",
+    "count": 12
+  },
+  {
+    "text": "Bundesverwaltungsgericht",
+    "label": "LOC",
+    "count": 12
+  },
+  {
+    "text": "Jörg Marks",
+    "label": "PER",
+    "count": 12
+  },
+  {
+    "text": "Flughafen Schönefeld",
+    "label": "LOC",
+    "count": 11
+  },
+  {
+    "text": "Potsdam",
+    "label": "LOC",
+    "count": 11
+  },
+  {
+    "text": "Lufthansa",
+    "label": "ORG",
+    "count": 11
+  },
+  {
+    "text": "Stolpe",
+    "label": "LOC",
+    "count": 11
+  },
+  {
+    "text": "Brandenburger",
+    "label": "LOC",
+    "count": 11
+  },
+  {
+    "text": "Tsp",
+    "label": "PER",
+    "count": 11
+  },
+  {
+    "text": "Leipzig",
+    "label": "LOC",
+    "count": 11
+  },
+  {
+    "text": "IVG",
+    "label": "ORG",
+    "count": 11
+  },
+  {
+    "text": "Michael Müller",
+    "label": "PER",
+    "count": 11
+  },
+  {
+    "text": "HB",
+    "label": "MISC",
+    "count": 11
+  },
+  {
+    "text": "Untersuchungsausschuss",
+    "label": "MISC",
+    "count": 11
+  },
+  {
+    "text": "Diepgen",
+    "label": "LOC",
+    "count": 10
+  },
+  {
+    "text": "Matthias Platzeck",
+    "label": "PER",
+    "count": 10
+  },
+  {
+    "text": "FBS",
+    "label": "ORG",
+    "count": 10
+  },
+  {
+    "text": "brandenburgischen",
+    "label": "MISC",
+    "count": 10
+  },
+  {
+    "text": "BerlZtg",
+    "label": "ORG",
+    "count": 10
+  },
+  {
+    "text": "Siemens",
+    "label": "ORG",
+    "count": 10
+  },
+  {
+    "text": "Hochtief",
+    "label": "PER",
+    "count": 10
+  },
+  {
+    "text": "Amann",
+    "label": "PER",
+    "count": 10
+  },
+  {
+    "text": "Mühlenfeld",
+    "label": "PER",
+    "count": 10
+  },
+  {
+    "text": "Berliner Abgeordnetenhaus",
+    "label": "LOC",
+    "count": 9
+  },
+  {
+    "text": "Eberhard Diepgen",
+    "label": "PER",
+    "count": 9
+  },
+  {
+    "text": "FR",
+    "label": "MISC",
+    "count": 9
+  },
+  {
+    "text": "Frankfurt",
+    "label": "LOC",
+    "count": 9
+  },
+  {
+    "text": "Diepensee",
+    "label": "LOC",
+    "count": 9
+  },
+  {
+    "text": "Air Berlin",
+    "label": "ORG",
+    "count": 9
+  },
+  {
+    "text": "Manfred Körtgen",
+    "label": "PER",
+    "count": 9
+  },
+  {
+    "text": "Karsten Mühlenfeld",
+    "label": "PER",
+    "count": 9
+  },
+  {
+    "text": "taz",
+    "label": "LOC",
+    "count": 8
+  },
+  {
+    "text": "Flughafen Tegel",
+    "label": "LOC",
+    "count": 8
+  },
+  {
+    "text": "Stadt",
+    "label": "LOC",
+    "count": 8
+  },
+  {
+    "text": "Manfred Stolpe",
+    "label": "PER",
+    "count": 8
+  },
+  {
+    "text": "Deutschland",
+    "label": "LOC",
+    "count": 8
+  },
+  {
+    "text": "SZ",
+    "label": "MISC",
+    "count": 8
+  },
+  {
+    "text": "München",
+    "label": "LOC",
+    "count": 8
+  },
+  {
+    "text": "Hochtief",
+    "label": "MISC",
+    "count": 8
+  },
+  {
+    "text": "Zeit",
+    "label": "MISC",
+    "count": 8
+  },
+  {
+    "text": "Tagesspiegel",
+    "label": "LOC",
+    "count": 8
+  },
+  {
+    "text": "Sp",
+    "label": "PER",
+    "count": 8
+  },
+  {
+    "text": "Dietmar Woidke",
+    "label": "PER",
+    "count": 8
+  },
+  {
+    "text": "brandenburgische",
+    "label": "MISC",
+    "count": 7
+  },
+  {
+    "text": "Großflughafens",
+    "label": "LOC",
+    "count": 7
+  },
+  {
+    "text": "Jüterbog",
+    "label": "LOC",
+    "count": 7
+  },
+  {
+    "text": "Mill",
+    "label": "PER",
+    "count": 7
+  },
+  {
+    "text": "IVG",
+    "label": "MISC",
+    "count": 7
+  },
+  {
+    "text": "Airports",
+    "label": "LOC",
+    "count": 7
+  },
+  {
+    "text": "EU-Kommission",
+    "label": "ORG",
+    "count": 7
+  },
+  {
+    "text": "taz",
+    "label": "MISC",
+    "count": 6
+  },
+  {
+    "text": "Schönefeld-Süd",
+    "label": "LOC",
+    "count": 6
+  },
+  {
+    "text": "Anschluss",
+    "label": "MISC",
+    "count": 6
+  },
+  {
+    "text": "Potsdamer",
+    "label": "LOC",
+    "count": 6
+  },
+  {
+    "text": "Bundes",
+    "label": "LOC",
+    "count": 6
+  },
+  {
+    "text": "Abgeordnetenhauses",
+    "label": "LOC",
+    "count": 6
+  },
+  {
+    "text": "Ralf Kunkel",
+    "label": "PER",
+    "count": 6
+  },
+  {
+    "text": "Vgl",
+    "label": "LOC",
+    "count": 6
+  },
+  {
+    "text": "Hartmut Mehdorn",
+    "label": "PER",
+    "count": 6
+  },
+  {
+    "text": "Marks",
+    "label": "PER",
+    "count": 6
+  },
+  {
+    "text": "FDP",
+    "label": "ORG",
+    "count": 5
+  },
+  {
+    "text": "deutschen",
+    "label": "MISC",
+    "count": 5
+  },
+  {
+    "text": "Flughafen Berlin-Schönefeld GmbH",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "deutsche",
+    "label": "MISC",
+    "count": 5
+  },
+  {
+    "text": "Bonn",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "“ Spiegel",
+    "label": "ORG",
+    "count": 5
+  },
+  {
+    "text": "Abgeordnetenhaus",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "Flughafens Schönefeld",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "Eigenkapital",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "Hochtief",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "PDS",
+    "label": "ORG",
+    "count": 5
+  },
+  {
+    "text": "die Grünen",
+    "label": "ORG",
+    "count": 5
+  },
+  {
+    "text": "Handelsblatt",
+    "label": "MISC",
+    "count": 5
+  },
+  {
+    "text": "Flughafens Tegel",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "Thomas Weyer",
+    "label": "PER",
+    "count": 5
+  },
+  {
+    "text": "Körtgen",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "Berliner Flughafengesellschaft",
+    "label": "ORG",
+    "count": 5
+  },
+  {
+    "text": "DFS",
+    "label": "ORG",
+    "count": 5
+  },
+  {
+    "text": "Martin Delius",
+    "label": "PER",
+    "count": 5
+  },
+  {
+    "text": "BER-Untersuchungsausschuss",
+    "label": "ORG",
+    "count": 5
+  },
+  {
+    "text": "Engelbert Lütke Daldrup",
+    "label": "PER",
+    "count": 5
+  },
+  {
+    "text": "DDR",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "Ruhnau",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "BFG",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "Berliner Senats",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "Tegels",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "London",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Paris",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Flughafen Berlin-Brandenburg International",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Grüne",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "Dioxin",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "BBF-Aufsichtsrat",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "Meinhard von Gerkan",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Hochtief-Konsortium",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "BBIP",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "Tsp",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Hauptstadt-Airport",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Dieter Johannsen-Roth",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Land Brandenburg",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Flughafen Berlin Brandenburg GmbH",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Flughafengegner",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Flughafens",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "FTD",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "Richter",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "Bez",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Bauordnungsamt",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Flughafen BER",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Landkreises Dahme-Spreewald",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Deutsche Bahn",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "BER-Baustelle",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "Rainer Bretschneider",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Andreas Otto",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Entrauchungsanlage",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Heike Fölster",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Linke",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "BER-Eröffnung",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "Jahr 2000",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Schöneberg",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "sowjetischen",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "West-Berliner",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Günther Krause",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "Parchim",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Berliner Senat",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "Eichwalde",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Schulzendorf",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Mahlow",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Matthias Wissmann",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "Wissmann",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "Bundesrechnungshof",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Ministerium",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "Berliner SPD",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "SLB",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "PPS-Geschäftsführer",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "Sp",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Essener",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "BörsZtg",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "WCP",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "Hochtief-Konsortium",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "BBF-Gesellschafter",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "Landtagswahl",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Berliner Flughafen",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Stolpe",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "WamS",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Konsortiums",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "Bundesverkehrsministerium",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "Mrd.",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Senatskanzlei",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Pannen",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "FBS",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Cottbus",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Nordbahn",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Hauptterminal",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Vgl",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Willy Brandt",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "Bundesverkehrsministeriums",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Weihnachten",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Tagesspiegel-Informationen",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Imtech",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Mittwoch",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "BER-Aufsichtsratschef",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "BER-Chef",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Berlin-Brandenburg",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Wowereits",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "BER-Terminal",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "PWC",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Fluggastterminal",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Interims-Regierungsterminal",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "SXF",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Interimsterminal",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Bundesanstalt für Immobilienaufgaben",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "BImA",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "Bosch",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "Flughafen Berlin-Brandenburg",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Walter Momper",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Friedrich Zimmermann",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "West-Berlin",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Europa",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "deutscher",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Europas",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Ost-Berliner",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Berliner Flughafen-Gesellschaft",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Ende des Jahres",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Berlins Regierender",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "MinPräs Stolpe",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Deutsche Bank",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Platzecks",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Mecklenburg-Vorpommern",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Heinz Ruhnau",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Schönefeld-Süd",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Bohnsdorf",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Dahlewitz",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Amsterdam",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Jüterbog-Ost",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "BBF-Holding",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Ausbaupläne",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Bonner",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "DDR-Zeiten",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Vgl. Spiegel",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Norbert Meisner",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Meisner",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "ÖTV",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Landtagswahl Brandenburg",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Zinsen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Gegner",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Sperenbergs",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Muenchen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Halle",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Schoenefeld",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Großen Koalition",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Raumordnungsverfahrens",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Sperenberg",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "BerlZtg",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Verseuchung",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Passagier",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Airport City",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Tempelhof",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Mark Verlust",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Tsp",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Dresden",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "SPIEGEL-Interview",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "RWE",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Hochtief AirPort GmbH",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Jürgen Linde",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Franz Müntefering",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Wilmer",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Cutler & Pickering",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Konsortiums",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Volker Kähne",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "BBF-Aufsichtsratsvorsitzender",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Landtag",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Credit Suisse",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Michael Pieper",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "PEG",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Leipzig-Halle",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Sachsen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "IVG Holding",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "BBIP",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Straßenwesen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Leyerle",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "IVG-Konsortium",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Blankenfelde",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Landesentwicklungsplan",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "PPS-Aufsichtsrat",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Arnim Bechmann",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Standortwahl Schönefeld",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Planern",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Frankfurt/Oder",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Euro",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Rechnerisch",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Flughafen Holding",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "BBI-Planung",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Baufeld-Ost",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "BBIP-Konsortium",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Ländern Berlin",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "FPS",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Chefplaner",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "ND",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Gebhardt",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Jahr 2006",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Stefan Paetow",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Deutschen Flugsicherung",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Brandenburgs Wirtschaftsminister",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Signal",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Internet",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Non-Aviation-Bereich",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Intern",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Behörde",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Landkreis Dahme-Spreewald",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Deutschlands",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "IGK-IGR Ingenieurgesellschaft",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Bundesverfassungsgericht",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Rollbahn",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Bundestag",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Europäische Kommission",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Körtgen",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "vier Jahre später",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Frank Welskop",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Peter Ramsauer",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Sicherheitsgründen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Kleinmachnow",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Regierungsterminal",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Düsseldorf",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Deutsche Flugsicherung",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Schönefelder Flughafen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Ludwig",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Flughafensprecher Ralf Kunkel",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "McKinsey",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Klappen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Ein Jahr später",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Michael Odenwald",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Oberverwaltungsgerichtes Berlin-Brandenburg",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "PG BBI",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "FBB-Aufsichtsrat",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Christian Manninger",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Neuruppin",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "BER-Technikchef",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Planfeststellungsbeschlusses",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Gottfried Egger",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Taz",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "SPD-Politiker",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "BER-Terminals",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Mehdorns",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Frankfurter Flughafen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Alexander Dobrindt",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Südbahn",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "BER-Südbahn",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Siemens-Konzern",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Kabeltrassen",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Harald Siegle",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Jochen Großmann",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Alfredo Di Mauro",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Brandenburger Landtags",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Schönefeld-Alt",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Kabeltrassen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "BER-Aufsichtsrat",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Abgeordneten",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "niederländischen",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Francis G.",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Passagierwachstums",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Brüssel",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "EU",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Matthias Kollatz-Ahnen",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Rauchgasventilatoren",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Delius",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Kabel",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Baus",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Bahnhof",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Eisenbahn-Bundesamt",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Kapitalspritze",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Berliner Abgeordnetenhauses",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Roten Rathaus",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "BER-Finanzierung",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Regierungsterminal",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "BER 2017/18",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Regierungsflughafen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Bima",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Erweiterungsbauten",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Single-Airports",
+    "label": "ORG",
+    "count": 2
+  }
+]

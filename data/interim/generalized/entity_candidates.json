@@ -1,0 +1,1202 @@
+[
+  {
+    "text": "damaskus",
+    "label": "LOC",
+    "count": 42
+  },
+  {
+    "text": "istanbul",
+    "label": "LOC",
+    "count": 22
+  },
+  {
+    "text": "syrien",
+    "label": "LOC",
+    "count": 18
+  },
+  {
+    "text": "Damascus",
+    "label": "LOC",
+    "count": 17
+  },
+  {
+    "text": "Beirut",
+    "label": "LOC",
+    "count": 14
+  },
+  {
+    "text": "ägypten",
+    "label": "LOC",
+    "count": 14
+  },
+  {
+    "text": "rida",
+    "label": "PER",
+    "count": 13
+  },
+  {
+    "text": "KEF",
+    "label": "ORG",
+    "count": 9
+  },
+  {
+    "text": "Ulama",
+    "label": "PER",
+    "count": 9
+  },
+  {
+    "text": "salafi",
+    "label": "PER",
+    "count": 9
+  },
+  {
+    "text": "haqaiq",
+    "label": "LOC",
+    "count": 9
+  },
+  {
+    "text": "arabisch",
+    "label": "MISC",
+    "count": 8
+  },
+  {
+    "text": "osm reich",
+    "label": "PER",
+    "count": 8
+  },
+  {
+    "text": "Jazairi",
+    "label": "PER",
+    "count": 8
+  },
+  {
+    "text": "The",
+    "label": "MISC",
+    "count": 8
+  },
+  {
+    "text": "briten",
+    "label": "LOC",
+    "count": 8
+  },
+  {
+    "text": "paris",
+    "label": "LOC",
+    "count": 7
+  },
+  {
+    "text": "Syria",
+    "label": "LOC",
+    "count": 7
+  },
+  {
+    "text": "krieg",
+    "label": "MISC",
+    "count": 7
+  },
+  {
+    "text": "Muqtabas",
+    "label": "PER",
+    "count": 6
+  },
+  {
+    "text": "Muhammad",
+    "label": "PER",
+    "count": 6
+  },
+  {
+    "text": "türken",
+    "label": "LOC",
+    "count": 6
+  },
+  {
+    "text": "The CUP",
+    "label": "MISC",
+    "count": 6
+  },
+  {
+    "text": "abdülh",
+    "label": "PER",
+    "count": 6
+  },
+  {
+    "text": "Reich",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "Khalidi",
+    "label": "PER",
+    "count": 5
+  },
+  {
+    "text": "Gab",
+    "label": "PER",
+    "count": 5
+  },
+  {
+    "text": "Islam",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "Jungtürken",
+    "label": "PER",
+    "count": 5
+  },
+  {
+    "text": "Kairo",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "arab",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "Osmanische",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "cup",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "parlament",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "arabische",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "zionismus",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "Abd al-Hamid al-Zahrawi",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Araber",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "İstanbul",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "konterrev",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "europa",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Salafiyya",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "Dawn",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "Qassab",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "If",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "gegner",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "watan",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "muqtabas",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Kawakibi",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Shafiq",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "kef",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "Muhammad ali",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "Rafiq",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "reich",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "ali",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "But",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "with",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "konterrev",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "osm reich",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "aleppo",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Tripoli",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "jurisconsult",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "Nabhani",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "arabischen",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Al tunisi",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Al-Muqtabas",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Kurd ali",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "WK1",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Istanbuler",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "stadt",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Revolution",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "christliche",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Christen",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "staatl",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Naqib al-Ashraf",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "along with",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "admin",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Sharif",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "algerien",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Abid",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Quwwatli",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Sham'a",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Kurd 'Ali",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "After",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Shukri al-'Asali",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Abd al-Rahman al-Yusuf",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "balkan",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Ottoman",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "sabahhedin",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Mekka",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Yusuf Shitwan",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Umar Mansur",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Shitwan",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "muhammadan union",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "kemal pascha",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Debatte",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "arab provinzen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Tanin",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "rather",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Chukhadar",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "mod lib",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Mod lib",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Talib",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "indien",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Feb",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "jemen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "libyen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Najd",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Europäische",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Notablen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Pasha",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Mardini",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "basra",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Izzet",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "muhammad kurd",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "türkische",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "staaten",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "jungtürken",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "osmanischer",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "jazairi damaskus",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "al fatat",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Gelvin",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "behind the scenes",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "dawn these",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Eberhard Kienle",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Arab unity schemes revisited",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "eindirektional",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "arabischer",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "einfluss salafi",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "anti salaf",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "salafi nationalismus",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "id al halabi",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "abd al kadir al khatib",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "begriffs watan",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "What they hope to convey is that it is necessary for each individual to love his watan and to",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "\\ rather",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Thus",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "they are doing little more than contributing to the construction of a Tower of Babel",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Your first duty is to strive to advance this community",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "by feeling their",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "their joy",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "by offering them guidance",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "by strengthening the bonds of affection and unity among them",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "This is because Islamic law treats them as equals without distinguishing between the Turk",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Kurd",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Albanian",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Persian",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "or Indian",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "oberhaupt khalif",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "dawla qaqm",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "bilad jamia",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "umran hadara",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "asabiyya al- jinsiyya",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "what the Prophet said about the call to chauvinism",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "will bring about the greatest calamity of them all :",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "the division of the Muslim",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "haqaiq 2:1",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "realevant",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "badr al din al hasani",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "mahmud al attar",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "abd al hamid al daghestani",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "FN",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "bida",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "S.212",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "selbstdefinition",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "fact",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "for all their talk of adhering to religious convention",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "it was the Hamidian period",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "officially sanctioned",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "just as",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "as a group",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "the first place",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "spionageapparates",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "We have argued that religion is far from being inflexible",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "legislated the",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "told to veil",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "nor",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "This is especially true",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "which honor and religion have been abused and there is pride only",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "following animal desires and European customs",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "The wisdom",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "this is that social relations",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "civilization",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "universal",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "ginally appeared",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "the newspaper",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Watan",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "wake up ! All nations have surpassed you",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Ottoman",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "dawla",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "while all",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "it and to control",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "been watered throughout all the ages with our blood",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "can never be sold as long as blood still",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "our veins",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "The happiness of every umma is based upon",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "rectify their morals",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "up to adversity",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "adherence to the foundations of religion generates the power of unity and complete harmony for the umma and if it restores moral virtue to the umma",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "widens the circle of cul¬ ture",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "then we cannot",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "sweeps us away to the abyss of degeneration",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "comte",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "fourier",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "islam als wataniyya",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Kultur",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "It is appropriate for us to examine a bit the influence of contemporary civilization on the characteristics of nations ... We say that civilization exists",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "a nation",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "civilization is on the verge of spreading throughout all areas of the earth",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "In the main",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Every contemporary state",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "rights and for the preservation of",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "for it endows them with",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "abundance of spiritual and material progress",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "There is thus among nations a great equity",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "with the exception of some Eastern states that are still absorbed",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "a period of languor",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "among civilized nations",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "guarantee to all of them their continued rights",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "This is because the rights of states",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "It is power",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "existence among",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "nationale kommittees",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "commins",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "islam",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "nahda society",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "abdülhamid",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Abduh",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Jamal al din Qasimi",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "abd al qadir al jazairi",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "qasimi",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "maninis",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "jamal al din",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Koran",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "araber",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "rel",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "antonius",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "tibi",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Jam§l al-DÊn",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "They",
+    "label": "PER",
+    "count": 2
+  }
+]

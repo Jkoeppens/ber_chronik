@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Reichskrise",
+    "description": "Umfasst die allgemeinen politischen und strukturellen Verfallserscheinungen des Osmanischen Reiches gegen Ende des 19. und Anfang des 20. Jahrhunderts.",
+    "keywords": [
+      "Osmanisches Reich",
+      "Verfall",
+      "Krise"
+    ]
+  },
+  {
+    "name": "Politische Akteure",
+    "description": "Beschreibt die verschiedenen Gruppen, Eliten und Fraktionen, die aktiv an den Machtkämpfen und politischen Veränderungen beteiligt waren.",
+    "keywords": [
+      "YoungTurks",
+      "CUP",
+      "Fraktionen"
+    ]
+  },
+  {
+    "name": "IdeologischerWandel",
+    "description": "Befasst sich mit den vorherrschenden Denkströmungen wie Nationalismus, Säkularismus und Forderungen nach Verfassungsrechten.",
+    "keywords": [
+      "Nationalismus",
+      "Konstitutionalismus",
+      "Demokratie"
+    ]
+  },
+  {
+    "name": "GesellschaftlicheSpannungen",
+    "description": "Analysiert die Konflikte zwischen verschiedenen Bevölkerungsgruppen, Ethnien und religiösen Gruppen innerhalb des Reiches.",
+    "keywords": [
+      "Ethnie",
+      "Minderheit",
+      "Spannungen"
+    ]
+  },
+  {
+    "name": "RevolutionäreEreignisse",
+    "description": "Fasst die großen Wendepunkte, Aufstände und gewaltsamen Konflikte zusammen, die das Reich durchzogen.",
+    "keywords": [
+      "Aufstände",
+      "Konflikt",
+      "Revolution"
+    ]
+  },
+  {
+    "name": "Machtstrukturen",
+    "description": "Bezieht sich auf die politischen Mechanismen und die Machtkämpfe zwischen den bestehenden und aufstrebenden Eliten.",
+    "keywords": [
+      "Sultanat",
+      "Machtwechsel",
+      "Adel"
+    ]
+  }
+]

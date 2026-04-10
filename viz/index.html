@@ -12,7 +12,31 @@
 <div id="main">
   <div id="left-col">
     <header style="display:flex; align-items:center; height:44px; padding:0 20px; background:#F7F5F0; gap:24px; flex-shrink:0;">
-      <span style="font-size:15px; font-weight:500; white-space:nowrap;">BER Chronik 1989–2017</span>
+      <div id="project-selector" style="position:relative;">
+        <button id="project-title-btn" style="font-size:15px; font-weight:500; white-space:nowrap; background:none; border:none; cursor:pointer; padding:0; color:inherit; display:flex; align-items:center; gap:5px;">
+          <span id="project-title-text">BER Chronik 1989–2017</span>
+          <span style="font-size:10px; color:#888; line-height:1;">▾</span>
+        </button>
+        <div id="project-dropdown" style="display:none; position:absolute; top:calc(100% + 8px); left:0; background:#fff; border:1px solid #e5e2dc; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); min-width:240px; z-index:1000; overflow:hidden;">
+          <div id="project-list" style="padding:4px 0; max-height:200px; overflow-y:auto;"></div>
+          <div id="project-actions" style="border-top:1px solid #e5e2dc; padding:4px 0;">
+            <a id="pa-edit"       href="#" style="display:block;padding:7px 14px;font-size:12px;color:#374151;text-decoration:none;white-space:nowrap;">Daten bearbeiten →</a>
+            <a id="pa-add-source" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#374151;text-decoration:none;white-space:nowrap;">Quellen hinzufügen →</a>
+            <div id="pa-rename-wrap" style="padding:0 14px;">
+              <a id="pa-rename-btn" href="#" style="display:block;padding:7px 0;font-size:12px;color:#374151;text-decoration:none;">Umbenennen</a>
+              <form id="pa-rename-form" style="display:none;gap:4px;align-items:center;padding-bottom:6px;">
+                <input id="pa-rename-input" type="text" style="flex:1;padding:4px 7px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;min-width:0">
+                <button type="submit" style="padding:4px 8px;background:#6d28d9;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer;">✓</button>
+                <button type="button" id="pa-rename-cancel" style="padding:4px 8px;background:#e5e7eb;border:none;border-radius:4px;font-size:11px;cursor:pointer;">✕</button>
+              </form>
+            </div>
+            <a id="pa-delete" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#dc2626;text-decoration:none;white-space:nowrap;">Löschen…</a>
+          </div>
+          <div style="border-top:1px solid #e5e2dc; padding:4px 0;">
+            <a id="project-new" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#6d28d9;text-decoration:none;white-space:nowrap;">+ Neues Projekt</a>
+          </div>
+        </div>
+      </div>
       <nav id="tabs" style="display:flex; gap:0; align-items:center;">
         <button class="tab active" id="tab-timeline">Timeline</button>
         <button class="tab"        id="tab-network">Netzwerk</button>
@@ -60,12 +84,131 @@
 
 <div id="tooltip"></div>
 
+<script src="config.js"></script>
+<script>
+// ── Projekt-Selektor ──────────────────────────────────────────────────────────
+(function () {
+  const currentProject = new URLSearchParams(location.search).get("project") ?? null;
+
+  const btn      = document.getElementById("project-title-btn");
+  const dropdown = document.getElementById("project-dropdown");
+  const listEl   = document.getElementById("project-list");
+  const actEl    = document.getElementById("project-actions");
+  const newProj  = document.getElementById("project-new");
+
+  newProj.href = `${DEV_API}/ingest`;
+
+  // Actions (only meaningful with a current project)
+  const paEdit    = document.getElementById("pa-edit");
+  const paAddSrc  = document.getElementById("pa-add-source");
+  const paRenBtn  = document.getElementById("pa-rename-btn");
+  const paRenForm = document.getElementById("pa-rename-form");
+  const paRenIn   = document.getElementById("pa-rename-input");
+  const paRenCan  = document.getElementById("pa-rename-cancel");
+  const paDelete  = document.getElementById("pa-delete");
+
+  if (currentProject) {
+    paEdit.href   = `${DEV_API}/editor?project=${currentProject}`;
+    paAddSrc.href = `${DEV_API}/ingest?project=${currentProject}&mode=add`;
+    actEl.style.display = "";
+  } else {
+    actEl.style.display = "none";
+  }
+
+  let open = false;
+  function setOpen(val) {
+    open = val;
+    dropdown.style.display = val ? "block" : "none";
+    if (!val) { paRenForm.style.display = "none"; paRenBtn.style.display = "block"; }
+  }
+
+  btn.addEventListener("click", (e) => { e.stopPropagation(); if (!open) loadProjects(); setOpen(!open); });
+  document.addEventListener("click", () => setOpen(false));
+  dropdown.addEventListener("click", (e) => e.stopPropagation());
+
+  // ── Rename ──
+  paRenBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    paRenForm.style.display = "flex";
+    paRenBtn.style.display  = "none";
+    paRenIn.value           = document.getElementById("project-title-text").textContent;
+    paRenIn.focus();
+  });
+  paRenCan.addEventListener("click", () => {
+    paRenForm.style.display = "none"; paRenBtn.style.display = "block";
+  });
+  paRenForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const newTitle = paRenIn.value.trim();
+    if (!newTitle || !currentProject) return;
+    const res = await fetch(`${DEV_API}/api/projects/${currentProject}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newTitle }),
+    });
+    if (res.ok) {
+      document.getElementById("project-title-text").textContent = newTitle;
+      document.title = newTitle;
+      paRenForm.style.display = "none"; paRenBtn.style.display = "block";
+    } else {
+      alert("Umbenennen fehlgeschlagen.");
+    }
+  });
+
+  // ── Delete ──
+  paDelete.addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!currentProject) return;
+    const name = document.getElementById("project-title-text").textContent;
+    if (!confirm(`Projekt „${name}" wirklich löschen?\nDieser Vorgang kann nicht rückgängig gemacht werden.`)) return;
+    const res = await fetch(`${DEV_API}/api/projects/${currentProject}`, {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: true }),
+    });
+    if (res.ok) {
+      window.location = window.location.pathname; // reload without ?project=
+    } else {
+      alert("Löschen fehlgeschlagen.");
+    }
+  });
+
+  function loadProjects() {
+    listEl.innerHTML = '<div style="padding:8px 14px;font-size:12px;color:#888;">Lade…</div>';
+    fetch(`${DEV_API}/api/projects`)
+      .then(r => r.json())
+      .then(projects => {
+        listEl.innerHTML = "";
+        projects.forEach(p => {
+          const isCurrent = p.id === currentProject || (!currentProject && p.id === "ber");
+          const row = document.createElement("div");
+          row.style.cssText = "display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:12px;white-space:nowrap;";
+          row.innerHTML = `
+            <span style="color:#6d28d9;width:10px;flex-shrink:0;">${isCurrent ? "●" : ""}</span>
+            <span style="flex:1;">${p.title || p.id}</span>
+            <span style="color:#aaa;font-size:11px;">${p.entry_count > 0 ? p.entry_count + " Eintr." : "leer"}</span>
+          `;
+          row.addEventListener("mouseenter", () => row.style.background = "#f5f3ff");
+          row.addEventListener("mouseleave", () => row.style.background = "");
+          row.addEventListener("click", () => { window.location = `?project=${p.id}`; });
+          listEl.appendChild(row);
+        });
+        if (!projects.length) {
+          listEl.innerHTML = '<div style="padding:8px 14px;font-size:12px;color:#888;">Keine Projekte</div>';
+        }
+      })
+      .catch(() => {
+        listEl.innerHTML = '<div style="padding:8px 14px;font-size:12px;color:#dc2626;">Server nicht erreichbar</div>';
+      });
+  }
+})();
+</script>
 <script src="highlight.js"></script>
-<script src="highlight-state.js"></script>
 <script src="panel.js"></script>
 <script src="chart.js"></script>
+<script src="utils.js"></script>
+<script src="tabs.js"></script>
 <script src="network.js"></script>
 <script src="search.js"></script>
+<script src="boot.js"></script>
 <script src="tutorial.js"></script>
 </body>
 </html>

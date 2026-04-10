@@ -1,0 +1,1061 @@
+[
+  {
+    "normalform": "Sabaheddin",
+    "typ": "Person",
+    "aliases": [
+      "Sabahaddin",
+      "Sabahhedin",
+      "Sabah",
+      "Prince Sabahaddin"
+    ]
+  },
+  {
+    "normalform": "Damaskus",
+    "typ": "Ort",
+    "aliases": [
+      "damaskus"
+    ]
+  },
+  {
+    "normalform": "Kommittee für Einheit und Freiheit",
+    "typ": "Organisation",
+    "aliases": [
+      "KEf",
+      "CUP",
+      "cpu"
+    ]
+  },
+  {
+    "normalform": "Enver",
+    "typ": "Person",
+    "aliases": [
+      "Enver"
+    ]
+  },
+  {
+    "normalform": "Nuri",
+    "typ": "Person",
+    "aliases": [
+      "Nursi",
+      "Celal Nuri",
+      "Celal"
+    ]
+  },
+  {
+    "normalform": "Revolte",
+    "typ": "Konzept",
+    "aliases": [
+      "Aufstände",
+      "Rebellion"
+    ]
+  },
+  {
+    "normalform": "Balkan",
+    "typ": "Ort",
+    "aliases": [
+      "Balkans",
+      "balkan"
+    ]
+  },
+  {
+    "normalform": "Macedomnian Revolutionary Organization",
+    "typ": "Organisation",
+    "aliases": [
+      "Macedomnian Revolutionary Organization",
+      "Organization"
+    ]
+  },
+  {
+    "normalform": "Salih",
+    "typ": "Person",
+    "aliases": [
+      "Salih Sharif",
+      "Salih"
+    ]
+  },
+  {
+    "normalform": "Wahl",
+    "typ": "Konzept",
+    "aliases": [
+      "Election"
+    ]
+  },
+  {
+    "normalform": "Albanians",
+    "typ": "Konzept",
+    "aliases": [
+      "Albanien",
+      "Albanian"
+    ]
+  },
+  {
+    "normalform": "Iraq",
+    "typ": "Ort",
+    "aliases": [
+      "Baghdad",
+      "Bagdad",
+      "Baghdad Railway"
+    ]
+  },
+  {
+    "normalform": "Latakiyya",
+    "typ": "Ort",
+    "aliases": [
+      "Latakia"
+    ]
+  },
+  {
+    "normalform": "Tanzimat",
+    "typ": "Konzept",
+    "aliases": [
+      "TNZIMAT"
+    ]
+  },
+  {
+    "normalform": "Jungosmanen",
+    "typ": "Organisation",
+    "aliases": [
+      "jungosmanen"
+    ]
+  },
+  {
+    "normalform": "Osmanisches Reich",
+    "typ": "Konzept",
+    "aliases": [
+      "Ottoman empire",
+      "Osmanisches Reich"
+    ]
+  },
+  {
+    "normalform": "Edirne",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Jungtürken",
+    "typ": "Konzept",
+    "aliases": [
+      "jungtürkischen",
+      "young Turks",
+      "Young Turk",
+      "Jungtürke"
+    ]
+  },
+  {
+    "normalform": "Osmanisches Reich",
+    "typ": "Organisation",
+    "aliases": [
+      "Osmanisches Reich"
+    ]
+  },
+  {
+    "normalform": "Talât Pascha",
+    "typ": "Person",
+    "aliases": [
+      "Talât Pascha",
+      "talaat",
+      "Talat"
+    ]
+  },
+  {
+    "normalform": "Abdühlhamid",
+    "typ": "Person",
+    "aliases": [
+      "Abdühlhamid",
+      "Abdülhamid",
+      "Abdühlhamid II"
+    ]
+  },
+  {
+    "normalform": "Medresen",
+    "typ": "Konzept",
+    "aliases": [
+      "Medresen"
+    ]
+  },
+  {
+    "normalform": "Opposition",
+    "typ": "Konzept",
+    "aliases": [
+      "Opposition"
+    ]
+  },
+  {
+    "normalform": "Konstitutionalisten",
+    "typ": "Konzept",
+    "aliases": [
+      "Konstitutionalisten"
+    ]
+  },
+  {
+    "normalform": "Mazedonien",
+    "typ": "Ort",
+    "aliases": [
+      "Mazedonien",
+      "Mazedonienfrage",
+      "Macedonia",
+      "Makedonien",
+      "Macedonian",
+      "Mazedonien (Manastir, Kosovo)"
+    ]
+  },
+  {
+    "normalform": "Manastir",
+    "typ": "Ort",
+    "aliases": [
+      "Manastir",
+      "Monastur"
+    ]
+  },
+  {
+    "normalform": "Kosovo",
+    "typ": "Ort",
+    "aliases": [
+      "Kosovo"
+    ]
+  },
+  {
+    "normalform": "Saloniki",
+    "typ": "Ort",
+    "aliases": [
+      "Saloniki",
+      "Thessaloniki"
+    ]
+  },
+  {
+    "normalform": "Zar Nikolaus II",
+    "typ": "Person",
+    "aliases": [
+      "Zar Nikolaus II"
+    ]
+  },
+  {
+    "normalform": "könig edward",
+    "typ": "Person",
+    "aliases": [
+      "könig edward"
+    ]
+  },
+  {
+    "normalform": "Ziya Gökalp",
+    "typ": "Person",
+    "aliases": [
+      "Ziya Gökalp",
+      "Ziya Gölkap"
+    ]
+  },
+  {
+    "normalform": "Yusuf Akcara",
+    "typ": "Person",
+    "aliases": [
+      "Yusuf Akcara"
+    ]
+  },
+  {
+    "normalform": "Sevket pasha",
+    "typ": "Person",
+    "aliases": [
+      "Sevket pasha"
+    ]
+  },
+  {
+    "normalform": "Ulama",
+    "typ": "Konzept",
+    "aliases": [
+      "ulama"
+    ]
+  },
+  {
+    "normalform": "Adana",
+    "typ": "Ort",
+    "aliases": [
+      "adana"
+    ]
+  },
+  {
+    "normalform": "mehmat Talat",
+    "typ": "Person",
+    "aliases": [
+      "mehmat Talat"
+    ]
+  },
+  {
+    "normalform": "Yusuf akcura",
+    "typ": "Person",
+    "aliases": [
+      "Yusuf akcura"
+    ]
+  },
+  {
+    "normalform": "Balkan",
+    "typ": "Ort",
+    "aliases": [
+      "balkan"
+    ]
+  },
+  {
+    "normalform": "Tripolis",
+    "typ": "Ort",
+    "aliases": [
+      "tripolis"
+    ]
+  },
+  {
+    "normalform": "Montenegro",
+    "typ": "Ort",
+    "aliases": [
+      "Montenegro"
+    ]
+  },
+  {
+    "normalform": "serbien",
+    "typ": "Ort",
+    "aliases": [
+      "serbien"
+    ]
+  },
+  {
+    "normalform": "bulgarien",
+    "typ": "Ort",
+    "aliases": [
+      "bulgarien",
+      "bulgarische"
+    ]
+  },
+  {
+    "normalform": "griechenland",
+    "typ": "Ort",
+    "aliases": [
+      "griechenland"
+    ]
+  },
+  {
+    "normalform": "janina",
+    "typ": "Ort",
+    "aliases": [
+      "janina"
+    ]
+  },
+  {
+    "normalform": "shköder",
+    "typ": "Ort",
+    "aliases": [
+      "shköder"
+    ]
+  },
+  {
+    "normalform": "sevket pascha",
+    "typ": "Person",
+    "aliases": [
+      "sevket pascha"
+    ]
+  },
+  {
+    "normalform": "Bulgarien",
+    "typ": "Ort",
+    "aliases": [
+      "bulgarische"
+    ]
+  },
+  {
+    "normalform": "Armenier",
+    "typ": "Konzept",
+    "aliases": [
+      "armenier"
+    ]
+  },
+  {
+    "normalform": "Griechen",
+    "typ": "Konzept",
+    "aliases": [
+      "griechen"
+    ]
+  },
+  {
+    "normalform": "Russen",
+    "typ": "Konzept",
+    "aliases": [
+      "russen"
+    ]
+  },
+  {
+    "normalform": "Osmanische Armee",
+    "typ": "Organisation",
+    "aliases": [
+      "osm armee"
+    ]
+  },
+  {
+    "normalform": "russland",
+    "typ": "Ort",
+    "aliases": [
+      "russland"
+    ]
+  },
+  {
+    "normalform": "abal huda al sayyadi",
+    "typ": "Person",
+    "aliases": [
+      "abal huda al sayyadi"
+    ]
+  },
+  {
+    "normalform": "syrien",
+    "typ": "Ort",
+    "aliases": [
+      "syrien",
+      "Syrian",
+      "Syria"
+    ]
+  },
+  {
+    "normalform": "istanbul",
+    "typ": "Ort",
+    "aliases": [
+      "istanbul"
+    ]
+  },
+  {
+    "normalform": "tripoli",
+    "typ": "Ort",
+    "aliases": [
+      "tripoli"
+    ]
+  },
+  {
+    "normalform": "sidon",
+    "typ": "Ort",
+    "aliases": [
+      "sidon"
+    ]
+  },
+  {
+    "normalform": "konservativ",
+    "typ": "Konzept",
+    "aliases": [
+      "konservativ"
+    ]
+  },
+  {
+    "normalform": "bildung",
+    "typ": "Konzept",
+    "aliases": [
+      "bildung"
+    ]
+  },
+  {
+    "normalform": "hamidiya",
+    "typ": "Organisation",
+    "aliases": [
+      "hamidiya"
+    ]
+  },
+  {
+    "normalform": "frankreich",
+    "typ": "Ort",
+    "aliases": [
+      "frankreich"
+    ]
+  },
+  {
+    "normalform": "briten",
+    "typ": "Ort",
+    "aliases": [
+      "briten",
+      "British Lynch Company"
+    ]
+  },
+  {
+    "normalform": "Bürokratie",
+    "typ": "Konzept",
+    "aliases": [
+      "bürokrat"
+    ]
+  },
+  {
+    "normalform": "ahmed riza",
+    "typ": "Person",
+    "aliases": [
+      "ahmed riza"
+    ]
+  },
+  {
+    "normalform": "Europäische",
+    "typ": "Ort",
+    "aliases": [
+      "Europäische"
+    ]
+  },
+  {
+    "normalform": "Bahaeddin sakir",
+    "typ": "Person",
+    "aliases": [
+      "Bahaeddin sakir"
+    ]
+  },
+  {
+    "normalform": "iran",
+    "typ": "Ort",
+    "aliases": [
+      "iran"
+    ]
+  },
+  {
+    "normalform": "Russ",
+    "typ": "Ort",
+    "aliases": [
+      "Russ"
+    ]
+  },
+  {
+    "normalform": "Talat Bey",
+    "typ": "Person",
+    "aliases": [
+      "Talat Bey"
+    ]
+  },
+  {
+    "normalform": "Ottoman Freedom Society",
+    "typ": "Organisation",
+    "aliases": [
+      "ottoman freedom society",
+      "Ottoman Free- dom Society"
+    ]
+  },
+  {
+    "normalform": "makedonien",
+    "typ": "Ort",
+    "aliases": [
+      "makedonien"
+    ]
+  },
+  {
+    "normalform": "anatolien",
+    "typ": "Ort",
+    "aliases": [
+      "anatolien"
+    ]
+  },
+  {
+    "normalform": "Muslime",
+    "typ": "Konzept",
+    "aliases": [
+      "muslime",
+      "muslim"
+    ]
+  },
+  {
+    "normalform": "Türken",
+    "typ": "Konzept",
+    "aliases": [
+      "türken"
+    ]
+  },
+  {
+    "normalform": "edward vii",
+    "typ": "Person",
+    "aliases": [
+      "edward vii"
+    ]
+  },
+  {
+    "normalform": "zar nikkolaus",
+    "typ": "Person",
+    "aliases": [
+      "zar nikkolaus"
+    ]
+  },
+  {
+    "normalform": "bosnien herzegowina",
+    "typ": "Ort",
+    "aliases": [
+      "bosnien herzegowina"
+    ]
+  },
+  {
+    "normalform": "wien",
+    "typ": "Ort",
+    "aliases": [
+      "wien"
+    ]
+  },
+  {
+    "normalform": "kreta",
+    "typ": "Ort",
+    "aliases": [
+      "kreta"
+    ]
+  },
+  {
+    "normalform": "jemen",
+    "typ": "Ort",
+    "aliases": [
+      "jemen"
+    ]
+  },
+  {
+    "normalform": "volkan",
+    "typ": "Organisation",
+    "aliases": [
+      "volkan"
+    ]
+  },
+  {
+    "normalform": "mehmed V",
+    "typ": "Person",
+    "aliases": [
+      "mehmed V"
+    ]
+  },
+  {
+    "normalform": "Mahmud sevket",
+    "typ": "Person",
+    "aliases": [
+      "Mahmud sevket",
+      "Mahmud sevekt pasha",
+      "savket pasha"
+    ]
+  },
+  {
+    "normalform": "Liberale",
+    "typ": "Konzept",
+    "aliases": [
+      "lib"
+    ]
+  },
+  {
+    "normalform": "mustafa kemal",
+    "typ": "Person",
+    "aliases": [
+      "mustafa kemal"
+    ]
+  },
+  {
+    "normalform": "aleppo",
+    "typ": "Ort",
+    "aliases": [
+      "aleppo"
+    ]
+  },
+  {
+    "normalform": "konterrevolution",
+    "typ": "Konzept",
+    "aliases": [
+      "konterrevolution",
+      "Gegenrevolution"
+    ]
+  },
+  {
+    "normalform": "Turkismus",
+    "typ": "Konzept",
+    "aliases": [
+      "turkismus"
+    ]
+  },
+  {
+    "normalform": "revolution",
+    "typ": "Konzept",
+    "aliases": [
+      "revolution"
+    ]
+  },
+  {
+    "normalform": "Kamil Pasha",
+    "typ": "Person",
+    "aliases": [
+      "Kamil Pasha"
+    ]
+  },
+  {
+    "normalform": "säkularismus",
+    "typ": "Konzept",
+    "aliases": [
+      "säkularismus"
+    ]
+  },
+  {
+    "normalform": "League of Private Initiative and Decentralisation",
+    "typ": "Organisation",
+    "aliases": [
+      "League of Private Initiative and Decentralisation"
+    ]
+  },
+  {
+    "normalform": "Kıbrıslı Kâmil Pascha",
+    "typ": "Person",
+    "aliases": [
+      "Kıbrıslı Kâmil Pascha"
+    ]
+  },
+  {
+    "normalform": "A bdu ̈lhamidII,",
+    "typ": "Person",
+    "aliases": [
+      "A bdu ̈lhamidII,"
+    ]
+  },
+  {
+    "normalform": "Huca Kadri",
+    "typ": "Person",
+    "aliases": [
+      "Huca Kadri"
+    ]
+  },
+  {
+    "normalform": "Hoca Muhiddin",
+    "typ": "Person",
+    "aliases": [
+      "Hoca Muhiddin"
+    ]
+  },
+  {
+    "normalform": "France",
+    "typ": "Ort",
+    "aliases": [
+      "France"
+    ]
+  },
+  {
+    "normalform": "Japan",
+    "typ": "Ort",
+    "aliases": [
+      "Japan"
+    ]
+  },
+  {
+    "normalform": "sozialismus",
+    "typ": "Konzept",
+    "aliases": [
+      "sozialismus"
+    ]
+  },
+  {
+    "normalform": "hunchaks",
+    "typ": "Konzept",
+    "aliases": [
+      "hunchaks"
+    ]
+  },
+  {
+    "normalform": "sassun",
+    "typ": "Ort",
+    "aliases": [
+      "sassun"
+    ]
+  },
+  {
+    "normalform": "Haqaiq",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Europa",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Shukri",
+    "typ": "Person",
+    "aliases": [
+      "Shukri"
+    ]
+  },
+  {
+    "normalform": "Cavid",
+    "typ": "Person",
+    "aliases": [
+      "Mehmed Cavid"
+    ]
+  },
+  {
+    "normalform": "Ismail",
+    "typ": "Person",
+    "aliases": [
+      "Ismail"
+    ]
+  },
+  {
+    "normalform": "Qadir",
+    "typ": "Person",
+    "aliases": [
+      "Qadir"
+    ]
+  },
+  {
+    "normalform": "Ghammashi",
+    "typ": "Person",
+    "aliases": [
+      "Efendi Ghammashi"
+    ]
+  },
+  {
+    "normalform": "Zahrawi",
+    "typ": "Person",
+    "aliases": [
+      "Zahrawi"
+    ]
+  },
+  {
+    "normalform": "Sohrabi",
+    "typ": "Person",
+    "aliases": [
+      "Sohrabi"
+    ]
+  },
+  {
+    "normalform": "Syrien",
+    "typ": "Ort",
+    "aliases": [
+      "Syrian",
+      "Syria"
+    ]
+  },
+  {
+    "normalform": "Konzession",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Semsi",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Nichttürken",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Mizan",
+    "typ": "Person",
+    "aliases": [
+      "Mizan"
+    ]
+  },
+  {
+    "normalform": "Aharonian",
+    "typ": "Person",
+    "aliases": [
+      "Avedis Aharonian"
+    ]
+  },
+  {
+    "normalform": "Nahda",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Rafiq",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Khatib",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Mughrabi",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Mebusanda",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Amer",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Harran",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "'Umar Mansur",
+    "typ": "Person",
+    "aliases": [
+      "'Umar Mansur"
+    ]
+  },
+  {
+    "normalform": "Rashad Efendi",
+    "typ": "Person",
+    "aliases": [
+      "Rashad Efendi"
+    ]
+  },
+  {
+    "normalform": "Muhammad Arslan",
+    "typ": "Person",
+    "aliases": [
+      "Muhammad Arslan"
+    ]
+  },
+  {
+    "normalform": "Jazairi",
+    "typ": "Person",
+    "aliases": [
+      "Sheikh 'Abd",
+      "sheikh"
+    ]
+  },
+  {
+    "normalform": "Ihsan Fikri",
+    "typ": "Person",
+    "aliases": [
+      "Ihsan Fikri"
+    ]
+  },
+  {
+    "normalform": "Arif",
+    "typ": "Person",
+    "aliases": [
+      "IusaynI, 'Arif"
+    ]
+  },
+  {
+    "normalform": "Saqiq Pasha",
+    "typ": "Person",
+    "aliases": [
+      "Saqiq"
+    ]
+  },
+  {
+    "normalform": "Hussein",
+    "typ": "Person",
+    "aliases": [
+      "Hussein"
+    ]
+  },
+  {
+    "normalform": "Kayali",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Asali",
+    "typ": "Person",
+    "aliases": [
+      "Asali"
+    ]
+  },
+  {
+    "normalform": "Hasan Fehmi",
+    "typ": "Person",
+    "aliases": [
+      "Hasan Fehmi"
+    ]
+  },
+  {
+    "normalform": "Balkankrieg",
+    "typ": "Konzept",
+    "aliases": [
+      "balkankrieg"
+    ]
+  },
+  {
+    "normalform": "Putsch",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Militärdienst",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Jungtürkenrevolution",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Gazi",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Italien",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Izmirlian",
+    "typ": "Person",
+    "aliases": [
+      "Madteos II Izmirlian"
+    ]
+  },
+  {
+    "normalform": " Sayyid Talib",
+    "typ": "Person",
+    "aliases": [
+      "Sayyid Talib (Basra)",
+      "Sayyid Talib"
+    ]
+  },
+  {
+    "normalform": "Muhammad Arslan",
+    "typ": "Person",
+    "aliases": [
+      "Amir Muhammad Arslan"
+    ]
+  },
+  {
+    "normalform": "Kilikien",
+    "typ": "Ort",
+    "aliases": [
+      "Königreich Kilikien"
+    ]
+  },
+  {
+    "normalform": "Nadra",
+    "typ": "Person",
+    "aliases": [
+      "Nadra"
+    ]
+  },
+  {
+    "normalform": "MardinI",
+    "typ": "Person",
+    "aliases": [
+      "MardInI"
+    ]
+  },
+  {
+    "normalform": "MakhzumI",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "IMRO",
+    "typ": "Organisation",
+    "aliases": [
+      "IMRO"
+    ]
+  },
+  {
+    "normalform": "Mahmoud Haddad",
+    "typ": "Person",
+    "aliases": [
+      "Mahmoud Haddad"
+    ]
+  },
+  {
+    "normalform": "ägypten",
+    "typ": "Ort",
+    "aliases": [
+      "ägypten"
+    ]
+  },
+  {
+    "normalform": "ahmed nayazi",
+    "typ": "Person",
+    "aliases": [
+      "ahmed nayazi"
+    ]
+  }
+]

@@ -1,0 +1,2972 @@
+[
+  {
+    "text": "cup",
+    "label": "MISC",
+    "count": 61
+  },
+  {
+    "text": "istanbul",
+    "label": "LOC",
+    "count": 14
+  },
+  {
+    "text": "damaskus",
+    "label": "LOC",
+    "count": 12
+  },
+  {
+    "text": "Abdülhamid",
+    "label": "PER",
+    "count": 12
+  },
+  {
+    "text": "KEF",
+    "label": "ORG",
+    "count": 9
+  },
+  {
+    "text": "juden",
+    "label": "MISC",
+    "count": 9
+  },
+  {
+    "text": "ägypten",
+    "label": "LOC",
+    "count": 8
+  },
+  {
+    "text": "Bulgarien",
+    "label": "LOC",
+    "count": 8
+  },
+  {
+    "text": "osm reich",
+    "label": "PER",
+    "count": 8
+  },
+  {
+    "text": "Beirut",
+    "label": "LOC",
+    "count": 8
+  },
+  {
+    "text": "Parlament",
+    "label": "ORG",
+    "count": 7
+  },
+  {
+    "text": "Paris",
+    "label": "LOC",
+    "count": 7
+  },
+  {
+    "text": "briten",
+    "label": "LOC",
+    "count": 7
+  },
+  {
+    "text": "thessaloniki",
+    "label": "LOC",
+    "count": 7
+  },
+  {
+    "text": "Verfassung",
+    "label": "ORG",
+    "count": 6
+  },
+  {
+    "text": "Türken",
+    "label": "LOC",
+    "count": 6
+  },
+  {
+    "text": "griechen",
+    "label": "MISC",
+    "count": 6
+  },
+  {
+    "text": "Balkan",
+    "label": "LOC",
+    "count": 5
+  },
+  {
+    "text": "CPU",
+    "label": "MISC",
+    "count": 5
+  },
+  {
+    "text": "The",
+    "label": "MISC",
+    "count": 5
+  },
+  {
+    "text": "europäische",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "griechenland",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "enver",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "syrien",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "anatolien",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Armee",
+    "label": "ORG",
+    "count": 4
+  },
+  {
+    "text": "Makedonien",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Arabische",
+    "label": "MISC",
+    "count": 4
+  },
+  {
+    "text": "sharia",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "europäer",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "They",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Jungtürken",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "Greeks",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Damascus",
+    "label": "LOC",
+    "count": 4
+  },
+  {
+    "text": "Armenier",
+    "label": "PER",
+    "count": 4
+  },
+  {
+    "text": "reich",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Edirne",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "russland",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Kurden",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "reich",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Bey",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "Gerücht",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "CUP",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "zentrum",
+    "label": "ORG",
+    "count": 3
+  },
+  {
+    "text": "pasha",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "Arabisch",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "rida",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "Armenians",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "armenier",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Tanin",
+    "label": "PER",
+    "count": 3
+  },
+  {
+    "text": "the Revolution",
+    "label": "MISC",
+    "count": 3
+  },
+  {
+    "text": "Syria",
+    "label": "LOC",
+    "count": 3
+  },
+  {
+    "text": "Public",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Mazedonien",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Manastir",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Kosovo",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Tallinn",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "bosnien und herzegowina",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Ziya Gökalp",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "adana",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Talat",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "islam",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "türkische",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "osmanische",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "islamischen",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Montenegro",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "janina",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "bulgarische",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "albaner",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "serben",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "russen",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "deutschland",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Islamische",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "tripoli",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "frankreich",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "albanischer",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Islam",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "abdülhamid",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "streik",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "militär",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "albanien",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "nazim pasha",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Edirne",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "League of Private Initiative and Decentralisation",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "reiches",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "krieg",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "on the contrary",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Europa",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "deutsche",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "osmanen",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Ahmed Riza",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "adana massaker",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "revolution",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "Arabs",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "feier",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "jerusalem",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Municipal Garden",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "After",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "ARF",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "libanon",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Règlement Organique",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "the Revolution",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Araber",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "Among the Arab provinces",
+    "label": "MISC",
+    "count": 2
+  },
+  {
+    "text": "stadt",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "began among the different actors",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Bulgarians",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Hasan Fehmi",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Liberale",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "1. Armee",
+    "label": "ORG",
+    "count": 2
+  },
+  {
+    "text": "Muqtabas",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "With",
+    "label": "PER",
+    "count": 2
+  },
+  {
+    "text": "Gegenputsch",
+    "label": "LOC",
+    "count": 2
+  },
+  {
+    "text": "cioleta islamic",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "jemandes turf",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "KEF Schlaf",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Russ revolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "berliner kongress",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Zar Nikolaus II",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "ahmed nayazi",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Semsi Pascha",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Yusuf Akcara",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Sevket pasha",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "revolution vor istanbul",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "KEF enver pasha",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Celal Nuri",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Said Nursi",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "naher liberaler",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "balkan von türken",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "islamische gesellschaft",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "KEF herrschaft",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "albanien revolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Verlust janina",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "bulgarische armee",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "osm armee",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "huda al sayyadi",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "islam vision abdülhamids",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "public works",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "midhat pasha",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "geheime society",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "schwiegersohns abdülhamids sabaheddin",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "rizas gruppe",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Committee of Progress and Union",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Russ revolution 1905",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "iran revolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "jemen krieg",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "gruppe neue orga league of private Initiative and decentralization",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "maloumian von den Dashnaks",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "1906 thessaloniki",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "ottoman freedom society",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Ismail Enver",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Macedomnian Revolutionary Organization",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "osmanische armee",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "franz josef australien",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "edward vii 9",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "guerilla cpu",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Konstitutionelle monarchei",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "herzegowina von wien",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "CUP Muslim Union",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Volkan Zeitung",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Gegenputsch 13.April",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "ersten armee",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "yildiz palast",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "hat cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "mehmed V",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Machtkonkurrenz cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "eimnzug armee",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "anti cup orga",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "arab halbinsel",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "erzwang kamils",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "friedensvertrag von london",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "cup regierung",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "machtbasis balkan",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "aleppo savket pasha",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "Ahmed cemal pasha",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Abdu ̈lhamid’s",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "end by the convergence of two trends",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the development of a growing",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "both inside and outside the empire",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "ideologue of the CUP",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Ahmed Rıza Bey",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Me ̧sveret",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "murad bey",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "mazedonischen gangs",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "osm freedom society",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "frz rev",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "osm revolution",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "hohen pforte",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "ottom freedom society",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "los 3.",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "england russland",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "at the outset that news of it did",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the public",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the Asiatic provinces and Tripoli of Barbary",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The Young Turk Revolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Fraternity and Justice",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "as the principal mediums of political participation",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "united against European intervention in the affairs of the empire",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "They spoke of a free press",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Very few of these things came to pass",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "System der repräsenation",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Kamil Pasha",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Sabahaddin Bey",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Mohammedan Union Party",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the centre-left Democratic Party",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the Liberal Party and the Moderate Freedom-Lovers’ Party",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Konterrevolution: cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Gazi Ahmed",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "rest abdülhamid",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "But unknown to the Committee",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "a secret military organisation",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "come into being with the encouragement of a number of high-ranking commanders sidelined by the CUP",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "On 25 July 1912",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The new",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "grand vezir seized the opportunity to ask the senate",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "composed of officers and high-ranking officials",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Although the senate had little more than ceremonial significance",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the issue of decrees dissolving the chamber of deputies and calling for new elections",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "pending approval by the sultan",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "More significantly",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "unreformed appendage of the old regime",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "That the CUP",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "therefore a serious error",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the chamber convened less",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "carried out by Dr Bahaeddin S ̧akir",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Dr Bahaeddin S",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Dr Naˆzım",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "another of the architects of the reorganisation",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the e ́minences",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The hand of the men of action was strengthened by the merger with the Ottoman Free- dom Society",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Talaˆt Bey",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Pas ̧a",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "rose to prominence",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "cemal bey",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Mehmed Cavid Bey",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Kara Kemal Bey",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "organiser of societies and cooperatives",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Ziya Go ̈kalp",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Problem Cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Porte above the parliament and the CUP",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "he received the first vote of no confidence",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Parlament nervt cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "colmar von goltzes",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "ollowing the precedent",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "byA bdu ̈lhamidII",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The combination of a skilful propaganda machine",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "initially posed",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "effectively silenced",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "he relative freedom of the first few years",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "it aggravated them",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Thus CUP policies",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "made things worse",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The cancellation of all privileges of non-Turkish Muslim",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the launching of an aggressive centralisation campaign and the demand that all citizens place their Ottoman",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "ticket cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "fürs reich",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Treaty of london",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the empire",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Rumelia and Anatolia",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Some influential politicians and pundits went",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "far as to propose the removal of the capital from Istanbul to a major town",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "central Anatolia or northern Syria.5",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "Royal Medical Academy",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Ulama Huca Kadri",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Hoca Muhiddin",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "le Bon",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Politics and Society",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The Ramadan of Freedom",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "feier revolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "In the nineteenth century",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the majority of the Ottoman Empire’s constituent groups did not see themselves as part of a nation",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Their identities meshed",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "array of overlapping identities",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "highlighted by religious",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "For some of the Arab notables",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "inability to reclaim their previous status",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "while others",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "began looking for alternative ways to express their grievances—through",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "for example",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "osmanischer bürgerschaft",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "ottoman history podcast",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "): selim III+MahmudII",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Abdülhamid II",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Avedis Aharonian",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "18. jh reformen",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "promulgation of the 1856 Edict",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Règlement Organique for Lebanon",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "al azm",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "al manar",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "The society",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "composed of Turks",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the non- scholarly",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "landowning bureaucrats",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "local politics",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Gab parade",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "fouad Pascha",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "isaia geschuite",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Niyazi and Enver Bey",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Madteos II Izmirlian",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Araber Fuad",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "kerkesse born",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "russ-türk krieg",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "gebet ummayyadenmoschee",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "bey cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "jurji bey sursuq",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "relig neutral",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Taksim Garden",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "Hamidian Garden",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "ls deko",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "In the postrevolutionary period",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "thrown into the public domain",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The public spheres of the postrevolutionary period seized symbolism from the monopoly of the state and the sovereign",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Rafiq Bey",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "This symbolic move",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "At one of the celebrations",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Abd al-Qadir al-Khatib al-Mughrabi",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "With their condensation of meaning and multivocality",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "symbols demonstrated the existence of",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "euphoric feelings",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "as a legitimizing force for the Revolution and a consecration of the new era",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "frz revolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The columns and articles",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the newspapers of the ethnic groups provide us with a",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "geographic areas of the empire",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the press played the role of mediator between politicians and the public",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "connecting the masses with politics",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "It also assumed the role of educating and disciplin- ing the public during the fragile postrevolutionary period",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "This role of the educator was mostly",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Imme- diately",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Tanin began publishing a series of articles under the title “Neler",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Öğreniyoruz Öğretmiyoruz",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "The title indicates that the newspaper itself",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "own percep- tions on them",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "each issue",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "subjects dealing with",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "gâyet nedir?”",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "What is the state? What is the aim?",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Meclis-i Mebusanda",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The number of the members of the House of Deputies",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Iki Derece",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Two stages",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Freedom of press",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Ethnische presse",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "One writer for the Arabic",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "… A correspondent for the Egyptian",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Al-Muqaṭṭam argued that the freedom resulting from the Revolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "lisan al hal",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Tag 1",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "revolution warnungen",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "fall regierung",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "Said Pascha",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "The immediate task of the political parties was to publish articles and give lectures to",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Sabah Gulian",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "as well as the publication of a newspaper that would explain the principles of constitu- tion",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The Ottoman-Arab Brother- hood Society",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The question of whether to adopt a centralized or decentralized political system",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Some of these commentators indicated that the administrative councils",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the prov- inces would complement",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Edwar Murqus",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "if he",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "as some of the capital’s newspapers",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "for the provinces along the lines of Germany and Amer- ica",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "remove and appoint high and low officials",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "As a result",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "the people of Lebanon",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "into two",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "one believed that it was necessary to send deputies to the Ottoman Parliament to ensure political enfranchisement",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "whereas the other thought that",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "osm reich",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "the ethnic press played the role of",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "This edu- cational role is particularly manifest in the newspapers",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "from the shackles of tyranny",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "For those traditional elites who",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "wary of the Revolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "became their",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "the notables and the ulema",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "by the news",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "afraid that the Revolution and the shift of the center of power from local authorities to the CUP",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "their traditional source of legitimacy",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "überall cup kommitees",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Damas- cus",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the newer ties of the Revolution",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The old power structures",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "affected by the Revolution",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the emergence of new actors on the political scene",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "mostly members of the newly emerging CUP",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "As the CUP assumed that role",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Damascus was to remove the ancien régime’s",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the mufti of Damascus",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Busra Eski-Sham",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "along with",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "among the ulema class,108 resulting",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Rida tour",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Salih Sharif al-Tunisi",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "al tunisi",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "As‘ad Bey",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "from the prism of political parties but",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "defining inter- and intraethnic politics",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "going to be to the state",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "It did so by creating the space",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Mt lebanon",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "liberale partei",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Arf für föderalismus",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "into three sections",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "and a prosperity plan",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The major points of disagreement between the CUP and the nondominant ethnic",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "millet system",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Beirut zentrum cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "alliances played almost no role",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "since the CUP",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "parties to campaign for the elections",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "since it",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Syria and the party",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "from Salonica as early as October",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The CUP",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "with the local populations of Syria",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "as they had",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "that the Syrians",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the survival of the an- cien régime",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the CUP nominated most of the deputies",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The candidates",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "as in the case of the vilayet of Beirut",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "most of them served the state",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the deputies in the Arab provinces came from three backgrounds",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "or professional men from the towns",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The phase before the balloting was characterized by a heated battle over ideas",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "which every",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "the blueprint for the political system that the ethnic group",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Many of these partisan",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "with the policies",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "ethno-religious privileges",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "national education",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Alba- nians",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "Jews and Arabs",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "In the Arab provinces",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Of 281",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "from the first round of elections",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "parliamentary politics",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "mension in the public spheres created after the Revolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "four main",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "preoccupied the ethnic",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "concessions to foreign countries",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Kamil pascha regierung",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "ethnic lines",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "general and along Greek/",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "important role",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "power politics from",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Shafiq al-Mu",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "Rushdi al-Sham",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "men whose election",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "CUP circles in the Arab provinces",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "been CUP supporters",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Abd al-Hamid al-Zahrawi",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "with the CUP party",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Arab Brotherhood Society",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Arab partei Al-I‘tidāl",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Liberal Moderate Party",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Al-ḥizb al-ḥurr al-Mu",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "It was also at the end of 1909 that a heated debate took place over the Lynch",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "related to the government’s plan to provide commercial conces- sion",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Iraq to a foreign enterprise",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "British Lynch Company",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Four major",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "especially pertinent to the Arab",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "ratification of the electoral results for four Arab",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the Hidjaz Railway",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Stress zw cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Yusuf Shitwan",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Umar Mansur",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Syrian Central Committee",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Rashid mutran",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "syrien griech kath",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "One of the main factors that hampered Arab",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "’ from being more active participants",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "as pointed out",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the nonexistence of a major",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Palestine attract the criticism of many Arab",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The Counterrevolution and the „Second Revolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "bruder des sultans",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Rashad Efendi",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "ittihad-i muhammedi",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "altersgegensatz militärs",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "rank officers",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "hilmi pascha",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "pasha von sultan",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Mehmed Cavid",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "cup sura-yi Ümmet",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "3. Armee",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "united ottoman association",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "cup istanbul",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "ottoman liberal party",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Liberal Union",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Amir Muhammad Arslan",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Armenier unterstützen cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "kampf gg konterrevolution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "action army",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Hunchaken und Dashnaken",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Society of Muhammad",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "konterrevolution provinztour",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "abd al wadir al ajlani",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "amir abdullah son of abd al Qadir al Jazairi",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "society of muslim",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "city Square",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "schmuck municipality",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Ali ayni bey",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Ihsan Fikri",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Königreich Kilikien",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "Burhan nuri",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Eröffnungssatz: Revolutionary",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "to forecast the outcomes and the impact of revolutions on their indigenous",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "interconnected public spheres",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "new actors emerged",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "new orders",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "some cases",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "creating new ones",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "revolution der cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The notion of public sphere within the context of the Ottoman Empire",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "infancy.2 Of course",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the public sphere",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "The official Ottoman",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the 19th century and was followed by the emergence of the private press",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The transformation of the literary public spheres into political public spheres",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the modern sense took place",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "peak with the promulgation of the Otto- man constitution",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the creation of private press and the proliferation of the ethnic press in the second half of the 19th century",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "from Lebanon",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "… After the Young Turk",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "this exilic public",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the Empire.8",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "he best study on the post-revolutionary press is that of Palmira Brummett",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Image and Imperialism in the Ottoman Revolutionary Press",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Albany: State Univer- sity of New York Press",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the creation of Arab",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Arab-Ottoman Brotherhood",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Bey al-Mu",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "Nadra Bey Mutfiin",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Bey al-I",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Arif Bey al-MardInI",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "SharIf Ja'far Pa§a and MuJ:!ammad Pa§a al-MakhzumI.",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Damascus was considered",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "for the activities of the ulema",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Ummayad Mosque",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "Revolution in",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "UP branch of Damascus",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Hussein Bey",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "the director of educa- tion",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Major SalIm",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "As'ad Bey",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Damascus was to get rid of the officials from the ancien regime period",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "pressured the Vali to dismiss the head of the Administrative Council of the Prov- ince",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "as well as the kaimakam of Zabadani and Busra Eski Sham",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "caused some",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "among the ulema class",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The British Consul Devey reported on the 12th of August",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "There is some discontent on the part of the ulema and certain leaders of the town",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "for the Union and Pro- gress Society",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "own way and removing",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "Some protester referred to the CUP as the committee of disunity and decline",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "his article has contended that post-revolutionary ethnic politics in the Ottoman Empire",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "defining inter- and intra-ethnic politics",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "loyalty would be to the state",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "It did so by creating a multiplicity of interconnected public spheres over",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "jan 13",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Mahmud Sevket",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "said Halim",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "mt lebanon maroniten vs drusen",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Arf 1890",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "le bon",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "merger cup",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "ottoman freedom soc",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "down with the spies",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "committee members reasoned that",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "as well among parliamentarians",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "senior bureaucrats",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Hüseyin Cahid",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "part to the practical dimensions of such a policy",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Cup kongress 1910",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the far-off province of Libya",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the national assembly grew more confident in",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "the wake of the 1912",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the summer of 1912 as a cohort of dissident officers from the Balkans",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Albanian rebels and the Liberal Entente",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "the CUP stronghold of Manastır",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the capital",
+    "label": "LOC",
+    "count": 1
+  },
+  {
+    "text": "Pressured by CUP",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "the sultan responded to the crisis by appointing a new civilian cabinet and a grand",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The creation of the CUP formed the critical point of separation between older figures like Mahmud Şevket and younger ones like Enver or Talat",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "The experience of mobilizing and agitating",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "closed quarters",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "for fear of government reprisal",
+    "label": "ORG",
+    "count": 1
+  },
+  {
+    "text": "jungtürken bewegung",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "se aufbauen",
+    "label": "PER",
+    "count": 1
+  },
+  {
+    "text": "Collaps at the margins",
+    "label": "MISC",
+    "count": 1
+  },
+  {
+    "text": "Balkan krieg",
+    "label": "MISC",
+    "count": 1
+  }
+]

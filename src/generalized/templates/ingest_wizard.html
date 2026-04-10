@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ingest Wizard</title>
+<style>
+{{APP_CSS}}
+/* ── Progress bar ── */
+#progress{background:var(--c-surface);border-bottom:1px solid var(--c-border-ui);
+           padding:11px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:10}
+.dots{display:flex;align-items:center;gap:0}
+.dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+     font-size:11px;font-weight:600;border:2px solid #d1d5db;background:var(--c-surface);
+     color:var(--c-text-4);transition:all .2s;cursor:default;flex-shrink:0;user-select:none}
+.dot.done{background:var(--c-primary);border-color:var(--c-primary);color:#fff;cursor:pointer}
+.dot.done:hover{background:var(--c-primary-h)}
+.dot.active{background:var(--c-surface);border-color:var(--c-primary);color:var(--c-primary);
+            box-shadow:0 0 0 3px var(--c-primary-tint)}
+.dot.reachable:not(.done):not(.active){cursor:pointer}
+.dot.reachable:not(.done):not(.active):hover{border-color:var(--c-primary);color:var(--c-primary)}
+.dot-line{width:24px;height:2px;background:#e5e7eb;flex-shrink:0}
+.dot-line.done{background:var(--c-primary)}
+#progress-label{font-size:12px;color:var(--c-text-2);margin-left:8px}
+#progress-label strong{color:var(--c-text)}
+
+/* ── Steps ── */
+#steps{flex:1;overflow:auto}
+.step{display:none;padding:28px 32px;max-width:780px;margin:0 auto}
+.step.active{display:block}
+.step h2{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--c-text)}
+.step-desc{font-size:12px;color:var(--c-text-3);margin-bottom:20px}
+
+/* ── Nav ── */
+#nav{background:var(--c-surface);border-top:1px solid var(--c-border-ui);
+     padding:12px 32px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+#btn-back{padding:7px 18px;border-radius:4px;font-size:12px}
+#btn-next{padding:7px 18px;border-radius:4px;font-size:12px}
+
+/* ── Step 1: Upload ── */
+#drop-zone{border:2px dashed #d1d5db;border-radius:8px;padding:40px 20px;text-align:center;
+           cursor:pointer;transition:all .2s;background:#fafafa;margin-bottom:12px}
+#drop-zone:hover,#drop-zone.dragover{border-color:var(--c-primary);background:var(--c-primary-bg)}
+#drop-zone svg{width:36px;height:36px;color:var(--c-text-4);margin-bottom:8px}
+#drop-zone p{font-size:12px;color:var(--c-text-3);margin-top:6px}
+#drop-zone strong{display:block;font-size:13px;color:var(--c-text-2)}
+#file-input{display:none}
+#file-list{display:flex;flex-direction:column;gap:6px}
+.file-item{display:flex;align-items:center;gap:8px;padding:8px 12px;
+           border-radius:6px;font-size:12px}
+.file-item svg{color:var(--c-primary);flex-shrink:0}
+.file-name{flex:1;font-weight:500;color:var(--c-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-size{font-size:11px;color:var(--c-text-4);flex-shrink:0}
+
+/* ── Step 2: Doc type ── */
+.doctype-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.doctype-card{padding:14px 16px;background:var(--c-surface);border:2px solid var(--c-border);
+              border-radius:8px;cursor:pointer;transition:all .15s;
+              display:flex;align-items:flex-start;gap:10px}
+.doctype-card:hover{border-color:var(--c-primary-ring)}
+.doctype-card.selected{border-color:var(--c-primary);background:var(--c-primary-bg)}
+.doctype-card input{margin-top:2px;accent-color:var(--c-primary);flex-shrink:0}
+.doctype-card div{flex:1}
+.doctype-card strong{display:block;font-size:12px;font-weight:600;color:var(--c-text);margin-bottom:2px}
+.doctype-card span{font-size:11px;color:var(--c-text-3)}
+
+/* ── Step 3: Analyse ── */
+#analysis-spinner{display:flex;align-items:center;gap:10px;padding:16px;
+                  background:var(--c-code-bg);border-radius:6px;
+                  font-size:12px;color:var(--c-text-2);margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner-ring{width:18px;height:18px;border:2px solid #e5e7eb;border-top-color:var(--c-primary);
+              border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+#analysis-result{display:none}
+.a-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:16px}
+.a-card{padding:10px 14px;border-radius:6px}
+.a-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--c-text-4);
+         display:block;margin-bottom:3px}
+.a-val{font-size:13px;font-weight:600;color:var(--c-text)}
+.a-events{margin-top:12px}
+.a-events h4{font-size:11px;font-weight:600;color:var(--c-text-3);margin-bottom:6px;
+             text-transform:uppercase;letter-spacing:.05em}
+.a-event-chip{display:inline-block;padding:2px 8px;background:var(--c-primary-tint);
+              color:#5b21b6;border-radius:10px;font-size:11px;margin:2px}
+#analysis-error{display:none;padding:12px;background:var(--c-danger-bg);
+                border:1px solid var(--c-danger-border);border-radius:6px;
+                font-size:12px;color:var(--c-danger)}
+
+/* ── Step 4: Time config ── */
+.time-inputs{display:flex;gap:16px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.time-inputs label{font-size:12px;color:var(--c-text-2);display:flex;align-items:center;gap:6px}
+.time-inputs input{padding:5px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;
+                   width:90px;font-family:inherit}
+#timeline-wrap{position:relative;margin-bottom:20px}
+#timeline-axis{height:32px;background:var(--c-surface);border:1px solid var(--c-border);
+               border-radius:4px;position:relative;overflow:visible;margin-bottom:4px}
+#timeline-labels{font-size:10px;color:var(--c-text-4);padding:0 2px}
+.tl-event{position:absolute;top:4px;height:24px;border-radius:3px;opacity:.85;cursor:pointer;
+          display:flex;align-items:center;padding:0 6px;font-size:10px;font-weight:600;
+          white-space:nowrap;overflow:hidden;color:#fff;transition:opacity .15s;min-width:4px}
+.tl-event:hover{opacity:1;z-index:5}
+#events-section h4{font-size:10px;font-weight:600;color:var(--c-text-3);text-transform:uppercase;
+                   letter-spacing:.06em;margin-bottom:8px}
+#events-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.ev-row{display:flex;align-items:center;gap:8px;padding:7px 10px;
+        border-radius:5px}
+.ev-color{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.ev-name{flex:1;font-size:12px;font-weight:500;color:var(--c-text)}
+.ev-years{font-size:11px;color:var(--c-text-3);white-space:nowrap}
+.ev-edit{border:none;background:transparent;color:var(--c-text-4);cursor:pointer;
+         font-size:11px;padding:2px 5px;border-radius:3px}
+.ev-edit:hover{background:#f3f4f6;color:var(--c-text-2)}
+.ev-del{border:none;background:transparent;color:var(--c-danger-border);cursor:pointer;
+        font-size:14px;padding:0 4px;line-height:1}
+.ev-del:hover{color:var(--c-danger)}
+.ev-form{padding:10px;background:var(--c-primary-bg);border:1px solid var(--c-primary-ring);
+         border-radius:5px;display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end}
+.ev-form label{font-size:11px;color:var(--c-text-3);display:flex;flex-direction:column;gap:3px}
+.ev-form input{padding:4px 7px;border:1px solid #d1d5db;border-radius:3px;
+               font-size:12px;font-family:inherit}
+
+/* ── Step 5: Taxonomy (embedded) ── */
+#tax-controls{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+#tax-status{font-size:11px;color:var(--c-text-3);margin-left:auto}
+#tax-log{max-height:80px;margin-bottom:10px}
+#tax-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.tax-cat{background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;
+         padding:12px;display:flex;flex-direction:column;gap:8px}
+.tax-cat-header{display:flex;align-items:center;gap:6px}
+.tax-cat-name{flex:1;font-size:12px;font-weight:600;padding:3px 7px;border:1px solid transparent;
+              border-radius:3px;background:transparent;color:var(--c-text);font-family:inherit}
+.tax-cat-name:hover{border-color:#d1d5db}
+.tax-cat-name:focus{border-color:var(--c-primary);outline:none;background:var(--c-primary-bg)}
+.tax-cat-desc{font-size:11px;line-height:1.5;padding:4px 7px;border:1px solid transparent;
+              border-radius:3px;resize:vertical;min-height:44px;font-family:inherit;
+              color:var(--c-text-2);background:transparent;width:100%}
+.tax-cat-desc:hover{border-color:#d1d5db}
+.tax-cat-desc:focus{border-color:var(--c-primary);outline:none;background:var(--c-primary-bg)}
+.tax-kw-list{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.tax-kw{display:flex;align-items:center;gap:2px;background:#f3f4f6;
+        border:1px solid var(--c-code-border);border-radius:10px;
+        padding:2px 7px 2px 9px;font-size:10px;color:#374151}
+.tax-kw input{border:none;background:transparent;font-size:10px;width:70px;outline:none;font-family:inherit}
+.tax-kw input:focus{width:95px}
+.tax-kw-del{border:none;background:transparent;color:var(--c-text-4);cursor:pointer;
+            font-size:12px;line-height:1;padding:0 2px}
+.tax-kw-del:hover{color:var(--c-danger)}
+.tax-kw-add{border:none;background:transparent;color:var(--c-primary);cursor:pointer;
+            font-size:10px;padding:2px 5px;border-radius:10px;border:1px dashed var(--c-primary-ring)}
+.tax-kw-add:hover{background:var(--c-primary-tint)}
+.tax-cat-del{border:none;background:transparent;color:#d1d5db;cursor:pointer;font-size:15px;
+             padding:1px 3px;line-height:1;border-radius:3px;flex-shrink:0}
+.tax-cat-del:hover{color:var(--c-danger);background:var(--c-danger-bg)}
+.tax-empty{padding:32px;text-align:center;color:var(--c-text-4);font-size:12px;grid-column:1/-1}
+
+/* ── Step 6: Entities ── */
+#ent-controls{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+#ent-log{max-height:180px;margin-top:8px}
+#ent-hint{font-size:11px;color:var(--c-text-3);margin-top:10px}
+
+/* ── Step 7: Pipeline ── */
+#btn-run-pipeline{padding:10px 24px;background:var(--c-success);border:none;border-radius:4px;
+                  color:#fff;font-size:13px;font-weight:600;cursor:pointer;
+                  transition:background .15s;margin-bottom:16px;font-family:inherit}
+#btn-run-pipeline:hover:not(:disabled){background:#15803d}
+#btn-run-pipeline:disabled{opacity:.5;cursor:default}
+#pipeline-log{font-size:11px;font-family:ui-monospace,monospace;white-space:pre-wrap;
+              background:#1e1e1e;color:#d4d4d4;border-radius:6px;padding:12px 16px;
+              min-height:120px;max-height:320px;overflow-y:auto;display:none;margin-bottom:12px}
+#pipeline-log .ok{color:#4ade80}
+#pipeline-log .err{color:#f87171}
+#preview-link{display:none;padding:8px 18px;background:#2563eb;color:#fff;text-decoration:none;
+              border-radius:4px;font-size:12px;font-weight:500}
+#preview-link:hover{background:#1d4ed8}
+.pipeline-steps{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.pipeline-step{display:flex;align-items:center;gap:10px;padding:8px 12px;
+               border-radius:5px;font-size:12px;color:var(--c-text-2)}
+.ps-icon{width:16px;text-align:center;flex-shrink:0}
+.ps-name{flex:1}
+.ps-status{font-size:11px;color:var(--c-text-4)}
+
+/* ── Existing project list ── */
+#proj-list-section{margin-top:24px;border-top:1px solid var(--c-border);padding-top:16px}
+#proj-list-section h3{font-size:12px;font-weight:600;color:var(--c-text-3);text-transform:uppercase;
+                       letter-spacing:.05em;margin-bottom:10px}
+#proj-list{display:flex;flex-direction:column;gap:6px}
+.proj-card{display:flex;align-items:center;gap:10px;padding:10px 14px;
+           border:1px solid var(--c-border);border-radius:6px;cursor:pointer;
+           background:var(--c-surface);transition:border-color .15s,background .15s;user-select:none}
+.proj-card:hover{border-color:var(--c-primary);background:var(--c-primary-bg)}
+.proj-card-title{font-size:13px;font-weight:600;color:var(--c-text);flex:1}
+.proj-card-meta{font-size:11px;color:var(--c-text-3)}
+.proj-card-open{font-size:11px;color:var(--c-primary);font-weight:600;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- Progress -->
+<div id="progress">
+  <div class="dots" id="dots"></div>
+  <div id="progress-label"><strong id="step-title">Dateien hochladen</strong> &nbsp;·&nbsp; Schritt <span id="step-num">1</span> / 7</div>
+</div>
+
+<div id="steps">
+
+  <!-- Step 1: Upload -->
+  <section id="step-1" class="step active">
+    <h2>Dateien hochladen</h2>
+    <p class="step-desc">DOCX, PDF oder TXT — auch mehrere Dateien gleichzeitig.</p>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:5px">Projektname</label>
+      <input id="project-name-input" type="text" placeholder="z.B. Osmanisches Reich 1875–1923"
+        style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #d1d5db;border-radius:5px;font-size:13px;outline:none">
+      <p style="font-size:11px;color:#9ca3af;margin:4px 0 0">Ordnername wird automatisch erzeugt (z.B. <code id="project-slug-preview" style="color:#6d28d9"></code>)</p>
+    </div>
+    <div id="drop-zone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+      </svg>
+      <strong>Dateien hierher ziehen</strong>
+      <p>oder klicken um Dateien auszuwählen</p>
+    </div>
+    <input type="file" id="file-input" multiple accept=".docx,.pdf,.txt">
+    <div id="file-list"></div>
+
+    <div id="proj-list-section">
+      <h3>Bestehendes Projekt öffnen</h3>
+      <div id="proj-list"><span style="font-size:11px;color:var(--c-text-3)">Lade…</span></div>
+    </div>
+  </section>
+
+  <!-- Step 2: Doc type -->
+  <section id="step-2" class="step">
+    <h2>Dokumenttyp</h2>
+    <p class="step-desc">Welche Art von Dokument wird verarbeitet?</p>
+    <div class="doctype-grid">
+      <label class="doctype-card selected">
+        <input type="radio" name="doc-type" value="Forschungsnotizen" checked>
+        <div><strong>Forschungsnotizen</strong><span>Akademische Lektürenotizen mit Quellenangaben</span></div>
+      </label>
+      <label class="doctype-card">
+        <input type="radio" name="doc-type" value="Presseartikel">
+        <div><strong>Presseartikel</strong><span>Zeitungs- oder Zeitschriftenartikel</span></div>
+      </label>
+      <label class="doctype-card">
+        <input type="radio" name="doc-type" value="Transkripte">
+        <div><strong>Transkripte</strong><span>Interview- oder Sitzungsprotokolle</span></div>
+      </label>
+      <label class="doctype-card">
+        <input type="radio" name="doc-type" value="Anderes">
+        <div><strong>Anderes</strong><span>Sonstiger Dokumenttyp</span></div>
+      </label>
+    </div>
+  </section>
+
+  <!-- Step 3: Analyse -->
+  <section id="step-3" class="step">
+    <h2>LLM-Analyse</h2>
+    <p class="step-desc">Claude analysiert automatisch Zeitraum, Ereignisse und Dokumentstruktur.</p>
+    <div id="analysis-spinner">
+      <div class="spinner-ring"></div>
+      <span id="analysis-status">Dokument wird geparst…</span>
+    </div>
+    <div id="analysis-error"></div>
+    <div id="analysis-result">
+      <div class="a-grid" id="a-grid"></div>
+      <div class="a-events" id="a-events"></div>
+    </div>
+  </section>
+
+  <!-- Step 4: Time config -->
+  <section id="step-4" class="step">
+    <h2>Zeitkonfiguration</h2>
+    <p class="step-desc">Zeitraum und historische Ereignisse anpassen.</p>
+    <div class="time-inputs">
+      <label>Von <input type="number" id="year-min" min="0" max="2100"></label>
+      <label>Bis <input type="number" id="year-max" min="0" max="2100"></label>
+    </div>
+    <div id="timeline-wrap">
+      <div id="timeline-axis"></div>
+      <div id="timeline-labels"></div>
+    </div>
+    <div id="events-section">
+      <h4>Ereignisse</h4>
+      <div id="events-list"></div>
+      <button id="btn-add-event">+ Ereignis hinzufügen</button>
+    </div>
+    <div id="preview-editor-section" style="display:none;margin-top:24px">
+      <hr style="margin-bottom:16px">
+      <h4 style="margin-bottom:8px">Zeitanker</h4>
+      <p id="preview-editor-hint" style="display:none;color:#888;font-size:13px">Zeitanker können nach dem Pipeline-Run in Schritt 7 bearbeitet werden.</p>
+      <iframe id="preview-editor-frame" src="" style="display:none;width:100%;height:600px;border:none"></iframe>
+    </div>
+  </section>
+
+  <!-- Step 5: Taxonomy -->
+  <section id="step-5" class="step">
+    <h2>Taxonomie</h2>
+    <p class="step-desc">Kategorien für die Klassifizierung bearbeiten.</p>
+    <div id="tax-controls">
+      <button class="btn" id="tax-btn-add">+ Kategorie</button>
+      <button class="btn btn-outline" id="tax-btn-propose">KI-Vorschlag generieren</button>
+      <button class="btn btn-success" id="tax-btn-save" disabled>Speichern</button>
+      <span id="tax-status">Lade…</span>
+    </div>
+    <div id="tax-log"></div>
+    <div id="tax-grid"></div>
+  </section>
+
+  <!-- Step 6: Entities -->
+  <section id="step-6" class="step">
+    <h2>Entities</h2>
+    <p class="step-desc">Personen, Orte, Organisationen und Konzepte erkennen und bearbeiten.</p>
+    <div id="ent-controls">
+      <button class="btn" id="ent-btn-sample">Stichprobe (schnell)</button>
+      <button class="btn btn-outline" id="ent-btn-full" disabled title="Erst Stichprobe analysieren, im Editor bestätigen (entities_seed.json), dann vollständig extrahieren">Vollständig (gründlich)</button>
+      <a class="btn" id="ent-btn-edit" href="/ingest/entities" target="_blank" style="display:none">Entity-Editor öffnen ↗</a>
+    </div>
+    <div id="ent-log" class="log-box" style="margin-top:8px"></div>
+    <div id="ent-log-toggle" class="log-toggle"></div>
+    <p id="ent-hint" style="font-size:11px;color:#888;margin-top:10px">1. Stichprobe → Editor → Bestätigen → 2. Vollständige Extraktion mit Few-Shot</p>
+  </section>
+
+  <!-- Step 7: Pipeline -->
+  <section id="step-7" class="step">
+    <h2>Pipeline ausführen</h2>
+    <p class="step-desc">Alle Schritte werden sequenziell ausgeführt.</p>
+    <div class="pipeline-steps" id="pipeline-steps">
+      <div class="pipeline-step" data-script="parse_document.py"><span class="ps-icon">1</span><span class="ps-name">parse_document.py</span><span class="ps-status" id="ps-0">ausstehend</span></div>
+      <div class="pipeline-step" data-script="detect_anchors.py"><span class="ps-icon">2</span><span class="ps-name">detect_anchors.py</span><span class="ps-status" id="ps-1">ausstehend</span></div>
+      <div class="pipeline-step" data-script="interpolate_anchors.py"><span class="ps-icon">3</span><span class="ps-name">interpolate_anchors.py</span><span class="ps-status" id="ps-2">ausstehend</span></div>
+      <div class="pipeline-step" data-script="classify_segments.py"><span class="ps-icon">4</span><span class="ps-name">classify_segments.py</span><span class="ps-status" id="ps-3">ausstehend</span></div>
+      <div class="pipeline-step" data-script="match_entities.py"><span class="ps-icon">5</span><span class="ps-name">match_entities.py</span><span class="ps-status" id="ps-4">ausstehend</span></div>
+      <div class="pipeline-step" data-script="export_preview.py"><span class="ps-icon">6</span><span class="ps-name">export_preview.py</span><span class="ps-status" id="ps-5">ausstehend</span></div>
+    </div>
+    <button id="btn-run-pipeline">Pipeline starten</button>
+    <div id="pipeline-log"></div>
+    <a id="preview-link" href="/preview" target="_blank">Zeitanker bearbeiten →</a>
+  </section>
+
+</div>
+
+<!-- Navigation -->
+<div id="nav">
+  <button class="btn" id="btn-back" disabled>← Zurück</button>
+  <button class="btn btn-primary" id="btn-next" disabled>Weiter →</button>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+const state = {
+  files: [],
+  doc_type: 'Forschungsnotizen',
+  analysis: null,
+  time_config: { year_min: 1800, year_max: 1920, events: [] },
+  taxonomy: [],
+  token: null,
+  project: null,
+  project_title: '',
+};
+
+function slugify(name) {
+  return name.toLowerCase().trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'projekt';
+}
+
+function authHeaders(extra = {}) {
+  const h = { 'Content-Type': 'application/json', ...extra };
+  if (state.token) h['X-Project-Token'] = state.token;
+  return h;
+}
+// Query-String mit project, document und token für alle API-Calls
+function _aq() {
+  const p = new URLSearchParams();
+  if (state.project)  p.set('project',  state.project);
+  if (state.document) p.set('document', state.document);
+  if (state.token)    p.set('token',    state.token);
+  const s = p.toString();
+  return s ? '?' + s : '';
+}
+let currentStep = 1;
+let maxReachedStep = 1;
+let analysisRan = false;
+const TOTAL = 7;
+const TITLES = ['Dateien hochladen','Dokumenttyp','LLM-Analyse','Zeitkonfiguration','Taxonomie','Entities','Pipeline'];
+const EVENT_COLORS = ['#6d28d9','#2563eb','#16a34a','#d97706','#dc2626','#0891b2','#7c3aed','#b45309'];
+let evNextId = 0;
+let taxDirty = false;
+let taxData  = [];
+
+// ── Progress dots ─────────────────────────────────────────────────────────────
+function buildDots() {
+  const c = document.getElementById('dots');
+  for (let i = 1; i <= TOTAL; i++) {
+    if (i > 1) { const l = document.createElement('div'); l.className='dot-line'; l.id=`dl-${i}`; c.appendChild(l); }
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 1 ? ' active' : '');
+    d.id = `dot-${i}`;
+    d.textContent = i;
+    d.addEventListener('click', () => { if (i <= maxReachedStep) gotoStep(i); });
+    c.appendChild(d);
+  }
+}
+buildDots();
+loadProjectList();
+
+function updateProgress(n) {
+  if (n > maxReachedStep) maxReachedStep = n;
+  for (let i = 1; i <= TOTAL; i++) {
+    const d = document.getElementById(`dot-${i}`);
+    const isDone = i < n;
+    const isActive = i === n;
+    const isReachable = i <= maxReachedStep && !isDone && !isActive;
+    d.className = 'dot' + (isDone ? ' done' : isActive ? ' active' : isReachable ? ' reachable' : '');
+    d.textContent = isDone ? '✓' : i;
+    if (i > 1) document.getElementById(`dl-${i}`).className = 'dot-line' + (i <= n ? ' done' : '');
+  }
+  document.getElementById('step-num').textContent = n;
+  document.getElementById('step-title').textContent = TITLES[n-1];
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+const btnBack = document.getElementById('btn-back');
+const btnNext = document.getElementById('btn-next');
+
+function gotoStep(n) {
+  document.querySelector('.step.active')?.classList.remove('active');
+  document.getElementById(`step-${n}`).classList.add('active');
+  updateProgress(n);
+  btnBack.disabled = n === 1;
+  btnNext.style.display = n === TOTAL ? 'none' : '';
+  currentStep = n;
+  onEnterStep(n);
+}
+
+btnBack.addEventListener('click', () => { if (currentStep > 1) gotoStep(currentStep - 1); });
+btnNext.addEventListener('click', () => {
+  if (currentStep === 5) {
+    saveTaxonomy().then(() => gotoStep(currentStep + 1));
+  } else {
+    gotoStep(currentStep + 1);
+  }
+});
+
+async function onEnterStep(n) {
+  btnNext.disabled = false;
+  if (n === 1) updateStep1Next();
+  if (n === 3) {
+    if (state.analysis) {
+      renderAnalysisResult(state.analysis);
+    } else {
+      btnNext.disabled = true;
+      if (!analysisRan) { runAnalysis(); analysisRan = true; }
+    }
+  }
+  if (n === 4) initTimeConfig();
+  if (n === 5) initTaxonomy();
+  if (n === 6) initEntities();
+}
+
+// ── Step 1: Upload ─────────────────────────────────────────────────────────────
+const dropZone       = document.getElementById('drop-zone');
+const fileInput      = document.getElementById('file-input');
+const projectNameEl  = document.getElementById('project-name-input');
+const slugPreviewEl  = document.getElementById('project-slug-preview');
+
+function updateStep1Next() {
+  btnNext.disabled = !(state.files.length > 0 && state.project_title.trim().length > 0);
+}
+
+projectNameEl.addEventListener('input', () => {
+  state.project_title = projectNameEl.value;
+  slugPreviewEl.textContent = state.project_title ? slugify(state.project_title) : '';
+  updateStep1Next();
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+dropZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+async function handleFiles(fileList) {
+  if (!fileList.length) return;
+  const fd = new FormData();
+  for (const f of fileList) fd.append('files', f);
+  const res  = await fetch('/ingest/upload', { method: 'POST', body: fd });
+  const data = await res.json();
+  if (data.ok) {
+    state.files = data.files;
+    analysisRan = false;  // new file → re-run analysis on step 3
+    state.analysis = null;
+    renderFileList();
+    updateStep1Next();
+  }
+}
+
+function renderFileList() {
+  const el = document.getElementById('file-list');
+  el.innerHTML = state.files.map(f => `
+    <div class="file-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/>
+      </svg>
+      <span class="file-name">${esc(f.name)}</span>
+      <span class="file-size">${fmtSize(f.size)}</span>
+    </div>`).join('');
+}
+
+function fmtSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+// ── Step 2: Doc type ───────────────────────────────────────────────────────────
+document.querySelectorAll('input[name="doc-type"]').forEach(r => {
+  r.addEventListener('change', e => {
+    state.doc_type = e.target.value;
+    document.querySelectorAll('.doctype-card').forEach(c => c.classList.remove('selected'));
+    e.target.closest('.doctype-card').classList.add('selected');
+  });
+});
+
+// ── Step 3: Analyse ────────────────────────────────────────────────────────────
+async function runAnalysis() {
+  if (state.analysis) {
+    renderAnalysisResult(state.analysis);
+    document.getElementById('analysis-result').style.display = 'block';
+    btnNext.disabled = false;
+    return;
+  }
+
+  const spinner  = document.getElementById('analysis-spinner');
+  const statusEl = document.getElementById('analysis-status');
+  const resultEl = document.getElementById('analysis-result');
+  const errEl    = document.getElementById('analysis-error');
+
+  spinner.style.display  = 'flex';
+  resultEl.style.display = 'none';
+  errEl.style.display    = 'none';
+  statusEl.textContent   = 'Dokument wird geparst und analysiert…';
+
+  try {
+    const res = await fetch('/ingest/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: state.files[0]?.name, doc_type: state.doc_type,
+                             project_name: state.project_title }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Unbekannter Fehler');
+
+    state.analysis     = data.analysis;
+    if (data.project)       state.project       = data.project;
+    if (data.project_title) state.project_title = data.project_title;
+    if (data.document)      state.document      = data.document;
+    const a          = data.analysis;
+    state.time_config = {
+      year_min: a.year_min || 1800,
+      year_max: a.year_max || 1920,
+      events: (a.events || a.historical_events || []).map((e, i) => ({ ...e, id: evNextId++, color: EVENT_COLORS[i % EVENT_COLORS.length] })),
+    };
+
+    // Minimal save_config to create DB entry + get token for subsequent requests
+    const scRes = await fetch('/ingest/save_config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project:    state.project  || undefined,
+        document:   state.document || undefined,
+        input_file: state.files[0]?.name || '',
+        doc_type:   state.doc_type,
+        analysis:   state.analysis,
+        time_config: state.time_config,
+        taxonomy:   [],
+        title:      state.project_title || undefined,
+        created_at: new Date().toISOString(),
+      }),
+    });
+    const scData = await scRes.json();
+    if (scData.token) state.token = scData.token;
+
+    spinner.style.display = 'none';
+    renderAnalysisResult(a);
+    resultEl.style.display = 'block';
+    btnNext.disabled = false;
+  } catch (err) {
+    spinner.style.display = 'none';
+    errEl.textContent = '✗ Fehler: ' + err.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function renderAnalysisResult(a) {
+  document.getElementById('a-grid').innerHTML = [
+    ['Zeitraum',  `${a.year_min ?? '?'} – ${a.year_max ?? '?'}`],
+    ['Sprache',   a.language || '?'],
+    ['Ereignisse', (a.events || []).length],
+    ['Organizer', (a.organizer_headings || []).length ? (a.organizer_headings || []).join(', ') : '–'],
+    ['Biblio-KW', (a.bibliography_keywords || []).length ? (a.bibliography_keywords || []).join(', ') : '–'],
+  ].map(([l, v]) => `<div class="a-card"><span class="a-label">${l}</span><span class="a-val">${esc(String(v))}</span></div>`).join('');
+
+  const evHtml = (a.events || []).map(e =>
+    `<span class="a-event-chip">${esc(e.name)} (${e.year_from}${e.year_to !== e.year_from ? '–'+e.year_to : ''})</span>`
+  ).join('');
+  document.getElementById('a-events').innerHTML = evHtml
+    ? `<h4>Erkannte Ereignisse</h4>${evHtml}` : '';
+}
+
+// ── Step 4: Time config ────────────────────────────────────────────────────────
+async function initTimeConfig() {
+  const tc = state.time_config;
+  document.getElementById('year-min').value = tc.year_min;
+  document.getElementById('year-max').value = tc.year_max;
+  renderTimeline();
+  renderEventsList();
+
+  const section = document.getElementById('preview-editor-section');
+  const frame   = document.getElementById('preview-editor-frame');
+  const hint    = document.getElementById('preview-editor-hint');
+  if (state.document && state.token) {
+    section.style.display = 'block';
+    const previewUrl = '/preview' + _aq();
+    const check = await fetch(previewUrl, { method: 'HEAD', headers: authHeaders() });
+    if (check.ok) {
+      hint.style.display  = 'none';
+      frame.style.display = 'block';
+      frame.src = previewUrl;
+    } else {
+      frame.style.display = 'none';
+      hint.style.display  = 'block';
+    }
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+function saveTimeConfig() {
+  if (!state.project || !state.token) return;
+  fetch('/ingest/save_config' + _aq(), {
+    method: 'POST', headers: authHeaders(),
+    body: JSON.stringify({
+      project:     state.project,
+      document:    state.document || undefined,
+      time_config: state.time_config,
+    }),
+  });
+}
+
+let _timeConfigSaveTimer = null;
+function saveTimeConfigDebounced() {
+  clearTimeout(_timeConfigSaveTimer);
+  _timeConfigSaveTimer = setTimeout(saveTimeConfig, 600);
+}
+
+document.getElementById('year-min').addEventListener('input', e => {
+  state.time_config.year_min = parseInt(e.target.value) || state.time_config.year_min;
+  renderTimeline();
+  saveTimeConfigDebounced();
+});
+document.getElementById('year-max').addEventListener('input', e => {
+  state.time_config.year_max = parseInt(e.target.value) || state.time_config.year_max;
+  renderTimeline();
+  saveTimeConfigDebounced();
+});
+
+function renderTimeline() {
+  const tc  = state.time_config;
+  const span = tc.year_max - tc.year_min || 1;
+  const axis = document.getElementById('timeline-axis');
+  const lbls = document.getElementById('timeline-labels');
+
+  axis.innerHTML = tc.events.map(ev => {
+    const l = ((ev.year_from - tc.year_min) / span * 100).toFixed(2);
+    const w = Math.max(((ev.year_to - ev.year_from + 1) / span * 100), 0.5).toFixed(2);
+    return `<div class="tl-event" style="left:${l}%;width:${w}%;background:${ev.color}"
+              data-id="${ev.id}" title="${esc(ev.name)} (${ev.year_from}–${ev.year_to})">${esc(ev.name)}</div>`;
+  }).join('');
+
+  // Tick labels: ~6 ticks
+  const step = Math.ceil(span / 6 / 10) * 10;
+  let labHtml = '';
+  for (let y = tc.year_min; y <= tc.year_max; y += step) {
+    const pct = ((y - tc.year_min) / span * 100).toFixed(1);
+    labHtml += `<span style="position:absolute;left:${pct}%;transform:translateX(-50%)">${y}</span>`;
+  }
+  lbls.style.position = 'relative';
+  lbls.style.height   = '14px';
+  lbls.innerHTML = labHtml;
+
+  // Click on timeline bar → open edit
+  axis.querySelectorAll('.tl-event').forEach(el => {
+    el.addEventListener('click', () => openEventEdit(parseInt(el.dataset.id)));
+  });
+}
+
+function renderEventsList() {
+  const el = document.getElementById('events-list');
+  el.innerHTML = '';
+  state.time_config.events.forEach(ev => {
+    const row = document.createElement('div');
+    row.className = 'ev-row';
+    row.dataset.id = ev.id;
+    row.innerHTML = `
+      <div class="ev-color" style="background:${ev.color}"></div>
+      <span class="ev-name">${esc(ev.name || '(kein Name)')}</span>
+      <span class="ev-years">${ev.year_from}–${ev.year_to}</span>
+      <button class="ev-edit" data-id="${ev.id}">Bearbeiten</button>
+      <button class="ev-del" data-id="${ev.id}" title="Löschen">×</button>`;
+    el.appendChild(row);
+  });
+  el.querySelectorAll('.ev-edit').forEach(b => b.addEventListener('click', () => openEventEdit(parseInt(b.dataset.id))));
+  el.querySelectorAll('.ev-del').forEach(b => b.addEventListener('click', () => {
+    state.time_config.events = state.time_config.events.filter(e => e.id !== parseInt(b.dataset.id));
+    renderTimeline(); renderEventsList(); saveTimeConfig();
+  }));
+}
+
+let activeEvForm = null;
+function openEventEdit(id) {
+  if (activeEvForm) { activeEvForm.remove(); activeEvForm = null; }
+  const ev = state.time_config.events.find(e => e.id === id);
+  if (!ev) return;
+  const row = document.querySelector(`[data-id="${id}"].ev-row`);
+  if (!row) return;
+
+  const form = document.createElement('div');
+  form.className = 'ev-form';
+  form.innerHTML = `
+    <label>Name<input id="ef-name" value="${esc(ev.name)}"></label>
+    <label>Von<input id="ef-from" type="number" value="${ev.year_from}" style="width:80px"></label>
+    <label>Bis<input id="ef-to"   type="number" value="${ev.year_to}"   style="width:80px"></label>
+    <div class="ev-form-actions">
+      <button class="btn btn-sm btn-primary" id="ef-save">OK</button>
+      <button class="btn btn-sm" id="ef-cancel">×</button>
+    </div>`;
+  row.after(form);
+  activeEvForm = form;
+
+  form.querySelector('#ef-save').addEventListener('click', () => {
+    ev.name      = form.querySelector('#ef-name').value;
+    ev.year_from = parseInt(form.querySelector('#ef-from').value) || ev.year_from;
+    ev.year_to   = parseInt(form.querySelector('#ef-to').value)   || ev.year_to;
+    form.remove(); activeEvForm = null;
+    renderTimeline(); renderEventsList(); saveTimeConfig();
+  });
+  form.querySelector('#ef-cancel').addEventListener('click', () => { form.remove(); activeEvForm = null; });
+}
+
+document.getElementById('btn-add-event').addEventListener('click', () => {
+  const tc = state.time_config;
+  const mid = Math.round((tc.year_min + tc.year_max) / 2);
+  tc.events.push({ id: evNextId++, name: '', year_from: mid, year_to: mid,
+                   color: EVENT_COLORS[tc.events.length % EVENT_COLORS.length] });
+  renderTimeline(); renderEventsList(); saveTimeConfig();
+  openEventEdit(tc.events[tc.events.length - 1].id);
+});
+
+// ── Step 5: Taxonomy ───────────────────────────────────────────────────────────
+async function initTaxonomy() {
+  const res = await fetch('/taxonomy/data' + _aq(), { headers: authHeaders() });
+  taxData   = await res.json();
+  taxDirty  = false;
+  renderTaxGrid();
+  document.getElementById('tax-status').textContent =
+    taxData.length ? `${taxData.length} Kategorien` : 'Noch keine Taxonomie';
+  document.getElementById('tax-btn-save').disabled = true;
+}
+
+function renderTaxGrid() {
+  const g = document.getElementById('tax-grid');
+  g.innerHTML = '';
+  if (!taxData.length) {
+    g.innerHTML = '<div class="tax-empty">Keine Kategorien — KI-Vorschlag generieren.</div>';
+    return;
+  }
+  taxData.forEach((cat, idx) => {
+    const card = document.createElement('div');
+    card.className = 'tax-cat';
+    card.dataset.idx = idx;
+
+    const hdr = document.createElement('div'); hdr.className = 'tax-cat-header';
+    const ni  = document.createElement('input'); ni.className = 'tax-cat-name';
+    ni.value = cat.name; ni.placeholder = 'Kategoriename';
+    ni.addEventListener('input', e => { taxData[idx].name = e.target.value; markTaxDirty(); });
+
+    const del = document.createElement('button'); del.className = 'tax-cat-del'; del.textContent = '×';
+    del.addEventListener('click', () => { taxData.splice(idx, 1); markTaxDirty(); renderTaxGrid(); });
+    hdr.appendChild(ni); hdr.appendChild(del);
+
+    const desc = document.createElement('textarea'); desc.className = 'tax-cat-desc';
+    desc.value = cat.description; desc.placeholder = 'Beschreibung…';
+    desc.addEventListener('input', e => { taxData[idx].description = e.target.value; markTaxDirty(); });
+
+    const kwList = document.createElement('div'); kwList.className = 'tax-kw-list';
+    (cat.keywords || []).forEach((kw, ki) => kwList.appendChild(makeTaxKw(idx, ki, kw)));
+    const addKw = document.createElement('button'); addKw.className = 'tax-kw-add'; addKw.textContent = '+ Keyword';
+    addKw.addEventListener('click', () => {
+      taxData[idx].keywords = taxData[idx].keywords || []; taxData[idx].keywords.push('');
+      markTaxDirty(); renderTaxGrid();
+      const chips = g.querySelectorAll(`.tax-cat[data-idx="${idx}"] .tax-kw input`);
+      if (chips.length) chips[chips.length-1].focus();
+    });
+    kwList.appendChild(addKw);
+    card.appendChild(hdr); card.appendChild(desc); card.appendChild(kwList);
+    g.appendChild(card);
+  });
+}
+
+function makeTaxKw(ci, ki, val) {
+  const chip = document.createElement('span'); chip.className = 'tax-kw';
+  const inp  = document.createElement('input'); inp.value = val; inp.placeholder = 'keyword';
+  inp.addEventListener('input', e => { taxData[ci].keywords[ki] = e.target.value; markTaxDirty(); });
+  const del  = document.createElement('button'); del.className = 'tax-kw-del'; del.textContent = '×';
+  del.addEventListener('click', () => { taxData[ci].keywords.splice(ki, 1); markTaxDirty(); renderTaxGrid(); });
+  chip.appendChild(inp); chip.appendChild(del); return chip;
+}
+
+function markTaxDirty() {
+  taxDirty = true;
+  document.getElementById('tax-btn-save').disabled = false;
+  document.getElementById('tax-status').textContent = 'Ungespeicherte Änderungen';
+}
+
+async function saveTaxonomy() {
+  if (!taxDirty) return;
+  await fetch('/taxonomy/save' + _aq(), {
+    method: 'POST', headers: authHeaders(), body: JSON.stringify(taxData)
+  });
+  state.taxonomy = taxData;
+  taxDirty = false;
+}
+
+document.getElementById('tax-btn-add').addEventListener('click', () => {
+  taxData.push({ name: '', description: '', keywords: [] }); markTaxDirty(); renderTaxGrid();
+  const cards = document.querySelectorAll('.tax-cat');
+  if (cards.length) cards[cards.length-1].querySelector('.tax-cat-name').focus();
+});
+
+document.getElementById('tax-btn-save').addEventListener('click', async () => {
+  document.getElementById('tax-btn-save').disabled = true;
+  document.getElementById('tax-btn-save').textContent = 'Speichere…';
+  await saveTaxonomy();
+  document.getElementById('tax-btn-save').textContent = 'Speichern';
+  document.getElementById('tax-status').textContent = `${taxData.length} Kategorien gespeichert ✓`;
+});
+
+document.getElementById('tax-btn-propose').addEventListener('click', async () => {
+  const btn    = document.getElementById('tax-btn-propose');
+  const logEl  = document.getElementById('tax-log');
+  btn.disabled = true; btn.textContent = 'Läuft…';
+  logEl.className = ''; logEl.textContent = ''; logEl.style.display = 'block';
+
+  const res    = await fetch('/ingest/propose_taxonomy' + _aq(), { method: 'POST', headers: authHeaders() });
+  const reader = res.body.getReader(), decoder = new TextDecoder(); let buf = '';
+  while (true) {
+    const { done, value } = await reader.read(); if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split('\\n'); buf = lines.pop();
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const msg = line.slice(6);
+      if (msg === '__done__') { await initTaxonomy(); btn.disabled = false; btn.textContent = 'KI-Vorschlag generieren'; return; }
+      if (msg.startsWith('__error__')) { logEl.className = 'error'; logEl.textContent += '\\n' + msg.slice(9); btn.disabled = false; btn.textContent = 'KI-Vorschlag generieren'; return; }
+      logEl.textContent += (logEl.textContent ? '\\n' : '') + msg; logEl.scrollTop = logEl.scrollHeight;
+    }
+  }
+  // Stream ended without __done__ — reload taxonomy anyway
+  await initTaxonomy(); btn.disabled = false; btn.textContent = 'KI-Vorschlag generieren';
+});
+
+// ── Bestehende Projekte ────────────────────────────────────────────────────────
+async function loadProjectList() {
+  const listEl = document.getElementById('proj-list');
+  try {
+    const res = await fetch('/api/projects');
+    if (!res.ok) { listEl.innerHTML = ''; return; }
+    const projects = await res.json();
+    if (!projects.length) {
+      listEl.innerHTML = '<span style="font-size:11px;color:var(--c-text-3)">Noch keine Projekte vorhanden.</span>';
+      return;
+    }
+    listEl.innerHTML = projects.map(p => `
+      <div class="proj-card" data-id="${escHtml(p.id)}" data-title="${escHtml(p.title)}" data-doctype="${escHtml(p.doc_type||'')}">
+        <div class="proj-card-title">${escHtml(p.title)}</div>
+        <div class="proj-card-meta">${escHtml(p.doc_type||'—')}${p.entry_count ? ' · ' + p.entry_count + '\u00a0Einträge' : ''}</div>
+        <span class="proj-card-open">öffnen →</span>
+      </div>`).join('');
+    listEl.querySelectorAll('.proj-card').forEach(card => {
+      card.addEventListener('click', () =>
+        openExistingProject(card.dataset.id, card.dataset.title, card.dataset.doctype));
+    });
+  } catch (_) {
+    listEl.innerHTML = '<span style="font-size:11px;color:var(--c-text-3)">Projekte konnten nicht geladen werden.</span>';
+  }
+}
+
+async function openExistingProject(id, title, docType) {
+  const listEl = document.getElementById('proj-list');
+  listEl.style.opacity = '0.5';
+  listEl.style.pointerEvents = 'none';
+  try {
+    const [tokenRes, cfgRes] = await Promise.all([
+      fetch('/api/projects/' + encodeURIComponent(id) + '/token'),
+      fetch('/api/projects/' + encodeURIComponent(id)),
+    ]);
+    if (!tokenRes.ok) throw new Error('Server-Fehler ' + tokenRes.status);
+    const tokenData = await tokenRes.json();
+    if (!tokenData.ok) throw new Error(tokenData.error || 'Fehler');
+    const cfg = cfgRes.ok ? await cfgRes.json() : {};
+    state.project       = id;
+    state.project_title = title;
+    state.doc_type      = docType;
+    state.token         = tokenData.token;
+    state.document      = tokenData.doc_id || undefined;
+    state.time_config   = {
+      year_min: cfg.year_min ?? 1800,
+      year_max: cfg.year_max ?? 1920,
+      events:   state.time_config?.events ?? [],
+    };
+    maxReachedStep = 6;
+    gotoStep(6);
+  } catch (e) {
+    alert('Fehler beim Öffnen: ' + e.message);
+  } finally {
+    listEl.style.opacity = '';
+    listEl.style.pointerEvents = '';
+  }
+}
+
+/// ── Step 6: Entities ───────────────────────────────────────────────────────────
+async function initEntities() {
+  // Prüfe ob entities_seed.json bereits vorhanden → Full-Button aktivieren
+  try {
+    const res = await fetch('/ingest/entities/data' + _aq(), { headers: authHeaders() });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        document.getElementById('ent-btn-full').disabled = false;
+        document.getElementById('ent-btn-edit').href = '/ingest/entities' + _aq();
+        document.getElementById('ent-btn-edit').style.display = 'inline-flex';
+      }
+    }
+  } catch (_) {}
+}
+
+function _entDone(logEl) {
+  logEl.textContent += '\\n✓ Fertig – Entity-Editor öffnen zum Bearbeiten';
+  const editBtn = document.getElementById('ent-btn-edit');
+  editBtn.href = '/ingest/entities' + _aq();
+  editBtn.style.display = 'inline-flex';
+  document.getElementById('ent-btn-full').disabled = false;
+  logEl.classList.add('collapsed');
+  const tog = document.getElementById('ent-log-toggle');
+  tog.textContent = 'Log anzeigen ▾'; tog.style.display = 'block';
+  tog.onclick = () => {
+    const open = logEl.classList.toggle('collapsed');
+    tog.textContent = open ? 'Log anzeigen ▾' : 'Log ausblenden ▴';
+  };
+}
+
+async function runSseTask(endpoint, logEl, onDone) {
+  const res = await fetch(endpoint + _aq(), { method: 'POST', headers: authHeaders() });
+  if (!res.ok || !res.body) { logEl.textContent += '\\nFehler: ' + res.status; return; }
+  const reader = res.body.getReader(), decoder = new TextDecoder(); let buf = '';
+  while (true) {
+    const { done, value } = await reader.read(); if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split('\\n'); buf = lines.pop();
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const msg = line.slice(6);
+      if (msg === '__done__') { onDone(); return; }
+      if (msg.startsWith('__error__')) { logEl.textContent += '\\n✗ ' + msg.slice(9); return; }
+      logEl.textContent += (logEl.textContent ? '\\n' : '') + msg;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+  }
+}
+
+document.getElementById('ent-btn-sample').addEventListener('click', async function() {
+  const logEl = document.getElementById('ent-log');
+  const tog = document.getElementById('ent-log-toggle');
+  logEl.classList.remove('collapsed'); logEl.style.display = 'block'; logEl.textContent = '';
+  tog.style.display = 'none';
+  this.disabled = true; this.textContent = 'Läuft…';
+  const self = this;
+  await runSseTask('/ingest/extract_entities', logEl, () => {
+    _entDone(logEl);
+    self.disabled = false; self.textContent = 'Stichprobe (schnell)';
+  });
+  self.disabled = false; self.textContent = 'Stichprobe (schnell)';
+});
+
+document.getElementById('ent-btn-full').addEventListener('click', async function() {
+  const logEl = document.getElementById('ent-log');
+  const tog = document.getElementById('ent-log-toggle');
+  logEl.classList.remove('collapsed'); logEl.style.display = 'block'; logEl.textContent = '';
+  tog.style.display = 'none';
+  this.disabled = true; this.textContent = 'Läuft…';
+  const self = this;
+  await runSseTask('/ingest/extract_entities_full', logEl, () => {
+    _entDone(logEl);
+    self.disabled = false; self.textContent = 'Vollständig (gründlich)';
+  });
+  self.disabled = false; self.textContent = 'Vollständig (gründlich)';
+});
+
+// ── Step 7: Pipeline ───────────────────────────────────────────────────────────
+document.getElementById('btn-run-pipeline').addEventListener('click', async () => {
+  // Save config first
+  const config = {
+    project:     state.project  || undefined,
+    document:    state.document || undefined,
+    input_file:  state.files[0]?.name || '',
+    doc_type:    state.doc_type,
+    analysis:    state.analysis,
+    time_config: state.time_config,
+    taxonomy:    taxData,
+    created_at:  new Date().toISOString(),
+  };
+  await fetch('/ingest/save_config', {
+    method: 'POST', headers: authHeaders(), body: JSON.stringify(config)
+  });
+
+  const btn    = document.getElementById('btn-run-pipeline');
+  const logEl  = document.getElementById('pipeline-log');
+  btn.disabled = true;
+  logEl.style.display = 'block';
+  logEl.textContent   = '';
+
+  const SCRIPT_NAMES = ['parse_document.py','detect_anchors.py','interpolate_anchors.py','classify_segments.py','match_entities.py','export_preview.py','export_exploration.py'];
+  let scriptIdx = -1, classifyTotal = 0;
+
+  const res    = await fetch('/ingest/run', {
+    method: 'POST', headers: authHeaders(),
+    body: JSON.stringify({
+      project:  state.project  || undefined,
+      document: state.document || undefined,
+      filename: state.files[0]?.name || '',
+    }),
+  });
+  const reader = res.body.getReader(), decoder = new TextDecoder(); let buf = '';
+
+  while (true) {
+    const { done, value } = await reader.read(); if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split('\\n'); buf = lines.pop();
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const msg = line.slice(6);
+
+      if (msg === '__done__') {
+        logEl.innerHTML += '<span class="ok">\\n✓ Pipeline abgeschlossen</span>';
+        logEl.scrollTop  = logEl.scrollHeight;
+        const previewLink = document.getElementById('preview-link');
+        previewLink.href = '/preview' + _aq();
+        previewLink.style.display = 'inline-block';
+        // Fallback: show exploration link from state.project if __link__ was not received
+        if (state.project && !logEl.parentElement.querySelector('.explo-link')) {
+          const linkEl = document.createElement('a');
+          linkEl.href = 'http://localhost:8765/viz/?project=' + encodeURIComponent(state.project);
+          linkEl.target = '_blank'; linkEl.className = 'explo-link';
+          linkEl.textContent = 'Zur Exploration →';
+          linkEl.style.cssText = 'display:inline-block;margin-top:10px;padding:6px 14px;background:#6d28d9;color:#fff;border-radius:4px;text-decoration:none;font-size:12px;font-weight:600';
+          logEl.after(linkEl);
+        }
+        return;
+      }
+      if (msg.startsWith('__link__:')) {
+        const url = msg.slice(9);
+        const existing = logEl.parentElement.querySelector('.explo-link');
+        if (existing) existing.remove();
+        const linkEl = document.createElement('a');
+        linkEl.href = url; linkEl.target = '_blank'; linkEl.className = 'explo-link';
+        linkEl.textContent = 'Zur Exploration →';
+        linkEl.style.cssText = 'display:inline-block;margin-top:10px;padding:6px 14px;background:#6d28d9;color:#fff;border-radius:4px;text-decoration:none;font-size:12px;font-weight:600';
+        logEl.after(linkEl);
+        continue;
+      }
+      if (msg.startsWith('__error__')) {
+        logEl.innerHTML += `<span class="err">\\n✗ ${escHtml(msg.slice(9))}</span>`;
+        logEl.scrollTop  = logEl.scrollHeight;
+        btn.disabled = false;
+        return;
+      }
+      // Detect script start to update step indicators
+      const startMatch = msg.match(/▶ Starte (.+?)…/);
+      if (startMatch) {
+        scriptIdx = SCRIPT_NAMES.indexOf(startMatch[1]);
+        if (scriptIdx >= 0) document.getElementById(`ps-${scriptIdx}`).textContent = '⟳ läuft…';
+      }
+      const doneMatch = msg.match(/✓ (.+?) abgeschlossen/);
+      if (doneMatch) {
+        const di = SCRIPT_NAMES.indexOf(doneMatch[1]);
+        if (di >= 0) document.getElementById(`ps-${di}`).textContent = '✓';
+      }
+      // classify_segments progress bar
+      const totalMatch = msg.match(/Segmente gesamt:\s+(\d+)/);
+      if (totalMatch) classifyTotal = parseInt(totalMatch[1]);
+      const progMatch = msg.match(/Fortschritt:\s*(\d+)\/(\d+)/);
+      if (progMatch) {
+        const done = parseInt(progMatch[1]), total = parseInt(progMatch[2]) || classifyTotal || 1;
+        if (classifyTotal < 1) classifyTotal = total;
+        const pct = Math.round(done / total * 100);
+        const filled = Math.round(pct / 10), empty = 10 - filled;
+        const bar = '█'.repeat(filled) + '░'.repeat(empty);
+        const el = document.getElementById('ps-3');
+        if (el) el.textContent = `[${bar}] ${pct}% (${done}/${total})`;
+      }
+      logEl.textContent += (logEl.textContent ? '\\n' : '') + msg;
+      logEl.scrollTop    = logEl.scrollHeight;
+    }
+  }
+});
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escHtml(s) { return esc(s); }
+</script>
+</body>
+</html>

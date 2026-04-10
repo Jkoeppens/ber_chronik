@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Entity Editor</title>
+<style>
+{{APP_CSS}}
+/* ── Layout ── */
+#log{margin:0 24px 8px;max-height:100px}
+.tab-pane{flex:1;overflow:hidden;display:flex;flex-direction:column}
+/* ── Tab nav ── */
+.tab-nav{display:flex;gap:0;border-bottom:1px solid var(--c-border-ui);
+         padding:0 24px;background:var(--c-bg)}
+.tab-btn{padding:8px 16px;font-size:12px;font-weight:500;border:none;background:none;
+         cursor:pointer;color:var(--c-text-3);border-bottom:2px solid transparent;
+         margin-bottom:-1px;transition:color .15s}
+.tab-btn:hover{color:var(--c-text-1)}
+.tab-btn.active{color:var(--c-primary);border-bottom-color:var(--c-primary)}
+/* ── Entity list tab ── */
+#tab-entities{padding:20px 24px;overflow-y:auto;gap:20px}
+.type-section h2{font-size:11px;font-weight:600;color:var(--c-text-3);text-transform:uppercase;
+                 letter-spacing:.06em;margin-bottom:10px;padding-bottom:5px;
+                 border-bottom:1px solid var(--c-code-border)}
+.entity-grid{display:flex;flex-direction:column;gap:6px}
+.entity-card{padding:10px 12px;display:flex;align-items:flex-start;gap:10px}
+.ec-body{flex:1;display:flex;flex-direction:column;gap:6px}
+.ec-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ec-label{font-size:10px;color:var(--c-text-3);min-width:72px}
+.ec-input{padding:3px 7px;border:1px solid #d1d5db;border-radius:3px;font-size:12px;
+          font-family:inherit;flex:1;min-width:120px;background:var(--c-surface)}
+.ec-input:focus{border-color:var(--c-primary);outline:none;background:var(--c-primary-bg)}
+.ec-select{padding:3px 7px;border:1px solid #d1d5db;border-radius:3px;font-size:12px;
+           font-family:inherit;background:var(--c-surface)}
+.aliases{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.alias-chip{display:inline-flex;align-items:center;gap:3px;background:var(--c-primary-tint);
+            border-radius:10px;padding:2px 8px;font-size:11px;color:#4c1d95}
+.alias-chip button{border:none;background:none;cursor:pointer;color:var(--c-primary);
+                   font-size:12px;line-height:1;padding:0 1px}
+.alias-chip button:hover{color:var(--c-danger)}
+.alias-add{display:flex;gap:5px;margin-top:2px;align-items:center}
+.alias-new-input{padding:2px 7px;border:1px solid #d1d5db;border-radius:10px;
+                 font-size:11px;width:130px;font-family:inherit}
+.alias-add-btn{padding:2px 8px;border:1px solid var(--c-primary-ring);border-radius:10px;
+               background:var(--c-surface);color:var(--c-primary);font-size:11px;cursor:pointer}
+.alias-add-btn:hover{background:var(--c-primary-tint)}
+.btn-delete{padding:3px 8px;border:1px solid var(--c-code-border);border-radius:3px;
+            background:var(--c-surface);color:var(--c-text-4);font-size:11px;cursor:pointer;
+            flex-shrink:0;transition:color .15s,border-color .15s}
+.btn-delete:hover{color:var(--c-danger);border-color:var(--c-danger-border)}
+#btn-add-entity{align-self:flex-start;margin-bottom:4px}
+/* ── Segment Annotator tab ── */
+#tab-segments{display:none;flex-direction:column}
+#seg-filter-bar{display:flex;align-items:center;gap:10px;padding:10px 24px;
+                background:var(--c-surface);border-bottom:1px solid var(--c-border-ui);
+                flex-shrink:0;flex-wrap:wrap}
+#seg-filter-bar select{padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;
+                       font-size:12px;font-family:inherit;background:var(--c-bg)}
+#seg-count{font-size:11px;color:var(--c-text-3);margin-left:auto}
+#seg-list{flex:1;overflow-y:auto;padding:16px 24px;display:flex;flex-direction:column;gap:10px}
+.seg-card{background:var(--c-surface);border:1px solid var(--c-border-ui);border-radius:6px;
+          padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.seg-meta{display:flex;align-items:center;gap:8px}
+.seg-type-badge{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+                background:var(--c-code-bg);color:var(--c-text-3);padding:2px 7px;
+                border-radius:10px;border:1px solid var(--c-code-border)}
+.seg-source{font-size:11px;color:var(--c-text-4)}
+.seg-text{font-size:13px;line-height:1.65;color:var(--c-text-1);
+          user-select:text;cursor:text;white-space:pre-wrap;word-break:break-word}
+mark{border-radius:2px;padding:0 2px;cursor:pointer;font-style:normal}
+mark:hover{filter:brightness(0.88)}
+/* ── Floating popups ── */
+.ee-popup{position:fixed;z-index:9999;background:#fff;border:1px solid #e5e2dc;
+           border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.14);padding:8px;
+           display:none;min-width:140px}
+.ee-popup-label{font-size:10px;color:var(--c-text-3);padding:0 4px 6px;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.ee-popup-btns{display:flex;gap:4px;flex-wrap:wrap}
+.ee-type-btn{padding:4px 10px;border:none;border-radius:4px;font-size:11px;font-weight:600;
+             cursor:pointer;color:#fff;transition:opacity .15s}
+.ee-type-btn:hover{opacity:.85}
+.ee-remove-btn{padding:4px 10px;border:1px solid var(--c-danger-border);border-radius:4px;
+               font-size:11px;cursor:pointer;color:var(--c-danger);background:var(--c-surface);
+               width:100%;margin-top:4px}
+.ee-remove-btn:hover{background:#fef2f2}
+/* ── New entity indicator ── */
+.is-new{border-left:3px solid var(--c-primary)}
+.new-badge{display:inline-flex;align-items:center;font-size:9px;font-weight:700;
+           letter-spacing:.06em;text-transform:uppercase;color:var(--c-primary);
+           background:var(--c-primary-tint);padding:1px 6px;border-radius:10px;margin-left:4px;
+           flex-shrink:0}
+.btn-reject{padding:3px 8px;border:1px solid var(--c-primary-ring);border-radius:3px;
+            background:var(--c-surface);color:var(--c-primary);font-size:11px;cursor:pointer;
+            flex-shrink:0;transition:color .15s,border-color .15s;margin-right:2px}
+.btn-reject:hover{color:var(--c-danger);border-color:var(--c-danger-border);background:#fef2f2}
+/* ── Duplicate warning ── */
+.dupe-badge{display:inline-flex;align-items:center;gap:3px;margin:4px 4px 0 0;
+            padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;cursor:pointer;
+            background:#fffbeb;color:#92400e;border:1px solid #fcd34d;
+            transition:background .15s}
+.dupe-badge:hover{background:#fef3c7}
+@keyframes dupe-flash{0%,100%{outline:none}25%,75%{outline:3px solid #f59e0b}}
+.dupe-highlight{animation:dupe-flash .6s ease 3}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <h1>Entity Editor</h1>
+  <span class="app-status" id="status">Lade…</span>
+  <button class="btn btn-outline" id="btn-sample" style="margin-left:auto">Stichprobe (schnell)</button>
+  <button class="btn btn-outline" id="btn-full">Vollständig (gründlich)</button>
+  <button class="btn btn-primary" id="btn-save">Speichern</button>
+</div>
+<div id="log" class="log-box"></div>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" id="tab-btn-entities">Entity-Liste</button>
+  <button class="tab-btn"        id="tab-btn-segments">Segment-Annotator</button>
+</nav>
+
+<!-- Tab 1: Entity-Liste -->
+<div id="tab-entities" class="tab-pane">
+  <button id="btn-add-entity" class="btn btn-dashed">+ Entity hinzufügen</button>
+  <div id="entity-sections"></div>
+</div>
+
+<!-- Tab 2: Segment-Annotator -->
+<div id="tab-segments" class="tab-pane">
+  <div id="seg-filter-bar">
+    <select id="seg-filter-coverage">
+      <option value="all">Alle Segmente</option>
+      <option value="with">Nur mit Entity</option>
+      <option value="without">Nur ohne Entity</option>
+    </select>
+    <select id="seg-filter-type">
+      <option value="all">Alle Typen</option>
+    </select>
+    <span id="seg-count"></span>
+  </div>
+  <div id="seg-list"></div>
+</div>
+
+<!-- Selection popup (new entity from text selection) -->
+<div class="ee-popup" id="sel-popup">
+  <div class="ee-popup-label" id="sel-popup-label"></div>
+  <div class="ee-popup-btns" id="sel-popup-btns"></div>
+</div>
+
+<!-- Entity popup (click on existing mark) -->
+<div class="ee-popup" id="ent-popup" style="min-width:160px">
+  <div class="ee-popup-label" id="ent-popup-label"></div>
+  <button class="ee-remove-btn" id="ent-popup-remove">Entfernen</button>
+</div>
+
+<script>
+const TYPES       = ['Person','Organisation','Ort','Konzept'];
+const TYPE_COLORS = {Person:'#2563eb', Ort:'#16a34a', Organisation:'#d97706', Konzept:'#7c3aed'};
+
+let entities = [], segments = [], dirty = false;
+let _selText = '', _entPopupIdx = -1;
+
+const _urlParams = new URLSearchParams(location.search);
+const _tok  = _urlParams.get('token')    || '';
+const _proj = _urlParams.get('project')  || '';
+const _doc  = _urlParams.get('document') || '';
+function _tq() {
+  const p = new URLSearchParams();
+  if (_tok)  p.set('token',    _tok);
+  if (_proj) p.set('project',  _proj);
+  if (_doc)  p.set('document', _doc);
+  const s = p.toString();
+  return s ? '?' + s : '';
+}
+function _th(){ const h = {'Content-Type':'application/json'}; if (_tok) h['X-Project-Token'] = _tok; return h; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Load ──────────────────────────────────────────────────────────────────────
+async function load() {
+  const [eRes, sRes] = await Promise.all([
+    fetch('/ingest/entities/data' + _tq()),
+    fetch('/ingest/segments/data' + _tq()),
+  ]);
+  entities = await eRes.json();
+  segments = await sRes.json();
+  updateStatus();
+  renderEntityTab();
+  _populateTypeFilter();
+}
+
+function updateStatus() {
+  document.getElementById('status').textContent =
+    entities.length + ' Entities · ' + segments.length + ' Segmente';
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+document.getElementById('tab-btn-entities').addEventListener('click', () => switchTab('entities'));
+document.getElementById('tab-btn-segments').addEventListener('click', () => switchTab('segments'));
+
+function switchTab(id) {
+  document.getElementById('tab-entities').style.display = id === 'entities' ? 'flex' : 'none';
+  document.getElementById('tab-segments').style.display = id === 'segments' ? 'flex' : 'none';
+  document.getElementById('tab-btn-entities').classList.toggle('active', id === 'entities');
+  document.getElementById('tab-btn-segments').classList.toggle('active', id === 'segments');
+  if (id === 'segments') renderSegmentTab();
+}
+
+// ── Duplikat-Erkennung ────────────────────────────────────────────────────────
+function _levenshtein(a, b) {
+  a = a.toLowerCase(); b = b.toLowerCase();
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m + 1}, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1]
+               : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function _computeDuplicates() {
+  // Returns Map<idx, [{otherIdx, reason}]>
+  const dupes = new Map();
+  const add = (i, j, reason) => {
+    if (!dupes.has(i)) dupes.set(i, []);
+    if (!dupes.has(j)) dupes.set(j, []);
+    if (!dupes.get(i).some(d => d.otherIdx === j)) dupes.get(i).push({otherIdx: j, reason});
+    if (!dupes.get(j).some(d => d.otherIdx === i)) dupes.get(j).push({otherIdx: i, reason});
+  };
+  const aliasSet = i => new Set(
+    [entities[i].normalform, ...(entities[i].aliases || [])].map(s => (s||'').toLowerCase().trim()).filter(Boolean)
+  );
+  for (let i = 0; i < entities.length; i++) {
+    const normI = (entities[i].normalform || '').trim();
+    const setI  = aliasSet(i);
+    for (let j = i + 1; j < entities.length; j++) {
+      const normJ = (entities[j].normalform || '').trim();
+      // Alias-Überschneidung
+      const setJ = aliasSet(j);
+      const overlap = [...setI].some(s => s.length >= 2 && setJ.has(s));
+      if (overlap) { add(i, j, 'Alias-Überschneidung'); continue; }
+      // Levenshtein auf Normalformen (nur wenn beide ≥3 Zeichen)
+      if (normI.length >= 3 && normJ.length >= 3 && _levenshtein(normI, normJ) < 3) {
+        add(i, j, `Ähnlicher Name ("${normI}" / "${normJ}")`);
+      }
+    }
+  }
+  return dupes;
+}
+
+// ── Entity tab ────────────────────────────────────────────────────────────────
+function renderEntityTab() {
+  const container = document.getElementById('entity-sections');
+  container.innerHTML = '';
+  const byType = {};
+  TYPES.forEach(t => byType[t] = []);
+  entities.forEach((e, i) => {
+    const t = e.typ || 'Konzept';
+    if (!byType[t]) byType[t] = [];
+    byType[t].push({ e, i });
+  });
+  TYPES.forEach(typ => {
+    const items = byType[typ];
+    if (!items.length) return;
+    // Alphabetisch nach Normalform sortieren
+    items.sort((a, b) => (a.e.normalform || '').localeCompare(b.e.normalform || '', 'de', {sensitivity: 'base'}));
+    const sec = document.createElement('div');
+    sec.className = 'type-section';
+    sec.innerHTML = `<h2>${esc(typ)} (${items.length})</h2><div class="entity-grid" id="grid-${typ}"></div>`;
+    container.appendChild(sec);
+    const grid = sec.querySelector('.entity-grid');
+    items.forEach(({ e, i }) => grid.appendChild(buildCard(e, i)));
+  });
+  // Duplikat-Badges nachträglich injizieren
+  const dupes = _computeDuplicates();
+  dupes.forEach((hits, idx) => {
+    const card = document.querySelector(`.entity-card[data-idx="${idx}"]`);
+    if (!card) return;
+    hits.forEach(({otherIdx, reason}) => {
+      const otherNorm = esc(entities[otherIdx]?.normalform || '');
+      const badge = document.createElement('button');
+      badge.className = 'dupe-badge';
+      badge.title = reason;
+      badge.textContent = '⚠ Duplikat?';
+      badge.dataset.target = otherIdx;
+      badge.addEventListener('click', () => {
+        const target = document.querySelector(`.entity-card[data-idx="${otherIdx}"]`);
+        if (!target) return;
+        target.scrollIntoView({behavior: 'smooth', block: 'center'});
+        target.classList.add('dupe-highlight');
+        setTimeout(() => target.classList.remove('dupe-highlight'), 1800);
+      });
+      card.querySelector('.ec-body').appendChild(badge);
+    });
+  });
+}
+
+function buildCard(e, idx) {
+  const isNew = e._status === 'new';
+  const div = document.createElement('div');
+  div.className = 'entity-card' + (isNew ? ' is-new' : '');
+  div.dataset.idx = idx;
+  const aliasChips = (e.aliases || []).map((a, ai) =>
+    `<span class="alias-chip">${esc(a)}<button data-ai="${ai}" title="Löschen">×</button></span>`
+  ).join('');
+  div.innerHTML = `
+    <div class="ec-body">
+      <div class="ec-row">
+        <span class="ec-label">Normalform</span>
+        <input class="ec-input ec-norm" value="${esc(e.normalform || e.text || '')}" placeholder="Normalform">
+        <select class="ec-select ec-typ">${TYPES.map(t =>
+          `<option${t===e.typ?' selected':''}>${t}</option>`).join('')}</select>
+        ${isNew ? '<span class="new-badge">NEU</span>' : ''}
+      </div>
+      <div class="ec-row">
+        <span class="ec-label">Aliases</span>
+        <div class="aliases ec-aliases">${aliasChips}
+          <div class="alias-add">
+            <input class="alias-new-input" placeholder="Alias hinzufügen…">
+            <button class="alias-add-btn">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${isNew ? '<button class="btn-reject" title="Ablehnen – Entity wird bei künftigen Läufen ignoriert">✗</button>' : ''}
+    <button class="btn-delete" title="Entity löschen">✕</button>`;
+
+  div.querySelector('.ec-norm').addEventListener('input', function() {
+    entities[idx].normalform = this.value; dirty = true;
+  });
+  div.querySelector('.ec-typ').addEventListener('change', function() {
+    entities[idx].typ = this.value; dirty = true; renderEntityTab();
+  });
+  div.querySelectorAll('.alias-chip button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      entities[idx].aliases.splice(parseInt(btn.dataset.ai), 1);
+      dirty = true; renderEntityTab();
+    });
+  });
+  const addInput = div.querySelector('.alias-new-input');
+  const addBtn   = div.querySelector('.alias-add-btn');
+  const doAdd = () => {
+    const v = addInput.value.trim(); if (!v) return;
+    if (!entities[idx].aliases) entities[idx].aliases = [];
+    entities[idx].aliases.push(v); dirty = true; addInput.value = ''; renderEntityTab();
+  };
+  addBtn.addEventListener('click', doAdd);
+  addInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doAdd(); }});
+  if (isNew) {
+    div.querySelector('.btn-reject').addEventListener('click', async () => {
+      const ent = entities[idx];
+      await fetch('/ingest/entities/reject', {
+        method: 'POST', headers: _th(),
+        body: JSON.stringify({ normalform: ent.normalform, aliases: ent.aliases || [], project: _proj || undefined, document: _doc || undefined })
+      });
+      entities.splice(idx, 1);
+      updateStatus(); renderEntityTab();
+    });
+  }
+  div.querySelector('.btn-delete').addEventListener('click', () => {
+    entities.splice(idx, 1); dirty = true; renderEntityTab();
+  });
+  return div;
+}
+
+document.getElementById('btn-add-entity').addEventListener('click', () => {
+  entities.push({ normalform: '', typ: 'Konzept', aliases: [] });
+  dirty = true; renderEntityTab();
+  document.getElementById('entity-sections').lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+});
+
+// ── Segment Annotator tab ────────────────────────────────────────────────────
+function _buildAliasMap() {
+  const entries = [];
+  entities.forEach((e, idx) => {
+    const names = new Set([e.normalform, ...(e.aliases||[])].filter(n => n && n.length >= 2));
+    names.forEach(name => entries.push({ text: name, idx, typ: e.typ || 'Konzept' }));
+  });
+  entries.sort((a, b) => b.text.length - a.text.length);
+  return entries;
+}
+
+function _escapeRegex(s) { return s.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&'); }
+
+function _highlightText(rawText, aliasMap) {
+  if (!rawText) return '';
+  // Normalize to NFC so combining characters don't break indexOf offsets
+  const norm  = rawText.normalize('NFC');
+  const lower = norm.toLowerCase();
+  const spans = [];
+  for (const { text, idx, typ } of aliasMap) {
+    const tl = text.normalize('NFC').toLowerCase();
+    if (tl.length < 2) continue;
+    let pos = 0;
+    while (pos <= lower.length - tl.length) {
+      const found = lower.indexOf(tl, pos);
+      if (found === -1) break;
+      const end = found + tl.length;
+      if (!spans.some(s => found < s.end && end > s.start))
+        spans.push({ start: found, end, idx, typ });
+      pos = found + 1;
+    }
+  }
+  spans.sort((a, b) => a.start - b.start);
+  let html = '', cursor = 0;
+  for (const { start, end, idx, typ } of spans) {
+    html += esc(norm.slice(cursor, start));
+    const c = TYPE_COLORS[typ] || '#7c3aed';
+    html += `<mark data-entity-idx="${idx}" style="background:${c}22;color:${c}">${esc(norm.slice(start, end))}</mark>`;
+    cursor = end;
+  }
+  html += esc(norm.slice(cursor));
+  return html;
+}
+
+function _populateTypeFilter() {
+  const types = [...new Set(segments.map(s => s.type || '?'))].sort();
+  const sel = document.getElementById('seg-filter-type');
+  sel.innerHTML = '<option value="all">Alle Typen</option>' +
+    types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+}
+
+function renderSegmentTab() {
+  const aliasMap = _buildAliasMap();
+  const coverage = document.getElementById('seg-filter-coverage').value;
+  const typeVal  = document.getElementById('seg-filter-type').value;
+
+  let filtered = segments.map((s, i) => ({ s, i }));
+  if (typeVal !== 'all') filtered = filtered.filter(({ s }) => (s.type || '?') === typeVal);
+  if (coverage === 'with')
+    filtered = filtered.filter(({ s }) => aliasMap.some(({ text }) =>
+      (s.text || '').toLowerCase().includes(text.toLowerCase())));
+  if (coverage === 'without')
+    filtered = filtered.filter(({ s }) => !aliasMap.some(({ text }) =>
+      (s.text || '').toLowerCase().includes(text.toLowerCase())));
+
+  document.getElementById('seg-count').textContent = filtered.length + ' Segmente';
+  const list = document.getElementById('seg-list');
+  list.innerHTML = '';
+  filtered.forEach(({ s, i }) => {
+    const card = document.createElement('div');
+    card.className = 'seg-card';
+    const highlighted = _highlightText(s.text || '', aliasMap);
+    card.innerHTML = `
+      <div class="seg-meta">
+        <span class="seg-type-badge">${esc(s.type || '?')}</span>
+        ${s.source ? `<span class="seg-source">${esc(s.source)}</span>` : ''}
+      </div>
+      <div class="seg-text" data-seg-idx="${i}">${highlighted}</div>`;
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('seg-filter-coverage').addEventListener('change', renderSegmentTab);
+document.getElementById('seg-filter-type').addEventListener('change', renderSegmentTab);
+
+// ── Selection popup ───────────────────────────────────────────────────────────
+const selPopup = document.getElementById('sel-popup');
+const entPopup = document.getElementById('ent-popup');
+
+// Build type buttons once
+const selBtns = document.getElementById('sel-popup-btns');
+TYPES.forEach(typ => {
+  const btn = document.createElement('button');
+  btn.className = 'ee-type-btn';
+  btn.textContent = typ;
+  btn.style.background = TYPE_COLORS[typ] || '#7c3aed';
+  btn.dataset.typ = typ;
+  selBtns.appendChild(btn);
+});
+
+document.addEventListener('mouseup', function(e) {
+  try {
+    if (e.target.closest('#sel-popup,#ent-popup')) return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) { hideSelPopup(); return; }
+    const text = sel.toString().trim().normalize('NFC');
+    if (!text || text.length < 2) { hideSelPopup(); return; }
+    // Only trigger inside a seg-text
+    const anchor = sel.anchorNode
+      ? (sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode)
+      : null;
+    if (!anchor || !anchor.closest('.seg-text')) { hideSelPopup(); return; }
+    _selText = text;
+    const range = sel.getRangeAt(0);
+    const rect  = range.getBoundingClientRect();
+    // rect can be empty (zero dimensions) on some browsers after DOM mutation
+    if (!rect.width && !rect.height) { hideSelPopup(); return; }
+    document.getElementById('sel-popup-label').textContent = '\\u201e' + text + '\\u201c';
+    // position:fixed → viewport-relative coords from getBoundingClientRect(), no scrollY needed
+    selPopup.style.left = Math.min(rect.left, window.innerWidth - 230) + 'px';
+    selPopup.style.top  = (rect.bottom + 6) + 'px';
+    selPopup.style.display = 'block';
+  } catch(err) {
+    console.error('Selection handler error:', err);
+    hideSelPopup();
+  }
+});
+
+selBtns.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-typ]');
+  if (!btn || !_selText) return;
+  const typ = btn.dataset.typ;
+  const norm = _selText;
+  const already = entities.find(en =>
+    [en.normalform, ...(en.aliases||[])].some(a =>
+      a && a.normalize('NFC').toLowerCase() === norm.normalize('NFC').toLowerCase())
+  );
+  if (!already) {
+    entities.push({ normalform: norm, typ, aliases: [norm] });
+    dirty = true; updateStatus(); renderEntityTab();
+  }
+  hideSelPopup();
+  window.getSelection()?.removeAllRanges();
+  setTimeout(() => renderSegmentTab(), 0);
+});
+
+function hideSelPopup() { selPopup.style.display = 'none'; _selText = ''; }
+
+// ── Entity click popup ────────────────────────────────────────────────────────
+document.getElementById('seg-list').addEventListener('click', function(e) {
+  const mark = e.target.closest('mark[data-entity-idx]');
+  if (!mark) return;
+  _entPopupIdx = parseInt(mark.dataset.entityIdx);
+  const ent  = entities[_entPopupIdx];
+  document.getElementById('ent-popup-label').textContent = ent
+    ? ent.normalform + ' (' + (ent.typ||'?') + ')' : '?';
+  const rect = mark.getBoundingClientRect();
+  entPopup.style.left = Math.min(rect.left, window.innerWidth - 170) + 'px';
+  entPopup.style.top  = (rect.bottom + 6) + 'px';
+  entPopup.style.display = 'block';
+  e.stopPropagation();
+});
+
+document.getElementById('ent-popup-remove').addEventListener('click', function() {
+  if (_entPopupIdx >= 0 && _entPopupIdx < entities.length) {
+    entities.splice(_entPopupIdx, 1);
+    dirty = true; updateStatus(); renderEntityTab();
+    setTimeout(() => renderSegmentTab(), 0);
+  }
+  hideEntPopup();
+});
+
+function hideEntPopup() { entPopup.style.display = 'none'; _entPopupIdx = -1; }
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#ent-popup')) hideEntPopup();
+  if (!e.target.closest('#sel-popup') && !e.target.closest('.seg-text')) hideSelPopup();
+});
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+document.getElementById('btn-save').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-save');
+  btn.disabled = true; btn.textContent = 'Speichert…';
+  // Strip internal fields before sending to server
+  const clean = entities.map(e => {
+    const c = Object.assign({}, e);
+    Object.keys(c).forEach(k => { if (k.startsWith('_')) delete c[k]; });
+    return c;
+  });
+  const res  = await fetch('/ingest/entities/save' + _tq(), {
+    method: 'POST', headers: _th(), body: JSON.stringify(clean)
+  });
+  const data = await res.json();
+  if (data.ok) {
+    dirty = false;
+    // Mark all as confirmed after save (seed now contains them)
+    entities.forEach(e => { e._status = 'confirmed'; });
+    document.getElementById('status').textContent = data.count + ' Entities gespeichert ✓';
+    btn.textContent = 'Gespeichert ✓';
+    renderEntityTab();
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Speichern'; }, 1500);
+  } else {
+    btn.disabled = false; btn.textContent = 'Speichern';
+  }
+});
+
+// ── SSE helper + extraction buttons ───────────────────────────────────────────
+async function _runSse(endpoint, btnEl) {
+  const logEl = document.getElementById('log');
+  const origLabel = btnEl.textContent;
+  logEl.className = ''; logEl.style.display = 'block'; logEl.textContent = '';
+  const togEl = document.getElementById('log-toggle');
+  if (togEl) togEl.style.display = 'none';
+  btnEl.disabled = true; btnEl.textContent = 'Läuft…';
+  document.getElementById('btn-sample').disabled = true;
+  document.getElementById('btn-full').disabled = true;
+  try {
+    const res = await fetch(endpoint, { method: 'POST', headers: _th() });
+    const reader = res.body.getReader(), decoder = new TextDecoder(); let buf = '';
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const msg = line.slice(6);
+        if (msg === '__done__') {
+          logEl.textContent += '\\n✓ Fertig – lade neu…';
+          await load();
+          logEl.classList.add('collapsed');
+          const tog = document.getElementById('log-toggle');
+          tog.textContent = 'Log anzeigen ▾'; tog.style.display = 'block';
+          tog.onclick = () => {
+            const open = logEl.classList.toggle('collapsed');
+            tog.textContent = open ? 'Log anzeigen ▾' : 'Log ausblenden ▴';
+          };
+          btnEl.textContent = origLabel;
+          document.getElementById('btn-sample').disabled = false;
+          document.getElementById('btn-full').disabled = false;
+          return;
+        }
+        if (msg.startsWith('__error__')) {
+          logEl.className = 'error'; logEl.textContent += '\\n✗ ' + msg.slice(9);
+          btnEl.textContent = origLabel;
+          document.getElementById('btn-sample').disabled = false;
+          document.getElementById('btn-full').disabled = false;
+          return;
+        }
+        logEl.textContent += (logEl.textContent ? '\\n' : '') + msg;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+    }
+  } finally {
+    btnEl.disabled = false; btnEl.textContent = origLabel;
+    document.getElementById('btn-sample').disabled = false;
+    document.getElementById('btn-full').disabled = false;
+  }
+}
+
+document.getElementById('btn-sample').addEventListener('click', function() {
+  _runSse('/ingest/extract_entities', this);
+});
+document.getElementById('btn-full').addEventListener('click', function() {
+  _runSse('/ingest/extract_entities_full', this);
+});
+
+load();
+</script>
+</body>
+</html>

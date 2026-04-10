@@ -1,0 +1,65 @@
+[
+  {
+    "name": "Historischer Kontext",
+    "description": "Angabe des Zeitraums und der politischen Ereignisse",
+    "keywords": [
+      "Osmanisches Reich",
+      "1908 Revolution",
+      "Konstitutionalismus"
+    ]
+  },
+  {
+    "name": "Politische Gruppen",
+    "description": "Beschreibung der politischen Gruppen und Parteien",
+    "keywords": [
+      "CUP",
+      "Ittihadistische Partei",
+      "Liberalen"
+    ]
+  },
+  {
+    "name": "Ethnische und religiöse Gruppen",
+    "description": "Beschreibung der ethnischen und religiösen Gemeinschaften",
+    "keywords": [
+      "Araber",
+      "Christliche Minderheit",
+      "Muslime"
+    ]
+  },
+  {
+    "name": "Politik und Recht",
+    "description": "Angabe von Gesetzen, Verfassungen und politischen Entscheidungen",
+    "keywords": [
+      "Konstitutionalismus",
+      "Reformgesetzgebung",
+      "Staatsrechte"
+    ]
+  },
+  {
+    "name": "Soziale und wirtschaftliche Fragen",
+    "description": "Beschreibung von sozialen und wirtschaftlichen Themen",
+    "keywords": [
+      "Arbeiterbewegung",
+      "Frauenrechte",
+      "Wirtschaftsentwicklung"
+    ]
+  },
+  {
+    "name": "Ideologie und Theorie",
+    "description": "Beschreibung der ideologischen Hintergründe und politischen Theorien",
+    "keywords": [
+      "Osmanismus",
+      "Turkismus",
+      "Liberalismus"
+    ]
+  },
+  {
+    "name": "Geschichtliche Ereignisse",
+    "description": "Angabe von historischen Ereignissen und Konflikten",
+    "keywords": [
+      "Balkankriege",
+      "Erster Weltkrieg",
+      "Osmanische Expansion"
+    ]
+  }
+]

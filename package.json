@@ -4,9 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "precompute-network": "node src/precompute_network.js"
+    "precompute-network": "node src/precompute_network.js",
+    "test": "playwright test"
   },
   "dependencies": {
     "d3-force": "^3.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
   }
 }

@@ -1,0 +1,555 @@
+{
+  "taxonomy": [
+    {
+      "name": "Revolutionsgeschichte",
+      "description": "Dokumente zur Revolution im Osmanischen Reich",
+      "keywords": [
+        "Osmanisches Reich",
+        "Junge Türken",
+        "Revolution"
+      ]
+    },
+    {
+      "name": "Politische Führung",
+      "description": "Führer und Parteien während der Revolution",
+      "keywords": [
+        "CUP",
+        "Talat",
+        "Enver"
+      ]
+    },
+    {
+      "name": "Ekonomie und Finanzen",
+      "description": "Wirtschaftliche Situation des Osmanischen Reichs",
+      "keywords": [
+        "Ökonomische Krise",
+        "Public Debt Administration",
+        "Kapitalismus"
+      ]
+    },
+    {
+      "name": "Soziale Bewegungen",
+      "description": "Armenier, Araber und Juden während der Revolution",
+      "keywords": [
+        "Armenier",
+        "Araber",
+        "Juden",
+        "Revolutionsbeteiligung"
+      ]
+    },
+    {
+      "name": "Exil und Diaspora",
+      "description": "Politiker im Exil während der Revolution",
+      "keywords": [
+        "Ahlwardt",
+        "Ahmed Riza",
+        "Le Bon"
+      ]
+    },
+    {
+      "name": "Historischer Kontext",
+      "description": "Grundlagen und Ursachen der Revolution",
+      "keywords": [
+        "Osmanisches Reich",
+        "Junge Türken",
+        "Kolonialismus"
+      ]
+    },
+    {
+      "name": "Politische Institutionen",
+      "description": "Regierungsformen und Parteien während der Revolution",
+      "keywords": [
+        "Parlamentarismus",
+        "Reichsverfassung",
+        "CUP"
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "normalform": "Sabaheddin",
+      "typ": "Person",
+      "aliases": [
+        "Sabahaddin",
+        "Sabahhedin",
+        "Prince Sabahaddin",
+        "Liberale Sabahhedin",
+        "Prince",
+        "Sabaheddin",
+        "prinz"
+      ]
+    },
+    {
+      "normalform": "Damaskus",
+      "typ": "Ort",
+      "aliases": [
+        "damaskus"
+      ]
+    },
+    {
+      "normalform": "Kongress für Einheit und Freiheit",
+      "typ": "Organisation",
+      "aliases": [
+        "CPU",
+        "KEF",
+        "CUP"
+      ]
+    },
+    {
+      "normalform": "Enver",
+      "typ": "Person",
+      "aliases": []
+    },
+    {
+      "normalform": "Nuri",
+      "typ": "Person",
+      "aliases": [
+        "Nursi",
+        "Celal Nuri",
+        "Burhan nuri",
+        "Said Nursi"
+      ]
+    },
+    {
+      "normalform": "Revolte",
+      "typ": "Konzept",
+      "aliases": [
+        "Aufstände",
+        "Rebellion",
+        "Jemen Revolte"
+      ]
+    },
+    {
+      "normalform": "Balkanerfahrungen",
+      "typ": "Ort",
+      "aliases": [
+        "Balkans"
+      ]
+    },
+    {
+      "normalform": "Religionsfreiheit",
+      "typ": "Konzept",
+      "aliases": [
+        "Versammlungsfreiheit",
+        "Pressefreiheit"
+      ]
+    },
+    {
+      "normalform": "Organisation",
+      "typ": "Person",
+      "aliases": [
+        "Organization",
+        "Macedomnian Revolutionary Organization"
+      ]
+    },
+    {
+      "normalform": "Egyptian",
+      "typ": "Person",
+      "aliases": [
+        "Egypt"
+      ]
+    },
+    {
+      "normalform": "Salih",
+      "typ": "Person",
+      "aliases": [
+        "SalIm",
+        "Salih Sharif",
+        "Major SalIm"
+      ]
+    },
+    {
+      "normalform": "Hijaz",
+      "typ": "Ort",
+      "aliases": [
+        "Hijazbahn",
+        "Hidjaz",
+        "Hidjaz Railway"
+      ]
+    },
+    {
+      "normalform": "Wahl",
+      "typ": "Konzept",
+      "aliases": [
+        "Vali"
+      ]
+    },
+    {
+      "normalform": "Syrians",
+      "typ": "Person",
+      "aliases": [
+        "Syrian",
+        "Syrian Central"
+      ]
+    },
+    {
+      "normalform": "Albanians",
+      "typ": "Konzept",
+      "aliases": [
+        "Albanien",
+        "Albanian"
+      ]
+    },
+    {
+      "normalform": "Iraq",
+      "typ": "Ort",
+      "aliases": [
+        "Baghdad",
+        "Bagdad",
+        "Baghdad Railway"
+      ]
+    },
+    {
+      "normalform": "Latakiyya",
+      "typ": "Ort",
+      "aliases": [
+        "Latakia"
+      ]
+    },
+    {
+      "normalform": "Tanzimat",
+      "typ": "Konzept",
+      "aliases": [
+        "TNZIMAT"
+      ]
+    },
+    {
+      "normalform": "Jungosmanen",
+      "typ": "Organisation",
+      "aliases": [
+        "jungosmanen"
+      ]
+    },
+    {
+      "normalform": "Edirne",
+      "typ": "Ort",
+      "aliases": []
+    },
+    {
+      "normalform": "KEf",
+      "typ": "Organisation",
+      "aliases": [
+        "KEf"
+      ]
+    },
+    {
+      "normalform": "Osmanisches Parlament",
+      "typ": "Organisation",
+      "aliases": [
+        "osmanischen Parlament"
+      ]
+    },
+    {
+      "normalform": "Talât Pascha",
+      "typ": "Person",
+      "aliases": [
+        "Talât Pascha"
+      ]
+    },
+    {
+      "normalform": "Osmanische Reich",
+      "typ": "Organisation",
+      "aliases": [
+        "Osmanische Reich"
+      ]
+    },
+    {
+      "normalform": "Ottoman Empire",
+      "typ": "Organisation",
+      "aliases": [
+        "Ottoman Empire"
+      ]
+    },
+    {
+      "normalform": "Abdühlhamid",
+      "typ": "Person",
+      "aliases": [
+        "abdülhamid",
+        "Abdühlhamid"
+      ]
+    },
+    {
+      "normalform": "Kapitulationen",
+      "typ": "Konzept",
+      "aliases": [
+        "Kapitulationen"
+      ]
+    },
+    {
+      "normalform": "ägypten",
+      "typ": "Ort",
+      "aliases": [
+        "ägypten"
+      ]
+    },
+    {
+      "normalform": "Kalifat",
+      "typ": "Konzept",
+      "aliases": [
+        "Kalifat"
+      ]
+    },
+    {
+      "normalform": "Medresen",
+      "typ": "Organisation",
+      "aliases": [
+        "Medresen"
+      ]
+    },
+    {
+      "normalform": "könig edward",
+      "typ": "Person",
+      "aliases": [
+        "könig edward"
+      ]
+    },
+    {
+      "normalform": "Zar Nikolaus II",
+      "typ": "Person",
+      "aliases": [
+        "Zar Nikolaus II"
+      ]
+    },
+    {
+      "normalform": "ahmed nayazi",
+      "typ": "Person",
+      "aliases": [
+        "ahmed nayazi"
+      ]
+    },
+    {
+      "normalform": "Manastir",
+      "typ": "Ort",
+      "aliases": [
+        "Manastir"
+      ]
+    },
+    {
+      "normalform": "Semsi Pascha",
+      "typ": "Person",
+      "aliases": [
+        "Semsi Pascha"
+      ]
+    },
+    {
+      "normalform": "Ziya Gökalp",
+      "typ": "Person",
+      "aliases": [
+        "Ziya Gökalp"
+      ]
+    },
+    {
+      "normalform": "Yusuf Akcara",
+      "typ": "Person",
+      "aliases": [
+        "Yusuf Akcara,"
+      ]
+    },
+    {
+      "normalform": "sharia",
+      "typ": "Konzept",
+      "aliases": [
+        "sharia"
+      ]
+    },
+    {
+      "normalform": "armenier",
+      "typ": "Konzept",
+      "aliases": [
+        "armenier"
+      ]
+    },
+    {
+      "normalform": "Konterrevolution",
+      "typ": "Konzept",
+      "aliases": [
+        "Konterrevolution"
+      ]
+    },
+    {
+      "normalform": "balkan",
+      "typ": "Ort",
+      "aliases": [
+        "balkan"
+      ]
+    },
+    {
+      "normalform": "tripolis",
+      "typ": "Ort",
+      "aliases": [
+        "tripolis"
+      ]
+    },
+    {
+      "normalform": "janina",
+      "typ": "Ort",
+      "aliases": [
+        "janina"
+      ]
+    },
+    {
+      "normalform": "shköder",
+      "typ": "Ort",
+      "aliases": [
+        "shköder"
+      ]
+    },
+    {
+      "normalform": "abal huda al sayyadi",
+      "typ": "Person",
+      "aliases": [
+        "abal huda al sayyadi",
+        "Sayyadi"
+      ]
+    },
+    {
+      "normalform": "midhat pasha",
+      "typ": "Person",
+      "aliases": [
+        "midhat pasha"
+      ]
+    },
+    {
+      "normalform": "hamidiya",
+      "typ": "Organisation",
+      "aliases": [
+        "hamidiya"
+      ]
+    },
+    {
+      "normalform": "kreta",
+      "typ": "Ort",
+      "aliases": [
+        "kreta"
+      ]
+    },
+    {
+      "normalform": "volkan",
+      "typ": "Organisation",
+      "aliases": [
+        "volkan"
+      ]
+    },
+    {
+      "normalform": "Mahmud sevket",
+      "typ": "Person",
+      "aliases": [
+        "Mahmud sevket"
+      ]
+    },
+    {
+      "normalform": "khalif",
+      "typ": "Konzept",
+      "aliases": [
+        "khalif"
+      ]
+    },
+    {
+      "normalform": "mustafa kemal",
+      "typ": "Person",
+      "aliases": [
+        "mustafa kemal"
+      ]
+    },
+    {
+      "normalform": "sevekt pasha",
+      "typ": "Person",
+      "aliases": [
+        "sevekt pasha",
+        "Sevket"
+      ]
+    },
+    {
+      "normalform": "Abdu ̈lhamid",
+      "typ": "Person",
+      "aliases": [
+        "Abdu ̈lhamid"
+      ]
+    },
+    {
+      "normalform": "Ahmed Rıza Bey",
+      "typ": "Person",
+      "aliases": [
+        "Ahmed Rıza Bey"
+      ]
+    },
+    {
+      "normalform": "Macedonia",
+      "typ": "Ort",
+      "aliases": [
+        "Macedonia"
+      ]
+    },
+    {
+      "normalform": "̧sveret",
+      "typ": "Person",
+      "aliases": [
+        "̧sveret"
+      ]
+    },
+    {
+      "normalform": "murad bey",
+      "typ": "Person",
+      "aliases": [
+        "murad bey"
+      ]
+    },
+    {
+      "normalform": "zeitschrift Mizan",
+      "typ": "Organisation",
+      "aliases": [
+        "zeitschrift Mizan"
+      ]
+    },
+    {
+      "normalform": "Osmanische Freiheitsgesellschaft",
+      "typ": "Organisation",
+      "aliases": [
+        "osm freedom society"
+      ]
+    },
+    {
+      "normalform": "ottom freedom society",
+      "typ": "Organisation",
+      "aliases": [
+        "ottom freedom society"
+      ]
+    },
+    {
+      "normalform": "Young Turk",
+      "typ": "Konzept",
+      "aliases": [
+        "Young Turk",
+        "Jungtürken"
+      ]
+    },
+    {
+      "normalform": "türken",
+      "typ": "Konzept",
+      "aliases": [
+        "türken"
+      ]
+    },
+    {
+      "normalform": "säkularismus",
+      "typ": "Konzept",
+      "aliases": [
+        "säkularismus"
+      ]
+    },
+    {
+      "normalform": "sozialisten",
+      "typ": "Konzept",
+      "aliases": [
+        "sozialisten"
+      ]
+    },
+    {
+      "normalform": "Mohammedan Union Party",
+      "typ": "Organisation",
+      "aliases": [
+        "Mohammedan Union Party"
+      ]
+    }
+  ]
+}

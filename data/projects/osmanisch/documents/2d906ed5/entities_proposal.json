@@ -1,0 +1,491 @@
+[
+  {
+    "normalform": "Sevket",
+    "typ": "Person",
+    "aliases": [
+      "sevket pasha"
+    ]
+  },
+  {
+    "normalform": "Istanbul",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Abdulhamid II",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "KEF",
+    "typ": "Organisation",
+    "aliases": [
+      "KeF"
+    ]
+  },
+  {
+    "normalform": "Latakia",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Ali Ayni Bey",
+    "typ": "Person",
+    "aliases": [
+      "ali ayni bey",
+      "mutasarrif"
+    ]
+  },
+  {
+    "normalform": "Damaskus",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Zabadani",
+    "typ": "Ort",
+    "aliases": [
+      "zabadani",
+      "kaymakam"
+    ]
+  },
+  {
+    "normalform": "Busra Eski-Sham",
+    "typ": "Ort",
+    "aliases": [
+      "busra eski-sham"
+    ]
+  },
+  {
+    "normalform": "Paris",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Österreich-Ungarn",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Bosnien und Herzegowina",
+    "typ": "Ort",
+    "aliases": [
+      "bosnien und herzegowina"
+    ]
+  },
+  {
+    "normalform": "Europa",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Gallipoli",
+    "typ": "Ort",
+    "aliases": [
+      "gallipoli",
+      "erdebeben gallipoli 1912"
+    ]
+  },
+  {
+    "normalform": "Montenegro",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Serbien",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Bulgarien",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Griechenland",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Jemen",
+    "typ": "Ort",
+    "aliases": [
+      "jemen",
+      "Yemen"
+    ]
+  },
+  {
+    "normalform": "Albanien",
+    "typ": "Ort",
+    "aliases": [
+      "albanien"
+    ]
+  },
+  {
+    "normalform": "Scutari",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Janina",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Edirne",
+    "typ": "Ort",
+    "aliases": [
+      "edirne"
+    ]
+  },
+  {
+    "normalform": "Sabah Gulian",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Hunch‘ak",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Ottomanism",
+    "typ": "Konzept",
+    "aliases": [
+      "Ottomanismus"
+    ]
+  },
+  {
+    "normalform": "Sultantruppen",
+    "typ": "Organisation",
+    "aliases": [
+      "sultanische Truppen"
+    ]
+  },
+  {
+    "normalform": "Cup",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Italiener",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Ägypten",
+    "typ": "Ort",
+    "aliases": [
+      "Agypten"
+    ]
+  },
+  {
+    "normalform": "Rhodos",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Tripoli",
+    "typ": "Ort",
+    "aliases": [
+      "Tripoli of Barbary"
+    ]
+  },
+  {
+    "normalform": "Italien",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Ottomanisches Reich",
+    "typ": "Organisation",
+    "aliases": [
+      "Reich"
+    ]
+  },
+  {
+    "normalform": "Syrien",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Arabische Halbinsel",
+    "typ": "Ort",
+    "aliases": [
+      "Halbinsel"
+    ]
+  },
+  {
+    "normalform": "Ägypter",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Sultan",
+    "typ": "Organisation",
+    "aliases": [
+      "Khalif"
+    ]
+  },
+  {
+    "normalform": "Briten",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Enver",
+    "typ": "Person",
+    "aliases": [
+      "Enver Pasha",
+      "Enver"
+    ]
+  },
+  {
+    "normalform": "Balkankrieg 2",
+    "typ": "Konzept",
+    "aliases": [
+      "Balkankrieg"
+    ]
+  },
+  {
+    "normalform": "Verfassung 1908",
+    "typ": "Organisation",
+    "aliases": [
+      "Verfassung"
+    ]
+  },
+  {
+    "normalform": "Kabinettssitzung",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Großwesir",
+    "typ": "Konzept",
+    "aliases": [
+      "Mahmud Sevket Pascha",
+      "Großwesir"
+    ]
+  },
+  {
+    "normalform": "Armee",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Freiwilligenverbände",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Colmar von Goltz",
+    "typ": "Person",
+    "aliases": [
+      "Nation unter Waffen"
+    ]
+  },
+  {
+    "normalform": "Abdülhamid",
+    "typ": "Person",
+    "aliases": [
+      "Abdulhamid"
+    ]
+  },
+  {
+    "normalform": "Europäische Mächte",
+    "typ": "Konzept",
+    "aliases": [
+      "Mächte"
+    ]
+  },
+  {
+    "normalform": "Kongress",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Sohn des Schwiegersohns Abdülhamids",
+    "typ": "Person",
+    "aliases": [
+      "Sabaheddin"
+    ]
+  },
+  {
+    "normalform": "Kulturpolitik",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Jerusalem",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Einigkeit in Vielfalt",
+    "typ": "Konzept",
+    "aliases": [
+      "Einheit"
+    ]
+  },
+  {
+    "normalform": "Arabische Gedichte",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Isaia Schuite",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Armeniern",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Außenintervention",
+    "typ": "Konzept",
+    "aliases": [
+      "Intervention"
+    ]
+  },
+  {
+    "normalform": "Mahmud Riza",
+    "typ": "Person",
+    "aliases": [
+      "Bürokrat"
+    ]
+  },
+  {
+    "normalform": "Nicht-Interventions-Gruppe",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Anatolein",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Internationale Mazedonische Revolutionäre Organisation",
+    "typ": "Organisation",
+    "aliases": [
+      "IMRO"
+    ]
+  },
+  {
+    "normalform": "1893",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Hollweg",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Deutschland",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Libyen",
+    "typ": "Ort",
+    "aliases": [
+      "Libya"
+    ]
+  },
+  {
+    "normalform": "Izmirlian",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Madteos II",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Niyazi",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Damascus",
+    "typ": "Ort",
+    "aliases": [
+      "Damas- cus"
+    ]
+  },
+  {
+    "normalform": "Ummayad Mosque",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "ulema",
+    "typ": "Konzept",
+    "aliases": [
+      "u- lema class"
+    ]
+  },
+  {
+    "normalform": "Anatolian provinces",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Mazedonien",
+    "typ": "Ort",
+    "aliases": [
+      "Macedonian Question"
+    ]
+  },
+  {
+    "normalform": "Israel",
+    "typ": "Ort",
+    "aliases": [
+      "Zionismus",
+      "zionismus"
+    ]
+  },
+  {
+    "normalform": "Avedis Aharonian",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Hunchaks",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Jungtürken",
+    "typ": "Organisation",
+    "aliases": [
+      "Jungen"
+    ]
+  },
+  {
+    "normalform": "al-Mu’ayyad",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Mutran",
+    "typ": "Konzept",
+    "aliases": [
+      "Mutran affair"
+    ]
+  },
+  {
+    "normalform": "Hidjaz Railway",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "Baghdad Railway",
+    "typ": "Organisation",
+    "aliases": []
+  }
+]

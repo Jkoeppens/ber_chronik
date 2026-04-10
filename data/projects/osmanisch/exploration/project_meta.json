@@ -1,0 +1,91 @@
+{
+  "title": "Dokument",
+  "doc_type": "buchnotizen",
+  "taxonomy": [
+    {
+      "name": "Revolutionsgeschichte",
+      "description": "Dokumente zur Revolution im Osmanischen Reich",
+      "keywords": [
+        "Osmanisches Reich",
+        "Junge Türken",
+        "Revolution"
+      ]
+    },
+    {
+      "name": "Politische Führung",
+      "description": "Führer und Parteien während der Revolution",
+      "keywords": [
+        "CUP",
+        "Talat",
+        "Enver"
+      ]
+    },
+    {
+      "name": "Ekonomie und Finanzen",
+      "description": "Wirtschaftliche Situation des Osmanischen Reichs",
+      "keywords": [
+        "Ökonomische Krise",
+        "Public Debt Administration",
+        "Kapitalismus"
+      ]
+    },
+    {
+      "name": "Soziale Bewegungen",
+      "description": "Armenier, Araber und Juden während der Revolution",
+      "keywords": [
+        "Armenier",
+        "Araber",
+        "Juden",
+        "Revolutionsbeteiligung"
+      ]
+    },
+    {
+      "name": "Exil und Diaspora",
+      "description": "Politiker im Exil während der Revolution",
+      "keywords": [
+        "Ahlwardt",
+        "Ahmed Riza",
+        "Le Bon"
+      ]
+    },
+    {
+      "name": "Historischer Kontext",
+      "description": "Grundlagen und Ursachen der Revolution",
+      "keywords": [
+        "Osmanisches Reich",
+        "Junge Türken",
+        "Kolonialismus"
+      ]
+    },
+    {
+      "name": "Politische Institutionen",
+      "description": "Regierungsformen und Parteien während der Revolution",
+      "keywords": [
+        "Parlamentarismus",
+        "Reichsverfassung",
+        "CUP"
+      ]
+    }
+  ],
+  "entity_types": [
+    "Konzept",
+    "Organisation",
+    "Ort",
+    "Person"
+  ],
+  "color_map": {
+    "Revolutionsgeschichte": "#3b82f6",
+    "Politische Führung": "#f59e0b",
+    "Ekonomie und Finanzen": "#10b981",
+    "Soziale Bewegungen": "#8b5cf6",
+    "Exil und Diaspora": "#ef4444",
+    "Historischer Kontext": "#06b6d4",
+    "Politische Institutionen": "#f97316"
+  },
+  "node_color_map": {
+    "Konzept": "#60a5fa",
+    "Organisation": "#fbbf24",
+    "Ort": "#34d399",
+    "Person": "#c084fc"
+  }
+}

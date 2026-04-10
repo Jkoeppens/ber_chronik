@@ -1,5 +1,6 @@
 // ── Timeline chart ────────────────────────────────────────────────────────────
-let _chartG = null, _x = null, _y = null, _w = 0, _h = 0;
+let _chartG = null, _clipG = null, _xAxisG = null;
+let _x = null, _y = null, _h = 0, _w = 0;
 let _series = [], _area = null, _defs = null;
 
 // Returns [{start, end}] for runs of years with no gap > 1
@@ -21,7 +22,14 @@ function drawChart(series, years) {
   const margin = { top: 16, right: 90, bottom: 36, left: 38 };
   svg.selectAll("*").remove();
 
+  const W = svg.node().clientWidth  || 800;
+  const H = svg.node().clientHeight || 380;
+  const w = W - margin.left - margin.right;
+  const h = H - margin.top  - margin.bottom;
+
   const defs = svg.append("defs");
+
+  // Gradient defs for background area fills
   series.forEach(s => {
     const color = COLOR[s.et] || "#999";
     const gradId = `grad-${s.et}`;
@@ -34,29 +42,35 @@ function drawChart(series, years) {
       .attr("stop-color", color).attr("stop-opacity", 0.02);
   });
 
-  const W = svg.node().clientWidth  || 800;
-  const H = svg.node().clientHeight || 380;
-  const w = W - margin.left - margin.right;
-  const h = H - margin.top  - margin.bottom;
+  // Clip path: masks zoomable content to the chart area
+  defs.append("clipPath").attr("id", "chart-clip")
+    .append("rect")
+      .attr("x", 0).attr("y", -10)
+      .attr("width", w).attr("height", h + 20);
 
   const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-  const x = d3.scaleLinear().domain([1989, 2017]).range([0, w]);
+  const x = d3.scaleLinear().domain([years[0], years[years.length - 1]]).range([0, w]);
   const y = d3.scaleLinear()
     .domain([0, d3.max(series, s => d3.max(s.values, v => v.count))]).nice()
     .range([h, 0]);
 
+  // ── Non-zoomable: grid, axes, baseline ──────────────────────────────────────
   g.append("g").attr("class","grid")
     .call(d3.axisLeft(y).ticks(5).tickSize(-w).tickFormat(""));
-  g.append("g").attr("class","axis").attr("transform",`translate(0,${h})`)
-    .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(15).tickSize(4));
+
+  const xAxisG = g.append("g").attr("class","axis").attr("transform",`translate(0,${h})`);
+  xAxisG.call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(15).tickSize(4));
+
   g.append("g").attr("class","axis")
     .call(d3.axisLeft(y).ticks(5).tickSize(4).tickPadding(6));
+
   g.append("line")
     .attr("class", "baseline")
     .attr("x1", 0).attr("x2", w)
     .attr("y1", h).attr("y2", h)
     .attr("stroke", "#999").attr("stroke-width", 0.75);
 
+  // ── Generators (keep originals; zoom creates rescaled copies) ───────────────
   const line = d3.line()
     .x(v => x(v.year)).y(v => y(v.count))
     .curve(d3.curveMonotoneX);
@@ -65,23 +79,26 @@ function drawChart(series, years) {
     .x(v => x(v.year)).y0(y(0)).y1(v => y(v.count))
     .curve(d3.curveMonotoneX);
 
-  // First pass: area fills (behind lines)
+  // ── Zoomable content group (clipped) ────────────────────────────────────────
+  const clipG = g.append("g").attr("clip-path", "url(#chart-clip)");
+
+  // Area fills (behind lines)
   series.forEach(s => {
     if (dimmedTypes.has(s.et)) return;
-    g.append("path").datum(s.values)
+    clipG.append("path").datum(s.values)
       .attr("class", "area-path")
       .attr("id", `area-${s.et}`)
       .attr("fill", `url(#grad-${s.et})`)
       .attr("d", area);
   });
 
+  // Lines and dots
   series.forEach(s => {
-    g.append("path").datum(s.values)
+    clipG.append("path").datum(s.values)
       .attr("class", "line-path" + (dimmedTypes.has(s.et) ? " dimmed" : ""))
       .attr("id", `line-${s.et}`)
       .attr("stroke", COLOR[s.et])
       .attr("d", line)
-      // Click on a line in highlight mode: open category panel, keep current highlight
       .on("click", (event) => {
         if (hlState.mode === "none") return;
         event.stopPropagation();
@@ -90,7 +107,7 @@ function drawChart(series, years) {
         showView("timeline", s.et, viewEl => { viewEl.innerHTML = renderParaList(entries); });
       });
 
-    g.selectAll(null)
+    clipG.selectAll(null)
       .data(s.values.filter(v => v.count > 0))
       .join("circle")
       .attr("class", `dot dot-${s.et.replace(/\s/g, '-')}` + (dimmedTypes.has(s.et) ? " dimmed" : ""))
@@ -112,34 +129,35 @@ function drawChart(series, years) {
           (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
         showView("timeline", `${v.year} · ${s.et}`,
           viewEl => { viewEl.innerHTML = renderParaList(sorted); });
-        // Replace current highlight with this dot's entries
         setHighlight("answer", v.anchorSet);
       });
   });
 
-  // Inline labels at line ends
+  // ── Labels (outside clip so they render in right margin) ────────────────────
+  const labelsG = g.append("g");
+
   const labelData = series
     .filter(s => !dimmedTypes.has(s.et))
     .map(s => {
       const last = [...s.values].reverse().find(v => v.count > 0);
       if (!last) return null;
-      return { et: s.et, x: x(last.year) + 8, y: y(last.count) };
+      return { et: s.et, x: x(last.year) + 8, y: y(last.count), year: last.year };
     })
     .filter(Boolean)
     .sort((a, b) => a.y - b.y);
 
-  // Collision resolution: push overlapping labels down
+  // Collision resolution
   for (let i = 1; i < labelData.length; i++) {
     if (labelData[i].y - labelData[i-1].y < 14)
       labelData[i].y = labelData[i-1].y + 14;
   }
-  // Clamp to chart height
   for (let i = 0; i < labelData.length; i++) {
     if (labelData[i].y > h - 5) labelData[i].y = h - 5;
   }
 
   labelData.forEach(l => {
-    g.append("text")
+    labelsG.append("text")
+      .datum(l)   // bind for zoom repositioning
       .attr("class", `line-label line-label-${l.et.replace(/\s/g, '-')}`)
       .attr("x", l.x)
       .attr("y", l.y)
@@ -148,21 +166,63 @@ function drawChart(series, years) {
       .text(l.et);
   });
 
-  _chartG = g; _x = x; _y = y; _w = w; _h = h;
+  // ── Store module-level state ─────────────────────────────────────────────────
+  _chartG = g; _clipG = clipG; _xAxisG = xAxisG;
+  _x = x; _y = y; _h = h; _w = w;
   _series = series; _defs = defs; _area = area;
 
-  // Store dot selection; re-apply current highlight state after redraw
   chartDotSelection = svg.selectAll("circle.dot");
   _applyHighlight();
 
-  // Click on empty chart area: reset highlight + close panel.
-  // Dot and line clicks stop propagation so they never reach this handler.
-  // hl-area (highlight overlay) clicks are also ignored here.
   svg.on("click.reset", (event) => {
     const tgt = event.target;
     if (tgt.classList?.contains("hl-area")) return;
     goHome();
   });
+
+  // ── Zoom ─────────────────────────────────────────────────────────────────────
+  const zoom = d3.zoom()
+    .scaleExtent([1, 20])
+    .translateExtent([[0, 0], [w, h]])
+    .extent([[0, 0], [w, h]])
+    .on("zoom", (event) => {
+      const xNew = event.transform.rescaleX(x);
+      _x = xNew;
+
+      // X axis
+      xAxisG.call(d3.axisBottom(xNew).tickFormat(d3.format("d")).ticks(15).tickSize(4));
+
+      // Updated generators
+      const lineNew = d3.line().x(v => xNew(v.year)).y(v => y(v.count)).curve(d3.curveMonotoneX);
+      const areaNew = d3.area().x(v => xNew(v.year)).y0(y(0)).y1(v => y(v.count)).curve(d3.curveMonotoneX);
+      _area = areaNew;
+
+      clipG.selectAll(".area-path").attr("d", areaNew);
+      clipG.selectAll(".line-path").attr("d", lineNew);
+      clipG.selectAll(".dot").attr("cx", v => xNew(v.year));
+      clipG.selectAll(".hl-area").attr("d", areaNew);
+
+      // Reposition hl-clip rects (year range stored as data attributes)
+      defs.selectAll(".hl-clip rect").each(function() {
+        const s   = +this.getAttribute("data-start");
+        const e   = +this.getAttribute("data-end");
+        const stp = xNew(s + 1) - xNew(s);
+        d3.select(this)
+          .attr("x",     xNew(s) - stp / 2)
+          .attr("width", xNew(e) - xNew(s) + stp);
+      });
+
+      // Reposition labels
+      labelsG.selectAll("text").each(function(d) {
+        if (d && d.year != null) d3.select(this).attr("x", xNew(d.year) + 8);
+      });
+    });
+
+  // Attach zoom; override dblclick to reset
+  svg.call(zoom);
+  svg.on("dblclick.zoom", () =>
+    svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity)
+  );
 }
 
 function _resetChartStyles() {
@@ -179,10 +239,8 @@ function _applyChartEntityHighlight() {
   _chartG.selectAll(".hl-area, .hl-line").remove();
   _defs.selectAll(".hl-clip, .hl-grad").remove();
 
-  // ── Full reset ──────────────────────────────────────────────────────────────
   if (mode === "none") { _resetChartStyles(); return; }
 
-  // ── Gather relevant entries — entity click OR answer anchors ────────────────
   let relevantEntries;
   if (focusEntity) {
     relevantEntries = (typeof entriesByActor !== "undefined" ? entriesByActor : new Map())
@@ -196,7 +254,6 @@ function _applyChartEntityHighlight() {
 
   if (!relevantEntries.length) { _resetChartStyles(); return; }
 
-  // Collect years per event type
   const byType = {};
   relevantEntries.forEach(e => {
     if (!e.year || !e.event_type) return;
@@ -207,10 +264,6 @@ function _applyChartEntityHighlight() {
   const relevantTypes = new Set(Object.keys(byType));
   const step = _x(1990) - _x(1989);
 
-  // ── Three-level dimming ──────────────────────────────────────────────────────
-  // Level 1 (hl-area overlay): relevant category + relevant timespan — full color, 2.5px, full area
-  // Level 2: relevant category + non-relevant timespan — original color, 0.15 opacity, 1px, area ~0.3
-  // Level 3: non-relevant category — grey #cccccc, 0.2 opacity, pointer-events untouched
   _chartG.selectAll(".line-path")
     .style("opacity",      function() { return relevantTypes.has(this.id.replace("line-", "")) ? 0.15 : 0.2; })
     .style("stroke",       function() { return relevantTypes.has(this.id.replace("line-", "")) ? null : "#cccccc"; })
@@ -223,8 +276,6 @@ function _applyChartEntityHighlight() {
     _chartG.selectAll(`.line-label-${et.replace(/\s/g, '-')}`).style("opacity", 1);
   });
 
-  // Dots: non-relevant → grey fill + 0.2 opacity, pointer-events untouched.
-  // Relevant → clear both overrides so _applyTimelineHighlight's attr takes over.
   if (focusEntity) {
     _chartG.selectAll(".dot").style("opacity", 0.2).style("fill", "#cccccc");
     relevantTypes.forEach(et => {
@@ -233,8 +284,6 @@ function _applyChartEntityHighlight() {
   } else {
     _chartG.selectAll(".dot").style("opacity", null).style("fill", null);
   }
-
-  // ── Segment overlays (entity focus + answer mode) ───────────────────────────
 
   Object.entries(byType).forEach(([et, yearSet]) => {
     const color = COLOR[et] || "#999";
@@ -246,19 +295,18 @@ function _applyChartEntityHighlight() {
       const clipId  = `hl-clip-${etSafe}-${start}-${end}`;
       const gradId  = `hl-grad-${etSafe}-${start}-${end}`;
 
-      // clipPath: ±half-year around the segment
+      // Store year range as data attributes so the zoom handler can reposition
       _defs.append("clipPath")
         .attr("class", "hl-clip")
         .attr("id", clipId)
         .append("rect")
+          .attr("data-start", start)
+          .attr("data-end",   end)
           .attr("x",      _x(start) - step / 2)
           .attr("y",      -10)
           .attr("width",  _x(end) - _x(start) + step)
           .attr("height", _h + 20);
 
-      // Per-segment gradient: y1 at the segment's peak so opacity 0.28 starts
-      // right at the line, y2 at the baseline. Low and high segments get
-      // identical fill intensity directly under the line.
       const peakCount = d3.max(s.values.filter(v => v.year >= start && v.year <= end), v => v.count) || 0;
       const gradY1 = _y(peakCount);
       const grad = _defs.append("linearGradient")
@@ -269,8 +317,8 @@ function _applyChartEntityHighlight() {
       grad.append("stop").attr("offset","0%").attr("stop-color", color).attr("stop-opacity", 0.25);
       grad.append("stop").attr("offset","100%").attr("stop-color", color).attr("stop-opacity", 0);
 
-      // Full s.values so curveMonotoneX tangents match the background line-path
-      _chartG.append("path").datum(s.values)
+      // Append to _clipG so highlight is clipped with the rest of the content
+      _clipG.append("path").datum(s.values)
         .attr("class", "hl-area")
         .attr("clip-path", `url(#${clipId})`)
         .attr("fill", `url(#${gradId})`)

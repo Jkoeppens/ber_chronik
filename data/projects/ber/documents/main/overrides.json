@@ -1,0 +1,9 @@
+[
+  {
+    "segment_id": "s0026",
+    "action": "set_anchor",
+    "time_from": 1911,
+    "time_to": null,
+    "precision": "manual"
+  }
+]

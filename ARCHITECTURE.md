@@ -6,23 +6,25 @@
 
 ## Überblick
 
-Alle JS-Dateien laufen im **globalen Browser-Scope** — keine Module, kein Build-Tool. Ladereihentolge in `index.html` ist zwingend:
+Alle JS-Dateien laufen im **globalen Browser-Scope** — keine Module, kein Build-Tool. Ladereihenfolge in `index.html` ist zwingend:
 
 ```
-highlight-state.js  → deklariert globale State-Variablen
-highlight.js        → deklariert Hilfsfunktionen und Konstanten
-panel.js            → deklariert View-State und Panel-Logik
-chart.js            → deklariert drawChart
-network.js          → deklariert drawNetwork, recomputeGraph
-search.js           → Boot: lädt Daten, baut alle Strukturen, ruft drawChart
-tutorial.js         → verdrahtet Tutorial-Button
+highlight.js        → Konstanten, aliasMap, Highlight-State, setHighlight()
+panel.js            → View-State, Panel-Logik, renderParaCard(), Tooltip
+chart.js            → drawChart(), _applyChartEntityHighlight()
+utils.js            → pairKey()
+tabs.js             → Tab-State, geteilte Daten-Globals (netNodes etc.), switchTab()
+network.js          → applyNetworkState(), drawNetwork()
+search.js           → sendChat(), fulltextSearch(), renderChatAnswer()
+boot.js             → Promise.all: Daten laden, drawChart aufrufen, netNodes/netLinks befüllen
+tutorial.js         → Tutorial-Overlay, STEPS, tutorialStart()
 ```
 
 ---
 
 ## Globaler State
 
-### highlight-state.js
+### highlight.js
 | Variable | Typ | Bedeutung |
 |---|---|---|
 | `hlState` | `{mode, anchors, active, focusEntity}` | Zentraler Highlight-Zustand. `mode`: `"none"` / `"answer"` / `"single"`. `anchors`: Set von doc_anchor-Strings. `active`: einzelner doc_anchor. `focusEntity`: Entitätsname. |
@@ -32,16 +34,21 @@ tutorial.js         → verdrahtet Tutorial-Button
 | `actorsByAnchor` | `Map<anchor, Set<name>>` | doc_anchor → Akteursnamen |
 | `chartDotSelection` | D3 selection | D3-Auswahl aller Timeline-Punkte. Wird bei jedem `drawChart` neu gesetzt. |
 | `DIM` | `0.35` | Konstante: Opacity für gedimmte Elemente |
-
-### highlight.js
-| Variable | Typ | Bedeutung |
-|---|---|---|
 | `aliasMap` | `{[alias]: {normalform, typ}}` | Alias → kanonischer Name + Typ |
 | `aliasesSorted` | `string[]` | Aliase absteigend nach Länge sortiert (für Regex-Matching) |
 | `summaryMap` | `{[name]: {summary, count}}` | KI-Zusammenfassungen pro Entität |
 | `EVENT_TYPES` | `string[]` | Vollständige Liste der Ereignistypen |
 | `COLOR` | `{[type]: hex}` | Farbe pro Ereignistyp |
 | `NODE_COLOR` | `{[typ]: hex}` | Farbe pro Entitätstyp (Person/Org/Gremium/Partei) |
+
+### tabs.js
+| Variable | Typ | Bedeutung |
+|---|---|---|
+| `networkDrawn` | boolean | True nach erstem `drawNetwork`-Aufruf |
+| `netNodes` | `Node[]` | Alle Knoten (befüllt in boot.js) |
+| `netLinks` | `Link[]` | Alle Links (befüllt in boot.js) |
+| `entriesByActor` | `Map<name, Entry[]>` | Akteur → zugehörige Einträge (befüllt in boot.js) |
+| `entriesByAnchor` | `Map<anchor, Entry>` | doc_anchor → Entry-Objekt (befüllt in boot.js) |
 
 ### network.js
 | Variable | Typ | Bedeutung |
@@ -52,10 +59,6 @@ tutorial.js         → verdrahtet Tutorial-Button
 | `activeNodeTypes` | `Set<string>` | Aktuell sichtbare Entitätstypen |
 | `netLinkSelection` | D3 selection | D3-Auswahl der sichtbaren Links |
 | `_networkLayout` | object \| null | Vorberechnete Knotenpositionen (aus `layout.json`) |
-| `networkDrawn` | boolean | True nach erstem `drawNetwork`-Aufruf |
-| `netNodes` | `Node[]` | Alle Knoten (gesetzt in search.js Boot) |
-| `netLinks` | `Link[]` | Alle Links (gesetzt in search.js Boot) |
-| `entriesByActor` | `Map<name, Entry[]>` | Akteur → zugehörige Einträge |
 
 ### panel.js
 | Variable | Typ | Bedeutung |
@@ -66,6 +69,11 @@ tutorial.js         → verdrahtet Tutorial-Button
 | `activeDot` | DOM element \| null | Aktuell aktiver Timeline-Punkt |
 | `dimmedTypes` | `Set<string>` | Ausgeblendete Ereignistypen (Timeline-Legende) |
 
+### search.js
+| Variable | Typ | Bedeutung |
+|---|---|---|
+| `allEntries` | `Entry[]` | Alle geladenen Einträge (befüllt in boot.js) |
+
 ---
 
 ## State-Mutationen: wer setzt was
@@ -74,13 +82,13 @@ tutorial.js         → verdrahtet Tutorial-Button
 ```
 sendChat()           → setHighlight("answer", anchors)
 dot click            → setHighlight("answer", anchorSet, anchor, null)
-entity click         → setHighlight("single", anchors, anchor, entity)
+entity click         → setHighlight("answer", anchors, null, entity)
 goHome()             → setHighlight("none")
 goBack()             → setHighlight(snapshot.mode, ...)
 tutorial step        → setHighlight("answer", anchors, null, "Hartmut Mehdorn")
 hit-line click       → setHighlight("answer", sharedAnchors, null, null)
 ```
-`setHighlight` ruft immer synchron `_applyHighlight()` → `_applyTimelineHighlight()` + `applyNetworkState()`.
+`setHighlight` ruft immer synchron `_applyHighlight()` → `_applyTimelineHighlight()` + `applyNetworkState()` + `_applyChartEntityHighlight()`.
 
 ### `selectedEntity` — über `selectEntity()`
 ```
@@ -88,7 +96,7 @@ node click           → selectEntity(id)          (network.js)
 entity span click    → selectEntity(normalform)   (panel.js, via #panel-content click)
 tutorial action      → selectEntity(node.id)
 ```
-`selectEntity` ruft `showView("entity", ...)` und `setHighlight("single", ...)`.
+`selectEntity` ruft `_renderView("entity", ...)` und `setHighlight("answer", ...)`.
 
 ### `netFocusNode` — direkt in network.js
 ```
@@ -126,18 +134,22 @@ dot.click
   → activeDot.classList.add("active")
   → showView("timeline", year+type, renderFn)
     → _renderView() → renderFn(el)
+      → renderParaList(entries) → renderParaCard() × n
   → setHighlight("answer", anchorSet)
     → _applyHighlight()
       → _applyTimelineHighlight()   (dimmt/hebt Punkte)
       → applyNetworkState()          (Netzwerk-Overlay)
+      → _applyChartEntityHighlight() (Linien-Overlay)
 ```
 
 ### Entitäts-Span im Panel klicken
 ```
 #panel-content.click (delegiert)
+  → netFocusNode = name          ← VOR selectEntity setzen!
   → selectEntity(normalform)
-    → showView("entity", name, renderEntityView)
-    → setHighlight("single", anchors, null, name)
+    → _renderView("entity", ...)
+      → renderEntityView() → renderParaCard() × n
+    → setHighlight("answer", anchors, null, name)
       → _applyHighlight() → applyNetworkState()
 ```
 
@@ -154,12 +166,12 @@ node.click
 ### Chat/Suche absenden
 ```
 sendChat()
-  → (falls nicht chat view) showView("chat", ...)
+  → (falls nicht chat view) _renderView("chat", ...)
   → setHighlight("none")
   → fetch API stream ODER fulltextSearch()
   → renderChatAnswer()
-    → highlightEntities() auf Quell-Paragraphen
-  → setHighlight("answer", sources)
+    → renderParaCard() × n   (Quellkarten mit id="src-...")
+    → setHighlight("answer", sources)
 ```
 
 ### Filter im Netzwerk ändern
@@ -178,9 +190,23 @@ Legende / Slider
 
 ---
 
+## renderParaCard — zentrale Karten-Funktion
+
+Definiert in `panel.js`. Rendert ein einzelnes Paragraphen-Card. Wird von drei Stellen aufgerufen:
+
+| Aufrufer | `id` | `anchor` | `highlightFn` |
+|---|---|---|---|
+| `renderParaList` (Timeline/Entity-View) | — | `p.doc_anchor` | `highlightEntities` oder `highlightWithKeywords(..., focusEntity)` |
+| `renderChatAnswer` — KI-Quellkarten | `src-{anchor}` | — | `highlightEntities` |
+| `renderChatAnswer` — Volltext-Treffer | — | — | `highlightWithKeywords(..., keywords)` |
+
+`id` und `anchor` sind exklusiv: `id` erzeugt ein DOM-`id`-Attribut (für `href="#src-..."` Links aus KI-Antworten); `anchor` erzeugt `data-anchor` (für Highlight-Sync).
+
+---
+
 ## applyNetworkState — State Machine
 
-Wird direkt aus `_applyHighlight()` und aus network.js-Handlern aufgerufen. Vier exklusive Modi, geprüft in dieser Reihenfolge:
+Wird aus `_applyHighlight()` und direkt aus network.js-Handlern aufgerufen. Vier exklusive Modi, geprüft in dieser Reihenfolge:
 
 1. **Ego-Graph** (`netFocusNode !== null`) — fokussiert Nachbarn eines Knotens
 2. **Edge-Focus** (`netFocusPair !== null`) — fokussiert ein Knotenpaar und ihre Links
@@ -191,7 +217,7 @@ Wichtig: `applyNetworkState` liest `netFocusNode`, `netFocusPair`, `hlState`, `a
 
 ---
 
-## Boot-Sequenz (search.js)
+## Boot-Sequenz (boot.js)
 
 ```
 Promise.all([data.json, entities_seed.csv, entities_summary.json])
@@ -204,7 +230,7 @@ Promise.all([data.json, entities_seed.csv, entities_summary.json])
   → new ResizeObserver(drawChart)
   → baut netNodes, netLinks, entriesByActor
 ```
-`drawNetwork` wird **nicht** beim Boot aufgerufen — erst beim ersten Klick auf den Netzwerk-Tab.
+`drawNetwork` wird **nicht** beim Boot aufgerufen — erst beim ersten Klick auf den Netzwerk-Tab (in `tabs.js`).
 
 ---
 
@@ -224,7 +250,7 @@ Beim Aufruf werden bestehende `_tempPinned`-Knoten zuerst entpinnt, dann neue ge
 
 ### 2. `setHighlight` → `applyNetworkState` während Simulation läuft
 
-**Dateien:** `highlight-state.js` → `network.js`
+**Dateien:** `highlight.js` → `network.js`
 
 `setHighlight` ist synchron und ruft sofort `applyNetworkState()` auf. `applyNetworkState` mutiert D3 Selections (`.attr("opacity", ...)`, `.attr("stroke", ...)`). Die D3 Force-Simulation läuft asynchron und ruft bei jedem Tick `rerender()` auf, das ebenfalls auf dieselben Elemente schreibt (`.attr("transform", ...)`).
 
@@ -234,31 +260,172 @@ Beim Aufruf werden bestehende `_tempPinned`-Knoten zuerst entpinnt, dann neue ge
 
 ---
 
-### 3. Boot-Abhängigkeit: `netNodes`/`netLinks` in search.js gesetzt, in network.js gelesen
+### 3. Boot-Abhängigkeit: `netNodes`/`netLinks` in boot.js gesetzt, in network.js gelesen
 
-**Dateien:** `search.js` (Boot) → `network.js` (`drawNetwork`)
+**Dateien:** `boot.js` → `tabs.js` (Globals) → `network.js` (`drawNetwork`)
 
-`netNodes`, `netLinks` und `entriesByActor` sind in `network.js` als leere Globals deklariert, werden aber in `search.js`'s `Promise.all`-Boot befüllt. `drawNetwork` liest diese Variablen beim ersten Tab-Klick.
+`netNodes`, `netLinks` und `entriesByActor` sind in `tabs.js` als leere Globals deklariert, werden in `boot.js`'s `Promise.all`-Boot befüllt, und von `drawNetwork` beim ersten Tab-Klick gelesen.
 
 **Problem 1:** Wenn der Nutzer auf "Netzwerk" klickt bevor der Boot-Promise aufgelöst ist, ist `netNodes = []` und das Netzwerk zeichnet sich leer — ohne Fehlermeldung.
 
-**Problem 2:** Wenn `entities_seed.csv` nicht erreichbar ist, liefert das `.catch(() => "")` einen leeren String an `buildAliasMap`. Das Ergebnis: `aliasMap` ist leer, alle Entitäts-Highlights im Panel fehlen schweigend. Kein Error, kein Warning.
+**Problem 2:** Wenn `entities_seed.csv` nicht erreichbar ist, liefert das `.catch(() => "")` einen leeren String an `buildAliasMap`. Das Ergebnis: `aliasMap` ist leer, alle Entitäts-Highlights im Panel fehlen schweigend.
 
 **Problem 3:** `entities_summary.json` hat ebenfalls ein `.catch(() => ({}))`. Fehlt die Datei, ist `summaryMap` leer — Knoten im Netzwerk erscheinen gestrichelt (korrekt), aber im Panel erscheinen keine KI-Zusammenfassungen.
 
 ---
 
-## Dateistruktur
+---
+
+## Ingest-Pipeline
+
+### Übersicht
+
+```
+DOCX-Datei
+     │
+     ▼
+parse_document.py ─────────────────────── segments.json
+     │
+     ├─── propose_taxonomy.py ──────────── taxonomy_proposal.json
+     │
+     ▼
+detect_anchors.py ─────────────────────── anchors.json
+     │
+     ▼
+interpolate_anchors.py ─────────────────── anchors_interpolated.json
+     │
+     ├─── extract_entities_v2.py ────────── entities_proposal.json
+     │         │
+     │         ▼  (Entity-Editor + Merge)
+     │    entities_seed.json
+     │
+     ▼
+classify_segments.py ──────────────────── classified.json
+     │
+     ▼
+match_entities.py ─────────────────────── classified.json  (+actors-Feld)
+     │
+     ├─── export_preview.py ─────────────── preview.html
+     │
+     ▼
+export_exploration.py ──────────────────── exploration/data.json
+                                            exploration/entities_seed.csv
+                                            exploration/project_meta.json
+                                                   │
+                                                   ▼
+                                            viz/index.html  (Browser-App)
+```
+
+`extract_entities_v2.py` ist **nicht Teil von `ingest/run`** — wird separat über Wizard Step 6 oder CLI angestoßen.
+
+---
+
+### Pipeline-Schritte (Input → Output)
+
+| Schritt | Skript | Input | Output |
+|---------|--------|-------|--------|
+| 1 | `parse_document.py` | DOCX-Datei | `segments.json` |
+| 2 | `propose_taxonomy.py` | `segments.json` | `taxonomy_proposal.json` |
+| 3 | `detect_anchors.py` | `segments.json` | `anchors.json` |
+| 4 | `interpolate_anchors.py` | `anchors.json`, optional `overrides.json` | `anchors_interpolated.json` |
+| 5 | `classify_segments.py` | `segments.json` + Taxonomie | `classified.json` |
+| — | `extract_entities_v2.py` | `segments.json`, optional `entities_seed.json` | `entities_proposal.json` |
+| 6 | `match_entities.py` | `segments.json` + `classified.json` + Entities | `classified.json` (+actors) |
+| 7 | `export_preview.py` | `anchors_interpolated.json` + `classified.json` | `preview.html` |
+| 8 | `export_exploration.py` | alle Doc-Outputs + `config.json` | `exploration/` |
+
+Schritte 1–2 + 5–8 laufen via `ingest/run`. Schritt 2 (Taxonomy) hat einen eigenen Proposal-Step. Entity-Extraktion ist ein separater manueller Schritt.
+
+---
+
+### Dateistruktur (Projekt)
+
+```
+data/
+  raw/
+    {filename}.docx                 Hochgeladene Rohdokumente
+
+  projects/
+    projects.db                     SQLite – Projekt-Metadaten + Tokens
+
+    {project_id}/
+      config.json                   Projektebene: title, year_min/max, taxonomy, entities
+      exploration/
+        data.json                   → viz/boot.js (alle Einträge)
+        entities_seed.csv           → viz/boot.js (Alias-Tabelle für Highlighting)
+        project_meta.json           → viz/boot.js (Farben, Kategorienamen)
+
+      documents/
+        {doc_id}/
+          config.json               Dokumentebene: doc_type, original_filename, ingested_at
+          segments.json             Alle Absätze nach parse_document.py
+          taxonomy_proposal.json    LLM-Kategorienvorschlag
+          anchors.json              Segmente + erkannte Zeitanker
+          anchors_interpolated.json Segmente + interpolierte Zeitspannen + Overrides
+          overrides.json            Manuelle Korrekturen (aus preview.html heruntergeladen)
+          classified.json           Segmente + LLM-Kategorie + actors-Feld
+          entities_proposal.json    Extrahierte Entity-Kandidaten
+          entities_seed.json        Bestätigte Entities (manuell im Editor kuratiert)
+          entities_merged.json      Merge aus seed + proposal + _status-Feldern
+          entities_rejected.json    Abgelehnte Entities (dauerhaft ausgeschlossen)
+          _v2_checkpoint.json       Resume-Checkpoint für extract_entities_v2 --mode full
+
+  interim/
+    generalized/
+      project_config.json           Pointer auf aktuelles Projekt + Dokument
+```
+
+---
+
+### Entity-Pipeline (4 LLM-Schritte)
+
+`extract_entities_v2.py` orchestriert vier Schritte über `entity_llm.py`:
+
+| Schritt | Funktion | Modus |
+|---------|----------|-------|
+| 1 — Stichprobe | `_llm_sample_iteration` | immer (50 zufällige Segmente) |
+| 2 — Vollextraktion | `_llm_full_extract` | nur `--mode full` + Seed vorhanden |
+| 3 — Dedup | `_llm_dedup` | immer; alle Kandidatenpaare in einem LLM-Request |
+| 4 — Normalform | `_llm_task1_normalize` | immer; Batches à 20, Retry + Fallback |
+
+Checkpoint/Resume: Schritt 2 hat Sub-Batch-Resume (`step2_batch`/`step2_entities`). Schritte 1, 3, 4 über `_run_stage` (per-Step-Checkpoint).
+
+Merge-Priorität bei Konflikten (`SOURCE_PRIORITY`): seed > llm > classifier/embedding.
+
+---
+
+### LLM-Provider-Abstraktion
+
+`src/generalized/llm.py` — einheitliche Schnittstelle für alle Pipeline-Schritte:
+
+```python
+provider = get_provider(task=TASK_EXTRACT)   # liest LLM_PROVIDER + Modell-Override aus .env
+text = provider.complete(prompt, system="…")
+data = provider.complete_json(prompt, system="…")   # parst JSON automatisch
+```
+
+| Provider | Default-Modell | `max_concurrency` |
+|----------|----------------|-------------------|
+| `ollama` | `OLLAMA_MODEL` aus `.env` | 1 |
+| `anthropic` | `claude-haiku-4-5-20251001` | 10 |
+
+`complete_json` entfernt Code-Fences, überspringt führende Prosa, verwendet `json.JSONDecoder.raw_decode`.
+
+---
+
+## Dateistruktur (viz/)
 
 ```
 viz/
   index.html           HTML-Struktur: #left-col (header + chart/network) | #panel
   style.css            Alle Styles; kein CSS-in-JS außer tutorial.js
-  highlight-state.js   Globaler State + setHighlight() + _applyHighlight()
-  highlight.js         Konstanten, aliasMap, highlightEntities()
-  panel.js             View-Stack, Panel-Navigation, selectEntity(), Tooltip
-  chart.js             drawChart(), Timeline-Dots, _applyChartEntityHighlight()
-  network.js           drawNetwork(), recomputeGraph(), applyNetworkState()
-  search.js            Boot, sendChat(), fulltextSearch(), renderChatAnswer()
+  highlight.js         Konstanten, aliasMap, Highlight-State + setHighlight(), highlightEntities()
+  panel.js             View-Stack, Panel-Navigation, renderParaCard(), selectEntity(), Tooltip
+  chart.js             drawChart(), _applyChartEntityHighlight()
+  utils.js             pairKey()
+  tabs.js              Tab-State, geteilte Daten-Globals (netNodes/netLinks/entriesByActor), switchTab()
+  network.js           applyNetworkState(), drawNetwork(), recomputeGraph()
+  search.js            sendChat(), fulltextSearch(), renderChatAnswer()
+  boot.js              App-Initialisierung: Daten laden, Timeline + Netzwerk aufbauen
   tutorial.js          Tutorial-Overlay, STEPS, tutorialStart()
 ```

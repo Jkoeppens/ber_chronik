@@ -1,0 +1,224 @@
+{
+  "input_file": "Damakus Notizen.docx",
+  "doc_type": "Forschungsnotizen",
+  "analysis": {
+    "year_min": 1850,
+    "year_max": 1918,
+    "events": [
+      {
+        "name": "Europäisierung und Herausforderung durch al-Jazairi",
+        "year_from": 1850,
+        "year_to": 1860
+      },
+      {
+        "name": "Private Druckerpressen in Syrien und islamische Reformbewegung",
+        "year_from": 1880,
+        "year_to": 1908
+      },
+      {
+        "name": "Jungtürkenrevolution und CUP-Komitees",
+        "year_from": 1908,
+        "year_to": 1909
+      },
+      {
+        "name": "Gründung der Arab-Ottoman Brotherhood (Al-ikha al-arabi al-uthmani)",
+        "year_from": 1908,
+        "year_to": 1908
+      },
+      {
+        "name": "Gegenputsch und wachsende Paranoia des CUP",
+        "year_from": 1909,
+        "year_to": 1909
+      },
+      {
+        "name": "Strafexpedition nach Hawran und al-Karak unter Sami Pasha al-Faruqi",
+        "year_from": 1910,
+        "year_to": 1910
+      },
+      {
+        "name": "Showdown über Zionismus und türkisch-arabische Animositäten",
+        "year_from": 1911,
+        "year_to": 1911
+      },
+      {
+        "name": "Reformverhandlungen zwischen CUP und Damaszener Notablen",
+        "year_from": 1913,
+        "year_to": 1913
+      }
+    ],
+    "language": "de",
+    "organizer_headings": [
+      "Weismann",
+      "Conclusion",
+      "Commins: Islamic Reform. Politics and Social Change in Late Ottoman Syria",
+      "Hasan Kayali - Arabs and Young Turks",
+      "Philip S. Khoury - Urban Notables and Arab Nationalism",
+      "Schäbler",
+      "Matossian",
+      "Hermann",
+      "Gelvin",
+      "From Patriotic Agitation to the Advent of Mass Politics"
+    ],
+    "bibliography_keywords": [
+      "Islamische Reform",
+      "Spätosmanisches Syrien",
+      "Arabischer Nationalismus",
+      "Osmanismus",
+      "Arabismus",
+      "Islamismus",
+      "Jungtürken",
+      "CUP (Komitee für Einheit und Fortschritt)",
+      "Damaszener Notable",
+      "Arabisch-osmanische Bruderschaft",
+      "Ulama",
+      "Nahda",
+      "Dezentralisierung",
+      "Hawran",
+      "Drusen",
+      "Zionismus",
+      "Haqaiq",
+      "Sufismus",
+      "Qasimi",
+      "Abd al-Qadir al-Jazairi"
+    ]
+  },
+  "time_config": {
+    "year_min": 1850,
+    "year_max": 1918,
+    "events": [
+      {
+        "name": "Europäisierung und Herausforderung durch al-Jazairi",
+        "year_from": 1850,
+        "year_to": 1860,
+        "id": 0,
+        "color": "#6d28d9"
+      },
+      {
+        "name": "Private Druckerpressen in Syrien und islamische Reformbewegung",
+        "year_from": 1880,
+        "year_to": 1908,
+        "id": 1,
+        "color": "#2563eb"
+      },
+      {
+        "name": "Jungtürkenrevolution und CUP-Komitees",
+        "year_from": 1908,
+        "year_to": 1909,
+        "id": 2,
+        "color": "#16a34a"
+      },
+      {
+        "name": "Gründung der Arab-Ottoman Brotherhood (Al-ikha al-arabi al-uthmani)",
+        "year_from": 1908,
+        "year_to": 1908,
+        "id": 3,
+        "color": "#d97706"
+      },
+      {
+        "name": "Gegenputsch und wachsende Paranoia des CUP",
+        "year_from": 1909,
+        "year_to": 1909,
+        "id": 4,
+        "color": "#dc2626"
+      },
+      {
+        "name": "Strafexpedition nach Hawran und al-Karak unter Sami Pasha al-Faruqi",
+        "year_from": 1910,
+        "year_to": 1910,
+        "id": 5,
+        "color": "#0891b2"
+      },
+      {
+        "name": "Showdown über Zionismus und türkisch-arabische Animositäten",
+        "year_from": 1911,
+        "year_to": 1911,
+        "id": 6,
+        "color": "#7c3aed"
+      },
+      {
+        "name": "Reformverhandlungen zwischen CUP und Damaszener Notablen",
+        "year_from": 1913,
+        "year_to": 1913,
+        "id": 7,
+        "color": "#b45309"
+      }
+    ]
+  },
+  "taxonomy": [
+    {
+      "name": "SalafiBewegung",
+      "description": "Notizen zu religiösen Reformern, Salafis und islamischen Gelehrten sowie deren Verhältnis zu politischen Strömungen im spätosmanischen Syrien.",
+      "keywords": [
+        "Salafi",
+        "Muhammad Abduh",
+        "mutadayyinun"
+      ]
+    },
+    {
+      "name": "ArabismusNationalismus",
+      "description": "Inhalte zur Entstehung und Entwicklung des arabischen Nationalismus, seiner sozialen Basis und ideologischen Selbstdefinition in Damaskus.",
+      "keywords": [
+        "Arabismus",
+        "watan",
+        "Nationalismus"
+      ]
+    },
+    {
+      "name": "JungtürkenCUP",
+      "description": "Notizen zum Komitee für Einheit und Fortschritt, seiner Machtstruktur, internen Konflikten und Einfluss auf die osmanische Provinzpolitik.",
+      "keywords": [
+        "CUP",
+        "Jungtürken",
+        "Verfassung"
+      ]
+    },
+    {
+      "name": "DamaszenerNotabeln",
+      "description": "Informationen über die traditionellen Notabelnfamilien Damaskus, ihre sozialen Netzwerke und ihre Reaktionen auf Revolution und Wandel.",
+      "keywords": [
+        "Notabeln",
+        "Ulema",
+        "al-Azm"
+      ]
+    },
+    {
+      "name": "OsmanischePolitik",
+      "description": "Notizen zur osmanischen Verwaltungsstruktur, Machtverhältnissen zwischen Palast, Hoher Pforte und CUP sowie Reformbemühungen nach 1908.",
+      "keywords": [
+        "Osmanismus",
+        "Hohe Pforte",
+        "Tanzimat"
+      ]
+    },
+    {
+      "name": "VerfassungsRevolution",
+      "description": "Inhalte zur Jungtürkischen Revolution von 1908, ihrer unmittelbaren politischen Wirkung und den Auseinandersetzungen in der Zweiten Konstitutionellen Periode.",
+      "keywords": [
+        "Revolution 1908",
+        "Konterrevolution",
+        "Zweite Konstitution"
+      ]
+    },
+    {
+      "name": "SozialeAkteure",
+      "description": "Notizen zu den sozialen Gruppen und Einzelpersonen, die als neue oder alte politische Akteure in Erscheinung treten, einschließlich Militär, Bürokratie und Kaufleute.",
+      "keywords": [
+        "Militär",
+        "Bürokraten",
+        "Kaufleute"
+      ]
+    },
+    {
+      "name": "QuellenMethodik",
+      "description": "Reflexionen über Quellenlage, historiografische Perspektiven und methodische Probleme bei der Erforschung von Nationalismus und Politik dieser Epoche.",
+      "keywords": [
+        "Memoiren",
+        "Historiografie",
+        "Quellenanalyse"
+      ]
+    }
+  ],
+  "created_at": "2026-03-29T09:42:24.677Z",
+  "project": "osm_reich_9",
+  "document": "600aa8d4"
+}

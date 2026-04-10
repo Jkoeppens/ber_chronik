@@ -1,0 +1,22 @@
+{
+  "title": "Damaskus Notizen",
+  "doc_type": "buchnotizen",
+  "taxonomy": [
+    {
+      "name": "Historischer Kontext",
+      "description": "Angabe des historischen Kontexts und Zeitraums",
+      "keywords": [
+        "Ottomanisches Reich",
+        "20. Jahrhundert",
+        "Nationalismus"
+      ]
+    }
+  ],
+  "entity_types": [],
+  "color_map": {
+    "Historischer Kontext": "#3b82f6"
+  },
+  "node_color_map": {},
+  "year_min": 1516,
+  "year_max": 1954
+}

@@ -1,0 +1,365 @@
+[
+  {
+    "text": "Damaskus",
+    "typ": "Ort",
+    "normalform": "Damaskus",
+    "aliases": [
+      "damaskus",
+      "Damascus"
+    ]
+  },
+  {
+    "text": "Istanbul",
+    "typ": "Ort",
+    "normalform": "Istanbul",
+    "aliases": [
+      "istanbul",
+      "İstanbul",
+      "Istanbuler"
+    ]
+  },
+  {
+    "text": "Syrien",
+    "typ": "Ort",
+    "normalform": "Syrien",
+    "aliases": [
+      "syrien",
+      "Syria"
+    ]
+  },
+  {
+    "text": "Beirut",
+    "typ": "Ort",
+    "normalform": "Beirut",
+    "aliases": [
+      "Beirut"
+    ]
+  },
+  {
+    "text": "Ägypten",
+    "typ": "Ort",
+    "normalform": "Ägypten",
+    "aliases": [
+      "ägypten"
+    ]
+  },
+  {
+    "text": "Paris",
+    "typ": "Ort",
+    "normalform": "Paris",
+    "aliases": [
+      "paris"
+    ]
+  },
+  {
+    "text": "Kairo",
+    "typ": "Ort",
+    "normalform": "Kairo",
+    "aliases": [
+      "Kairo"
+    ]
+  },
+  {
+    "text": "Aleppo",
+    "typ": "Ort",
+    "normalform": "Aleppo",
+    "aliases": [
+      "aleppo"
+    ]
+  },
+  {
+    "text": "Tripoli",
+    "typ": "Ort",
+    "normalform": "Tripoli",
+    "aliases": [
+      "Tripoli"
+    ]
+  },
+  {
+    "text": "Algerien",
+    "typ": "Ort",
+    "normalform": "Algerien",
+    "aliases": [
+      "algerien"
+    ]
+  },
+  {
+    "text": "Europa",
+    "typ": "Ort",
+    "normalform": "Europa",
+    "aliases": [
+      "europa"
+    ]
+  },
+  {
+    "text": "Rashid Rida",
+    "typ": "Person",
+    "normalform": "Rashid Rida",
+    "aliases": [
+      "rida"
+    ]
+  },
+  {
+    "text": "Abd al-Hamid al-Zahrawi",
+    "typ": "Person",
+    "normalform": "Abd al-Hamid al-Zahrawi",
+    "aliases": [
+      "Abd al-Hamid al-Zahrawi"
+    ]
+  },
+  {
+    "text": "Kawakibi",
+    "typ": "Person",
+    "normalform": "Abd al-Rahman al-Kawakibi",
+    "aliases": [
+      "Kawakibi"
+    ]
+  },
+  {
+    "text": "Kurd Ali",
+    "typ": "Person",
+    "normalform": "Muhammad Kurd Ali",
+    "aliases": [
+      "Kurd ali",
+      "Muhammad ali"
+    ]
+  },
+  {
+    "text": "Jazairi",
+    "typ": "Person",
+    "normalform": "Jazairi",
+    "aliases": [
+      "Jazairi"
+    ]
+  },
+  {
+    "text": "Khalidi",
+    "typ": "Person",
+    "normalform": "Khalidi",
+    "aliases": [
+      "Khalidi"
+    ]
+  },
+  {
+    "text": "Qassab",
+    "typ": "Person",
+    "normalform": "Qassab",
+    "aliases": [
+      "Qassab"
+    ]
+  },
+  {
+    "text": "Nabhani",
+    "typ": "Person",
+    "normalform": "Nabhani",
+    "aliases": [
+      "Nabhani"
+    ]
+  },
+  {
+    "text": "Abdülhamid II.",
+    "typ": "Person",
+    "normalform": "Abdülhamid II.",
+    "aliases": [
+      "abdülh"
+    ]
+  },
+  {
+    "text": "Rafiq",
+    "typ": "Person",
+    "normalform": "Rafiq",
+    "aliases": [
+      "Rafiq"
+    ]
+  },
+  {
+    "text": "Shafiq",
+    "typ": "Person",
+    "normalform": "Shafiq",
+    "aliases": [
+      "Shafiq"
+    ]
+  },
+  {
+    "text": "Abid",
+    "typ": "Person",
+    "normalform": "Abid",
+    "aliases": [
+      "Abid"
+    ]
+  },
+  {
+    "text": "Al-Tunisi",
+    "typ": "Person",
+    "normalform": "Al-Tunisi",
+    "aliases": [
+      "Al tunisi"
+    ]
+  },
+  {
+    "text": "Naqib al-Ashraf",
+    "typ": "Organisation",
+    "normalform": "Naqib al-Ashraf",
+    "aliases": [
+      "Naqib al-Ashraf"
+    ]
+  },
+  {
+    "text": "Osmanisches Reich",
+    "typ": "Organisation",
+    "normalform": "Osmanisches Reich",
+    "aliases": [
+      "osm reich",
+      "Osmanische",
+      "Reich",
+      "reich"
+    ]
+  },
+  {
+    "text": "Komitee für Einheit und Fortschritt (CUP)",
+    "typ": "Organisation",
+    "normalform": "Committee of Union and Progress",
+    "aliases": [
+      "The CUP",
+      "cup",
+      "KEF",
+      "kef"
+    ]
+  },
+  {
+    "text": "Osmanisches Parlament",
+    "typ": "Organisation",
+    "normalform": "Osmanisches Parlament",
+    "aliases": [
+      "parlament"
+    ]
+  },
+  {
+    "text": "Salafiyya",
+    "typ": "Organisation",
+    "normalform": "Salafiyya",
+    "aliases": [
+      "Salafiyya",
+      "salafi"
+    ]
+  },
+  {
+    "text": "Al-Muqtabas",
+    "typ": "Werk",
+    "normalform": "Al-Muqtabas",
+    "aliases": [
+      "Muqtabas",
+      "muqtabas",
+      "Al-Muqtabas"
+    ]
+  },
+  {
+    "text": "Al-Haqaiq",
+    "typ": "Werk",
+    "normalform": "Al-Haqaiq",
+    "aliases": [
+      "haqaiq"
+    ]
+  },
+  {
+    "text": "The Dawn",
+    "typ": "Werk",
+    "normalform": "The Dawn",
+    "aliases": [
+      "Dawn"
+    ]
+  },
+  {
+    "text": "Osmanismus",
+    "typ": "Konzept",
+    "normalform": "Osmanismus",
+    "aliases": [
+      "Osmanische"
+    ]
+  },
+  {
+    "text": "Arabischer Nationalismus",
+    "typ": "Konzept",
+    "normalform": "Arabischer Nationalismus",
+    "aliases": [
+      "arabisch",
+      "arabische",
+      "arabischen",
+      "arab",
+      "Araber",
+      "watan"
+    ]
+  },
+  {
+    "text": "Jungtürken",
+    "typ": "Konzept",
+    "normalform": "Jungtürkische Bewegung",
+    "aliases": [
+      "Jungtürken",
+      "türken"
+    ]
+  },
+  {
+    "text": "Zionismus",
+    "typ": "Konzept",
+    "normalform": "Zionismus",
+    "aliases": [
+      "zionismus"
+    ]
+  },
+  {
+    "text": "Islam",
+    "typ": "Konzept",
+    "normalform": "Islam",
+    "aliases": [
+      "Islam"
+    ]
+  },
+  {
+    "text": "Ulama",
+    "typ": "Konzept",
+    "normalform": "Ulama",
+    "aliases": [
+      "Ulama"
+    ]
+  },
+  {
+    "text": "Konterrevolution",
+    "typ": "Konzept",
+    "normalform": "Konterrevolution",
+    "aliases": [
+      "konterrev"
+    ]
+  },
+  {
+    "text": "Britisches Empire",
+    "typ": "Organisation",
+    "normalform": "Britisches Empire",
+    "aliases": [
+      "briten"
+    ]
+  },
+  {
+    "text": "Erster Weltkrieg",
+    "typ": "Konzept",
+    "normalform": "Erster Weltkrieg",
+    "aliases": [
+      "WK1",
+      "krieg"
+    ]
+  },
+  {
+    "text": "Sharif von Mekka",
+    "typ": "Organisation",
+    "normalform": "Sharif von Mekka",
+    "aliases": [
+      "Sharif"
+    ]
+  },
+  {
+    "text": "",
+    "normalform": "Türkismus",
+    "typ": "Konzept",
+    "aliases": []
+  }
+]

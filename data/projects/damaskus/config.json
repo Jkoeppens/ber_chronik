@@ -1,0 +1,17 @@
+{
+  "title": "Damaskus Notizen",
+  "year_min": 1516,
+  "year_max": 1954,
+  "taxonomy": [
+    {
+      "name": "Historischer Kontext",
+      "description": "Angabe des historischen Kontexts und Zeitraums",
+      "keywords": [
+        "Ottomanisches Reich",
+        "20. Jahrhundert",
+        "Nationalismus"
+      ]
+    }
+  ],
+  "entities": []
+}

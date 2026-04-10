@@ -1,0 +1,323 @@
+[
+  {
+    "text": "damaskus",
+    "typ": "Ort",
+    "normalform": "Damaskus",
+    "aliases": [
+      "Damascus",
+      "damaskus"
+    ]
+  },
+  {
+    "text": "istanbul",
+    "typ": "Ort",
+    "normalform": "Istanbul",
+    "aliases": [
+      "istanbul",
+      "Istanbul",
+      "İstanbul",
+      "Istanbuler"
+    ]
+  },
+  {
+    "text": "syrien",
+    "typ": "Ort",
+    "normalform": "Syrien",
+    "aliases": [
+      "syrien",
+      "Syria"
+    ]
+  },
+  {
+    "text": "Beirut",
+    "typ": "Ort",
+    "normalform": "Beirut",
+    "aliases": []
+  },
+  {
+    "text": "ägypten",
+    "typ": "Ort",
+    "normalform": "Ägypten",
+    "aliases": []
+  },
+  {
+    "text": "paris",
+    "typ": "Ort",
+    "normalform": "Paris",
+    "aliases": []
+  },
+  {
+    "text": "Kairo",
+    "typ": "Ort",
+    "normalform": "Kairo",
+    "aliases": []
+  },
+  {
+    "text": "aleppo",
+    "typ": "Ort",
+    "normalform": "Aleppo",
+    "aliases": []
+  },
+  {
+    "text": "Tripoli",
+    "typ": "Ort",
+    "normalform": "Tripoli",
+    "aliases": []
+  },
+  {
+    "text": "europa",
+    "typ": "Ort",
+    "normalform": "Europa",
+    "aliases": []
+  },
+  {
+    "text": "algerien",
+    "typ": "Ort",
+    "normalform": "Algerien",
+    "aliases": []
+  },
+  {
+    "text": "rida",
+    "typ": "Person",
+    "normalform": "Rida",
+    "aliases": []
+  },
+  {
+    "text": "Jazairi",
+    "typ": "Person",
+    "normalform": "Jazairi",
+    "aliases": []
+  },
+  {
+    "text": "Muhammad",
+    "typ": "Person",
+    "normalform": "Muhammad",
+    "aliases": [
+      "Muhammad ali",
+      "Muhammad Ali"
+    ]
+  },
+  {
+    "text": "abdülh",
+    "typ": "Person",
+    "normalform": "Abdülhamid",
+    "aliases": [
+      "abdülh"
+    ]
+  },
+  {
+    "text": "Khalidi",
+    "typ": "Person",
+    "normalform": "Khalidi",
+    "aliases": []
+  },
+  {
+    "text": "Abd al-Hamid al-Zahrawi",
+    "typ": "Person",
+    "normalform": "Abd al-Hamid al-Zahrawi",
+    "aliases": []
+  },
+  {
+    "text": "Qassab",
+    "typ": "Person",
+    "normalform": "Qassab",
+    "aliases": []
+  },
+  {
+    "text": "Kawakibi",
+    "typ": "Person",
+    "normalform": "Kawakibi",
+    "aliases": []
+  },
+  {
+    "text": "Shafiq",
+    "typ": "Person",
+    "normalform": "Shafiq",
+    "aliases": []
+  },
+  {
+    "text": "Rafiq",
+    "typ": "Person",
+    "normalform": "Rafiq",
+    "aliases": []
+  },
+  {
+    "text": "Nabhani",
+    "typ": "Person",
+    "normalform": "Nabhani",
+    "aliases": []
+  },
+  {
+    "text": "Al tunisi",
+    "typ": "Person",
+    "normalform": "Al-Tunisi",
+    "aliases": [
+      "Al tunisi"
+    ]
+  },
+  {
+    "text": "Kurd ali",
+    "typ": "Person",
+    "normalform": "Kurd Ali",
+    "aliases": [
+      "Kurd ali"
+    ]
+  },
+  {
+    "text": "Naqib al-Ashraf",
+    "typ": "Person",
+    "normalform": "Naqib al-Ashraf",
+    "aliases": []
+  },
+  {
+    "text": "Abid",
+    "typ": "Person",
+    "normalform": "Abid",
+    "aliases": []
+  },
+  {
+    "text": "Osmanisches Reich",
+    "typ": "Organisation",
+    "normalform": "Osmanisches Reich",
+    "aliases": [
+      "osm reich",
+      "Reich",
+      "Osmanische"
+    ]
+  },
+  {
+    "text": "KEF",
+    "typ": "Organisation",
+    "normalform": "KEF",
+    "aliases": [
+      "KEF",
+      "kef"
+    ]
+  },
+  {
+    "text": "CUP",
+    "typ": "Organisation",
+    "normalform": "Komitee für Einheit und Fortschritt (CUP)",
+    "aliases": [
+      "The CUP",
+      "cup"
+    ]
+  },
+  {
+    "text": "Jungtürken",
+    "typ": "Organisation",
+    "normalform": "Jungtürken",
+    "aliases": [
+      "türken"
+    ]
+  },
+  {
+    "text": "Parlament",
+    "typ": "Organisation",
+    "normalform": "Osmanisches Parlament",
+    "aliases": [
+      "parlament"
+    ]
+  },
+  {
+    "text": "Salafiyya",
+    "typ": "Organisation",
+    "normalform": "Salafiyya",
+    "aliases": [
+      "salafi",
+      "Salafiyya"
+    ]
+  },
+  {
+    "text": "Briten",
+    "typ": "Organisation",
+    "normalform": "Britisches Empire",
+    "aliases": [
+      "briten"
+    ]
+  },
+  {
+    "text": "Sharif",
+    "typ": "Organisation",
+    "normalform": "Sharif von Mekka",
+    "aliases": [
+      "Sharif"
+    ]
+  },
+  {
+    "text": "Al-Muqtabas",
+    "typ": "Werk",
+    "normalform": "Al-Muqtabas",
+    "aliases": [
+      "Muqtabas",
+      "muqtabas",
+      "Al-Muqtabas"
+    ]
+  },
+  {
+    "text": "haqaiq",
+    "typ": "Werk",
+    "normalform": "Haqaiq",
+    "aliases": []
+  },
+  {
+    "text": "Dawn",
+    "typ": "Werk",
+    "normalform": "Dawn",
+    "aliases": []
+  },
+  {
+    "text": "Ulama",
+    "typ": "Konzept",
+    "normalform": "Ulama",
+    "aliases": []
+  },
+  {
+    "text": "Zionismus",
+    "typ": "Konzept",
+    "normalform": "Zionismus",
+    "aliases": [
+      "zionismus"
+    ]
+  },
+  {
+    "text": "Islam",
+    "typ": "Konzept",
+    "normalform": "Islam",
+    "aliases": []
+  },
+  {
+    "text": "Arabismus",
+    "typ": "Konzept",
+    "normalform": "Arabismus",
+    "aliases": [
+      "arab",
+      "arabisch",
+      "arabische",
+      "arabischen",
+      "Araber"
+    ]
+  },
+  {
+    "text": "watan",
+    "typ": "Konzept",
+    "normalform": "Watan (Heimat/Vaterland)",
+    "aliases": []
+  },
+  {
+    "text": "Konterrevolution",
+    "typ": "Konzept",
+    "normalform": "Konterrevolution",
+    "aliases": [
+      "konterrev"
+    ]
+  },
+  {
+    "text": "Revolution",
+    "typ": "Konzept",
+    "normalform": "Jungtürkische Revolution",
+    "aliases": [
+      "Revolution"
+    ]
+  }
+]

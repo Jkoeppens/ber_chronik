@@ -1,0 +1,445 @@
+[
+  {
+    "text": "BER",
+    "typ": "Organisation",
+    "normalform": "Flughafen Berlin Brandenburg",
+    "aliases": [
+      "BER",
+      "BBI",
+      "Flughafen BER",
+      "Berlin Brandenburg Airport"
+    ]
+  },
+  {
+    "text": "Berlin",
+    "typ": "Ort",
+    "normalform": "Berlin",
+    "aliases": [
+      "Berlins",
+      "Berliner",
+      "Berlin (Stadt)"
+    ]
+  },
+  {
+    "text": "Schönefeld",
+    "typ": "Ort",
+    "normalform": "Schönefeld",
+    "aliases": [
+      "Schönefelds",
+      "Flughafen Schönefeld"
+    ]
+  },
+  {
+    "text": "BerlZtg",
+    "typ": "Werk",
+    "normalform": "Berliner Zeitung",
+    "aliases": [
+      "BerlZtg",
+      "Berliner Zeitung"
+    ]
+  },
+  {
+    "text": "Brandenburg",
+    "typ": "Ort",
+    "normalform": "Brandenburg",
+    "aliases": [
+      "Brandenburgs",
+      "Brandenburger",
+      "brandenburgischen",
+      "brandenburgische"
+    ]
+  },
+  {
+    "text": "Bund",
+    "typ": "Organisation",
+    "normalform": "Bundesrepublik Deutschland (Bund als Anteilseigner)",
+    "aliases": [
+      "Bund"
+    ]
+  },
+  {
+    "text": "BBI",
+    "typ": "Organisation",
+    "normalform": "Flughafen Berlin Brandenburg",
+    "aliases": [
+      "BBI",
+      "BER",
+      "Berlin Brandenburg International"
+    ]
+  },
+  {
+    "text": "BBF",
+    "typ": "Organisation",
+    "normalform": "Berliner Flughafengesellschaft BBF",
+    "aliases": [
+      "BBF"
+    ]
+  },
+  {
+    "text": "Mehdorn",
+    "typ": "Person",
+    "normalform": "Hartmut Mehdorn",
+    "aliases": [
+      "Mehdorn"
+    ]
+  },
+  {
+    "text": "SPD",
+    "typ": "Organisation",
+    "normalform": "Sozialdemokratische Partei Deutschlands",
+    "aliases": [
+      "SPD"
+    ]
+  },
+  {
+    "text": "FBB",
+    "typ": "Organisation",
+    "normalform": "Flughafen Berlin Brandenburg GmbH",
+    "aliases": [
+      "FBB"
+    ]
+  },
+  {
+    "text": "Sperenberg",
+    "typ": "Ort",
+    "normalform": "Sperenberg",
+    "aliases": [
+      "Sperenberg"
+    ]
+  },
+  {
+    "text": "BerlMopo",
+    "typ": "Werk",
+    "normalform": "Berliner Morgenpost",
+    "aliases": [
+      "BerlMopo",
+      "Berliner Morgenpost"
+    ]
+  },
+  {
+    "text": "Tagesspiegel",
+    "typ": "Werk",
+    "normalform": "Der Tagesspiegel",
+    "aliases": [
+      "Tagesspiegel",
+      "Tsp"
+    ]
+  },
+  {
+    "text": "Tempelhof",
+    "typ": "Ort",
+    "normalform": "Flughafen Berlin-Tempelhof",
+    "aliases": [
+      "Tempelhof"
+    ]
+  },
+  {
+    "text": "Tegel",
+    "typ": "Ort",
+    "normalform": "Flughafen Berlin-Tegel",
+    "aliases": [
+      "Tegel",
+      "Flughafen Tegel"
+    ]
+  },
+  {
+    "text": "Klaus Wowereit",
+    "typ": "Person",
+    "normalform": "Klaus Wowereit",
+    "aliases": [
+      "Wowereit"
+    ]
+  },
+  {
+    "text": "CDU",
+    "typ": "Organisation",
+    "normalform": "Christlich Demokratische Union Deutschlands",
+    "aliases": [
+      "CDU"
+    ]
+  },
+  {
+    "text": "Berliner Zeitung",
+    "typ": "Werk",
+    "normalform": "Berliner Zeitung",
+    "aliases": [
+      "Berliner Zeitung",
+      "BerlZtg"
+    ]
+  },
+  {
+    "text": "Spiegel",
+    "typ": "Werk",
+    "normalform": "Der Spiegel",
+    "aliases": [
+      "Spiegel",
+      "Sp"
+    ]
+  },
+  {
+    "text": "Rainer Schwarz",
+    "typ": "Person",
+    "normalform": "Rainer Schwarz",
+    "aliases": [
+      "Schwarz"
+    ]
+  },
+  {
+    "text": "Lütke Daldrup",
+    "typ": "Person",
+    "normalform": "Engelbert Lütke Daldrup",
+    "aliases": [
+      "Lütke Daldrup"
+    ]
+  },
+  {
+    "text": "HB",
+    "typ": "Werk",
+    "normalform": "Handelsblatt",
+    "aliases": [
+      "HB"
+    ]
+  },
+  {
+    "text": "PPS",
+    "typ": "Organisation",
+    "normalform": "PPS (Projektsteuerung BER)",
+    "aliases": [
+      "PPS"
+    ]
+  },
+  {
+    "text": "Horst Amann",
+    "typ": "Person",
+    "normalform": "Horst Amann",
+    "aliases": [
+      "Amann"
+    ]
+  },
+  {
+    "text": "Matthias Platzeck",
+    "typ": "Person",
+    "normalform": "Matthias Platzeck",
+    "aliases": [
+      "Platzeck"
+    ]
+  },
+  {
+    "text": "Jörg Marks",
+    "typ": "Person",
+    "normalform": "Jörg Marks",
+    "aliases": [
+      "Marks"
+    ]
+  },
+  {
+    "text": "Potsdam",
+    "typ": "Ort",
+    "normalform": "Potsdam",
+    "aliases": [
+      "Potsdam"
+    ]
+  },
+  {
+    "text": "Lufthansa",
+    "typ": "Organisation",
+    "normalform": "Deutsche Lufthansa AG",
+    "aliases": [
+      "Lufthansa"
+    ]
+  },
+  {
+    "text": "Stolpe",
+    "typ": "Person",
+    "normalform": "Manfred Stolpe",
+    "aliases": [
+      "Stolpe",
+      "Manfred Stolpe"
+    ]
+  },
+  {
+    "text": "Leipzig",
+    "typ": "Ort",
+    "normalform": "Leipzig",
+    "aliases": [
+      "Leipzig"
+    ]
+  },
+  {
+    "text": "IVG",
+    "typ": "Organisation",
+    "normalform": "IVG Immobilien AG",
+    "aliases": [
+      "IVG"
+    ]
+  },
+  {
+    "text": "Michael Müller",
+    "typ": "Person",
+    "normalform": "Michael Müller",
+    "aliases": [
+      "Müller"
+    ]
+  },
+  {
+    "text": "Untersuchungsausschuss",
+    "typ": "Organisation",
+    "normalform": "Untersuchungsausschuss BER",
+    "aliases": [
+      "Untersuchungsausschuss"
+    ]
+  },
+  {
+    "text": "Eberhard Diepgen",
+    "typ": "Person",
+    "normalform": "Eberhard Diepgen",
+    "aliases": [
+      "Diepgen"
+    ]
+  },
+  {
+    "text": "Frankfurt",
+    "typ": "Ort",
+    "normalform": "Frankfurt am Main",
+    "aliases": [
+      "Frankfurt"
+    ]
+  },
+  {
+    "text": "Diepensee",
+    "typ": "Ort",
+    "normalform": "Diepensee",
+    "aliases": [
+      "Diepensee"
+    ]
+  },
+  {
+    "text": "Air Berlin",
+    "typ": "Organisation",
+    "normalform": "Air Berlin PLC & Co. Luftverkehrs KG",
+    "aliases": [
+      "Air Berlin"
+    ]
+  },
+  {
+    "text": "Manfred Körtgen",
+    "typ": "Person",
+    "normalform": "Manfred Körtgen",
+    "aliases": [
+      "Körtgen"
+    ]
+  },
+  {
+    "text": "Karsten Mühlenfeld",
+    "typ": "Person",
+    "normalform": "Karsten Mühlenfeld",
+    "aliases": [
+      "Mühlenfeld"
+    ]
+  },
+  {
+    "text": "taz",
+    "typ": "Werk",
+    "normalform": "die tageszeitung",
+    "aliases": [
+      "taz"
+    ]
+  },
+  {
+    "text": "Bundesverwaltungsgericht",
+    "typ": "Organisation",
+    "normalform": "Bundesverwaltungsgericht",
+    "aliases": [
+      "Bundesverwaltungsgericht"
+    ]
+  },
+  {
+    "text": "Deutschland",
+    "typ": "Ort",
+    "normalform": "Deutschland",
+    "aliases": [
+      "Deutschland"
+    ]
+  },
+  {
+    "text": "München",
+    "typ": "Ort",
+    "normalform": "München",
+    "aliases": [
+      "München"
+    ]
+  },
+  {
+    "text": "Hochtief",
+    "typ": "Organisation",
+    "normalform": "HOCHTIEF AG",
+    "aliases": [
+      "Hochtief"
+    ]
+  },
+  {
+    "text": "Siemens",
+    "typ": "Organisation",
+    "normalform": "Siemens AG",
+    "aliases": [
+      "Siemens"
+    ]
+  },
+  {
+    "text": "Dietmar Woidke",
+    "typ": "Person",
+    "normalform": "Dietmar Woidke",
+    "aliases": [
+      "Woidke"
+    ]
+  },
+  {
+    "text": "FBS",
+    "typ": "Organisation",
+    "normalform": "Flughafengesellschaft Berlin Schönefeld",
+    "aliases": [
+      "FBS"
+    ]
+  },
+  {
+    "text": "SZ",
+    "typ": "Werk",
+    "normalform": "Süddeutsche Zeitung",
+    "aliases": [
+      "SZ"
+    ]
+  },
+  {
+    "text": "FR",
+    "typ": "Werk",
+    "normalform": "Frankfurter Rundschau",
+    "aliases": [
+      "FR"
+    ]
+  },
+  {
+    "text": "Berliner Abgeordnetenhaus",
+    "typ": "Organisation",
+    "normalform": "Abgeordnetenhaus von Berlin",
+    "aliases": [
+      "Berliner Abgeordnetenhaus",
+      "Abgeordnetenhaus"
+    ]
+  },
+  {
+    "text": "Jüterbog",
+    "typ": "Ort",
+    "normalform": "Jüterbog",
+    "aliases": [
+      "Jüterbog"
+    ]
+  },
+  {
+    "text": "Zeit",
+    "typ": "Werk",
+    "normalform": "Die Zeit",
+    "aliases": [
+      "Zeit"
+    ]
+  }
+]

@@ -27,7 +27,9 @@ load_dotenv()
 # ── Config ────────────────────────────────────────────────────────────────────
 MODEL          = "claude-haiku-4-5-20251001"
 MAX_PARAGRAPHS = 20
-DATA_PATH      = Path(__file__).resolve().parent.parent / "viz" / "data.json"
+ROOT           = Path(__file__).resolve().parent.parent
+DATA_PATH_DEFAULT = ROOT / "viz" / "data.json"
+PROJECTS_DIR   = ROOT / "data" / "projects"
 
 client  = anthropic.Anthropic()
 limiter = Limiter(key_func=get_remote_address)
@@ -86,8 +88,16 @@ STOPWORDS = {
 }
 
 # ── Data ─────────────────────────────────────────────────────────────────────
-with open(DATA_PATH, encoding="utf-8") as _f:
-    ENTRIES: list[dict] = json.load(_f)["entries"]
+def _load_entries(project_id: str | None) -> list[dict]:
+    if project_id:
+        path = PROJECTS_DIR / project_id / "exploration" / "data.json"
+        if not path.exists():
+            # Try viz/data.json as secondary fallback for the default project
+            path = DATA_PATH_DEFAULT
+    else:
+        path = DATA_PATH_DEFAULT
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)["entries"]
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="BER Chronik Chat API", version="2.0")
@@ -104,7 +114,8 @@ app.add_middleware(
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
 class ChatRequest(BaseModel):
-    question: str
+    question:   str
+    project_id: str | None = None
 
 
 class ChatResponse(BaseModel):
@@ -164,7 +175,8 @@ def chat(req: ChatRequest, request: Request) -> ChatResponse:
     keywords = extract_keywords(question)
 
     # Step 2: OR search over all entries
-    hits = search_entries(ENTRIES, keywords)
+    entries = _load_entries(req.project_id)
+    hits = search_entries(entries, keywords)
     hits = hits[:MAX_PARAGRAPHS]
 
     if not hits:
@@ -197,7 +209,8 @@ def chat_stream(req: ChatRequest, request: Request) -> StreamingResponse:
         raise HTTPException(status_code=400, detail="question must not be empty")
 
     keywords = extract_keywords(question)
-    hits = search_entries(ENTRIES, keywords)[:MAX_PARAGRAPHS]
+    entries = _load_entries(req.project_id)
+    hits = search_entries(entries, keywords)[:MAX_PARAGRAPHS]
     sources = [e["doc_anchor"] for e in hits if e.get("doc_anchor")]
 
     if not hits:

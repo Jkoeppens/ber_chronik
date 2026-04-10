@@ -1,0 +1,329 @@
+[
+  {
+    "text": "Abdülhamid",
+    "typ": "Person",
+    "normalform": "Abdülhamid (Ottoman Sultan)",
+    "aliases": [
+      "Osman I"
+    ]
+  },
+  {
+    "text": "KEF",
+    "typ": "Organisation",
+    "normalform": "Kurdistan Freedom Party",
+    "aliases": []
+  },
+  {
+    "text": "Juden",
+    "typ": "Person|Konzept",
+    "normalform": "jüdische Bevölkerung",
+    "aliases": [
+      "Judentum"
+    ]
+  },
+  {
+    "text": "Ägypten",
+    "typ": "Ort",
+    "normalform": "Ägypten (Land)",
+    "aliases": []
+  },
+  {
+    "text": "Bulgarien",
+    "typ": "Ort",
+    "normalform": "Bulgarien (Land)",
+    "aliases": []
+  },
+  {
+    "text": "Osm Reich",
+    "typ": "Organisation|Konzept",
+    "normalform": "Osmanisches Reich",
+    "aliases": [
+      "Ottomanische Reich",
+      "Osmanischer Staat"
+    ]
+  },
+  {
+    "text": "Beirut",
+    "typ": "Ort",
+    "normalform": "Beirut (Stadt)",
+    "aliases": []
+  },
+  {
+    "text": "Parlament",
+    "typ": "Organisation",
+    "normalform": "Parlament (Ottomanisches Reich)",
+    "aliases": [
+      "Osmanisches Parlament"
+    ]
+  },
+  {
+    "text": "Paris",
+    "typ": "Ort",
+    "normalform": "Paris (Stadt)",
+    "aliases": []
+  },
+  {
+    "text": "Briten",
+    "typ": "Person|Konzept",
+    "normalform": "britische Bevölkerung",
+    "aliases": [
+      "Großbritannien"
+    ]
+  },
+  {
+    "text": "Thessaloniki",
+    "typ": "Ort",
+    "normalform": "Thessaloniki (Stadt)",
+    "aliases": []
+  },
+  {
+    "text": "Verfassung",
+    "typ": "Organisation|Konzept",
+    "normalform": "Ottomanische Verfassung",
+    "aliases": [
+      "Osmanische Verfassung"
+    ]
+  },
+  {
+    "text": "Türken",
+    "typ": "Person|Konzept",
+    "normalform": "türkische Bevölkerung",
+    "aliases": [
+      "Türkei"
+    ]
+  },
+  {
+    "text": "Griechen",
+    "typ": "Person|Konzept",
+    "normalform": "griechische Bevölkerung",
+    "aliases": [
+      "Griechenland"
+    ]
+  },
+  {
+    "text": "Bey",
+    "typ": "Person|Organisation",
+    "normalform": "Persönlicher Titel (nicht klar definiert)",
+    "aliases": [
+      "Bey, Person",
+      "Bey, Organisation"
+    ]
+  },
+  {
+    "text": "Gerücht",
+    "typ": "Konzept",
+    "normalform": "unbestimmtes Gerücht",
+    "aliases": [
+      "Gerücht, Konzept"
+    ]
+  },
+  {
+    "text": "CUP",
+    "typ": "Organisation",
+    "normalform": "Cambridge University Press",
+    "aliases": [
+      "CUP, Organisation"
+    ]
+  },
+  {
+    "text": "zentrum",
+    "typ": "Organisation",
+    "normalform": "nicht klar definiert (vielleicht ein politisches Zentrum)",
+    "aliases": [
+      "zentrum, Organisation"
+    ]
+  },
+  {
+    "text": "pasha",
+    "typ": "Person",
+    "normalform": "Titel für hohe Beamte im Osmanischen Reich",
+    "aliases": [
+      "Pasha, Person"
+    ]
+  },
+  {
+    "text": "Arabisch",
+    "typ": "Konzept",
+    "normalform": "Sprache oder Kultur der Araber",
+    "aliases": [
+      "Arabisch, Konzept"
+    ]
+  },
+  {
+    "text": "rida",
+    "typ": "Person",
+    "normalform": "nicht klar definiert (vielleicht ein historischer Personenname)",
+    "aliases": [
+      "Rida, Person"
+    ]
+  },
+  {
+    "text": "Armenians",
+    "typ": "Ort",
+    "normalform": "Volksgruppe aus Armenien",
+    "aliases": [
+      "Armeniers, Ort"
+    ]
+  },
+  {
+    "text": "armenier",
+    "typ": "Person|Konzept",
+    "normalform": "Volksgruppe oder Sprache der Armenier",
+    "aliases": [
+      "Armenier, Person",
+      "Armenier, Konzept"
+    ]
+  },
+  {
+    "text": "Tanin",
+    "typ": "Person",
+    "normalform": "nicht klar definiert (vielleicht ein historischer Personenname)",
+    "aliases": [
+      "Tanin, Person"
+    ]
+  },
+  {
+    "text": "the Revolution",
+    "typ": "Konzept",
+    "normalform": "Revolution oder politische Bewegung",
+    "aliases": [
+      "Revolution, Konzept"
+    ]
+  },
+  {
+    "text": "Syria",
+    "typ": "Ort",
+    "normalform": "Staat in der Region Nahost",
+    "aliases": [
+      "Syrien, Ort"
+    ]
+  },
+  {
+    "text": "Public",
+    "typ": "Konzept",
+    "normalform": "öffentlich oder allgemein zugänglich",
+    "aliases": [
+      "Öffentlichkeit, Konzept"
+    ]
+  },
+  {
+    "text": "Mazedonien",
+    "typ": "Ort",
+    "normalform": "Staat in Südosteuropa",
+    "aliases": [
+      "Nordmazedonien, Ort"
+    ]
+  },
+  {
+    "text": "Manastir",
+    "typ": "Organisation|Ort",
+    "normalform": "nicht klar definiert (vielleicht ein historischer Name einer Organisation oder eines Ortes)",
+    "aliases": [
+      "Manastir, Organisation",
+      "Manastir, Ort"
+    ]
+  },
+  {
+    "text": "Kosovo",
+    "typ": "Ort",
+    "normalform": "Staat in Südosteuropa",
+    "aliases": [
+      "Kosovska Mitrovica, Ort"
+    ]
+  },
+  {
+    "text": "Tallinn",
+    "typ": "Ort",
+    "normalform": "Hauptstadt Estlands",
+    "aliases": [
+      "Tallin, Ort"
+    ]
+  },
+  {
+    "text": "bosnien und herzegowina",
+    "typ": "Ort",
+    "normalform": "Staat in Südosteuropa",
+    "aliases": [
+      "Bosnien und Herzegowina, Ort"
+    ]
+  },
+  {
+    "text": "Ziya Gökalp",
+    "typ": "Person",
+    "normalform": "türkischer Philosoph und Politiker",
+    "aliases": [
+      "Ziya Gökalp, Person"
+    ]
+  },
+  {
+    "text": "adana",
+    "typ": "Ort",
+    "normalform": "Stadt in der Türkei",
+    "aliases": [
+      "Adana, Ort"
+    ]
+  },
+  {
+    "text": "Talat",
+    "typ": "Person",
+    "normalform": "Talat",
+    "aliases": [
+      "Talat"
+    ]
+  },
+  {
+    "text": "Islam",
+    "typ": "Konzept",
+    "normalform": "islamisch",
+    "aliases": [
+      "isla",
+      "Islamische"
+    ]
+  },
+  {
+    "text": "Montenegro",
+    "typ": "Ort",
+    "normalform": "Montenegro",
+    "aliases": []
+  },
+  {
+    "text": "Janina",
+    "typ": "Ort",
+    "normalform": "Janina",
+    "aliases": []
+  },
+  {
+    "text": "Russland",
+    "typ": "Organisation",
+    "normalform": "Russen",
+    "aliases": [
+      "russen"
+    ]
+  },
+  {
+    "text": "Deutschland",
+    "typ": "Ort",
+    "normalform": "deutschland",
+    "aliases": []
+  },
+  {
+    "text": "Frankreich",
+    "typ": "Ort",
+    "normalform": "frankreich",
+    "aliases": []
+  },
+  {
+    "text": "Tripoli",
+    "typ": "Ort",
+    "normalform": "tripoli",
+    "aliases": []
+  },
+  {
+    "text": "Osmanisches Reich",
+    "typ": "Organisation",
+    "normalform": "osmanische",
+    "aliases": [
+      "islamischen"
+    ]
+  }
+]
