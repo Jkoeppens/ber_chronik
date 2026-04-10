@@ -404,8 +404,17 @@ async def ingest_analyze(request: Request):
         f"[{s.get('source', '?')}]\n{s['text']}" for s in sample
     )
 
-    organizer_headings   = [s["text"] for s in segments if s.get("type") in ("heading", "source") and s.get("text")]
-    bibliography_keywords = [s["text"] for s in segments if s.get("type") == "bibliography" and s.get("text")]
+    seen_sources: dict[str, None] = {}
+    for s in segments:
+        src = s.get("source")
+        if s.get("type") == "content" and src:
+            seen_sources[src] = None
+    organizer_headings = list(seen_sources.keys())
+
+    bibliography_keywords = [
+        s["text"][:60] for s in segments
+        if s.get("type") == "bibliography" and s.get("text")
+    ][:10]
 
     # 3. LLM-Analyse (nur year_min, year_max, events, language)
     load_dotenv(ROOT / ".env")

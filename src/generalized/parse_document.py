@@ -151,10 +151,12 @@ def parse_presseartikel(path: Path) -> list[dict]:
     Keine Hierarchie, kein source, kein page.
     Reine Jahres-Überschriften (< 10 Zeichen, nur Ziffern) → type 'heading'.
     Alle anderen → type 'content'.
+    year_bucket: int aus der letzten Jahres-Überschrift, None vor der ersten.
     """
     doc = docx.Document(path)
     segments: list[dict] = []
     seg_id = 0
+    current_year: int | None = None
 
     for p in doc.paragraphs:
         text = p.text.strip()
@@ -163,16 +165,21 @@ def parse_presseartikel(path: Path) -> list[dict]:
 
         if len(text) < 10 and _YEAR_HEADING.match(text):
             typ = "heading"
+            try:
+                current_year = int(text.strip())
+            except ValueError:
+                pass
         else:
             typ = "content"
 
         seg_id += 1
         segments.append({
-            "segment_id": f"s{seg_id:04d}",
-            "type":       typ,
-            "text":       text,
-            "source":     None,
-            "page":       None,
+            "segment_id":  f"s{seg_id:04d}",
+            "type":        typ,
+            "text":        text,
+            "source":      None,
+            "page":        None,
+            "year_bucket": current_year,
         })
 
     return segments
