@@ -37,6 +37,26 @@
 #btn-back{padding:7px 18px;border-radius:4px;font-size:12px}
 #btn-next{padding:7px 18px;border-radius:4px;font-size:12px}
 
+/* ── Wide-step mode (Step 4, Step 6) ── */
+body.wide-step{height:100vh;overflow:hidden}
+body.wide-step #steps{overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column}
+body.wide-step .step.active{display:flex;flex-direction:column;height:100%;padding:0;max-width:none;margin:0}
+body.wide-step #nav{position:fixed;bottom:0;left:0;right:0;z-index:20;box-shadow:0 -1px 4px rgba(0,0,0,.06)}
+/* Step 4 toolbar */
+.step4-toolbar{padding:12px 24px;background:var(--c-surface);border-bottom:1px solid var(--c-border-ui);flex-shrink:0}
+body.wide-step .step4-toolbar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:10px 24px}
+body.wide-step .step4-toolbar .step4-title{display:none}
+body.wide-step .step4-toolbar .time-inputs{margin:0}
+body.wide-step .step4-toolbar #timeline-wrap{flex:1;min-width:180px;margin:0}
+body.wide-step .step4-toolbar #events-section{flex:1;min-width:200px}
+body.wide-step .step4-toolbar #events-section h4{display:none}
+body.wide-step .step4-toolbar #events-list{flex-direction:row;flex-wrap:wrap;margin-bottom:0;gap:4px}
+body.wide-step .step4-toolbar #events-list .ev-row{padding:3px 8px;font-size:11px}
+/* Step 4 iframe area */
+body.wide-step #preview-editor-section{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;margin:0!important;padding-bottom:52px}
+body.wide-step #preview-editor-frame{flex:1;width:100%;height:auto!important;border:none}
+body.wide-step #preview-editor-hint{padding:24px 32px}
+
 /* ── Step 1: Upload ── */
 #drop-zone{border:2px dashed #d1d5db;border-radius:8px;padding:40px 20px;text-align:center;
            cursor:pointer;transition:all .2s;background:#fafafa;margin-bottom:12px}
@@ -273,24 +293,26 @@
 
   <!-- Step 4: Time config -->
   <section id="step-4" class="step">
-    <h2>Zeitkonfiguration</h2>
-    <p class="step-desc">Zeitraum und historische Ereignisse anpassen.</p>
-    <div class="time-inputs">
-      <label>Von <input type="number" id="year-min" min="0" max="2100"></label>
-      <label>Bis <input type="number" id="year-max" min="0" max="2100"></label>
+    <div class="step4-toolbar">
+      <div class="step4-title">
+        <h2>Zeitkonfiguration</h2>
+        <p class="step-desc">Zeitraum und historische Ereignisse anpassen.</p>
+      </div>
+      <div class="time-inputs">
+        <label>Von <input type="number" id="year-min" min="0" max="2100"></label>
+        <label>Bis <input type="number" id="year-max" min="0" max="2100"></label>
+      </div>
+      <div id="timeline-wrap">
+        <div id="timeline-axis"></div>
+        <div id="timeline-labels"></div>
+      </div>
+      <div id="events-section">
+        <h4>Ereignisse</h4>
+        <div id="events-list"></div>
+        <button id="btn-add-event">+ Ereignis hinzufügen</button>
+      </div>
     </div>
-    <div id="timeline-wrap">
-      <div id="timeline-axis"></div>
-      <div id="timeline-labels"></div>
-    </div>
-    <div id="events-section">
-      <h4>Ereignisse</h4>
-      <div id="events-list"></div>
-      <button id="btn-add-event">+ Ereignis hinzufügen</button>
-    </div>
-    <div id="preview-editor-section" style="display:none;margin-top:24px">
-      <hr style="margin-bottom:16px">
-      <h4 style="margin-bottom:8px">Zeitanker</h4>
+    <div id="preview-editor-section" style="display:none">
       <p id="preview-editor-hint" style="display:none;color:#888;font-size:13px">Zeitanker können nach dem Pipeline-Run in Schritt 7 bearbeitet werden.</p>
       <iframe id="preview-editor-frame" src="" style="display:none;width:100%;height:600px;border:none"></iframe>
     </div>
@@ -431,9 +453,11 @@ function updateProgress(n) {
 const btnBack = document.getElementById('btn-back');
 const btnNext = document.getElementById('btn-next');
 
+const WIDE_STEPS = new Set([4]);
 function gotoStep(n) {
   document.querySelector('.step.active')?.classList.remove('active');
   document.getElementById(`step-${n}`).classList.add('active');
+  document.body.classList.toggle('wide-step', WIDE_STEPS.has(n));
   updateProgress(n);
   btnBack.disabled = n === 1;
   btnNext.style.display = n === TOTAL ? 'none' : '';
