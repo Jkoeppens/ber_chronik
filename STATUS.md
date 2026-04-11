@@ -93,6 +93,12 @@ Checkpoint/Resume: Schritt 2 hat Sub-Batch-Resume; alle anderen Schritte über `
 - Task-spezifische Modell-Overrides (`.env`) sind vorbereitet aber nicht aktiv — falls unterschiedliche Modelle pro Schritt gewünscht werden
 - `taxonomy/propose` übergibt kein `project`/`document` Argument an das Propose-Script — nutzt globalen State-Fallback; sollte wie alle anderen Endpoints auf Request-Parameter umgestellt werden
 - Entity-Extraktion läuft nicht automatisch in `ingest/run` — Entscheidung offen: automatisch integrieren oder manueller Schritt mit eigenem Wizard-Button (aktuell: manuell via Wizard Step 6)
+- **Schritt 3 (bestehendes Projekt): Fehler obwohl segments.json existiert** — Wizard zeigt Parse-Fehler, statt zu prüfen ob bereits geparst wurde; soll bei vorhandener segments.json direkt zu Schritt 4 springen
+- **Schritt 4: year_min/year_max nicht wiederhergestellt** — Felder zeigen immer 1800/1920 statt der gespeicherten Werte aus config.json
+- **Schritt 4: Zeitanker-iframe erscheint zu spät** — iframe soll sofort eingeblendet werden wenn preview.html bereits existiert, nicht erst nach einem Hinweistext
+- **Schritt 5: Taxonomie-Prompt erzeugt zu viele Kategorien** — LLM liefert ~20 Kategorien statt der gewünschten 6–8; Beschreibungen fehlen in der Ausgabe
+- **Schritt 6: Entity-Editor nicht eingebettet** — Editor öffnet als separate Seite statt direkt in den Wizard integriert zu sein
+- **Schritt 7: Pipeline-Buttons zusammenführen** — „Pipeline starten" und „Alles erneut ausführen" sollen ein einziger Button sein; einzelne Schritte sollen direkt anklickbar sein ohne erst die Gesamtpipeline zu starten
 
 ---
 
