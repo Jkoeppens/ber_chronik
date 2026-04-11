@@ -11,6 +11,11 @@ Promise.all([
 
   initColors(meta);
   projectMeta = meta;
+  if (meta && meta.title) {
+    const titleEl = document.getElementById("project-title-text");
+    if (titleEl) titleEl.textContent = meta.title;
+    document.title = meta.title;
+  }
   buildAliasMap(csvText);
   summaryMap = summaries;
   allEntries = entries;

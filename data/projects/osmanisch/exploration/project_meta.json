@@ -1,69 +1,59 @@
 {
-  "title": "Dokument",
+  "title": "osmanisch",
   "doc_type": "buchnotizen",
   "taxonomy": [
     {
-      "name": "Revolutionsgeschichte",
-      "description": "Dokumente zur Revolution im Osmanischen Reich",
+      "name": "Reichskrise",
+      "description": "Umfasst die allgemeinen politischen und strukturellen Verfallserscheinungen des Osmanischen Reiches gegen Ende des 19. und Anfang des 20. Jahrhunderts.",
       "keywords": [
         "Osmanisches Reich",
-        "Junge Türken",
+        "Verfall",
+        "Krise"
+      ]
+    },
+    {
+      "name": "Politische Akteure",
+      "description": "Beschreibt die verschiedenen Gruppen, Eliten und Fraktionen, die aktiv an den Machtkämpfen und politischen Veränderungen beteiligt waren.",
+      "keywords": [
+        "YoungTurks",
+        "CUP",
+        "Fraktionen"
+      ]
+    },
+    {
+      "name": "IdeologischerWandel",
+      "description": "Befasst sich mit den vorherrschenden Denkströmungen wie Nationalismus, Säkularismus und Forderungen nach Verfassungsrechten.",
+      "keywords": [
+        "Nationalismus",
+        "Konstitutionalismus",
+        "Demokratie"
+      ]
+    },
+    {
+      "name": "GesellschaftlicheSpannungen",
+      "description": "Analysiert die Konflikte zwischen verschiedenen Bevölkerungsgruppen, Ethnien und religiösen Gruppen innerhalb des Reiches.",
+      "keywords": [
+        "Ethnie",
+        "Minderheit",
+        "Spannungen"
+      ]
+    },
+    {
+      "name": "RevolutionäreEreignisse",
+      "description": "Fasst die großen Wendepunkte, Aufstände und gewaltsamen Konflikte zusammen, die das Reich durchzogen.",
+      "keywords": [
+        "Aufstände",
+        "Konflikt",
         "Revolution"
       ]
     },
     {
-      "name": "Politische Führung",
-      "description": "Führer und Parteien während der Revolution",
+      "name": "Machtstrukturen",
+      "description": "Bezieht sich auf die politischen Mechanismen und die Machtkämpfe zwischen den bestehenden und aufstrebenden Eliten.",
       "keywords": [
-        "CUP",
-        "Talat",
-        "Enver"
-      ]
-    },
-    {
-      "name": "Ekonomie und Finanzen",
-      "description": "Wirtschaftliche Situation des Osmanischen Reichs",
-      "keywords": [
-        "Ökonomische Krise",
-        "Public Debt Administration",
-        "Kapitalismus"
-      ]
-    },
-    {
-      "name": "Soziale Bewegungen",
-      "description": "Armenier, Araber und Juden während der Revolution",
-      "keywords": [
-        "Armenier",
-        "Araber",
-        "Juden",
-        "Revolutionsbeteiligung"
-      ]
-    },
-    {
-      "name": "Exil und Diaspora",
-      "description": "Politiker im Exil während der Revolution",
-      "keywords": [
-        "Ahlwardt",
-        "Ahmed Riza",
-        "Le Bon"
-      ]
-    },
-    {
-      "name": "Historischer Kontext",
-      "description": "Grundlagen und Ursachen der Revolution",
-      "keywords": [
-        "Osmanisches Reich",
-        "Junge Türken",
-        "Kolonialismus"
-      ]
-    },
-    {
-      "name": "Politische Institutionen",
-      "description": "Regierungsformen und Parteien während der Revolution",
-      "keywords": [
-        "Parlamentarismus",
-        "Reichsverfassung",
-        "CUP"
+        "Sultanat",
+        "Machtwechsel",
+        "Adel"
       ]
     }
   ],
@@ -74,18 +64,19 @@
     "Person"
   ],
   "color_map": {
-    "Revolutionsgeschichte": "#3b82f6",
-    "Politische Führung": "#f59e0b",
-    "Ekonomie und Finanzen": "#10b981",
-    "Soziale Bewegungen": "#8b5cf6",
-    "Exil und Diaspora": "#ef4444",
-    "Historischer Kontext": "#06b6d4",
-    "Politische Institutionen": "#f97316"
+    "Reichskrise": "#3b82f6",
+    "Politische Akteure": "#f59e0b",
+    "IdeologischerWandel": "#10b981",
+    "GesellschaftlicheSpannungen": "#8b5cf6",
+    "RevolutionäreEreignisse": "#ef4444",
+    "Machtstrukturen": "#06b6d4"
   },
   "node_color_map": {
     "Konzept": "#60a5fa",
     "Organisation": "#fbbf24",
     "Ort": "#34d399",
     "Person": "#c084fc"
-  }
+  },
+  "year_min": 1830,
+  "year_max": 1925
 }

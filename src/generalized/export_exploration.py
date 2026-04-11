@@ -123,8 +123,8 @@ def build_entities_csv(entities: list[dict]) -> str:
 
 # ── project_meta.json ─────────────────────────────────────────────────────────
 
-def build_meta(config: dict, taxonomy: list[dict], entities: list[dict]) -> dict:
-    title    = config.get("title") or config.get("input_file") or "Dokument"
+def build_meta(config: dict, taxonomy: list[dict], entities: list[dict], project: str | None = None) -> dict:
+    title    = config.get("title") or config.get("input_file") or project or "Dokument"
     doc_type = config.get("doc_type", "buchnotizen")
 
     ordered_cats = [c["name"] for c in taxonomy if c.get("name")]
@@ -308,7 +308,7 @@ def main() -> None:
         print(f"→ {csv_out}  ({n_rows} Alias-Zeilen)")
 
     # ── project_meta.json ──────────────────────────────────────────────────────
-    meta = build_meta(config, taxonomy, entities)
+    meta = build_meta(config, taxonomy, entities, project=args.project)
     meta_out.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"→ {meta_out}")
 
