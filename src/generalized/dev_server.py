@@ -496,6 +496,15 @@ async def ingest_save_config(request: Request):
     for field in ("title", "year_min", "year_max", "taxonomy", "entities"):
         if field in body:
             proj_cfg[field] = body[field]
+    if "time_config" in body:
+        tc = body["time_config"]
+        if isinstance(tc, dict):
+            if "year_min" in tc:
+                proj_cfg["year_min"] = tc["year_min"]
+            if "year_max" in tc:
+                proj_cfg["year_max"] = tc["year_max"]
+            if "events" in tc:
+                proj_cfg["events"] = tc["events"]
     proj_cfg_path.write_text(json.dumps(proj_cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # ── Dokumentebene: doc_type, original_filename ──────────────────────────────
@@ -578,6 +587,46 @@ async def ingest_run(request: Request):
             if "__error__" in chunk:
                 break  # non-fatal: exploration failure doesn't abort
         yield f"data: __link__:http://localhost:8765/viz/?project={project}\n\n"
+        yield "data: __done__\n\n"
+
+    return sse_response(gen())
+
+
+@app.post("/ingest/run/step")
+async def ingest_run_step(request: Request):
+    body     = await request.json()
+    step     = body.get("step", "")
+    filename = body.get("filename", "")
+    project  = body.get("project") or request.query_params.get("project") or get_current_project()
+    doc_id   = body.get("document") or request.query_params.get("document") or get_current_document() or "main"
+    if err := await _require_token(request, project): return err
+
+    input_file = RAW_DIR / filename if filename else None
+    parse_args = ["--project", project, "--document", doc_id] + ([str(input_file)] if input_file else [])
+    d_args     = ["--project", project, "--document", doc_id]
+    p_args     = ["--project", project]
+
+    _STEP_MAP = {
+        "parse_document.py":       (PARSE_SCRIPT,              parse_args),
+        "detect_anchors.py":       (DETECT_SCRIPT,             d_args),
+        "interpolate_anchors.py":  (INTERPOLATE_SCRIPT,        d_args),
+        "classify_segments.py":    (CLASSIFY_SCRIPT,           d_args),
+        "match_entities.py":       (MATCH_ENTITIES_SCRIPT,     d_args),
+        "export_preview.py":       (EXPORT_SCRIPT,             d_args),
+        "export_exploration.py":   (EXPORT_EXPLORATION_SCRIPT, p_args),
+    }
+    if step not in _STEP_MAP:
+        return JSONResponse({"ok": False, "error": f"Unbekannter Schritt: {step}"}, status_code=400)
+
+    script, args = _STEP_MAP[step]
+
+    async def gen():
+        async for chunk in run_script_sse(script, args):
+            if chunk == "data: __ok__\n\n":
+                break
+            yield chunk
+            if "__error__" in chunk:
+                break
         yield "data: __done__\n\n"
 
     return sse_response(gen())
@@ -853,6 +902,7 @@ async def get_project_endpoint(project_id: str):
         "doc_type": proj["doc_type"],
         "year_min": cfg.get("year_min"),
         "year_max": cfg.get("year_max"),
+        "events":   cfg.get("events") or [],
     })
 
 

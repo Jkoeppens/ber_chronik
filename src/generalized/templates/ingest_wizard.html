@@ -178,6 +178,9 @@
 .ps-icon{width:16px;text-align:center;flex-shrink:0}
 .ps-name{flex:1}
 .ps-status{font-size:11px;color:var(--c-text-4)}
+.ps-rerun{font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid var(--c-border);background:transparent;color:var(--c-text-3);cursor:pointer;display:none}
+.ps-rerun:hover{background:var(--c-surface-2)}
+.pipeline-steps.done .ps-rerun{display:inline-block}
 
 /* ── Existing project list ── */
 #proj-list-section{margin-top:24px;border-top:1px solid var(--c-border);padding-top:16px}
@@ -326,14 +329,17 @@
     <h2>Pipeline ausführen</h2>
     <p class="step-desc">Alle Schritte werden sequenziell ausgeführt.</p>
     <div class="pipeline-steps" id="pipeline-steps">
-      <div class="pipeline-step" data-script="parse_document.py"><span class="ps-icon">1</span><span class="ps-name">parse_document.py</span><span class="ps-status" id="ps-0">ausstehend</span></div>
-      <div class="pipeline-step" data-script="detect_anchors.py"><span class="ps-icon">2</span><span class="ps-name">detect_anchors.py</span><span class="ps-status" id="ps-1">ausstehend</span></div>
-      <div class="pipeline-step" data-script="interpolate_anchors.py"><span class="ps-icon">3</span><span class="ps-name">interpolate_anchors.py</span><span class="ps-status" id="ps-2">ausstehend</span></div>
-      <div class="pipeline-step" data-script="classify_segments.py"><span class="ps-icon">4</span><span class="ps-name">classify_segments.py</span><span class="ps-status" id="ps-3">ausstehend</span></div>
-      <div class="pipeline-step" data-script="match_entities.py"><span class="ps-icon">5</span><span class="ps-name">match_entities.py</span><span class="ps-status" id="ps-4">ausstehend</span></div>
-      <div class="pipeline-step" data-script="export_preview.py"><span class="ps-icon">6</span><span class="ps-name">export_preview.py</span><span class="ps-status" id="ps-5">ausstehend</span></div>
+      <div class="pipeline-step" data-script="parse_document.py"><span class="ps-icon">1</span><span class="ps-name">parse_document.py</span><span class="ps-status" id="ps-0">ausstehend</span><button class="ps-rerun" data-script="parse_document.py">↺ Neu</button></div>
+      <div class="pipeline-step" data-script="detect_anchors.py"><span class="ps-icon">2</span><span class="ps-name">detect_anchors.py</span><span class="ps-status" id="ps-1">ausstehend</span><button class="ps-rerun" data-script="detect_anchors.py">↺ Neu</button></div>
+      <div class="pipeline-step" data-script="interpolate_anchors.py"><span class="ps-icon">3</span><span class="ps-name">interpolate_anchors.py</span><span class="ps-status" id="ps-2">ausstehend</span><button class="ps-rerun" data-script="interpolate_anchors.py">↺ Neu</button></div>
+      <div class="pipeline-step" data-script="classify_segments.py"><span class="ps-icon">4</span><span class="ps-name">classify_segments.py</span><span class="ps-status" id="ps-3">ausstehend</span><button class="ps-rerun" data-script="classify_segments.py">↺ Neu</button></div>
+      <div class="pipeline-step" data-script="match_entities.py"><span class="ps-icon">5</span><span class="ps-name">match_entities.py</span><span class="ps-status" id="ps-4">ausstehend</span><button class="ps-rerun" data-script="match_entities.py">↺ Neu</button></div>
+      <div class="pipeline-step" data-script="export_preview.py"><span class="ps-icon">6</span><span class="ps-name">export_preview.py</span><span class="ps-status" id="ps-5">ausstehend</span><button class="ps-rerun" data-script="export_preview.py">↺ Neu</button></div>
     </div>
-    <button id="btn-run-pipeline">Pipeline starten</button>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button id="btn-run-pipeline">Pipeline starten</button>
+      <button id="btn-rerun-all" style="display:none">↺ Alles neu ausführen</button>
+    </div>
     <div id="pipeline-log"></div>
     <a id="preview-link" href="/preview" target="_blank">Zeitanker bearbeiten →</a>
   </section>
@@ -859,7 +865,7 @@ document.getElementById('tax-btn-propose').addEventListener('click', async () =>
   while (true) {
     const { done, value } = await reader.read(); if (done) break;
     buf += decoder.decode(value, { stream: true });
-    const lines = buf.split('\\n'); buf = lines.pop();
+    const lines = buf.split('\n'); buf = lines.pop();
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
       const msg = line.slice(6);
@@ -919,7 +925,7 @@ async function openExistingProject(id, title, docType) {
     state.time_config   = {
       year_min: cfg.year_min ?? 1800,
       year_max: cfg.year_max ?? 1920,
-      events:   state.time_config?.events ?? [],
+      events:   (cfg.events || []).map((e, i) => ({ ...e, id: evNextId++, color: EVENT_COLORS[i % EVENT_COLORS.length] })),
     };
     maxReachedStep = 6;
     gotoStep(6);
@@ -969,7 +975,7 @@ async function runSseTask(endpoint, logEl, onDone) {
   while (true) {
     const { done, value } = await reader.read(); if (done) break;
     buf += decoder.decode(value, { stream: true });
-    const lines = buf.split('\\n'); buf = lines.pop();
+    const lines = buf.split('\n'); buf = lines.pop();
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
       const msg = line.slice(6);
@@ -1045,77 +1051,131 @@ document.getElementById('btn-run-pipeline').addEventListener('click', async () =
   });
   const reader = res.body.getReader(), decoder = new TextDecoder(); let buf = '';
 
-  while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    buf += decoder.decode(value, { stream: true });
-    const lines = buf.split('\\n'); buf = lines.pop();
+  try {
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
 
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      const msg = line.slice(6);
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const msg = line.slice(6);
 
-      if (msg === '__done__') {
-        logEl.innerHTML += '<span class="ok">\\n✓ Pipeline abgeschlossen</span>';
-        logEl.scrollTop  = logEl.scrollHeight;
-        const previewLink = document.getElementById('preview-link');
-        previewLink.href = '/preview' + _aq();
-        previewLink.style.display = 'inline-block';
-        // Fallback: show exploration link from state.project if __link__ was not received
-        if (state.project && !logEl.parentElement.querySelector('.explo-link')) {
+        if (msg === '__done__') {
+          logEl.innerHTML += '<span class="ok">\n✓ Pipeline abgeschlossen</span>';
+          logEl.scrollTop  = logEl.scrollHeight;
+          const previewLink = document.getElementById('preview-link');
+          previewLink.href = '/preview' + _aq();
+          previewLink.style.display = 'inline-block';
+          document.getElementById('pipeline-steps').classList.add('done');
+          document.getElementById('btn-rerun-all').style.display = 'inline-block';
+          if (state.project && !logEl.parentElement.querySelector('.explo-link')) {
+            const linkEl = document.createElement('a');
+            linkEl.href = 'http://localhost:8765/viz/?project=' + encodeURIComponent(state.project);
+            linkEl.target = '_blank'; linkEl.className = 'explo-link';
+            linkEl.textContent = 'Zur Exploration →';
+            linkEl.style.cssText = 'display:inline-block;margin-top:10px;padding:6px 14px;background:#6d28d9;color:#fff;border-radius:4px;text-decoration:none;font-size:12px;font-weight:600';
+            logEl.after(linkEl);
+          }
+          return;
+        }
+        if (msg.startsWith('__link__:')) {
+          const url = msg.slice(9);
+          const existing = logEl.parentElement.querySelector('.explo-link');
+          if (existing) existing.remove();
           const linkEl = document.createElement('a');
-          linkEl.href = 'http://localhost:8765/viz/?project=' + encodeURIComponent(state.project);
-          linkEl.target = '_blank'; linkEl.className = 'explo-link';
+          linkEl.href = url; linkEl.target = '_blank'; linkEl.className = 'explo-link';
           linkEl.textContent = 'Zur Exploration →';
           linkEl.style.cssText = 'display:inline-block;margin-top:10px;padding:6px 14px;background:#6d28d9;color:#fff;border-radius:4px;text-decoration:none;font-size:12px;font-weight:600';
           logEl.after(linkEl);
+          continue;
         }
-        return;
+        if (msg.startsWith('__error__')) {
+          logEl.innerHTML += `<span class="err">\n✗ ${escHtml(msg.slice(9))}</span>`;
+          logEl.scrollTop  = logEl.scrollHeight;
+          btn.disabled = false;
+          return;
+        }
+        // Detect script start to update step indicators
+        const startMatch = msg.match(/▶ Starte (.+?)…/);
+        if (startMatch) {
+          scriptIdx = SCRIPT_NAMES.indexOf(startMatch[1]);
+          const psEl = scriptIdx >= 0 ? document.getElementById(`ps-${scriptIdx}`) : null;
+          if (psEl) psEl.textContent = '⟳ läuft…';
+        }
+        const doneMatch = msg.match(/✓ (.+?) abgeschlossen/);
+        if (doneMatch) {
+          const di = SCRIPT_NAMES.indexOf(doneMatch[1]);
+          const psEl = di >= 0 ? document.getElementById(`ps-${di}`) : null;
+          if (psEl) psEl.textContent = '✓';
+        }
+        // classify_segments progress bar
+        const totalMatch = msg.match(/Segmente gesamt:\s+(\d+)/);
+        if (totalMatch) classifyTotal = parseInt(totalMatch[1]);
+        const progMatch = msg.match(/Fortschritt:\s*(\d+)\/(\d+)/);
+        if (progMatch) {
+          const done = parseInt(progMatch[1]), total = parseInt(progMatch[2]) || classifyTotal || 1;
+          if (classifyTotal < 1) classifyTotal = total;
+          const pct = Math.round(done / total * 100);
+          const filled = Math.round(pct / 10), empty = 10 - filled;
+          const bar = '█'.repeat(filled) + '░'.repeat(empty);
+          const el = document.getElementById('ps-3');
+          if (el) el.textContent = `[${bar}] ${pct}% (${done}/${total})`;
+        }
+        logEl.textContent += (logEl.textContent ? '\n' : '') + msg;
+        logEl.scrollTop    = logEl.scrollHeight;
       }
-      if (msg.startsWith('__link__:')) {
-        const url = msg.slice(9);
-        const existing = logEl.parentElement.querySelector('.explo-link');
-        if (existing) existing.remove();
-        const linkEl = document.createElement('a');
-        linkEl.href = url; linkEl.target = '_blank'; linkEl.className = 'explo-link';
-        linkEl.textContent = 'Zur Exploration →';
-        linkEl.style.cssText = 'display:inline-block;margin-top:10px;padding:6px 14px;background:#6d28d9;color:#fff;border-radius:4px;text-decoration:none;font-size:12px;font-weight:600';
-        logEl.after(linkEl);
-        continue;
-      }
-      if (msg.startsWith('__error__')) {
-        logEl.innerHTML += `<span class="err">\\n✗ ${escHtml(msg.slice(9))}</span>`;
-        logEl.scrollTop  = logEl.scrollHeight;
-        btn.disabled = false;
-        return;
-      }
-      // Detect script start to update step indicators
-      const startMatch = msg.match(/▶ Starte (.+?)…/);
-      if (startMatch) {
-        scriptIdx = SCRIPT_NAMES.indexOf(startMatch[1]);
-        if (scriptIdx >= 0) document.getElementById(`ps-${scriptIdx}`).textContent = '⟳ läuft…';
-      }
-      const doneMatch = msg.match(/✓ (.+?) abgeschlossen/);
-      if (doneMatch) {
-        const di = SCRIPT_NAMES.indexOf(doneMatch[1]);
-        if (di >= 0) document.getElementById(`ps-${di}`).textContent = '✓';
-      }
-      // classify_segments progress bar
-      const totalMatch = msg.match(/Segmente gesamt:\s+(\d+)/);
-      if (totalMatch) classifyTotal = parseInt(totalMatch[1]);
-      const progMatch = msg.match(/Fortschritt:\s*(\d+)\/(\d+)/);
-      if (progMatch) {
-        const done = parseInt(progMatch[1]), total = parseInt(progMatch[2]) || classifyTotal || 1;
-        if (classifyTotal < 1) classifyTotal = total;
-        const pct = Math.round(done / total * 100);
-        const filled = Math.round(pct / 10), empty = 10 - filled;
-        const bar = '█'.repeat(filled) + '░'.repeat(empty);
-        const el = document.getElementById('ps-3');
-        if (el) el.textContent = `[${bar}] ${pct}% (${done}/${total})`;
-      }
-      logEl.textContent += (logEl.textContent ? '\\n' : '') + msg;
-      logEl.scrollTop    = logEl.scrollHeight;
     }
-  }
+  } catch (_) { /* stream closed by server */ }
+});
+
+// ── Step 7: Rerun single step ─────────────────────────────────────────────────
+async function runSingleStep(scriptName, statusEl) {
+  statusEl.textContent = '⟳ läuft…';
+  const logEl = document.getElementById('pipeline-log');
+  logEl.style.display = 'block';
+  logEl.textContent += (logEl.textContent ? '\n' : '') + `\n▶ Starte ${scriptName} neu…`;
+  logEl.scrollTop = logEl.scrollHeight;
+
+  let buf = '';
+  try {
+    const resp = await fetch('/ingest/run/step' + _aq(), {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ step: scriptName }),
+    });
+    const reader = resp.body.getReader(), dec = new TextDecoder();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const msg = line.slice(6);
+        if (msg === '__done__') { statusEl.textContent = '✓'; logEl.textContent += '\n✓ ' + scriptName + ' abgeschlossen'; logEl.scrollTop = logEl.scrollHeight; return; }
+        if (msg.startsWith('__error__')) { statusEl.textContent = '✗'; logEl.innerHTML += `<span class="err">\n✗ ${escHtml(msg.slice(9))}</span>`; logEl.scrollTop = logEl.scrollHeight; return; }
+        logEl.textContent += '\n' + msg; logEl.scrollTop = logEl.scrollHeight;
+      }
+    }
+  } catch (_) { /* stream closed */ }
+  statusEl.textContent = '?';
+}
+
+document.getElementById('pipeline-steps').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.ps-rerun');
+  if (!btn) return;
+  const script = btn.dataset.script;
+  const stepDiv = btn.closest('.pipeline-step');
+  const statusEl = stepDiv.querySelector('.ps-status');
+  btn.disabled = true;
+  await runSingleStep(script, statusEl);
+  btn.disabled = false;
+});
+
+document.getElementById('btn-rerun-all').addEventListener('click', () => {
+  document.getElementById('btn-run-pipeline').click();
 });
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
