@@ -680,13 +680,13 @@ async function runClassifyAfterTaxonomy() {
   const section = document.getElementById('tax-classify-section');
   const logEl   = document.getElementById('tax-classify-log');
   section.style.display = 'block';
-  logEl.textContent = '⟳ Segmente klassifizieren…';
+  logEl.textContent = '⟳ Neu klassifizieren…';
   let buf = '';
   try {
     const resp = await fetch('/ingest/run/step' + _aq(), {
       method: 'POST',
       headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ step: 'classify_segments.py' }),
+      body: JSON.stringify({ step: 'classify_segments.py', force: true }),
     });
     const reader = resp.body.getReader(), dec = new TextDecoder();
     while (true) {

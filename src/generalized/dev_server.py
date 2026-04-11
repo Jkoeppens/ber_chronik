@@ -597,20 +597,22 @@ async def ingest_run_step(request: Request):
     body     = await request.json()
     step     = body.get("step", "")
     filename = body.get("filename", "")
+    force    = body.get("force", False)
     project  = body.get("project") or request.query_params.get("project") or get_current_project()
     doc_id   = body.get("document") or request.query_params.get("document") or get_current_document() or "main"
     if err := await _require_token(request, project): return err
 
-    input_file = RAW_DIR / filename if filename else None
-    parse_args = ["--project", project, "--document", doc_id] + ([str(input_file)] if input_file else [])
-    d_args     = ["--project", project, "--document", doc_id]
-    p_args     = ["--project", project]
+    input_file    = RAW_DIR / filename if filename else None
+    parse_args    = ["--project", project, "--document", doc_id] + ([str(input_file)] if input_file else [])
+    d_args        = ["--project", project, "--document", doc_id]
+    p_args        = ["--project", project]
+    classify_args = d_args + (["--force"] if force else [])
 
     _STEP_MAP = {
         "parse_document.py":       (PARSE_SCRIPT,              parse_args),
         "detect_anchors.py":       (DETECT_SCRIPT,             d_args),
         "interpolate_anchors.py":  (INTERPOLATE_SCRIPT,        d_args),
-        "classify_segments.py":    (CLASSIFY_SCRIPT,           d_args),
+        "classify_segments.py":    (CLASSIFY_SCRIPT,           classify_args),
         "match_entities.py":       (MATCH_ENTITIES_SCRIPT,     d_args),
         "export_preview.py":       (EXPORT_SCRIPT,             d_args),
         "export_exploration.py":   (EXPORT_EXPLORATION_SCRIPT, p_args),

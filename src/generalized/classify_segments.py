@@ -117,6 +117,7 @@ async def main_async() -> None:
     ap = argparse.ArgumentParser(description="Segmente per LLM klassifizieren")
     ap.add_argument("--project",  required=True, help="Projektname (z.B. ber, damaskus)")
     ap.add_argument("--document", required=True, help="Dokument-ID (z.B. main)")
+    ap.add_argument("--force", action="store_true", help="Cache ignorieren, alle Segmente neu klassifizieren")
     args = ap.parse_args()
 
     project_dir   = ROOT / "data" / "projects" / args.project
@@ -157,9 +158,9 @@ async def main_async() -> None:
     content_segments = [s for s in segments if s.get("type") == "content"]
     categories_block = build_categories_block(taxonomy)
 
-    # ── Resume: bereits klassifizierte laden ──────────────────────────────────
+    # ── Resume: bereits klassifizierte laden (überspringen bei --force) ──────
     existing: dict[str, dict] = {}
-    if OUTPUT_PATH.exists():
+    if not args.force and OUTPUT_PATH.exists():
         for r in json.loads(OUTPUT_PATH.read_text(encoding="utf-8")):
             if r.get("category") is not None or r.get("confidence") is not None:
                 existing[r["segment_id"]] = r
