@@ -699,6 +699,16 @@ async function runClassifyAfterTaxonomy() {
           logEl.textContent += '\n✓ Klassifizierung abgeschlossen';
           logEl.scrollTop = logEl.scrollHeight;
           // Preview neu generieren
+          // Preview nur neu generieren wenn anchors_interpolated.json bereits existiert
+          try {
+            const statusRes = await fetch('/ingest/doc_status' + _aq());
+            const status = statusRes.ok ? await statusRes.json() : {};
+            if (!status.anchors) {
+              logEl.textContent += '\n— Preview wird nach Pipeline-Run verfügbar';
+              logEl.scrollTop = logEl.scrollHeight;
+              return;
+            }
+          } catch (_) { return; }
           logEl.textContent += '\n⟳ Preview generieren…';
           let buf2 = '';
           try {
@@ -719,7 +729,6 @@ async function runClassifyAfterTaxonomy() {
                 if (m2 === '__done__') {
                   logEl.textContent += '\n✓ Preview aktualisiert';
                   logEl.scrollTop = logEl.scrollHeight;
-                  // iframe in Schritt 5 neu laden
                   const frame = document.getElementById('preview-editor-frame');
                   if (frame && frame.src) { frame.src = frame.src; }
                   return;
