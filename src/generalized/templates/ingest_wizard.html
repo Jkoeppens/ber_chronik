@@ -456,6 +456,24 @@ async function onEnterStep(n) {
   if (n === 3) {
     if (state.analysis) {
       renderAnalysisResult(state.analysis);
+    } else if (state.project && state.document && state.token) {
+      // Bestehendes Projekt: prüfen ob segments.json schon existiert
+      btnNext.disabled = true;
+      try {
+        const statusRes = await fetch('/ingest/doc_status' + _aq());
+        const status = statusRes.ok ? await statusRes.json() : {};
+        if (status.segments) {
+          const spinner  = document.getElementById('analysis-spinner');
+          const statusEl = document.getElementById('analysis-status');
+          spinner.style.display = 'flex';
+          statusEl.textContent  = '✓ Dokument bereits geparst — weiter zu Schritt 4…';
+          spinner.querySelector('.spinner-ring').style.display = 'none';
+          btnNext.disabled = false;
+          setTimeout(() => gotoStep(4), 2000);
+          return;
+        }
+      } catch (_) { /* Fehler ignorieren, normaler Analyse-Lauf */ }
+      if (!analysisRan) { runAnalysis(); analysisRan = true; }
     } else {
       btnNext.disabled = true;
       if (!analysisRan) { runAnalysis(); analysisRan = true; }

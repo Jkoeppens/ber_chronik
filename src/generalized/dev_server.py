@@ -845,6 +845,20 @@ async def reject_entity(request: Request):
     return JSONResponse({"ok": True})
 
 
+@app.get("/ingest/doc_status")
+async def get_doc_status(request: Request):
+    project = request.query_params.get("project") or get_current_project()
+    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    if err := await _require_token(request, project): return err
+    doc_dir = get_doc_dir(project, doc_id)
+    return JSONResponse({
+        "segments":   (doc_dir / "segments.json").exists(),
+        "anchors":    (doc_dir / "anchors_interpolated.json").exists(),
+        "classified": (doc_dir / "classified.json").exists(),
+        "preview":    (doc_dir / "preview.html").exists(),
+    })
+
+
 @app.get("/ingest/segments/data")
 async def get_segments_data(request: Request):
     project = request.query_params.get("project") or get_current_project()
