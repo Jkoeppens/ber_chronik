@@ -305,6 +305,7 @@ body.wide-step #ent-hint{display:none!important}
       <button class="btn" id="tax-btn-add">+ Kategorie</button>
       <button class="btn btn-outline" id="tax-btn-propose">KI-Vorschlag generieren</button>
       <button class="btn btn-success" id="tax-btn-save" disabled>Speichern</button>
+      <button class="btn btn-outline" id="tax-btn-classify">Neu klassifizieren</button>
       <span id="tax-status">Lade…</span>
     </div>
     <div id="tax-log"></div>
@@ -948,6 +949,13 @@ document.getElementById('tax-btn-save').addEventListener('click', async () => {
   await saveTaxonomy();
   document.getElementById('tax-btn-save').textContent = 'Speichern';
   document.getElementById('tax-status').textContent = `${taxData.length} Kategorien gespeichert ✓`;
+});
+
+document.getElementById('tax-btn-classify').addEventListener('click', async () => {
+  const btn = document.getElementById('tax-btn-classify');
+  btn.disabled = true; btn.textContent = 'Läuft…';
+  await runClassifyAfterTaxonomy();
+  btn.disabled = false; btn.textContent = 'Neu klassifizieren';
 });
 
 document.getElementById('tax-btn-propose').addEventListener('click', async () => {
