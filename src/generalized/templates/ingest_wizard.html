@@ -56,6 +56,12 @@ body.wide-step .step4-toolbar #events-list .ev-row{padding:3px 8px;font-size:11p
 body.wide-step #preview-editor-section{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;margin:0!important;padding-bottom:52px}
 body.wide-step #preview-editor-frame{flex:1;display:block;width:100%;min-height:0;height:0;border:none}
 body.wide-step #preview-editor-hint{padding:24px 32px;flex:none}
+/* Step 6 wide mode */
+body.wide-step #ent-editor-section{display:flex!important;flex-direction:column;flex:1;min-height:0;overflow:hidden;padding-bottom:52px}
+body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:none}
+body.wide-step #ent-log{display:none!important}
+body.wide-step #ent-log-toggle{display:none!important}
+body.wide-step #ent-hint{display:none!important}
 
 /* ── Step 1: Upload ── */
 #drop-zone{border:2px dashed #d1d5db;border-radius:8px;padding:40px 20px;text-align:center;
@@ -334,16 +340,22 @@ body.wide-step #preview-editor-hint{padding:24px 32px;flex:none}
 
   <!-- Step 6: Entities -->
   <section id="step-6" class="step">
-    <h2>Entities</h2>
-    <p class="step-desc">Personen, Orte, Organisationen und Konzepte erkennen und bearbeiten.</p>
-    <div id="ent-controls">
-      <button class="btn" id="ent-btn-sample">Stichprobe (schnell)</button>
-      <button class="btn btn-outline" id="ent-btn-full" disabled title="Erst Stichprobe analysieren, im Editor bestätigen (entities_seed.json), dann vollständig extrahieren">Vollständig (gründlich)</button>
-      <a class="btn" id="ent-btn-edit" href="/ingest/entities" target="_blank" style="display:none">Entity-Editor öffnen ↗</a>
+    <div class="step4-toolbar" id="ent-toolbar">
+      <div class="step4-title">
+        <h2>Entities</h2>
+        <p class="step-desc">Personen, Orte, Organisationen und Konzepte erkennen und bearbeiten.</p>
+      </div>
+      <div id="ent-controls">
+        <button class="btn" id="ent-btn-sample">Stichprobe (schnell)</button>
+        <button class="btn btn-outline" id="ent-btn-full" disabled title="Erst Stichprobe analysieren, im Editor bestätigen (entities_seed.json), dann vollständig extrahieren">Vollständig (gründlich)</button>
+      </div>
+      <div id="ent-log" class="log-box" style="margin-top:8px"></div>
+      <div id="ent-log-toggle" class="log-toggle"></div>
+      <p id="ent-hint" style="font-size:11px;color:#888;margin-top:6px">1. Stichprobe → Editor → Bestätigen → 2. Vollständige Extraktion mit Few-Shot</p>
     </div>
-    <div id="ent-log" class="log-box" style="margin-top:8px"></div>
-    <div id="ent-log-toggle" class="log-toggle"></div>
-    <p id="ent-hint" style="font-size:11px;color:#888;margin-top:10px">1. Stichprobe → Editor → Bestätigen → 2. Vollständige Extraktion mit Few-Shot</p>
+    <div id="ent-editor-section" style="display:none;flex:1;min-height:0">
+      <iframe id="ent-editor-frame" src="" style="display:block;width:100%;height:0;flex:1;border:none;min-height:0"></iframe>
+    </div>
   </section>
 
   <!-- Step 7: Pipeline -->
@@ -453,7 +465,7 @@ function updateProgress(n) {
 const btnBack = document.getElementById('btn-back');
 const btnNext = document.getElementById('btn-next');
 
-const WIDE_STEPS = new Set([4]);
+const WIDE_STEPS = new Set([4, 6]);
 function gotoStep(n) {
   document.querySelector('.step.active')?.classList.remove('active');
   document.getElementById(`step-${n}`).classList.add('active');
@@ -987,6 +999,13 @@ async function openExistingProject(id, title, docType) {
 
 /// ── Step 6: Entities ───────────────────────────────────────────────────────────
 async function initEntities() {
+  // Iframe einbetten wenn project+token gesetzt
+  const section = document.getElementById('ent-editor-section');
+  const frame   = document.getElementById('ent-editor-frame');
+  if (state.project && state.token) {
+    section.style.display = 'flex';
+    frame.src = '/ingest/entities' + _aq();
+  }
   // Prüfe ob entities_seed.json bereits vorhanden → Full-Button aktivieren
   try {
     const res = await fetch('/ingest/entities/data' + _aq(), { headers: authHeaders() });
@@ -994,19 +1013,17 @@ async function initEntities() {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         document.getElementById('ent-btn-full').disabled = false;
-        document.getElementById('ent-btn-edit').href = '/ingest/entities' + _aq();
-        document.getElementById('ent-btn-edit').style.display = 'inline-flex';
       }
     }
   } catch (_) {}
 }
 
 function _entDone(logEl) {
-  logEl.textContent += '\\n✓ Fertig – Entity-Editor öffnen zum Bearbeiten';
-  const editBtn = document.getElementById('ent-btn-edit');
-  editBtn.href = '/ingest/entities' + _aq();
-  editBtn.style.display = 'inline-flex';
+  logEl.textContent += '\n✓ Fertig';
   document.getElementById('ent-btn-full').disabled = false;
+  // Iframe neu laden damit Ergebnisse sichtbar werden
+  const frame = document.getElementById('ent-editor-frame');
+  if (frame.src) frame.src = frame.src;
   logEl.classList.add('collapsed');
   const tog = document.getElementById('ent-log-toggle');
   tog.textContent = 'Log anzeigen ▾'; tog.style.display = 'block';
