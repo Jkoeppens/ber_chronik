@@ -297,8 +297,25 @@ body.wide-step #ent-hint{display:none!important}
     </div>
   </section>
 
-  <!-- Step 4: Time config -->
+  <!-- Step 4: Taxonomy -->
   <section id="step-4" class="step">
+    <h2>Taxonomie</h2>
+    <p class="step-desc">Kategorien für die Klassifizierung bearbeiten.</p>
+    <div id="tax-controls">
+      <button class="btn" id="tax-btn-add">+ Kategorie</button>
+      <button class="btn btn-outline" id="tax-btn-propose">KI-Vorschlag generieren</button>
+      <button class="btn btn-success" id="tax-btn-save" disabled>Speichern</button>
+      <span id="tax-status">Lade…</span>
+    </div>
+    <div id="tax-log"></div>
+    <div id="tax-grid"></div>
+    <div id="tax-classify-section" style="display:none;margin-top:16px">
+      <div id="tax-classify-log" class="log-box" style="display:block;max-height:160px"></div>
+    </div>
+  </section>
+
+  <!-- Step 5: Time config -->
+  <section id="step-5" class="step">
     <div class="step4-toolbar">
       <div class="step4-title">
         <h2>Zeitkonfiguration</h2>
@@ -322,20 +339,6 @@ body.wide-step #ent-hint{display:none!important}
       <p id="preview-editor-hint" style="display:none;color:#888;font-size:13px">Zeitanker können nach dem Pipeline-Run in Schritt 7 bearbeitet werden.</p>
       <iframe id="preview-editor-frame" src="" style="display:none;width:100%;height:600px;border:none"></iframe>
     </div>
-  </section>
-
-  <!-- Step 5: Taxonomy -->
-  <section id="step-5" class="step">
-    <h2>Taxonomie</h2>
-    <p class="step-desc">Kategorien für die Klassifizierung bearbeiten.</p>
-    <div id="tax-controls">
-      <button class="btn" id="tax-btn-add">+ Kategorie</button>
-      <button class="btn btn-outline" id="tax-btn-propose">KI-Vorschlag generieren</button>
-      <button class="btn btn-success" id="tax-btn-save" disabled>Speichern</button>
-      <span id="tax-status">Lade…</span>
-    </div>
-    <div id="tax-log"></div>
-    <div id="tax-grid"></div>
   </section>
 
   <!-- Step 6: Entities -->
@@ -423,7 +426,7 @@ let currentStep = 1;
 let maxReachedStep = 1;
 let analysisRan = false;
 const TOTAL = 7;
-const TITLES = ['Dateien hochladen','Dokumenttyp','LLM-Analyse','Zeitkonfiguration','Taxonomie','Entities','Pipeline'];
+const TITLES = ['Dateien hochladen','Dokumenttyp','LLM-Analyse','Taxonomie','Zeitkonfiguration','Entities','Pipeline'];
 const EVENT_COLORS = ['#6d28d9','#2563eb','#16a34a','#d97706','#dc2626','#0891b2','#7c3aed','#b45309'];
 let evNextId = 0;
 let taxDirty = false;
@@ -464,7 +467,7 @@ function updateProgress(n) {
 const btnBack = document.getElementById('btn-back');
 const btnNext = document.getElementById('btn-next');
 
-const WIDE_STEPS = new Set([4, 6]);
+const WIDE_STEPS = new Set([5, 6]);
 function gotoStep(n) {
   document.querySelector('.step.active')?.classList.remove('active');
   document.getElementById(`step-${n}`).classList.add('active');
@@ -478,8 +481,11 @@ function gotoStep(n) {
 
 btnBack.addEventListener('click', () => { if (currentStep > 1) gotoStep(currentStep - 1); });
 btnNext.addEventListener('click', () => {
-  if (currentStep === 5) {
-    saveTaxonomy().then(() => gotoStep(currentStep + 1));
+  if (currentStep === 4) {
+    saveTaxonomy().then(async () => {
+      await runClassifyAfterTaxonomy();
+      gotoStep(5);
+    });
   } else {
     gotoStep(currentStep + 1);
   }
@@ -514,8 +520,8 @@ async function onEnterStep(n) {
       if (!analysisRan) { runAnalysis(); analysisRan = true; }
     }
   }
-  if (n === 4) initTimeConfig();
-  if (n === 5) initTaxonomy();
+  if (n === 4) initTaxonomy();
+  if (n === 5) initTimeConfig();
   if (n === 6) initEntities();
 }
 
@@ -669,7 +675,38 @@ function renderAnalysisResult(a) {
     ? `<h4>Erkannte Ereignisse</h4>${evHtml}` : '';
 }
 
-// ── Step 4: Time config ────────────────────────────────────────────────────────
+// ── Step 4: Taxonomy → classify ────────────────────────────────────────────────
+async function runClassifyAfterTaxonomy() {
+  const section = document.getElementById('tax-classify-section');
+  const logEl   = document.getElementById('tax-classify-log');
+  section.style.display = 'block';
+  logEl.textContent = '⟳ Segmente klassifizieren…';
+  let buf = '';
+  try {
+    const resp = await fetch('/ingest/run/step' + _aq(), {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ step: 'classify_segments.py' }),
+    });
+    const reader = resp.body.getReader(), dec = new TextDecoder();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const msg = line.slice(6);
+        if (msg === '__done__') { logEl.textContent += '\n✓ Klassifizierung abgeschlossen'; logEl.scrollTop = logEl.scrollHeight; return; }
+        if (msg.startsWith('__error__')) { logEl.innerHTML += `<span style="color:#f87171">\n✗ ${msg.slice(9)}</span>`; return; }
+        logEl.textContent += (logEl.textContent ? '\n' : '') + msg;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+    }
+  } catch (_) {}
+}
+
+// ── Step 5: Time config ────────────────────────────────────────────────────────
 async function initTimeConfig() {
   const tc = state.time_config;
   document.getElementById('year-min').value = tc.year_min;

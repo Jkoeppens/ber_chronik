@@ -227,6 +227,8 @@ def main() -> None:
     taxonomy    = config.get("taxonomy") or []
     entities    = config.get("entities") or []
 
+    _taxonomy_is_fallback = not taxonomy
+
     # ── Dokumente auflisten ────────────────────────────────────────────────────
     docs_dir = project_dir / "documents"
     if not docs_dir.exists():
@@ -281,6 +283,14 @@ def main() -> None:
 
     # ── data.json ──────────────────────────────────────────────────────────────
     entries = build_entries(all_anchors, all_cls_map)
+
+    # Taxonomy-Fallback: event_type-Werte aus den Einträgen ableiten
+    if _taxonomy_is_fallback:
+        seen_types = sorted({e["event_type"] for e in entries if e.get("event_type")})
+        taxonomy = [{"name": t, "description": "", "keywords": []} for t in seen_types]
+        if taxonomy:
+            print(f"⚠ taxonomy in config.json leer — Fallback: {len(taxonomy)} event_type-Werte aus klassifizierten Segmenten")
+
     data_obj = {
         "generated": str(date.today()),
         "count":     len(entries),

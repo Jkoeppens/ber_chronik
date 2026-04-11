@@ -8,6 +8,14 @@ const PREC_COLOR = {
   manual: "#7c3aed", null: "#dc2626"
 };
 const CAT_COLORS = {{js_cat_colors}};
+const CATEGORIES = {{js_categories}};
+
+// ── URL params (passed when embedded as iframe) ────────────────────────────
+const _qp   = new URLSearchParams(location.search);
+const _proj = _qp.get('project')  || '';
+const _doc  = _qp.get('document') || '';
+const _tok  = _qp.get('token')    || '';
+
 const PREC_LABEL = {
   exact: "exact", heading: "heading", event: "event",
   interpolated: "interp.", decade: "decade",
@@ -231,6 +239,10 @@ function openEdit(segId) {
   activeEditId = segId;
   cardEl.querySelector(".btn-edit").classList.add("active");
 
+  const catOptions = CATEGORIES.map(c =>
+    `<option value="${esc(c)}"${c === seg.category ? ' selected' : ''}>${esc(c)}</option>`
+  ).join('');
+
   const form = document.createElement("div");
   form.className = "edit-form";
   form.innerHTML = `
@@ -250,6 +262,14 @@ function openEdit(segId) {
         Undatierbar
       </label>
     </div>
+    ${CATEGORIES.length ? `
+    <div class="ef-row">
+      <span class="ef-label">Kategorie</span>
+      <select id="ef-category" style="flex:1;padding:3px 7px;border:1px solid #d1d5db;border-radius:3px;font-size:12px">
+        <option value="">— keine —</option>
+        ${catOptions}
+      </select>
+    </div>` : ''}
     <div class="ef-row">
       <span class="ef-label">Notiz</span>
       <input class="ef-input-wide" id="ef-note" type="text" placeholder="Begründung…"
@@ -278,6 +298,8 @@ function openEdit(segId) {
     const fromVal   = form.querySelector("#ef-from").value;
     const toVal     = form.querySelector("#ef-to").value;
     const note      = form.querySelector("#ef-note").value.trim();
+    const catEl     = form.querySelector("#ef-category");
+    const catVal    = catEl ? catEl.value : (seg.category || "");
 
     let override;
     if (undatable) {
@@ -299,6 +321,18 @@ function openEdit(segId) {
     }
 
     overrides.set(segId, override);
+
+    // Persist category change to classified.json
+    if (catVal !== (seg.category || "")) {
+      seg.category = catVal || undefined;
+      const qs = new URLSearchParams({project: _proj, document: _doc, token: _tok}).toString();
+      fetch("/ingest/classified/update?" + qs, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({segment_id: segId, category: catVal}),
+      }).catch(() => {});
+    }
+
     updateExportBtn();
     closeActiveForm();
     refreshCard(segId);

@@ -290,6 +290,7 @@ def _build_js(
     js_quality_report: str,
     year_min: int,
     year_max: int,
+    js_categories: str = "[]",
 ) -> str:
     return _render_template(
         "preview.js",
@@ -299,6 +300,7 @@ def _build_js(
         js_quality_report=js_quality_report,
         year_min=str(year_min),
         year_max=str(year_max),
+        js_categories=js_categories,
     )
 
 
@@ -379,6 +381,8 @@ def build_html(segments: list[dict], initial_overrides: list[dict],
         ensure_ascii=False,
     )
 
+    js_categories = json.dumps(ordered_cats, ensure_ascii=False)
+
     # ── Stats bar HTML ────────────────────────────────────────────────────────
     def stat_pill(label, value, color=""):
         style = f' style="border-left:3px solid {color}"' if color else ""
@@ -432,7 +436,8 @@ def build_html(segments: list[dict], initial_overrides: list[dict],
     css  = _build_css()
     body = _build_body(stats_pills, filter_btns, source_opts, tick_labels, cat_filter_btns)
     js   = _build_js(
-        js_data, js_initial_overrides, js_cat_colors, js_quality_report, YEAR_MIN, YEAR_MAX
+        js_data, js_initial_overrides, js_cat_colors, js_quality_report,
+        YEAR_MIN, YEAR_MAX, js_categories,
     )
     return f"""<!DOCTYPE html>
 <html lang="de">

@@ -859,6 +859,33 @@ async def get_doc_status(request: Request):
     })
 
 
+@app.post("/ingest/classified/update")
+async def update_classified(request: Request):
+    body       = await request.json()
+    project    = request.query_params.get("project") or get_current_project()
+    doc_id     = request.query_params.get("document") or get_current_document() or "main"
+    if err := await _require_token(request, project): return err
+    segment_id = body.get("segment_id")
+    category   = body.get("category") or ""
+    if not segment_id:
+        return JSONResponse({"ok": False, "error": "segment_id fehlt"}, status_code=400)
+    doc_dir = get_doc_dir(project, doc_id)
+    classified_path = doc_dir / "classified.json"
+    if not classified_path.exists():
+        return JSONResponse({"ok": False, "error": "classified.json nicht gefunden"}, status_code=404)
+    rows = json.loads(classified_path.read_text(encoding="utf-8"))
+    updated = False
+    for row in rows:
+        if row.get("segment_id") == segment_id:
+            row["category"] = category
+            updated = True
+            break
+    if not updated:
+        return JSONResponse({"ok": False, "error": "segment_id nicht gefunden"}, status_code=404)
+    classified_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+    return JSONResponse({"ok": True})
+
+
 @app.get("/ingest/segments/data")
 async def get_segments_data(request: Request):
     project = request.query_params.get("project") or get_current_project()
