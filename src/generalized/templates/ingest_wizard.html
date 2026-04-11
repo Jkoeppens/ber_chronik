@@ -370,9 +370,8 @@ body.wide-step #ent-hint{display:none!important}
       <div class="pipeline-step" data-script="match_entities.py"><span class="ps-icon">5</span><span class="ps-name">match_entities.py</span><span class="ps-status" id="ps-4">ausstehend</span><button class="ps-rerun" data-script="match_entities.py">↺ Neu</button></div>
       <div class="pipeline-step" data-script="export_preview.py"><span class="ps-icon">6</span><span class="ps-name">export_preview.py</span><span class="ps-status" id="ps-5">ausstehend</span><button class="ps-rerun" data-script="export_preview.py">↺ Neu</button></div>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:8px">
+    <div style="margin-bottom:8px">
       <button id="btn-run-pipeline">Pipeline starten</button>
-      <button id="btn-rerun-all" style="display:none">↺ Alles neu ausführen</button>
     </div>
     <div id="pipeline-log"></div>
     <a id="preview-link" href="/preview" target="_blank">Zeitanker bearbeiten →</a>
@@ -987,7 +986,7 @@ async function openExistingProject(id, title, docType) {
       year_max: cfg.year_max ?? 1920,
       events:   (cfg.events || []).map((e, i) => ({ ...e, id: evNextId++, color: EVENT_COLORS[i % EVENT_COLORS.length] })),
     };
-    maxReachedStep = 6;
+    maxReachedStep = 7;
     gotoStep(6);
   } catch (e) {
     alert('Fehler beim Öffnen: ' + e.message);
@@ -1133,7 +1132,8 @@ document.getElementById('btn-run-pipeline').addEventListener('click', async () =
           previewLink.href = '/preview' + _aq();
           previewLink.style.display = 'inline-block';
           document.getElementById('pipeline-steps').classList.add('done');
-          document.getElementById('btn-rerun-all').style.display = 'inline-block';
+          btn.disabled = false;
+          btn.textContent = 'Pipeline erneut starten';
           if (state.project && !logEl.parentElement.querySelector('.explo-link')) {
             const linkEl = document.createElement('a');
             linkEl.href = 'http://localhost:8765/viz/?project=' + encodeURIComponent(state.project);
@@ -1239,9 +1239,6 @@ document.getElementById('pipeline-steps').addEventListener('click', async (e) =>
   btn.disabled = false;
 });
 
-document.getElementById('btn-rerun-all').addEventListener('click', () => {
-  document.getElementById('btn-run-pipeline').click();
-});
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
