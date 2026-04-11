@@ -695,7 +695,44 @@ async function runClassifyAfterTaxonomy() {
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
         const msg = line.slice(6);
-        if (msg === '__done__') { logEl.textContent += '\n✓ Klassifizierung abgeschlossen'; logEl.scrollTop = logEl.scrollHeight; return; }
+        if (msg === '__done__') {
+          logEl.textContent += '\n✓ Klassifizierung abgeschlossen';
+          logEl.scrollTop = logEl.scrollHeight;
+          // Preview neu generieren
+          logEl.textContent += '\n⟳ Preview generieren…';
+          let buf2 = '';
+          try {
+            const resp2 = await fetch('/ingest/run/step' + _aq(), {
+              method: 'POST',
+              headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ step: 'export_preview.py' }),
+            });
+            const reader2 = resp2.body.getReader(), dec2 = new TextDecoder();
+            while (true) {
+              const { value: v2, done: d2 } = await reader2.read();
+              if (d2) break;
+              buf2 += dec2.decode(v2, { stream: true });
+              const lines2 = buf2.split('\n'); buf2 = lines2.pop();
+              for (const l2 of lines2) {
+                if (!l2.startsWith('data: ')) continue;
+                const m2 = l2.slice(6);
+                if (m2 === '__done__') {
+                  logEl.textContent += '\n✓ Preview aktualisiert';
+                  logEl.scrollTop = logEl.scrollHeight;
+                  // iframe in Schritt 5 neu laden
+                  const frame = document.getElementById('preview-editor-frame');
+                  if (frame && frame.src) { frame.src = frame.src; }
+                  return;
+                }
+                if (m2.startsWith('__error__')) {
+                  logEl.innerHTML += `<span style="color:#f87171">\n✗ Preview-Fehler: ${m2.slice(9)}</span>`;
+                  return;
+                }
+              }
+            }
+          } catch (_) {}
+          return;
+        }
         if (msg.startsWith('__error__')) { logEl.innerHTML += `<span style="color:#f87171">\n✗ ${msg.slice(9)}</span>`; return; }
         logEl.textContent += (logEl.textContent ? '\n' : '') + msg;
         logEl.scrollTop = logEl.scrollHeight;
