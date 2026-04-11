@@ -483,10 +483,7 @@ function gotoStep(n) {
 btnBack.addEventListener('click', () => { if (currentStep > 1) gotoStep(currentStep - 1); });
 btnNext.addEventListener('click', () => {
   if (currentStep === 4) {
-    saveTaxonomy().then(async () => {
-      await runClassifyAfterTaxonomy();
-      gotoStep(5);
-    });
+    saveTaxonomy().then(() => gotoStep(5));
   } else {
     gotoStep(currentStep + 1);
   }
