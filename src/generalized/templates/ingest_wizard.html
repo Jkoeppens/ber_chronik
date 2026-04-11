@@ -647,13 +647,19 @@ async function initTimeConfig() {
   const hint    = document.getElementById('preview-editor-hint');
   if (state.document && state.token) {
     section.style.display = 'block';
-    const previewUrl = '/preview' + _aq();
-    const check = await fetch(previewUrl, { method: 'HEAD', headers: authHeaders() });
-    if (check.ok) {
-      hint.style.display  = 'none';
-      frame.style.display = 'block';
-      frame.src = previewUrl;
-    } else {
+    frame.src = '';  // Reset so iframe reloads each time step 4 is entered
+    try {
+      const statusRes = await fetch('/ingest/doc_status' + _aq());
+      const status = statusRes.ok ? await statusRes.json() : {};
+      if (status.preview) {
+        hint.style.display  = 'none';
+        frame.style.display = 'block';
+        frame.src = '/preview' + _aq();
+      } else {
+        frame.style.display = 'none';
+        hint.style.display  = 'block';
+      }
+    } catch (_) {
       frame.style.display = 'none';
       hint.style.display  = 'block';
     }
