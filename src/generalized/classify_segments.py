@@ -47,10 +47,31 @@ def build_categories_block(taxonomy: list[dict]) -> str:
     return "\n".join(f"- {cat['name']} – {cat['description']}" for cat in taxonomy)
 
 
+def normalize_category(raw: str | None, valid_names: list[str]) -> str | None:
+    """Normalisiert die LLM-Kategorie gegen die gültige Taxonomie-Liste.
+
+    1. Exakter Match → nehmen
+    2. Kein exakter Match → längsten gültigen Namen der als Substring vorkommt nehmen
+    3. Kein Substring-Match → "(unbekannt)"
+    """
+    if raw is None:
+        return None
+    # 1. Exakt
+    if raw in valid_names:
+        return raw
+    # 2. Substring — längsten Match bevorzugen (z.B. "Außenpolitik" vor "Politik")
+    raw_lower = raw.lower()
+    matches = [n for n in valid_names if n.lower() in raw_lower]
+    if matches:
+        return max(matches, key=len)
+    return "(unbekannt)"
+
+
 async def classify_one(
     provider,
     segment: dict,
     categories_block: str,
+    valid_names: list[str],
 ) -> dict:
     """Klassifiziert ein einzelnes Segment. Bei JSON-Fehler: einmal retry."""
     user_prompt = USER_TEMPLATE.format(
@@ -76,7 +97,7 @@ async def classify_one(
             parsed = json.loads(text)
             return {
                 **segment,
-                "category":   parsed.get("category"),
+                "category":   normalize_category(parsed.get("category"), valid_names),
                 "confidence": parsed.get("confidence", "low"),
             }
         except json.JSONDecodeError:
@@ -157,6 +178,7 @@ async def main_async() -> None:
 
     content_segments = [s for s in segments if s.get("type") == "content"]
     categories_block = build_categories_block(taxonomy)
+    valid_names      = [cat["name"] for cat in taxonomy]
 
     # ── Resume: bereits klassifizierte laden (überspringen bei --force) ──────
     existing: dict[str, dict] = {}
@@ -192,10 +214,10 @@ async def main_async() -> None:
                 # Sequenziell: direkt awaiten, kein gather
                 results = []
                 for seg in batch:
-                    results.append(await classify_one(provider, seg, categories_block))
+                    results.append(await classify_one(provider, seg, categories_block, valid_names))
             else:
                 results = await asyncio.gather(*[
-                    classify_one(provider, seg, categories_block)
+                    classify_one(provider, seg, categories_block, valid_names)
                     for seg in batch
                 ])
             for r in results:
