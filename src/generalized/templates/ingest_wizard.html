@@ -328,6 +328,11 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
         <div id="events-list"></div>
         <button id="btn-add-event">+ Ereignis hinzufügen</button>
       </div>
+      <div style="margin-top:12px;display:flex;align-items:center;gap:10px">
+        <button class="btn" id="btn-calc-anchors">Zeitanker berechnen</button>
+        <span id="anchor-status" style="font-size:11px;color:var(--c-text-3)"></span>
+      </div>
+      <div id="time-anchor-log" class="log-box" style="display:none;margin-top:8px;max-height:120px"></div>
     </div>
     <div id="preview-editor-section" style="display:none">
       <p id="preview-editor-hint" style="display:none;color:#888;font-size:13px">Zeitanker können nach dem Pipeline-Run in Schritt 7 bearbeitet werden.</p>
@@ -461,9 +466,14 @@ function gotoStep(n) {
 }
 
 btnBack.addEventListener('click', () => { if (currentStep > 1) gotoStep(currentStep - 1); });
-btnNext.addEventListener('click', () => {
+btnNext.addEventListener('click', async () => {
   if (currentStep === 4) {
     saveTaxonomy().then(() => gotoStep(5));
+  } else if (currentStep === 5) {
+    btnNext.disabled = true;
+    const ok = await runAnchorPipeline();
+    btnNext.disabled = false;
+    if (ok) gotoStep(6);
   } else {
     gotoStep(currentStep + 1);
   }
@@ -763,6 +773,78 @@ async function initTimeConfig() {
     section.style.display = 'none';
   }
 }
+
+async function runAnchorPipeline() {
+  const logEl    = document.getElementById('time-anchor-log');
+  const statusEl = document.getElementById('anchor-status');
+  const section  = document.getElementById('preview-editor-section');
+  const frame    = document.getElementById('preview-editor-frame');
+  const hint     = document.getElementById('preview-editor-hint');
+
+  logEl.style.display  = 'block';
+  logEl.textContent    = '';
+  statusEl.textContent = '';
+
+  const STEPS = [
+    { step: 'detect_anchors.py',      label: '⟳ Zeitanker erkennen…' },
+    { step: 'interpolate_anchors.py', label: '⟳ Interpolieren…' },
+    { step: 'export_preview.py',      label: '⟳ Preview generieren…' },
+  ];
+
+  for (const { step, label } of STEPS) {
+    logEl.textContent += (logEl.textContent ? '\n' : '') + label;
+    logEl.scrollTop = logEl.scrollHeight;
+    let buf = '', success = false;
+    try {
+      const resp = await fetch('/ingest/run/step' + _aq(), {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step }),
+      });
+      const reader = resp.body.getReader(), dec = new TextDecoder();
+      outer: while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n'); buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const msg = line.slice(6);
+          if (msg === '__done__') { success = true; break outer; }
+          if (msg.startsWith('__error__')) {
+            logEl.innerHTML += `<span style="color:#f87171">\n✗ ${msg.slice(9)}</span>`;
+            logEl.scrollTop = logEl.scrollHeight;
+            statusEl.textContent = '✗ Fehler';
+            return false;
+          }
+        }
+      }
+    } catch (_) {
+      statusEl.textContent = '✗ Verbindungsfehler';
+      return false;
+    }
+    if (!success) { statusEl.textContent = '✗ Kein Ergebnis'; return false; }
+    // Letzte Zeile mit ✓ aktualisieren
+    logEl.textContent = logEl.textContent.replace(/\n?⟳[^\n]*$/, '') +
+      (logEl.textContent ? '\n' : '') + '✓ ' + label.slice(2);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  statusEl.textContent = '✓ Fertig';
+  // iframe neu laden
+  section.style.display = 'block';
+  hint.style.display    = 'none';
+  frame.style.display   = 'block';
+  frame.src = '/preview' + _aq();
+  return true;
+}
+
+document.getElementById('btn-calc-anchors').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-calc-anchors');
+  btn.disabled = true; btn.textContent = 'Läuft…';
+  await runAnchorPipeline();
+  btn.disabled = false; btn.textContent = 'Zeitanker berechnen';
+});
 
 function saveTimeConfig() {
   if (!state.project || !state.token) return;
