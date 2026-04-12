@@ -983,6 +983,14 @@ async def delete_project_endpoint(project_id: str, request: Request):
     if project_dir.exists():
         shutil.rmtree(project_dir)
     await delete_project(project_id)
+    # project_config.json zurücksetzen wenn es auf dieses Projekt zeigt
+    if CONFIG_PATH.exists():
+        try:
+            cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+            if cfg.get("project") == project_id:
+                CONFIG_PATH.write_text("{}", encoding="utf-8")
+        except Exception:
+            pass
     return JSONResponse({"ok": True})
 
 
