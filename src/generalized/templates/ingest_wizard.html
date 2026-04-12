@@ -42,26 +42,22 @@ body.wide-step{height:100vh;overflow:hidden}
 body.wide-step #steps{overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column}
 body.wide-step .step.active{display:flex;flex-direction:column;flex:1;min-height:0;height:100%;padding:0;max-width:none;margin:0}
 body.wide-step #nav{position:fixed;bottom:0;left:0;right:0;z-index:20;box-shadow:0 -1px 4px rgba(0,0,0,.06)}
-/* Step 4 toolbar */
+/* Step 5 + 6 toolbar (non-wide) */
 .step4-toolbar{padding:12px 24px;background:var(--c-surface);border-bottom:1px solid var(--c-border-ui);flex-shrink:0}
-body.wide-step .step4-toolbar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:10px 24px}
-body.wide-step .step4-toolbar .step4-title{display:none}
-body.wide-step .step4-toolbar .time-inputs{margin:0}
-body.wide-step .step4-toolbar #timeline-wrap{flex:1;min-width:180px;margin:0}
-body.wide-step .step4-toolbar #events-section{flex:1;min-width:200px}
-body.wide-step .step4-toolbar #events-section h4{display:none}
-body.wide-step .step4-toolbar #events-list{flex-direction:row;flex-wrap:wrap;margin-bottom:0;gap:4px}
-body.wide-step .step4-toolbar #events-list .ev-row{padding:3px 8px;font-size:11px}
-/* Step 4 iframe area */
+/* Step 5 wide mode: sidebar left (controls) + right (iframe) */
+body.wide-step #step-5{flex-direction:row!important}
+body.wide-step #step-5 .step4-toolbar{flex:0 0 260px;overflow-y:auto;border-bottom:none;border-right:1px solid var(--c-border-ui);display:block;padding:16px}
+body.wide-step #step-5 .step4-toolbar .step4-title{display:none}
+body.wide-step #step-5 .step4-toolbar .time-inputs{margin-bottom:16px}
+body.wide-step #step-5 .step4-toolbar #timeline-wrap{margin-bottom:16px}
+body.wide-step #step-5 .step4-toolbar #events-section h4{font-size:11px}
+/* Step 5 iframe area */
 body.wide-step #preview-editor-section{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;margin:0!important;padding-bottom:52px}
 body.wide-step #preview-editor-frame{flex:1;display:block;width:100%;min-height:0;height:0;border:none}
 body.wide-step #preview-editor-hint{padding:24px 32px;flex:none}
 /* Step 6 wide mode */
 body.wide-step #ent-editor-section{display:flex!important;flex-direction:column;flex:1;min-height:0;overflow:hidden;padding-bottom:52px}
 body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:none}
-body.wide-step #ent-log{display:none!important}
-body.wide-step #ent-log-toggle{display:none!important}
-body.wide-step #ent-hint{display:none!important}
 
 /* ── Step 1: Upload ── */
 #drop-zone{border:2px dashed #d1d5db;border-radius:8px;padding:40px 20px;text-align:center;
@@ -344,19 +340,6 @@ body.wide-step #ent-hint{display:none!important}
 
   <!-- Step 6: Entities -->
   <section id="step-6" class="step">
-    <div class="step4-toolbar" id="ent-toolbar">
-      <div class="step4-title">
-        <h2>Entities</h2>
-        <p class="step-desc">Personen, Orte, Organisationen und Konzepte erkennen und bearbeiten.</p>
-      </div>
-      <div id="ent-controls">
-        <button class="btn" id="ent-btn-sample">Stichprobe (schnell)</button>
-        <button class="btn btn-outline" id="ent-btn-full" disabled title="Erst Stichprobe analysieren, im Editor bestätigen (entities_seed.json), dann vollständig extrahieren">Vollständig (gründlich)</button>
-      </div>
-      <div id="ent-log" class="log-box" style="margin-top:8px"></div>
-      <div id="ent-log-toggle" class="log-toggle"></div>
-      <p id="ent-hint" style="font-size:11px;color:#888;margin-top:6px">1. Stichprobe → Editor → Bestätigen → 2. Vollständige Extraktion mit Few-Shot</p>
-    </div>
     <div id="ent-editor-section" style="display:none;flex:1;min-height:0">
       <iframe id="ent-editor-frame" src="" style="display:block;width:100%;height:0;flex:1;border:none;min-height:0"></iframe>
     </div>
@@ -1093,31 +1076,6 @@ async function initEntities() {
     section.style.display = 'flex';
     frame.src = '/ingest/entities' + _aq();
   }
-  // Prüfe ob entities_seed.json bereits vorhanden → Full-Button aktivieren
-  try {
-    const res = await fetch('/ingest/entities/data' + _aq(), { headers: authHeaders() });
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        document.getElementById('ent-btn-full').disabled = false;
-      }
-    }
-  } catch (_) {}
-}
-
-function _entDone(logEl) {
-  logEl.textContent += '\n✓ Fertig';
-  document.getElementById('ent-btn-full').disabled = false;
-  // Iframe neu laden damit Ergebnisse sichtbar werden
-  const frame = document.getElementById('ent-editor-frame');
-  if (frame.src) frame.src = frame.src;
-  logEl.classList.add('collapsed');
-  const tog = document.getElementById('ent-log-toggle');
-  tog.textContent = 'Log anzeigen ▾'; tog.style.display = 'block';
-  tog.onclick = () => {
-    const open = logEl.classList.toggle('collapsed');
-    tog.textContent = open ? 'Log anzeigen ▾' : 'Log ausblenden ▴';
-  };
 }
 
 async function runSseTask(endpoint, logEl, onDone) {
@@ -1139,33 +1097,6 @@ async function runSseTask(endpoint, logEl, onDone) {
   }
 }
 
-document.getElementById('ent-btn-sample').addEventListener('click', async function() {
-  const logEl = document.getElementById('ent-log');
-  const tog = document.getElementById('ent-log-toggle');
-  logEl.classList.remove('collapsed'); logEl.style.display = 'block'; logEl.textContent = '';
-  tog.style.display = 'none';
-  this.disabled = true; this.textContent = 'Läuft…';
-  const self = this;
-  await runSseTask('/ingest/extract_entities', logEl, () => {
-    _entDone(logEl);
-    self.disabled = false; self.textContent = 'Stichprobe (schnell)';
-  });
-  self.disabled = false; self.textContent = 'Stichprobe (schnell)';
-});
-
-document.getElementById('ent-btn-full').addEventListener('click', async function() {
-  const logEl = document.getElementById('ent-log');
-  const tog = document.getElementById('ent-log-toggle');
-  logEl.classList.remove('collapsed'); logEl.style.display = 'block'; logEl.textContent = '';
-  tog.style.display = 'none';
-  this.disabled = true; this.textContent = 'Läuft…';
-  const self = this;
-  await runSseTask('/ingest/extract_entities_full', logEl, () => {
-    _entDone(logEl);
-    self.disabled = false; self.textContent = 'Vollständig (gründlich)';
-  });
-  self.disabled = false; self.textContent = 'Vollständig (gründlich)';
-});
 
 // ── Step 7: Pipeline ───────────────────────────────────────────────────────────
 document.getElementById('btn-run-pipeline').addEventListener('click', async () => {
