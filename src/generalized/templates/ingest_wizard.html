@@ -44,13 +44,9 @@ body.wide-step .step.active{display:flex;flex-direction:column;flex:1;min-height
 body.wide-step #nav{position:fixed;bottom:0;left:0;right:0;z-index:20;box-shadow:0 -1px 4px rgba(0,0,0,.06)}
 /* Step 5 + 6 toolbar (non-wide) */
 .step4-toolbar{padding:12px 24px;background:var(--c-surface);border-bottom:1px solid var(--c-border-ui);flex-shrink:0}
-/* Step 5 wide mode: sidebar left (controls) + right (iframe) */
-body.wide-step #step-5{flex-direction:row!important}
-body.wide-step #step-5 .step4-toolbar{flex:0 0 260px;overflow-y:auto;border-bottom:none;border-right:1px solid var(--c-border-ui);display:block;padding:16px}
+/* Step 5 wide mode: toolbar full-width oben, iframe darunter */
+body.wide-step #step-5 .step4-toolbar{display:block;padding:12px 24px}
 body.wide-step #step-5 .step4-toolbar .step4-title{display:none}
-body.wide-step #step-5 .step4-toolbar .time-inputs{margin-bottom:16px}
-body.wide-step #step-5 .step4-toolbar #timeline-wrap{margin-bottom:16px}
-body.wide-step #step-5 .step4-toolbar #events-section h4{font-size:11px}
 /* Step 5 iframe area */
 body.wide-step #preview-editor-section{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;margin:0!important;padding-bottom:52px}
 body.wide-step #preview-editor-frame{flex:1;display:block;width:100%;min-height:0;height:0;border:none}
@@ -868,6 +864,16 @@ function openEventEdit(id) {
     </div>`;
   row.after(form);
   activeEvForm = form;
+
+  const liveUpdate = () => {
+    const f = parseInt(form.querySelector('#ef-from').value);
+    const t = parseInt(form.querySelector('#ef-to').value);
+    if (f) ev.year_from = f;
+    if (t) ev.year_to   = t;
+    renderTimeline();
+  };
+  form.querySelector('#ef-from').addEventListener('input', liveUpdate);
+  form.querySelector('#ef-to').addEventListener('input', liveUpdate);
 
   form.querySelector('#ef-save').addEventListener('click', () => {
     ev.name      = form.querySelector('#ef-name').value;
