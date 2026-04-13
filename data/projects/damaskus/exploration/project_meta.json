@@ -1,22 +1,88 @@
 {
-  "title": "Damaskus Notizen",
+  "title": "Damaskus",
   "doc_type": "buchnotizen",
   "taxonomy": [
     {
-      "name": "Historischer Kontext",
-      "description": "Angabe des historischen Kontexts und Zeitraums",
-      "keywords": [
-        "Ottomanisches Reich",
-        "20. Jahrhundert",
-        "Nationalismus"
-      ]
+      "name": "Außenpolitik",
+      "description": "",
+      "keywords": []
+    },
+    {
+      "name": "Gesellschaftliche Gruppen",
+      "description": "",
+      "keywords": []
+    },
+    {
+      "name": "Personennetzwerke",
+      "description": "",
+      "keywords": []
+    },
+    {
+      "name": "Politik",
+      "description": "",
+      "keywords": []
+    },
+    {
+      "name": "Politik - Politische Akteure",
+      "description": "",
+      "keywords": []
+    },
+    {
+      "name": "Politik - Politisches System",
+      "description": "",
+      "keywords": []
+    },
+    {
+      "name": "Politik – Politische Akteure",
+      "description": "",
+      "keywords": []
+    },
+    {
+      "name": "Politik – Politisches System",
+      "description": "",
+      "keywords": []
+    },
+    {
+      "name": "Politik – Politisches System, Politische Akteure",
+      "description": "",
+      "keywords": []
+    },
+    {
+      "name": "Politik – Politisches System, Politische Akteure, Bürokratie und Verwaltung",
+      "description": "",
+      "keywords": []
+    },
+    {
+      "name": "Presse und Öffentlichkeit",
+      "description": "",
+      "keywords": []
     }
   ],
-  "entity_types": [],
+  "entity_types": [
+    "Konzept",
+    "Organisation",
+    "Ort",
+    "Person"
+  ],
   "color_map": {
-    "Historischer Kontext": "#3b82f6"
+    "Außenpolitik": "#3b82f6",
+    "Gesellschaftliche Gruppen": "#f59e0b",
+    "Personennetzwerke": "#10b981",
+    "Politik": "#8b5cf6",
+    "Politik - Politische Akteure": "#ef4444",
+    "Politik - Politisches System": "#06b6d4",
+    "Politik – Politische Akteure": "#f97316",
+    "Politik – Politisches System": "#6366f1",
+    "Politik – Politisches System, Politische Akteure": "#14b8a6",
+    "Politik – Politisches System, Politische Akteure, Bürokratie und Verwaltung": "#a855f7",
+    "Presse und Öffentlichkeit": "#3b82f6"
   },
-  "node_color_map": {},
-  "year_min": 1516,
-  "year_max": 1954
+  "node_color_map": {
+    "Konzept": "#60a5fa",
+    "Organisation": "#fbbf24",
+    "Ort": "#34d399",
+    "Person": "#c084fc"
+  },
+  "year_min": 1895,
+  "year_max": 1918
 }

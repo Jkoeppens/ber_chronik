@@ -173,7 +173,8 @@ function drawNetwork(nodes, links) {
     nodes.forEach(d => {
       const p = posMap.get(d.id);
       if (p) { d.x = p.x * sx; d.y = p.y * sy; }
-      else   { d.x = W / 2;    d.y = H / 2;    }
+      else   { d.x = W / 2 + (Math.random() - 0.5) * W * 0.8;
+               d.y = H / 2 + (Math.random() - 0.5) * H * 0.8; }
     });
   } else {
     nodes.forEach(d => {
@@ -452,7 +453,8 @@ function drawNetwork(nodes, links) {
   const nodeG = g.append("g");
   const node  = nodeG
     .selectAll("g").data(nodes).join("g")
-    .attr("cursor", "pointer")
+    .attr("cursor",         "pointer")
+    .attr("pointer-events", "all")   // g itself receives clicks (circle has pointer-events:none)
     .call(d3.drag()
       .on("start", (e, d) => { if (!e.active) sim.alpha(0.1).restart(); d.fx = d.x; d.fy = d.y; })
       .on("drag",  (e, d) => { d.fx = e.x; d.fy = e.y; })
@@ -467,7 +469,8 @@ function drawNetwork(nodes, links) {
     .attr("fill",             d => NODE_COLOR[d.typ] || "#bbb")
     .attr("stroke",           "#F7F5F0")
     .attr("stroke-width",     2)
-    .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
+    .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3")
+    .attr("pointer-events",   "none");  // clicks pass through to parent <g>
 
   node.append("text")
     .attr("class",       "net-label")
@@ -516,6 +519,58 @@ function drawNetwork(nodes, links) {
       applyNetworkState();
       // Smoothly pan so the focused node is centred in the viewport
       svg.transition().duration(300).call(zoomBehavior.translateTo, d.x, d.y);
+    });
+
+  // ── Invisible hit areas — appended AFTER nodeG so they render on top ──────────
+  // Hit lines are trimmed to node radii in rerender(), so they don't cover circles.
+  hitG   = g.append("g");
+  hitSel = hitG
+    .selectAll("line").data(hitLinks).join("line")
+    .attr("stroke",         "transparent")
+    .attr("stroke-width",   14)
+    .attr("fill",           "none")
+    .attr("cursor",         "pointer")
+    .on("mouseenter", (event, d) => {
+      const sid = d.source?.id ?? d.source, tid = d.target?.id ?? d.target;
+      const k   = pairKey(d);
+      const n   = pairTotalCount.get(k) || 0;
+      showTip(
+        `<div class="tip-entry" style="gap:4px">` +
+        `<span>${escapeHtml(sid)} + ${escapeHtml(tid)}</span>` +
+        `<span style="color:#888">· ${n}×</span></div>`,
+        event);
+      // Brighten all visible parallel lines in this pair
+      linkSel.filter(l => pairKey(l) === k).attr("stroke-opacity", 0.85);
+    })
+    .on("mousemove", moveTip)
+    .on("mouseleave", (event, d) => {
+      hideTip();
+      const k = pairKey(d);
+      if (netFocusNode || hlState.mode !== "none") { applyNetworkState(); return; }
+      linkSel.filter(l => pairKey(l) === k).attr("stroke-opacity", 0.5);
+    })
+    .on("click", (event, d) => {
+      hideTip();
+      // Release any pinned ego node
+      if (netFocusNode) {
+        const prev = nodes.find(n => n.id === netFocusNode);
+        if (prev) { prev.fx = null; prev.fy = null; }
+        netFocusNode = null;
+      }
+      const sid = d.source?.id ?? d.source, tid = d.target?.id ?? d.target;
+      const key = pairKey(sid, tid);
+      netFocusPair = { key, sid, tid };
+      const shared = (entriesByActor.get(sid) || [])
+        .filter(e => Array.isArray(e.actors) && e.actors.includes(tid))
+        .sort((a, b) => (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
+      const title = `${sid} + ${tid} · alle Verbindungen`;
+      showView("timeline", title, viewEl => {
+        viewEl.innerHTML = shared.length
+          ? renderParaList(shared)
+          : `<div class="chat-params">Keine gemeinsamen Artikel.</div>`;
+      });
+      // setHighlight triggers applyNetworkState; netFocusPair is already set so edge branch wins
+      setHighlight("answer", new Set(shared.map(e => e.doc_anchor).filter(Boolean)));
     });
 
   function _fitGraph(animated) {

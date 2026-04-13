@@ -1,102 +1,112 @@
 alias,normalform,typ
-Ihsan Fikri,Ihsan Fikri,Person
-Königreich Kilikien,Königreich Kilikien,Konzept
-itidal,itidal,Organisation
-Enver,Enver,Person
-Enver Pasha,Enver,Person
-Serbesti,Serbesti,Organisation
-Hasan Fehmi,Hasan Fehmi,Person
-Rashad Efendi,Rashad Efendi,Person
+Sabaheddin,Sabaheddin,Person
+Sabahaddin,Sabaheddin,Person
+Sabahhedin,Sabaheddin,Person
+Prince Sabahaddin,Sabaheddin,Person
+Liberale Sabahhedin,Sabaheddin,Person
+Prince,Sabaheddin,Person
+prinz,Sabaheddin,Person
 Damaskus,Damaskus,Ort
-Damascus,Damaskus,Ort
-Ummayad Mosque,Ummayad Mosque,Organisation
-CUP,CUP,Konzept
-CPU,CUP,Konzept
-Committee of Union and Progress,CUP,Konzept
-Syrien,Syrien,Ort
-Putsch,Putsch,Konzept
-Turkei,Turkei,Ort
-Russland,Russland,Ort
-Britten,Britten,Ort
-Anatolein,Anatolein,Ort
-Istanbul,Istanbul,Ort
-Ableitung,Ableitung,Konzept
-Bürokratie,Bürokratie,Konzept
-Bulgarien,Bulgarien,Ort
-Bulgarisches Königreich,Bulgarien,Ort
-Kreta,Kreta,Ort
-Griechenland,Griechenland,Ort
-Österreich-Ungarn,Österreich-Ungarn,Organisation
-Wien,Österreich-Ungarn,Organisation
-Bosnien und Herzegowina,Bosnien und Herzegowina,Ort
-Paris,Paris,Ort
-Lebanon,Lebanon,Ort
-Osmisches Reich,Osmisches Reich,Organisation
-Osmanische Imperium,Osmisches Reich,Organisation
-Bahn,Bahn,Konzept
-Minen,Minen,Konzept
-Ahmed Riza,Ahmed Riza,Person
-Iran,Iran,Ort
-Armenier,Armenier,Konzept
-Russ,Russ,Ort
-Türkei,Türkei,Ort
-Liberale Partei,Liberale Partei,Organisation
-Hilmi Pascha,Hilmi Pascha,Person
-Tevfik Pascha,Tevfik Pascha,Person
-Sultan,Sultan,Konzept
-Mehmed Cavid,Mehmed Cavid,Person
-Bahaeddin Sakir,Bahaeddin Sakir,Person
-Hüssein Cahid,Hüssein Cahid,Person
-Latakia,Latakia,Ort
-Ali Ayni Bey,Ali Ayni Bey,Person
-Sevket,Sevket,Person
-Thessaloniki,Thessaloniki,Ort
-Tanin,Tanin,Organisation
-Suray-i Ümmet,Suray-i Ümmet,Organisation
-KEF,KEF,Organisation
-Russische Botschaft,Russische Botschaft,Ort
-Anatolien,Anatolien,Konzept
-Sabaheddin Bey,Sabaheddin Bey,Person
-Said Pascha,Said Pascha,Person
-Abdülhamid,Abdülhamid,Person
-Abdü'l-Hamid,Abdülhamid,Person
-Konst,Konst,Ort
-Periode,Konst,Ort
-Agragland,Agragland,Ort
-Osm Reich,Osm Reich,Organisation
-Osmanisches Reich,Osm Reich,Organisation
-Hunchaks,Hunchaks,Organisation
-Sassun,Sassun,Ort
+Kongress für Einheit und Freiheit,Kongress für Einheit und Freiheit,Organisation
+CPU,Kongress für Einheit und Freiheit,Organisation
+KEF,Kongress für Einheit und Freiheit,Organisation
+CUP,Kongress für Einheit und Freiheit,Organisation
+Enver,Enver,Person
+Nuri,Nuri,Person
+Nursi,Nuri,Person
+Celal Nuri,Nuri,Person
+Burhan nuri,Nuri,Person
+Said Nursi,Nuri,Person
+Revolte,Revolte,Konzept
+Aufstände,Revolte,Konzept
+Rebellion,Revolte,Konzept
+Jemen Revolte,Revolte,Konzept
+Balkanerfahrungen,Balkanerfahrungen,Ort
+Balkans,Balkanerfahrungen,Ort
+Religionsfreiheit,Religionsfreiheit,Konzept
+Versammlungsfreiheit,Religionsfreiheit,Konzept
+Pressefreiheit,Religionsfreiheit,Konzept
+Organisation,Organisation,Person
+Organization,Organisation,Person
+Macedomnian Revolutionary Organization,Organisation,Person
+Egyptian,Egyptian,Person
+Egypt,Egyptian,Person
+Salih,Salih,Person
+SalIm,Salih,Person
+Salih Sharif,Salih,Person
+Major SalIm,Salih,Person
+Hijaz,Hijaz,Ort
+Hijazbahn,Hijaz,Ort
+Hidjaz,Hijaz,Ort
+Hidjaz Railway,Hijaz,Ort
+Wahl,Wahl,Konzept
+Vali,Wahl,Konzept
+Syrians,Syrians,Person
+Syrian,Syrians,Person
+Syrian Central,Syrians,Person
+Albanians,Albanians,Konzept
+Albanien,Albanians,Konzept
+Albanian,Albanians,Konzept
+Iraq,Iraq,Ort
+Baghdad,Iraq,Ort
+Bagdad,Iraq,Ort
+Baghdad Railway,Iraq,Ort
+Latakiyya,Latakiyya,Ort
+Latakia,Latakiyya,Ort
+Tanzimat,Tanzimat,Konzept
+TNZIMAT,Tanzimat,Konzept
+Jungosmanen,Jungosmanen,Organisation
 Edirne,Edirne,Ort
-Kamil,Kamil,Person
-Mahmud Sevket Pasha,Mahmud Sevket Pasha,Person
-Nazim Pascha,Nazim Pascha,Person
-Midhat,Midhat,Person
-midhat pasha,Midhat,Person
-Verfassung,Verfassung,Konzept
-Rida,Rida,Person
-Al Azm,Al Azm,Person
-Ottoman Consultative Society,Ottoman Consultative Society,Organisation
-Al Manar,Al Manar,Ort
-Ägypten,Ägypten,Ort
-Talat,Talat,Person
-Balkanprovinzen,Balkanprovinzen,Konzept
-Balkan,Balkanprovinzen,Konzept
-Militär,Militär,Konzept
-Hochpforte,Hochpforte,Organisation
-Bürokratie der Hohen Pforte,Hochpforte,Organisation
-Halim,Halim,Person
-Talât,Talât,Person
-Semsi,Semsi,Person
-Talat,Talat,Person
-Ahmed Rıza,Ahmed Rıza,Person
-Talaˆt,Talaˆt,Person
-Kara Kemal,Kara Kemal,Person
-Kıbrıslı Kâmil,Kıbrıslı Kâmil,Person
-fouad,fouad,Person
-Rafiq,Rafiq,Person
-Shafiq,Shafiq,Person
-Nadra,Nadra,Person
-Arif,Arif,Person
-Mutfiin,Mutfiin,Person
-Hussein,Hussein,Person
+KEf,KEf,Organisation
+Osmanisches Parlament,Osmanisches Parlament,Organisation
+osmanischen Parlament,Osmanisches Parlament,Organisation
+Talât Pascha,Talât Pascha,Person
+Osmanische Reich,Osmanische Reich,Organisation
+Ottoman Empire,Ottoman Empire,Organisation
+Abdühlhamid,Abdühlhamid,Person
+abdülhamid,Abdühlhamid,Person
+Kapitulationen,Kapitulationen,Konzept
+ägypten,ägypten,Ort
+Kalifat,Kalifat,Konzept
+Medresen,Medresen,Organisation
+könig edward,könig edward,Person
+Zar Nikolaus II,Zar Nikolaus II,Person
+ahmed nayazi,ahmed nayazi,Person
+Manastir,Manastir,Ort
+Semsi Pascha,Semsi Pascha,Person
+Ziya Gökalp,Ziya Gökalp,Person
+Yusuf Akcara,Yusuf Akcara,Person
+"Yusuf Akcara,",Yusuf Akcara,Person
+sharia,sharia,Konzept
+armenier,armenier,Konzept
+Konterrevolution,Konterrevolution,Konzept
+balkan,balkan,Ort
+tripolis,tripolis,Ort
+janina,janina,Ort
+shköder,shköder,Ort
+abal huda al sayyadi,abal huda al sayyadi,Person
+Sayyadi,abal huda al sayyadi,Person
+midhat pasha,midhat pasha,Person
+hamidiya,hamidiya,Organisation
+kreta,kreta,Ort
+volkan,volkan,Organisation
+Mahmud sevket,Mahmud sevket,Person
+khalif,khalif,Konzept
+mustafa kemal,mustafa kemal,Person
+sevekt pasha,sevekt pasha,Person
+Sevket,sevekt pasha,Person
+Abdu ̈lhamid,Abdu ̈lhamid,Person
+Ahmed Rıza Bey,Ahmed Rıza Bey,Person
+Macedonia,Macedonia,Ort
+̧sveret,̧sveret,Person
+murad bey,murad bey,Person
+zeitschrift Mizan,zeitschrift Mizan,Organisation
+Osmanische Freiheitsgesellschaft,Osmanische Freiheitsgesellschaft,Organisation
+osm freedom society,Osmanische Freiheitsgesellschaft,Organisation
+ottom freedom society,ottom freedom society,Organisation
+Young Turk,Young Turk,Konzept
+Jungtürken,Young Turk,Konzept
+türken,türken,Konzept
+säkularismus,säkularismus,Konzept
+sozialisten,sozialisten,Konzept
+Mohammedan Union Party,Mohammedan Union Party,Organisation

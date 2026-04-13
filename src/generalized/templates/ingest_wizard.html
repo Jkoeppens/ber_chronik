@@ -44,14 +44,13 @@ body.wide-step .step.active{display:flex;flex-direction:column;flex:1;min-height
 body.wide-step #nav{position:fixed;bottom:0;left:0;right:0;z-index:20;box-shadow:0 -1px 4px rgba(0,0,0,.06)}
 /* Step 5 + 6 toolbar (non-wide) */
 .step4-toolbar{padding:12px 24px;background:var(--c-surface);border-bottom:1px solid var(--c-border-ui);flex-shrink:0}
-/* Step 5 wide mode: toolbar full-width oben, iframe darunter */
-body.wide-step #step-5 .step4-toolbar{display:block;padding:12px 24px}
-body.wide-step #step-5 .step4-toolbar .step4-title{display:none}
-body.wide-step #step-5 #timeline-wrap{max-width:480px}
-/* Step 5 iframe area */
-body.wide-step #preview-editor-section{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;margin:0!important;padding-bottom:52px}
-body.wide-step #preview-editor-frame{flex:1;display:block;width:100%;min-height:0;height:0;border:none}
-body.wide-step #preview-editor-hint{padding:24px 32px;flex:none}
+/* Step 5: normaler Block-Flow, kein wide-step */
+#step-5.step{padding:0;max-width:none}
+#step-5 .step4-toolbar{display:flex;flex-direction:column;padding:12px 0}
+#step-5 .step4-toolbar .step4-title{display:none}
+#step-5 #timeline-wrap{order:1;padding:0 40px;max-width:none;margin-bottom:0}
+#step-5 .time-inputs{order:2;justify-content:space-between;padding:4px 40px 0;margin-bottom:0;gap:0}
+#step5-body{padding:12px 24px}
 /* Step 6 wide mode */
 body.wide-step #ent-editor-section{display:flex!important;flex-direction:column;flex:1;min-height:0;overflow:hidden;padding-bottom:52px}
 body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:none}
@@ -112,11 +111,11 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
                    width:90px;font-family:inherit}
 #timeline-wrap{position:relative;margin-bottom:20px}
 #timeline-axis{height:32px;background:var(--c-surface);border:1px solid var(--c-border);
-               border-radius:4px;position:relative;overflow:visible;margin-bottom:4px}
+               border-radius:4px;position:relative;overflow:hidden;margin-bottom:4px}
 #timeline-labels{font-size:10px;color:var(--c-text-4);padding:0 2px}
 .tl-event{position:absolute;top:4px;height:24px;border-radius:3px;opacity:.85;cursor:pointer;
           display:flex;align-items:center;padding:0 6px;font-size:10px;font-weight:600;
-          white-space:nowrap;overflow:hidden;color:#fff;transition:opacity .15s;min-width:4px}
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;transition:opacity .15s;min-width:4px}
 .tl-event:hover{opacity:1;z-index:5}
 #events-section h4{font-size:10px;font-weight:600;color:var(--c-text-3);text-transform:uppercase;
                    letter-spacing:.06em;margin-bottom:8px}
@@ -310,6 +309,7 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
 
   <!-- Step 5: Time config -->
   <section id="step-5" class="step">
+    <!-- Sticky header: Von/Bis + timeline -->
     <div class="step4-toolbar">
       <div class="step4-title">
         <h2>Zeitkonfiguration</h2>
@@ -323,6 +323,9 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
         <div id="timeline-axis"></div>
         <div id="timeline-labels"></div>
       </div>
+    </div>
+    <!-- Scrollable body: events list + actions -->
+    <div id="step5-body">
       <div id="events-section">
         <h4>Ereignisse</h4>
         <div id="events-list"></div>
@@ -334,10 +337,7 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
       </div>
       <div id="time-anchor-log" class="log-box" style="display:none;margin-top:8px;max-height:120px"></div>
     </div>
-    <div id="preview-editor-section" style="display:none">
-      <p id="preview-editor-hint" style="display:none;color:#888;font-size:13px">Zeitanker können nach dem Pipeline-Run in Schritt 7 bearbeitet werden.</p>
-      <iframe id="preview-editor-frame" src="" style="display:none;width:100%;height:600px;border:none"></iframe>
-    </div>
+    <iframe id="step5-preview" src="" style="display:none;width:100%;height:calc(100vh - 100px);border:none;margin-top:12px"></iframe>
   </section>
 
   <!-- Step 6: Entities -->
@@ -453,7 +453,7 @@ function updateProgress(n) {
 const btnBack = document.getElementById('btn-back');
 const btnNext = document.getElementById('btn-next');
 
-const WIDE_STEPS = new Set([5, 6]);
+const WIDE_STEPS = new Set([6]);
 function gotoStep(n) {
   document.querySelector('.step.active')?.classList.remove('active');
   document.getElementById(`step-${n}`).classList.add('active');
@@ -747,39 +747,26 @@ async function initTimeConfig() {
   document.getElementById('year-max').value = tc.year_max;
   renderTimeline();
   renderEventsList();
-
-  const section = document.getElementById('preview-editor-section');
-  const frame   = document.getElementById('preview-editor-frame');
-  const hint    = document.getElementById('preview-editor-hint');
+  // Preview-iframe laden wenn bereits vorhanden
+  const frame = document.getElementById('step5-preview');
+  frame.style.display = 'none';
   if (state.document && state.token) {
-    section.style.display = 'block';
-    frame.src = '';  // Reset so iframe reloads each time step 4 is entered
     try {
-      const statusRes = await fetch('/ingest/doc_status' + _aq());
-      const status = statusRes.ok ? await statusRes.json() : {};
-      if (status.preview) {
-        hint.style.display  = 'none';
-        frame.style.display = 'block';
-        frame.src = '/preview' + _aq();
-      } else {
-        frame.style.display = 'none';
-        hint.style.display  = 'block';
+      const res = await fetch('/ingest/doc_status' + _aq());
+      if (res.ok) {
+        const status = await res.json();
+        if (status.preview) {
+          frame.src = '/preview' + _aq();
+          frame.style.display = 'block';
+        }
       }
-    } catch (_) {
-      frame.style.display = 'none';
-      hint.style.display  = 'block';
-    }
-  } else {
-    section.style.display = 'none';
+    } catch (_) {}
   }
 }
 
 async function runAnchorPipeline() {
   const logEl    = document.getElementById('time-anchor-log');
   const statusEl = document.getElementById('anchor-status');
-  const section  = document.getElementById('preview-editor-section');
-  const frame    = document.getElementById('preview-editor-frame');
-  const hint     = document.getElementById('preview-editor-hint');
 
   logEl.style.display  = 'block';
   logEl.textContent    = '';
@@ -831,11 +818,11 @@ async function runAnchorPipeline() {
   }
 
   statusEl.textContent = '✓ Fertig';
-  // iframe neu laden
-  section.style.display = 'block';
-  hint.style.display    = 'none';
-  frame.style.display   = 'block';
+  renderEventsList();
+  // Preview-iframe neu laden
+  const frame = document.getElementById('step5-preview');
   frame.src = '/preview' + _aq();
+  frame.style.display = 'block';
   return true;
 }
 
@@ -883,17 +870,20 @@ function renderTimeline() {
 
   axis.innerHTML = tc.events.map(ev => {
     const l = ((ev.year_from - tc.year_min) / span * 100).toFixed(2);
-    const w = Math.max(((ev.year_to - ev.year_from + 1) / span * 100), 0.5).toFixed(2);
+    const w = Math.max(((ev.year_to - ev.year_from) / span * 100), 0.5).toFixed(2);
     return `<div class="tl-event" style="left:${l}%;width:${w}%;background:${ev.color}"
               data-id="${ev.id}" title="${esc(ev.name)} (${ev.year_from}–${ev.year_to})">${esc(ev.name)}</div>`;
   }).join('');
 
-  // Tick labels: ~6 ticks
-  const step = Math.ceil(span / 6 / 10) * 10;
+  // Tick labels: year_min + year_max always shown, ~4 intermediate ticks
+  const step = Math.ceil(span / 5 / 10) * 10;
+  const ticks = new Set([tc.year_min, tc.year_max]);
+  for (let y = tc.year_min + step; y < tc.year_max; y += step) ticks.add(y);
   let labHtml = '';
-  for (let y = tc.year_min; y <= tc.year_max; y += step) {
+  for (const y of [...ticks].sort((a, b) => a - b)) {
     const pct = ((y - tc.year_min) / span * 100).toFixed(1);
-    labHtml += `<span style="position:absolute;left:${pct}%;transform:translateX(-50%)">${y}</span>`;
+    const align = y === tc.year_min ? 'translateX(0)' : y === tc.year_max ? 'translateX(-100%)' : 'translateX(-50%)';
+    labHtml += `<span style="position:absolute;left:${pct}%;transform:${align}">${y}</span>`;
   }
   lbls.style.position = 'relative';
   lbls.style.height   = '14px';
@@ -906,6 +896,7 @@ function renderTimeline() {
 }
 
 function renderEventsList() {
+  console.log('[renderEventsList] events:', JSON.stringify(state.time_config.events));
   const el = document.getElementById('events-list');
   el.innerHTML = '';
   state.time_config.events.forEach(ev => {

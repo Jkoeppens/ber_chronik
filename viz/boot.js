@@ -90,7 +90,9 @@ Promise.all([
 
   netNodes = [...nodeCounts.entries()].map(([id, count]) => ({
     id, count,
-    typ: aliasMap[id.toLowerCase()]?.typ || "Org",
+    typ: aliasMap[id.toLowerCase()]?.typ ||
+         Object.keys(NODE_COLOR).find(k => /org/i.test(k)) ||
+         Object.keys(NODE_COLOR)[0] || "Org",
   }));
 
   // One link per (pair, event_type); include all pairs (threshold = 1)

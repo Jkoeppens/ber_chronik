@@ -1,0 +1,157 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - button "BER Chronik 1989–2017 ▾" [ref=e6] [cursor=pointer]:
+        - generic [ref=e7]: BER Chronik 1989–2017
+        - generic [ref=e8]: ▾
+      - navigation [ref=e9]:
+        - button "Timeline" [ref=e10] [cursor=pointer]
+        - button "Netzwerk" [active] [ref=e11] [cursor=pointer]
+      - generic "Tutorial starten" [ref=e12] [cursor=pointer]: "?"
+    - generic [ref=e13]:
+      - img [ref=e14]:
+        - generic [ref=e17]:
+          - generic [ref=e18] [cursor=pointer]:
+            - generic: Berlin
+          - generic [ref=e19] [cursor=pointer]:
+            - generic: Brandenburg
+          - generic [ref=e20] [cursor=pointer]:
+            - generic: Rainer Schwarz
+          - generic [ref=e21] [cursor=pointer]:
+            - generic: Eberhard Diepgen
+          - generic [ref=e22] [cursor=pointer]:
+            - generic: Abgeordnetenhaus von Berlin
+          - generic [ref=e23] [cursor=pointer]:
+            - generic: die tageszeitung
+          - generic [ref=e24] [cursor=pointer]:
+            - generic: Sozialdemokratische Partei Deutschlands
+          - generic [ref=e25] [cursor=pointer]:
+            - generic: Flughafen Berlin-Tegel
+          - generic [ref=e26] [cursor=pointer]:
+            - generic: Der Spiegel
+          - generic [ref=e27] [cursor=pointer]:
+            - generic: Deutschland
+          - generic [ref=e28] [cursor=pointer]:
+            - generic: Schönefeld
+          - generic [ref=e29] [cursor=pointer]:
+            - generic: Der Tagesspiegel
+          - generic [ref=e30] [cursor=pointer]:
+            - generic: Flughafen Berlin-Tempelhof
+          - generic [ref=e31] [cursor=pointer]:
+            - generic: Manfred Stolpe
+          - generic [ref=e32] [cursor=pointer]:
+            - generic: Potsdam
+          - generic [ref=e33] [cursor=pointer]:
+            - generic: Sperenberg
+          - generic [ref=e34] [cursor=pointer]:
+            - generic: Deutsche Lufthansa AG
+          - generic [ref=e35] [cursor=pointer]:
+            - generic: Christlich Demokratische Union Deutschlands
+          - generic [ref=e36] [cursor=pointer]:
+            - generic: Frankfurter Rundschau
+          - generic [ref=e37] [cursor=pointer]:
+            - generic: Frankfurt am Main
+          - generic [ref=e38] [cursor=pointer]:
+            - generic: Berliner Flughafengesellschaft BBF
+          - generic [ref=e39] [cursor=pointer]:
+            - generic: Matthias Platzeck
+          - generic [ref=e40] [cursor=pointer]:
+            - generic: Jüterbog
+          - generic [ref=e41] [cursor=pointer]:
+            - generic: Flughafengesellschaft Berlin Schönefeld
+          - generic [ref=e42] [cursor=pointer]:
+            - generic: Handelsblatt
+          - generic [ref=e43] [cursor=pointer]:
+            - generic: Die Zeit
+          - generic [ref=e44] [cursor=pointer]:
+            - generic: Berliner Zeitung
+          - generic [ref=e45] [cursor=pointer]:
+            - generic: Diepensee
+          - generic [ref=e46] [cursor=pointer]:
+            - generic: Air Berlin PLC & Co. Luftverkehrs KG
+          - generic [ref=e47] [cursor=pointer]:
+            - generic: Bundesrepublik Deutschland (Bund als Anteilseigner)
+          - generic [ref=e48] [cursor=pointer]:
+            - generic: Süddeutsche Zeitung
+          - generic [ref=e49] [cursor=pointer]:
+            - generic: München
+          - generic [ref=e50] [cursor=pointer]:
+            - generic: Leipzig
+          - generic [ref=e51] [cursor=pointer]:
+            - generic: IVG Immobilien AG
+          - generic [ref=e52] [cursor=pointer]:
+            - generic: Siemens AG
+          - generic [ref=e53] [cursor=pointer]:
+            - generic: Flughafen Berlin Brandenburg
+          - generic [ref=e54] [cursor=pointer]:
+            - generic: Michael Müller
+          - generic [ref=e55] [cursor=pointer]:
+            - generic: PPS (Projektsteuerung BER)
+          - generic [ref=e56] [cursor=pointer]:
+            - generic: HOCHTIEF AG
+          - generic [ref=e57] [cursor=pointer]:
+            - generic: Klaus Wowereit
+          - generic [ref=e58] [cursor=pointer]:
+            - generic: Untersuchungsausschuss BER
+          - generic [ref=e59] [cursor=pointer]:
+            - generic: Berliner Morgenpost
+          - generic [ref=e60] [cursor=pointer]:
+            - generic: Bundesverwaltungsgericht
+          - generic [ref=e61] [cursor=pointer]:
+            - generic: Flughafen Berlin Brandenburg GmbH
+          - generic [ref=e62] [cursor=pointer]:
+            - generic: Manfred Körtgen
+          - generic [ref=e63] [cursor=pointer]:
+            - generic: Hartmut Mehdorn
+          - generic [ref=e64] [cursor=pointer]:
+            - generic: Horst Amann
+          - generic [ref=e65] [cursor=pointer]:
+            - generic: Dietmar Woidke
+          - generic [ref=e66] [cursor=pointer]:
+            - generic: Jörg Marks
+          - generic [ref=e67] [cursor=pointer]:
+            - generic: Karsten Mühlenfeld
+          - generic [ref=e68] [cursor=pointer]:
+            - generic: Engelbert Lütke Daldrup
+      - generic [ref=e724]:
+        - generic [ref=e725]:
+          - text: Top
+          - slider "Top 51 Akteure" [ref=e726]: "51"
+          - generic [ref=e727]: "51"
+          - text: Akteure
+        - generic [ref=e728]:
+          - text: Min.
+          - slider "Min. 2 Verbindungen" [ref=e729]: "2"
+          - generic [ref=e730]: "2"
+          - text: Verbindungen
+      - generic [ref=e731]:
+        - generic [ref=e732]:
+          - generic [ref=e733]: Entitätstyp
+          - generic [ref=e734]:
+            - generic [ref=e737] [cursor=pointer]: Organisation
+            - generic [ref=e740] [cursor=pointer]: Ort
+            - generic [ref=e743] [cursor=pointer]: Person
+            - generic [ref=e746] [cursor=pointer]: Werk
+        - generic [ref=e747]:
+          - generic [ref=e748]: Thema
+          - generic [ref=e749]:
+            - generic [ref=e752] [cursor=pointer]: Planungsrecht
+            - generic [ref=e755] [cursor=pointer]: Baukomplexität
+            - generic [ref=e758] [cursor=pointer]: Kostensteigerung
+            - generic [ref=e761] [cursor=pointer]: Privatisierung
+            - generic [ref=e764] [cursor=pointer]: Vergabeverfahren
+            - generic [ref=e767] [cursor=pointer]: Lärmschutz
+            - generic [ref=e770] [cursor=pointer]: Eröffnungsverzögerung
+            - generic [ref=e773] [cursor=pointer]: PolitischeAkteure
+  - complementary [ref=e774]:
+    - generic [ref=e775]:
+      - button "←" [ref=e776] [cursor=pointer]
+      - textbox "Frage zur BER-Chronik …" [ref=e778]
+      - button "→" [ref=e779] [cursor=pointer]
+    - generic [ref=e780]:
+      - generic [ref=e781]: Suche
+      - button "×" [ref=e782] [cursor=pointer]
+```

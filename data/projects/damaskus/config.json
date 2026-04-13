@@ -1,17 +1,57 @@
 {
-  "title": "Damaskus Notizen",
-  "year_min": 1516,
-  "year_max": 1954,
-  "taxonomy": [
+  "title": "Damaskus",
+  "taxonomy": [],
+  "year_min": 1895,
+  "year_max": 1918,
+  "events": [
     {
-      "name": "Historischer Kontext",
-      "description": "Angabe des historischen Kontexts und Zeitraums",
-      "keywords": [
-        "Ottomanisches Reich",
-        "20. Jahrhundert",
-        "Nationalismus"
-      ]
+      "name": "Bildung von Einflusssalafien übertrieben",
+      "year_from": 1908,
+      "year_to": 1918,
+      "id": 0,
+      "color": "#6d28d9"
+    },
+    {
+      "name": "Ulama vs. Notablen: Ghettoisierung in Istanbul",
+      "year_from": 1870,
+      "year_to": 1920,
+      "id": 1,
+      "color": "#2563eb"
+    },
+    {
+      "name": "Gründung der CUP in Syrien (1912)",
+      "year_from": 1905,
+      "year_to": 1914,
+      "id": 2,
+      "color": "#16a34a"
+    },
+    {
+      "name": "Wahlsystem in der Osmanischen Reich",
+      "year_from": 1876,
+      "year_to": 1908,
+      "id": 3,
+      "color": "#d97706"
+    },
+    {
+      "name": "Kampagne gegen Abd al-Razzaq al-Bitar",
+      "year_from": 1890,
+      "year_to": 1910,
+      "id": 4,
+      "color": "#dc2626"
+    },
+    {
+      "name": "Verbreitung von Arabismus und Islamismus in Syrien (1908-1912)",
+      "year_from": 1895,
+      "year_to": 1914,
+      "id": 5,
+      "color": "#0891b2"
+    },
+    {
+      "name": "Debatten über die Auswirkungen der osmanischen Konstitution",
+      "year_from": 1877,
+      "year_to": 1909,
+      "id": 6,
+      "color": "#7c3aed"
     }
-  ],
-  "entities": []
+  ]
 }

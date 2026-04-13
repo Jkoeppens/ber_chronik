@@ -8,14 +8,16 @@
       "Sabah",
       "Prince Sabahaddin",
       "Prinz Sabaheddin"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Damaskus",
     "typ": "Ort",
     "aliases": [
       "damaskus"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Kommittee für Einheit und Freiheit",
@@ -24,14 +26,18 @@
       "KEf",
       "CUP",
       "cpu"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Enver",
     "typ": "Person",
     "aliases": [
-      "Enver"
-    ]
+      "Enver",
+      "Enver Bey",
+      "Enver Pasha"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Celal Nuri",
@@ -40,7 +46,8 @@
       "Nursi",
       "Celal Nuri",
       "Celal"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Revolte",
@@ -48,7 +55,8 @@
     "aliases": [
       "Aufstände",
       "Rebellion"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Balkan",
@@ -56,7 +64,8 @@
     "aliases": [
       "Balkans",
       "balkan"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Macedomnian Revolutionary Organization",
@@ -64,7 +73,8 @@
     "aliases": [
       "Macedomnian Revolutionary Organization",
       "Organization"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Salih",
@@ -73,14 +83,16 @@
       "Salih Sharif",
       "Salih",
       "Sharif"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Wahl",
     "typ": "Konzept",
     "aliases": [
       "Election"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Albanians",
@@ -88,7 +100,8 @@
     "aliases": [
       "Albanien",
       "Albanian"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Iraq",
@@ -97,33 +110,38 @@
       "Baghdad",
       "Bagdad",
       "Baghdad Railway"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Latakiyya",
     "typ": "Ort",
     "aliases": [
       "Latakia"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Tanzimat",
     "typ": "Konzept",
     "aliases": [
       "TNZIMAT"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Jungosmanen",
     "typ": "Organisation",
     "aliases": [
       "jungosmanen"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Edirne",
     "typ": "Ort",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Jungtürken",
@@ -133,14 +151,16 @@
       "young Turks",
       "Young Turk",
       "Jungtürke"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Osmanisches Reich",
     "typ": "Organisation",
     "aliases": [
       "Osmanisches Reich"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Talât Pascha",
@@ -150,7 +170,8 @@
       "talaat",
       "Talat",
       "mehmat Talat"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Abdühlhamid",
@@ -164,28 +185,32 @@
       "Fuad",
       "Fuad Pasha",
       "A bdu ̈lhamidII,"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Medresen",
     "typ": "Konzept",
     "aliases": [
       "Medresen"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Opposition",
     "typ": "Konzept",
     "aliases": [
       "Opposition"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Konstitutionalisten",
     "typ": "Konzept",
     "aliases": [
       "Konstitutionalisten"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Mazedonien",
@@ -196,9 +221,9 @@
       "Macedonia",
       "Makedonien",
       "Macedonian",
-      "Mazedonien (Manastir, Kosovo)",
-      "makedon"
-    ]
+      "Mazedonien (Manastir, Kosovo)"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Manastir",
@@ -206,14 +231,16 @@
     "aliases": [
       "Manastir",
       "Monastur"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Kosovo",
     "typ": "Ort",
     "aliases": [
       "Kosovo"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Saloniki",
@@ -221,21 +248,24 @@
     "aliases": [
       "Saloniki",
       "Thessaloniki"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Zar Nikolaus II",
     "typ": "Person",
     "aliases": [
       "Zar Nikolaus II"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "könig edward",
     "typ": "Person",
     "aliases": [
       "könig edward"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Ziya Gökalp",
@@ -244,14 +274,16 @@
       "Ziya Gökalp",
       "Ziya Gölkap",
       "Gökalp"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Yusuf Akcara",
     "typ": "Person",
     "aliases": [
       "Yusuf Akcara"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Sevket pasha",
@@ -261,14 +293,16 @@
       "Mahmud sevket",
       "savket pasha",
       "Mahmud Sevket Pascha"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Ulama",
     "typ": "Konzept",
     "aliases": [
       "ulama"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Adana",
@@ -282,35 +316,48 @@
       "Jerusalem",
       "Damascus",
       "Istanbul"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Yusuf akcura",
     "typ": "Person",
     "aliases": [
       "Yusuf akcura"
-    ]
+    ],
+    "_status": "confirmed"
+  },
+  {
+    "normalform": "Balkan",
+    "typ": "Ort",
+    "aliases": [
+      "balkan"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Tripolis",
     "typ": "Ort",
     "aliases": [
       "tripolis"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Montenegro",
     "typ": "Ort",
     "aliases": [
       "Montenegro"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "serbien",
     "typ": "Ort",
     "aliases": [
       "serbien"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "bulgarien",
@@ -318,70 +365,88 @@
     "aliases": [
       "bulgarien",
       "bulgarische"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "griechenland",
     "typ": "Ort",
     "aliases": [
       "griechenland"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "janina",
     "typ": "Ort",
     "aliases": [
       "janina"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "shköder",
     "typ": "Ort",
     "aliases": [
       "shköder"
-    ]
+    ],
+    "_status": "confirmed"
+  },
+  {
+    "normalform": "Bulgarien",
+    "typ": "Ort",
+    "aliases": [
+      "bulgarische"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Armenier",
     "typ": "Konzept",
     "aliases": [
       "armenier"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Griechen",
     "typ": "Konzept",
     "aliases": [
       "griechen"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Russen",
     "typ": "Konzept",
     "aliases": [
       "russen"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Osmanische Armee",
     "typ": "Organisation",
     "aliases": [
       "osm armee"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "russland",
     "typ": "Ort",
     "aliases": [
       "russland"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "abal huda al sayyadi",
     "typ": "Person",
     "aliases": [
       "abal huda al sayyadi"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "syrien",
@@ -389,51 +454,65 @@
     "aliases": [
       "syrien",
       "Syrian",
-      "Syria",
-      "surien"
-    ]
+      "Syria"
+    ],
+    "_status": "confirmed"
+  },
+  {
+    "normalform": "istanbul",
+    "typ": "Ort",
+    "aliases": [
+      "istanbul"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "tripoli",
     "typ": "Ort",
     "aliases": [
       "tripoli"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "sidon",
     "typ": "Ort",
     "aliases": [
       "sidon"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "konservativ",
     "typ": "Konzept",
     "aliases": [
       "konservativ"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "bildung",
     "typ": "Konzept",
     "aliases": [
       "bildung"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "hamidiya",
     "typ": "Organisation",
     "aliases": [
       "hamidiya"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "frankreich",
     "typ": "Ort",
     "aliases": [
       "frankreich"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "briten",
@@ -441,56 +520,64 @@
     "aliases": [
       "briten",
       "British Lynch Company"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Bürokratie",
     "typ": "Konzept",
     "aliases": [
       "bürokrat"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "ahmed riza",
     "typ": "Person",
     "aliases": [
       "ahmed riza"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Europäische",
     "typ": "Ort",
     "aliases": [
       "Europäische"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Bahaeddin sakir",
     "typ": "Person",
     "aliases": [
       "Bahaeddin sakir"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "iran",
     "typ": "Ort",
     "aliases": [
       "iran"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Russ",
     "typ": "Ort",
     "aliases": [
       "Russ"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Talat Bey",
     "typ": "Person",
     "aliases": [
       "Talat Bey"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Ottoman Freedom Society",
@@ -498,15 +585,24 @@
     "aliases": [
       "ottoman freedom society",
       "Ottoman Free- dom Society"
-    ]
+    ],
+    "_status": "confirmed"
+  },
+  {
+    "normalform": "makedonien",
+    "typ": "Ort",
+    "aliases": [
+      "makedonien"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "anatolien",
     "typ": "Ort",
     "aliases": [
-      "anatolien",
-      "Anatolia"
-    ]
+      "anatolien"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Muslime",
@@ -514,91 +610,104 @@
     "aliases": [
       "muslime",
       "muslim"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Türken",
     "typ": "Konzept",
     "aliases": [
       "türken"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "edward vii",
     "typ": "Person",
     "aliases": [
       "edward vii"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "zar nikkolaus",
     "typ": "Person",
     "aliases": [
       "zar nikkolaus"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "bosnien herzegowina",
     "typ": "Ort",
     "aliases": [
       "bosnien herzegowina"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "wien",
     "typ": "Ort",
     "aliases": [
       "wien"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "kreta",
     "typ": "Ort",
     "aliases": [
       "kreta"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "jemen",
     "typ": "Ort",
     "aliases": [
       "jemen"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "volkan",
     "typ": "Organisation",
     "aliases": [
       "volkan"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "mehmed V",
     "typ": "Person",
     "aliases": [
       "mehmed V"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Liberale",
     "typ": "Konzept",
     "aliases": [
       "lib"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "mustafa kemal",
     "typ": "Person",
     "aliases": [
       "mustafa kemal"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "aleppo",
     "typ": "Ort",
     "aliases": [
       "aleppo"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "konterrevolution",
@@ -606,35 +715,40 @@
     "aliases": [
       "konterrevolution",
       "Gegenrevolution"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Turkismus",
     "typ": "Konzept",
     "aliases": [
       "turkismus"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "revolution",
     "typ": "Konzept",
     "aliases": [
       "revolution"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "säkularismus",
     "typ": "Konzept",
     "aliases": [
       "säkularismus"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "League of Private Initiative and Decentralisation",
     "typ": "Organisation",
     "aliases": [
       "League of Private Initiative and Decentralisation"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Kıbrıslı Kâmil Pascha",
@@ -642,196 +756,233 @@
     "aliases": [
       "Kıbrıslı Kâmil Pascha",
       "Kamil Pasha"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Huca Kadri",
     "typ": "Person",
     "aliases": [
       "Huca Kadri"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Hoca Muhiddin",
     "typ": "Person",
     "aliases": [
       "Hoca Muhiddin"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "France",
     "typ": "Ort",
     "aliases": [
       "France"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Japan",
     "typ": "Ort",
     "aliases": [
       "Japan"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "sozialismus",
     "typ": "Konzept",
     "aliases": [
       "sozialismus"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "hunchaks",
     "typ": "Konzept",
     "aliases": [
       "hunchaks"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "sassun",
     "typ": "Ort",
     "aliases": [
       "sassun"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Haqaiq",
     "typ": "Organisation",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Europa",
     "typ": "Ort",
-    "aliases": [
-      "Europa"
-    ]
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Shukri",
     "typ": "Person",
     "aliases": [
       "Shukri"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Cavid",
     "typ": "Person",
     "aliases": [
       "Mehmed Cavid"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Ismail",
     "typ": "Person",
     "aliases": [
       "Ismail"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Qadir",
     "typ": "Person",
     "aliases": [
       "Qadir"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Ghammashi",
     "typ": "Person",
     "aliases": [
       "Efendi Ghammashi"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Zahrawi",
     "typ": "Person",
     "aliases": [
       "Zahrawi"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Sohrabi",
     "typ": "Person",
     "aliases": [
       "Sohrabi"
-    ]
+    ],
+    "_status": "confirmed"
+  },
+  {
+    "normalform": "Syrien",
+    "typ": "Ort",
+    "aliases": [
+      "Syrian",
+      "Syria"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Konzession",
     "typ": "Konzept",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Semsi",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Nichttürken",
     "typ": "Konzept",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Mizan",
     "typ": "Person",
     "aliases": [
       "Mizan"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Aharonian",
     "typ": "Person",
     "aliases": [
       "Avedis Aharonian"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Nahda",
     "typ": "Konzept",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Rafiq",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Khatib",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Mughrabi",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Mebusanda",
     "typ": "Konzept",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Amer",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Harran",
     "typ": "Konzept",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "'Umar Mansur",
     "typ": "Person",
     "aliases": [
-      "'Umar Mansur",
-      "Bingazi"
-    ]
+      "'Umar Mansur"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Rashad Efendi",
     "typ": "Person",
     "aliases": [
       "Rashad Efendi"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Muhammad Arslan",
@@ -839,7 +990,8 @@
     "aliases": [
       "Muhammad Arslan",
       "Amir Muhammad Arslan"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Jazairi",
@@ -847,47 +999,54 @@
     "aliases": [
       "Sheikh 'Abd",
       "sheikh"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Ihsan Fikri",
     "typ": "Person",
     "aliases": [
       "Ihsan Fikri"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Arif",
     "typ": "Person",
     "aliases": [
       "IusaynI, 'Arif"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Saqiq Pasha",
     "typ": "Person",
     "aliases": [
       "Saqiq"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Hussein",
     "typ": "Person",
     "aliases": [
       "Hussein"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Kayali",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Asali",
     "typ": "Person",
     "aliases": [
       "Asali"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Hasan Fehmi",
@@ -895,173 +1054,207 @@
     "aliases": [
       "Hasan Fehmi",
       "Fehmi"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Balkankrieg",
     "typ": "Konzept",
     "aliases": [
       "balkankrieg"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Putsch",
     "typ": "Konzept",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Militärdienst",
     "typ": "Konzept",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Jungtürkenrevolution",
     "typ": "Konzept",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Gazi",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Italien",
     "typ": "Ort",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Izmirlian",
     "typ": "Person",
     "aliases": [
       "Madteos II Izmirlian"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": " Sayyid Talib",
     "typ": "Person",
     "aliases": [
       "Sayyid Talib (Basra)",
-      "Sayyid Talib",
-      "Basra"
-    ]
+      "Sayyid Talib"
+    ],
+    "_status": "confirmed"
+  },
+  {
+    "normalform": "Muhammad Arslan",
+    "typ": "Person",
+    "aliases": [
+      "Amir Muhammad Arslan"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Kilikien",
     "typ": "Ort",
     "aliases": [
       "Königreich Kilikien"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Nadra",
     "typ": "Person",
     "aliases": [
       "Nadra"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "MardinI",
     "typ": "Person",
     "aliases": [
       "MardInI"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "MakhzumI",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "IMRO",
     "typ": "Organisation",
     "aliases": [
       "IMRO"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Mahmoud Haddad",
     "typ": "Person",
     "aliases": [
       "Mahmoud Haddad"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "ägypten",
     "typ": "Ort",
     "aliases": [
       "ägypten"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "ahmed nayazi",
     "typ": "Person",
     "aliases": [
       "ahmed nayazi"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Rushdi",
     "typ": "Person",
     "aliases": [
       "Rushdi"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Shafiq",
     "typ": "Person",
     "aliases": [
       "Shafiq"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Sakir",
     "typ": "Person",
     "aliases": [
       "Sakir"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Nazim",
     "typ": "Person",
     "aliases": [
       "Nazim"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Gulian",
     "typ": "Person",
     "aliases": [
       "Gulian"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Riza",
     "typ": "Person",
     "aliases": [
       "Riza"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Zabadani",
     "typ": "Ort",
     "aliases": [
       "Zabadani"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Arslan",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Hunch‘ak",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Abdu",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Edwar Murqus",
@@ -1070,14 +1263,16 @@
       "Edwar",
       "Murqus",
       "Edwar Murqus"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Halim",
     "typ": "Person",
     "aliases": [
       "Tod"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Major SalIm",
@@ -1086,243 +1281,280 @@
       "Major",
       "SalIm",
       "Four major"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Muhtar Pas",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Muhtar",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Rıza",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Said Nursi",
     "typ": "Person",
     "aliases": [
       "Nursi:"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Konstitutionalismus",
     "typ": "Konzept",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Moderne",
     "typ": "Konzept",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Lynch Company",
     "typ": "Organisation",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Society of Muhammad",
     "typ": "Organisation",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Ahmed cemal pasha",
     "typ": "Person",
     "aliases": [
       "Ahmed cemal pasha"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Pressefreiheit",
     "typ": "Konzept",
     "aliases": [
       "Pressefreiheit"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Al-Muqaṭṭam",
     "typ": "Organisation",
     "aliases": [
       "Al-Muqaṭṭam"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Ottoman-Arab Brother- hood Society",
     "typ": "Organisation",
     "aliases": [
       "Ottoman-Arab Brother- hood Society"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Lisān al-Ḥāl",
     "typ": "Organisation",
     "aliases": [
       "Lisān al-Ḥāl"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Ottoman- Arab Brotherhood Society",
     "typ": "Organisation",
     "aliases": [
       "Ottoman- Arab Brotherhood Society"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Zionism",
     "typ": "Konzept",
     "aliases": [
       "Zionism"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "hilmi pascha",
     "typ": "Person",
     "aliases": [
       "hilmi pascha"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "tevfik pasha",
     "typ": "Person",
     "aliases": [
       "tevfik pasha"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Muqtabas",
     "typ": "Organisation",
     "aliases": [
       "Muqtabas"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "fikri",
     "typ": "Person",
     "aliases": [
       "fikri"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Ummayad Mosque",
     "typ": "Ort",
     "aliases": [
       "Ummayad Mosque"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "As'ad Bey",
     "typ": "Person",
     "aliases": [
       "As'ad Bey"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "SalIm al-Jaza'iri,",
     "typ": "Person",
     "aliases": [
       "SalIm al-Jaza'iri,"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Nazim pasha",
     "typ": "Person",
     "aliases": [
       "Nazim pasha"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "sevket",
     "typ": "Person",
     "aliases": [
       "sevket"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "ottoman freedom soc",
     "typ": "Organisation",
     "aliases": [
       "ottoman freedom soc"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Tanin",
     "typ": "Organisation",
     "aliases": [
       "Tanin"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Libya",
     "typ": "Ort",
     "aliases": [
       "Libya"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Liberal Entente",
     "typ": "Organisation",
     "aliases": [
       "Liberal Entente"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Savior Officers",
     "typ": "Organisation",
     "aliases": [
       "Savior Officers"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Cahid",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Muhammad Fawzi Pasha",
     "typ": "Person",
     "aliases": [
       "Fawzi"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Niyazi",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Kara Kemal",
     "typ": "Person",
     "aliases": [
       "Kara"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Vali",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Bahaeddin",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Nimr",
     "typ": "Person",
-    "aliases": []
+    "aliases": [],
+    "_status": "confirmed"
   },
   {
     "normalform": "Yusuf Shitwan",
     "typ": "Person",
     "aliases": [
-      "Shitwan",
-      "Bingazi"
-    ]
+      "Shitwan"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Busra Eski Sham",
@@ -1331,46 +1563,22 @@
       "Busra",
       "Eski-Sham",
       "Busra Eski-Sham"
-    ]
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Lebanon",
     "typ": "Ort",
     "aliases": [
       "Polen",
-      "Mt lebanon",
-      "Lebanon",
-      "lebanoen"
-    ]
+      "Mt lebanon"
+    ],
+    "_status": "confirmed"
   },
   {
     "normalform": "Berlin",
     "typ": "Ort",
-    "aliases": []
-  },
-  {
-    "normalform": "Shafiq al-Mu'ayyad",
-    "typ": "Person",
-    "aliases": []
-  },
-  {
-    "normalform": "Mahmud Sevket Pasha",
-    "typ": "Person",
-    "aliases": []
-  },
-  {
-    "normalform": "Australien",
-    "typ": "Konzept",
-    "aliases": [
-      "Australien"
-    ]
-  },
-  {
-    "normalform": "Egypten",
-    "typ": "Ort",
-    "aliases": [
-      "Egypten",
-      "misir"
-    ]
+    "aliases": [],
+    "_status": "confirmed"
   }
 ]

@@ -7,11 +7,9 @@
     "text": "Erwartungen geweckt durch vorhandensein von Verfassung",
     "page": 352,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": [
-      "Verfassung"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0019",
@@ -21,8 +19,8 @@
     "text": "Offensive frömmigkeit abdülhamids zur beschwichtigung der sunniten. Andere fühlen sich widerum gegeängelt",
     "page": 353,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
-    "confidence": "medium",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "high",
     "actors": []
   },
   {
@@ -33,10 +31,10 @@
     "text": "Abdühlhamid mit 33 jahren sehr lange sultan, durch informationtechnik besonders autokratisch",
     "page": 354,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Sultan"
+      "Abdühlhamid"
     ]
   },
   {
@@ -47,11 +45,9 @@
     "text": "Parlament hatte zweit sitzungen, dann 1877 ende, verfassung mit verfassung außer kraft gesetzt, autoren verbannt",
     "page": 354,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Verfassung"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0022",
@@ -61,7 +57,7 @@
     "text": "Volkszählung: 20,4 mio menschen, ¾ Muslime",
     "page": 357,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": []
   },
@@ -73,9 +69,11 @@
     "text": "Kapitulationen waren teil der osmanisches modernisierungspolitik, ging von entwicklung aus, wehrte sich nicht",
     "page": 359,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Machtstrukturen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Kapitulationen"
+    ]
   },
   {
     "segment_id": "s0024",
@@ -85,10 +83,10 @@
     "text": "Public debt administration hatte mehr beamte als das Finanzministerium, Bruttoeinnahmen von 30% des Staatshaushaltes. Immer noch besser als ägypten, wo einfach beschlagnahmt wurde",
     "page": 359,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Ägypten"
+      "ägypten"
     ]
   },
   {
@@ -99,9 +97,11 @@
     "text": "Landwirtschaft kapitulationen tabak und baumwolle",
     "page": 363,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
-    "confidence": "high",
-    "actors": []
+    "category": "Reichskrise",
+    "confidence": "medium",
+    "actors": [
+      "Kapitulationen"
+    ]
   },
   {
     "segment_id": "s0027",
@@ -111,10 +111,10 @@
     "text": "Abdülhamids kulturpolitik stellte sich gegen koloniale prägung und zustrom muslimischer einwanderer aus Balkan und kaukasus",
     "page": 364,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "Balkanprovinzen"
+      "balkan"
     ]
   },
   {
@@ -125,7 +125,7 @@
     "text": "Fußnote bildung cioleta islamic benevolent societies – über damaskus als ausnahme in Bildungspolitik",
     "page": 364,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Politische Akteure",
     "confidence": "medium",
     "actors": [
       "Damaskus"
@@ -139,9 +139,11 @@
     "text": "Medresen wurden nicht reformiert, da jemandes turf für ausnahme von Militärdienst",
     "page": 366,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "high",
-    "actors": []
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "medium",
+    "actors": [
+      "Medresen"
+    ]
   },
   {
     "segment_id": "s0030",
@@ -151,7 +153,7 @@
     "text": "Nichtmuslime hatten normalerweise eigene schulen, wer es sich leisten konnte, schickte seine kinder ins ausland, andere option missionarsschulen",
     "page": 366,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -163,7 +165,7 @@
     "text": "Schon seit 1830er interessierte das reich missionarsschulen. Nach krimkrieg viele amerikaner angesiedelt, machen schulen. Das wird als gegengewicht zu russen gutgeheißen, große anzahl führt dann zu sorgen",
     "page": 366,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -175,8 +177,8 @@
     "text": "1884 Altertümergesetz, gab natürlich Korruption aber keine allgemeine Plünderung mehr",
     "page": 367,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Institutionen",
-    "confidence": "high",
+    "category": "Machtstrukturen",
+    "confidence": "medium",
     "actors": []
   },
   {
@@ -187,11 +189,13 @@
     "text": "KEF/Jungtürken (europäische Bezeichnung) waren sehr unterschiedliche, hatten wenig gemein außer Gegnerschaft zu Abdülhamid",
     "page": 370,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "KEF",
-      "Abdülhamid"
+      "Kongress für Einheit und Freiheit",
+      "KEf",
+      "Abdühlhamid",
+      "Young Turk"
     ]
   },
   {
@@ -202,10 +206,11 @@
     "text": "Kef förmlich organisiert bei welle von armenierfeindlicher Gewalt 1894",
     "page": 370,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "KEF"
+      "Kongress für Einheit und Freiheit",
+      "KEf"
     ]
   },
   {
@@ -216,11 +221,9 @@
     "text": "1902 Generalkongress der osm Opposition 1902 in Paris Spaltung in Konstitutionalisten, Materialisten und Anarchisten.  Wichtigste spaltfrage: einmischung ausländischer Mächte in Riech",
     "page": 371,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Paris"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0036",
@@ -230,11 +233,11 @@
     "text": "KEF Schlaf bis 1905, dann eindruck Russ revolution 1905",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": [
-      "Russ",
-      "KEF"
+      "Kongress für Einheit und Freiheit",
+      "KEf"
     ]
   },
   {
@@ -245,9 +248,11 @@
     "text": "Revolutionsausbruch in Mazedonien (Manastir, Kosovo, Saloniki) ort mehr christen als muslime, weil berliner kongress diese gebiete als europ eigeteilt hatte wegen der Bevölkerung, Muslime bildeten keine einheitliche gruppe. Welle auswanderung weil entweder für Regie comany (tabak) arbeiten oder gehen, außerdem landenteignungen",
     "page": 372,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Manastir"
+    ]
   },
   {
     "segment_id": "s0038",
@@ -257,7 +262,7 @@
     "text": "Jeden monat 1908 100 polit morde in unruheprovinz, außerdem Dürre – provinz großer auflösung und europ einmischung",
     "page": 374,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": []
   },
@@ -269,10 +274,13 @@
     "text": "Treffen Juni 1908 könig edward und Zar Nikolaus II in Tallinn getroffen, um osm zur aufgabe mazed zu zwingen – grund für revolution, nach zwei wochen hatten die rebellen die provinz unter kontrolle, führung Ismail enver und ahmed nayazi",
     "page": 374,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Enver"
+      "Enver",
+      "könig edward",
+      "Zar Nikolaus II",
+      "ahmed nayazi"
     ]
   },
   {
@@ -283,12 +291,9 @@
     "text": "Konzession des sultan: verfassung widerherstellen 7. Juli 1908",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Sultan",
-      "Verfassung"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0041",
@@ -298,10 +303,11 @@
     "text": "Erster schuss des zerfallskriegs: Semsi Pascha in Manastir 7. Juli 1908 ermordet. Alle fangen an um das erbe des reiches zu kämpfen.",
     "page": 374,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Semsi"
+      "Manastir",
+      "Semsi Pascha"
     ]
   },
   {
@@ -312,14 +318,9 @@
     "text": "Reaktion: undbhängigkeitserklärung Bulgarien, Annexion kretas durch griechenland, wien erklärte annexion bosnien und herzegowina",
     "page": 374,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": [
-      "Bulgarien",
-      "Griechenland",
-      "Österreich-Ungarn",
-      "Bosnien und Herzegowina"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0043",
@@ -329,10 +330,13 @@
     "text": "Wenig einigkeit KEF, nur antiklerikal, materialistisch, Säkularisen, kaum pläne wie reich zu retten sei. Beratend Ziya Gökalp, Yusuf Akcara, aber erstmal dringende dinge erledigen",
     "page": 375,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
     "actors": [
-      "KEF"
+      "Kongress für Einheit und Freiheit",
+      "KEf",
+      "Ziya Gökalp",
+      "Yusuf Akcara"
     ]
   },
   {
@@ -343,11 +347,11 @@
     "text": "Streiks im reich soldaten und Bahn wegen ausstehendem gehalt, hoffnung auf KEf unterstützung enttäuscht",
     "page": 375,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
-    "confidence": "high",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "medium",
     "actors": [
-      "Bahn",
-      "KEF"
+      "Kongress für Einheit und Freiheit",
+      "KEf"
     ]
   },
   {
@@ -358,11 +362,13 @@
     "text": "Nun freie presse ist nicht nur für KEF, Karrikaturen, außerdem demo an prophetengeburtstag, ruf „sharia“ (31.März 1909), wirre nachrichten darüber in adana (kef gestürzt?, armenier wollen aufstand?",
     "page": 376,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Armenier",
-      "KEF"
+      "Kongress für Einheit und Freiheit",
+      "KEf",
+      "sharia",
+      "armenier"
     ]
   },
   {
@@ -373,12 +379,11 @@
     "text": "Sevket pasha verhängte kriegszustand, truppen zur verteidigung der revolution vor istanbul, absetzung abdülhamid II",
     "page": 376,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Istanbul",
-      "Sevket",
-      "Abdülhamid"
+      "Abdühlhamid",
+      "sevekt pasha"
     ]
   },
   {
@@ -389,11 +394,9 @@
     "text": "Revision verfassung schränkte streikrecht ein und beendete befreiung nichtmuslime vom militärdienst",
     "page": 376,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
-    "confidence": "high",
-    "actors": [
-      "Verfassung"
-    ]
+    "category": "Reichskrise",
+    "confidence": "medium",
+    "actors": []
   },
   {
     "segment_id": "s0048",
@@ -403,10 +406,10 @@
     "text": "Muslimische ulama macht mit bei adana hetzt armenier, zwei tage land kämpfe, truppen zur beruhigung machten mit bei morden",
     "page": 377,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Revolutionäre Ereignisse",
     "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier"
     ]
   },
   {
@@ -417,10 +420,11 @@
     "text": "Konterrevolutionäre predigen und schockieren, liberale und nichtmuslimische verbündete verstummen, das führt in kef zu verschiebung zu radikalen säkularisten. Außerdem konservative gegen sufisten (?",
     "page": 378,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "KEF"
+      "Kongress für Einheit und Freiheit",
+      "KEf"
     ]
   },
   {
@@ -431,13 +435,14 @@
     "text": "Schlüsselfiguren KEF enver pasha, mehmat Talat, Ziya Gökalp, Yusuf akcura, Celal Nuri (alle jung",
     "page": 378,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
+      "Kongress für Einheit und Freiheit",
       "Enver",
-      "KEF",
-      "Talat",
-      "Talat"
+      "Nuri",
+      "KEf",
+      "Ziya Gökalp"
     ]
   },
   {
@@ -448,7 +453,7 @@
     "text": "Gleichzeitig gegen isl frömmigkeit und kein gespür für nichtmuslime, sehen in islam und überkonfessionelen osmanischen idealen keine bindekraft, sie wollten türkische sprache und osmanische schrfift",
     "page": 379,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -460,9 +465,11 @@
     "text": "Kritik an kapitulationen mochten liberale nicht, weil das für sie staatswirtschaft war",
     "page": 379,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
-    "actors": []
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
+    "actors": [
+      "Kapitulationen"
+    ]
   },
   {
     "segment_id": "s0053",
@@ -472,10 +479,11 @@
     "text": "Nichttürken wurden verdängt aus KEF",
     "page": 379,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "KEF"
+      "Kongress für Einheit und Freiheit",
+      "KEf"
     ]
   },
   {
@@ -486,12 +494,15 @@
     "text": "Said Nursi: festgenommen wirren 31. März, aber eigentlich kef naher liberaler, redet bei kaiuser reise balkan von türken als schildwache der islamischen nationalität, islamische gesellschaft sei wie eine Fabrik wo alle zusammen arbeiten (rede vorher damaskus",
     "page": 380,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
       "Damaskus",
-      "KEF",
-      "Balkanprovinzen"
+      "Kongress für Einheit und Freiheit",
+      "Nuri",
+      "KEf",
+      "balkan",
+      "türken"
     ]
   },
   {
@@ -502,9 +513,11 @@
     "text": "1911 ital truppen tripolis, ab da andauernd krieg",
     "page": 380,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "tripolis"
+    ]
   },
   {
     "segment_id": "s0056",
@@ -514,12 +527,13 @@
     "text": "Jemen Revolte gegen KEF herrschaft, albanien revolution, erdbeben Gallipoli 1912, kriegserklärung Montenegro, serbien, bulgarien, griechenland",
     "page": 380,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Bulgarien",
-      "Griechenland",
-      "KEF"
+      "Kongress für Einheit und Freiheit",
+      "Revolte",
+      "Albanians",
+      "KEf"
     ]
   },
   {
@@ -530,10 +544,11 @@
     "text": "Sturz kabinett KEF durch “Retteroffiziere“",
     "page": 381,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "KEF"
+      "Kongress für Einheit und Freiheit",
+      "KEf"
     ]
   },
   {
@@ -544,11 +559,12 @@
     "text": "Viele gebietsverluste, krieg in catalca, 50 km vor istanbul, fast nichts mehr übrig von europäischen besitzungen, edirne, janina und shköder belagert",
     "page": 381,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Istanbul",
-      "Edirne"
+      "Edirne",
+      "janina",
+      "shköder"
     ]
   },
   {
@@ -559,12 +575,13 @@
     "text": "Edirne wurde belagernt rettungsoffiz bieten teilung an, enver platzt in kabinettssitzung, erschießt großwesir, setzten mahmud sevket pascha an seine stelle",
     "page": 381,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
       "Enver",
-      "Sevket",
-      "Edirne"
+      "Edirne",
+      "Mahmud sevket",
+      "sevekt pasha"
     ]
   },
   {
@@ -575,14 +592,14 @@
     "text": "Verlust janina und shköder, märz edine an bulgarien, gescheiterter gegenputsch mordet trotzdem sevket pascha, balkankrieg der alliierten gegen osm reich untereinander, edirne dann doch an osm reich, enver held",
     "page": 381,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
       "Enver",
-      "Bulgarien",
-      "Sevket",
-      "Osm Reich",
-      "Edirne"
+      "Edirne",
+      "janina",
+      "shköder",
+      "sevekt pasha"
     ]
   },
   {
@@ -593,7 +610,7 @@
     "text": "Carnegie bericht 1914 über bulgarische Verbrechen in edirne, taktik, nicht zufall",
     "page": 382,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
       "Edirne"
@@ -607,9 +624,11 @@
     "text": "Türken flohen vor christen, bulgaren vor griechen und türken, griechen und türken vor bulgaren, albaner vor serben. Griechische behörden töten bulgarische bewohner von serres, als bulgarische armee kam tötete die die griechen",
     "page": 383,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "türken"
+    ]
   },
   {
     "segment_id": "s0063",
@@ -619,10 +638,12 @@
     "text": "Balkanerfahrungen verschafften KEF extremisten auftrieb",
     "page": 384,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "KEF"
+      "Kongress für Einheit und Freiheit",
+      "Balkanerfahrungen",
+      "KEf"
     ]
   },
   {
@@ -633,13 +654,12 @@
     "text": "Russ botschaft überreichte frz, engl und dt vertretern vorschläge für reformen, KEF ausgeschlossen, unterschrieben 1914 ostgebiete zu teilen, ohne das wirklich vor zu haben. Einmischung von außen, innen kommt die idee anatolien zu homogenisieren (griechen und armenier raus",
     "page": 385,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Armenier",
-      "Russ",
-      "KEF",
-      "Anatolien"
+      "Kongress für Einheit und Freiheit",
+      "KEf",
+      "armenier"
     ]
   },
   {
@@ -650,11 +670,10 @@
     "text": "Völkermord armenier, weil sie mit russen angeblich zusmmenarbeiten, außerdem verluste osm armee anatolien",
     "page": 388,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Armenier",
-      "Anatolien"
+      "armenier"
     ]
   },
   {
@@ -665,9 +684,11 @@
     "text": "Osman's dream : the story of the Ottoman empire 1300 - 1923 / Caroline Finkel",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Ottoman Empire"
+    ]
   },
   {
     "segment_id": "s0067",
@@ -677,10 +698,11 @@
     "text": "Jungosmanen waren für verfassung mit islamischen touch gegen tanzimat als europäische spiegelung",
     "page": 489,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "Verfassung"
+      "Tanzimat",
+      "Jungosmanen"
     ]
   },
   {
@@ -691,12 +713,9 @@
     "text": "Verfassung drei monate nach thronbesteigung beschlossen, suspendiert wegen krise mit russland und briten, glaibt er nicht an rettung durch veränderung sondern durch kontinuität",
     "page": 490,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Russland",
-      "Verfassung"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0069",
@@ -706,9 +725,11 @@
     "text": "Tanzimat-zusammenhalt war nch berliner konferenz nicht mehr das richtige, shift zu muslimischer identität",
     "page": 491,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Tanzimat"
+    ]
   },
   {
     "segment_id": "s0070",
@@ -718,8 +739,8 @@
     "text": "Selbstverständnis des reiches als modern wie deutschland etwa, mit kaiser, exotisch wollte man nicht sein",
     "page": 491,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "high",
+    "category": "Politische Akteure",
+    "confidence": "medium",
     "actors": []
   },
   {
@@ -730,7 +751,7 @@
     "text": "Islamische identität als gegenstück zu ethnischer europäischer identität",
     "page": 492,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -742,11 +763,10 @@
     "text": "Bau einer bahn von damaskus nach median 1900 -1908",
     "page": 495,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Damaskus",
-      "Bahn"
+      "Damaskus"
     ]
   },
   {
@@ -757,10 +777,11 @@
     "text": "Abdülhamid holte araber an den hof, „geiseln“ die für araber in ihren provinzen verantwortlich waren. Darunter abal huda al sayyadi",
     "page": 495,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Abdülhamid"
+      "Abdühlhamid",
+      "abal huda al sayyadi"
     ]
   },
   {
@@ -771,12 +792,12 @@
     "text": "Es entwickelte sich seit 1856 (tanzimat) eine syrische identität, die durch gemeinsame sprache getragen war und glauben überbrückte. Provinzen damaskus, sidon und tripoli zu einer superprovinz zusammengefasst – passt nicht mit islam vision abdülhamids zusammen, sayyadi ist sein propagandist. Verteilung islamistischer propaganda, zensur der presse in syrien, alles musste über istanbul gehen",
     "page": 496,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
       "Damaskus",
-      "Syrien",
-      "Istanbul"
+      "Tanzimat",
+      "abal huda al sayyadi"
     ]
   },
   {
@@ -787,9 +808,11 @@
     "text": "Religionsfreiheit 1856 dadurch missionare, daher religionsunterricht etc dringender",
     "page": 497,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Religionsfreiheit"
+    ]
   },
   {
     "segment_id": "s0076",
@@ -799,12 +822,10 @@
     "text": "Abdülhamid war an sich konservativ, wollte reich erhalten und war generell vorsichtig, aber wirtschaft muss laufen, bisschen bürokratie auch ändern. Aber militär und verwaltung bekommen 690% haushalt, public works, bildung etc 5%, 30% war schuldendienst",
     "page": 499,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Bürokratie",
-      "Abdülhamid",
-      "Militär"
+      "Abdühlhamid"
     ]
   },
   {
@@ -815,11 +836,9 @@
     "text": "Zentralisierung als lehre aus loslösiung der balkanprovinzen",
     "page": 500,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Balkanprovinzen"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0078",
@@ -829,11 +848,10 @@
     "text": "Konstitutionalist midhat pasha ermordet weil konstitutionalist, dann verdeckt, weil angst vor folgen (alles durch sultan",
     "page": 501,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "Sultan",
-      "Midhat"
+      "midhat pasha"
     ]
   },
   {
@@ -844,11 +862,11 @@
     "text": "Kurden rekrutiert, die immer sehr unabhängig waren, um armenier zu kontrollieren, formalisierung für integrations ins reich, dann aber doch hamidiya regimente grausam, intervention briten, frankreich, russland",
     "page": 502,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Russland",
-      "Armenier"
+      "armenier",
+      "hamidiya"
     ]
   },
   {
@@ -859,10 +877,10 @@
     "text": "Intellektuelle wollen auch reich erhalten, waren aber unzufrieden mit abdülhamid, wegen autokratie, offensichtlichem scheitern das auseinanderfallen zu stoppen",
     "page": 504,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "Abdülhamid"
+      "Abdühlhamid"
     ]
   },
   {
@@ -873,13 +891,11 @@
     "text": "Erst 1889 militär- und medizinakademie gründeten geheime society zur wiedereinsetzung der Verfassung, aber entdeckt, verhaftet oder nach paris geflohen, gründung 1894 KEF",
     "page": 504,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Paris",
-      "KEF",
-      "Verfassung",
-      "Militär"
+      "Kongress für Einheit und Freiheit",
+      "KEf"
     ]
   },
   {
@@ -890,11 +906,12 @@
     "text": "Kef entwicklung von intellektuell zu pragmatisch, abwechselde phasen von vitalität und infighting, sehr unterschiedliche ideen, aus vielen Gegenden nur einig: weg mit abdülhamid",
     "page": 504,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "KEF",
-      "Abdülhamid"
+      "Kongress für Einheit und Freiheit",
+      "KEf",
+      "Abdühlhamid"
     ]
   },
   {
@@ -905,12 +922,13 @@
     "text": "Abdülhamid unterdrückte KEF erfolgreich im innern, will aber au ch dass europ mächte mitmachen. Aber in paris wurde 1902 sogar kongress kef erlaubt (wichtig dabei der sohn des schwiegersohns abdülhamids sabaheddin",
     "page": 505,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Paris",
-      "KEF",
-      "Abdülhamid"
+      "Sabaheddin",
+      "Kongress für Einheit und Freiheit",
+      "KEf",
+      "Abdühlhamid"
     ]
   },
   {
@@ -921,10 +939,12 @@
     "text": "Sabaheddin fraktion, mit armeniern verbündet für äußere intervention vs fraktion umahmed riza, bürokrat, kategorisch gegen äußere Intervention. Nicht intervention gruppe kleiner, aber seit beginn kef dominant",
     "page": 505,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "Politische Akteure",
+    "confidence": "medium",
     "actors": [
-      "KEF"
+      "Sabaheddin",
+      "Kongress für Einheit und Freiheit",
+      "KEf"
     ]
   },
   {
@@ -935,7 +955,7 @@
     "text": "Europäische presse feiert natürlich interventionistenfraktion",
     "page": 505,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": []
   },
@@ -947,10 +967,12 @@
     "text": "Sabaheddin gruppe versucht mit mazedonischer, albanischer und armenischer hilfe ausländische hilfe für putsch zu bekommen, rizas gruppe versucht besserre Organisation für die Zukunft und fokussiert sich auf Türken/muslime. Islam als bindendes Nationalbewusstsein, nicht unbedingt so religiös",
     "page": 505,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Putsch"
+      "Sabaheddin",
+      "Organisation",
+      "türken"
     ]
   },
   {
@@ -961,13 +983,11 @@
     "text": "Riza war eigentlich eher graduell, abgelöst von Bahaeddin sakir, revolutionär, der sogar armenier ansprechen will, die lehnen aber ab, gründet Committee of Progress and Union (CPU), mitglieder laden militärs ein, idee evtl von deutschen armeetrainer freiherr von Goltz – führt zu idee militär-politik-nexus, einige natürlich dagegen",
     "page": 506,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Armenier",
-      "Bahaeddin Sakir",
-      "Militär"
+      "Kongress für Einheit und Freiheit",
+      "armenier"
     ]
   },
   {
@@ -978,12 +998,9 @@
     "text": "Russ revolution 1905 gibt revolutionären auftrieb, liberale wurden da auch von ereignissen abgehängt, außerdem iran revolution",
     "page": 506,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": [
-      "Iran",
-      "Russ"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0089",
@@ -993,11 +1010,11 @@
     "text": "Unruhen 1905 1907 in anatolien wegen einberufung für jemen krieg – will muslimischer großherrscher sein, aber alle werden wütend. 1906 sogar rebellion armenier muslime zusammen gegen steuern",
     "page": 507,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Armenier",
-      "Anatolien"
+      "Revolte",
+      "armenier"
     ]
   },
   {
@@ -1008,7 +1025,7 @@
     "text": "Agrarprodukte nicht gut besteuern (willkür) und weltmarkt nicht kompetetiv",
     "page": 507,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": []
   },
@@ -1020,11 +1037,11 @@
     "text": "Cpu hatte keine rolle in anatolien, aber sabahhedin gruppe neue orga league of private Initiative and decentralization war dabei, neue verbindungen zu provinzanführern",
     "page": 508,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Anatolien"
+      "Sabaheddin",
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1035,10 +1052,10 @@
     "text": "1907 neuer Oppositionskongress in paris unter Riza und sabahhedin Bey, khachatur maloumian von den Dashnaks, spannungen wegen misstrauen gegen armenierallianz",
     "page": 508,
     "doc_type": "Forschungsnotizen",
-    "category": "Exil und Diaspora",
-    "confidence": "high",
+    "category": "Politische Akteure",
+    "confidence": "medium",
     "actors": [
-      "Paris"
+      "Sabaheddin"
     ]
   },
   {
@@ -1049,15 +1066,11 @@
     "text": "1906 thessaloniki geheimorganisation ottoman freedom society anführer Talat Bey, außerdem mitglieder der dritten armee aus thessaloniki, darunter Ismail Enver, 1907 merge mit CPU, aber noch eigenständige Orga. Ziel: Verfassung wiedereinsetzen. Neue kraft CPU und basis in thessaloniki 508f",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "Enver",
-      "CUP",
-      "Thessaloniki",
-      "Verfassung",
-      "Talat",
-      "Talat"
+      "Kongress für Einheit und Freiheit",
+      "Enver"
     ]
   },
   {
@@ -1068,10 +1081,10 @@
     "text": "Modell neuorganisation Internal Macedomnian Revolutionary Organization von 1893. Ziel war es gewesen, neues land makedonien zu machen aus Kosovo, Monastur und Thessaloniki (spiegelbild der gegner also",
     "page": 509,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Thessaloniki"
+      "Organisation"
     ]
   },
   {
@@ -1082,11 +1095,11 @@
     "text": "Cpu wird schlagkräftig aber intern komische rituale. Für balkan bleibt osmanisch, revolution unmöglich ohne die Armee",
     "page": 509,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "high",
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
     "actors": [
-      "CUP",
-      "Balkanprovinzen"
+      "Kongress für Einheit und Freiheit",
+      "balkan"
     ]
   },
   {
@@ -1097,7 +1110,7 @@
     "text": "Makedonien hielt identität nicht zusammen osmanische armee hatte das auch nicht geschafft",
     "page": 510,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -1109,8 +1122,8 @@
     "text": "Zar und franz josef australien treffen sich wollen dass makedonien unter europäische kontrolle kommt",
     "page": 510,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "medium",
+    "category": "Reichskrise",
+    "confidence": "high",
     "actors": []
   },
   {
@@ -1121,10 +1134,10 @@
     "text": "Aufstände gegen steuern wie in anatolien 1905",
     "page": 511,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Anatolien"
+      "Revolte"
     ]
   },
   {
@@ -1135,10 +1148,11 @@
     "text": "CPU in mazedonien wendet sich nicht nur an muslime oder türken",
     "page": 511,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
-    "confidence": "high",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "medium",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "türken"
     ]
   },
   {
@@ -1149,12 +1163,9 @@
     "text": "13. mai 1908 ultimatum an den sultan verfassung einzusetzen",
     "page": 511,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Sultan",
-      "Verfassung"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0101",
@@ -1164,10 +1175,10 @@
     "text": "Diskussion zar nikkolaus und edward vii 9-12. Juni in tallinn, angst vor euro intervention führrt zu guerilla cpu",
     "page": 511,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1178,12 +1189,10 @@
     "text": "Kontrolle erreicht übe makedonien, abdülhamid setzt bis 24. Juli verfassung ein und kündigt wahlen an nach drohung marsch auf istanbul",
     "page": 512,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Istanbul",
-      "Abdülhamid",
-      "Verfassung"
+      "Abdühlhamid"
     ]
   },
   {
@@ -1194,10 +1203,10 @@
     "text": "Konstitutionelle monarchei, cpu wird zu cup. Aber eigentlich haben die keine lust auf parlamentarischen pluralismus, wollen rat der ethnien sein, die unter bedingungen der cup kooperieren. Parlament daher eliteprojekt",
     "page": 512,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Institutionen",
-    "confidence": "high",
+    "category": "Politische Akteure",
+    "confidence": "medium",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1208,10 +1217,11 @@
     "text": "Gleicheitsverständnis aller eigentrlcih eingesetzt, balkanchristen wollen aber eher gleichheit der tanzimat, problem für cup",
     "page": 513,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
-    "confidence": "high",
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Tanzimat"
     ]
   },
   {
@@ -1222,13 +1232,10 @@
     "text": "Bulgarien unabhängigkeit, bosnien herzegowina von wien annektiert, kreta von griechenland",
     "page": 513,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Bulgarien",
-      "Kreta",
-      "Griechenland",
-      "Österreich-Ungarn"
+      "kreta"
     ]
   },
   {
@@ -1239,11 +1246,11 @@
     "text": "Bei den wahlen trat libertale uznion gegen cup an, eine eminenz darin ist sabaheddin bey",
     "page": 513,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": [
-      "CUP",
-      "Sabaheddin Bey"
+      "Sabaheddin",
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1254,10 +1261,10 @@
     "text": "Abdülhamid knirscht zähne, kommt nicht zum parlament usw, das wird ihm übel genommen",
     "page": 514,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Abdülhamid"
+      "Abdühlhamid"
     ]
   },
   {
@@ -1268,7 +1275,7 @@
     "text": "Soziale und ökonomische freiheiten 1908, auch kleidung für frauen, aber auch ansammlungen von unzufriedenen damit, wollen sitten weil reich auseinanderfällt, gegen theater, tavernen, fotografie, für verschleierung",
     "page": 514,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -1280,12 +1287,10 @@
     "text": "Auch neue freiheit genutzt für streiks, bahn und minen. Ein drittel der 200.000 – 250.000 arbeiter haben irgendwann gestreikt. Erste gesetzte gegen streik schon oktober 1908, bevor parlament wieder offen. Gewalt gegen streikende, cup hatte keine zeit für das Volk",
     "page": 515,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Bahn",
-      "Minen"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1296,10 +1301,11 @@
     "text": "Muslimische opposition gegen CUP Muslim Union, Volkan Zeitung",
     "page": 515,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "volkan"
     ]
   },
   {
@@ -1310,7 +1316,7 @@
     "text": "Gegenputsch 13.April 1909 gregorianisch, trdit allianz von enttäuschten klerikern und unzufriedenen truppen der ersten armee (waren schon berüchtigt für niederschlagung meuterei jemen rekruten",
     "page": 515,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -1322,11 +1328,11 @@
     "text": "Truppen 1. Und 3. Armee hatten offiziere festgenommen, waren für islamisches recht, hätten in armee keine zeit für glauben. Anführer sind diejenigen, auf die Abdülhamid zählte: durch ränge aufgestiegene, nicht akademieabsolventen der CUP. Gerücht dass verkürzte dienstzeit in jemen etc dazu führt, dass religionsschüler eingezogen werden",
     "page": 516,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Abdülhamid"
+      "Kongress für Einheit und Freiheit",
+      "Abdühlhamid"
     ]
   },
   {
@@ -1337,12 +1343,11 @@
     "text": "Forderungen putsch: rücktritt großwesir und kriegsminister und parlamentspräsident, abgang einiger cup köpfe, islamisches recht, entlassung der offiziere, die nur akademie abgeschlossen haben, einsetzung der aufgestiegenen. 13. April schnelle reaktion: Abdülhamid sagt ja, mehr isl recht, vllt hat abdülhamid das alles sowieso organisiert",
     "page": 516,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Putsch",
-      "Abdülhamid"
+      "Kongress für Einheit und Freiheit",
+      "Abdühlhamid"
     ]
   },
   {
@@ -1353,13 +1358,11 @@
     "text": "Cup sagt das darf abdülhamid nicht, er ist ja kein autokrat mehr. Belagerung yildiz palast. Verkündung später das volk habe den sultan abgesetzt, exil nach thessaloniki",
     "page": 517,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Sultan",
-      "Thessaloniki",
-      "Abdülhamid"
+      "Kongress für Einheit und Freiheit",
+      "Abdühlhamid"
     ]
   },
   {
@@ -1370,11 +1373,10 @@
     "text": "Laut verfassung gab es keine organisierte vertretung des volkes, das hat cup einfach an sich genommen. Lösung war umweg über islamisches recht, islam ja staatsreligion",
     "page": 517,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Verfassung"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1385,9 +1387,11 @@
     "text": "Gegenputsch unblutig, sanktionen 80 hinrichtungen, auch volkan publisher",
     "page": 518,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "volkan"
+    ]
   },
   {
     "segment_id": "s0117",
@@ -1397,11 +1401,9 @@
     "text": "Bruder des sultans kam als mehmed V an die macht, allerdings machte sich das parlament zur höchsten autorität, sultan bestätigt nur parlamentsbeschlüsse",
     "page": 518,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
-    "actors": [
-      "Sultan"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0118",
@@ -1411,12 +1413,12 @@
     "text": "Mächtig: generalinspektor 1.2.3. armee Mahmud sevket, damit über parlament und CUP (marsch auf istanbul dann, martial law meiste zeit",
     "page": 518,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Istanbul",
-      "Sevket"
+      "Kongress für Einheit und Freiheit",
+      "Mahmud sevket",
+      "sevekt pasha"
     ]
   },
   {
@@ -1427,13 +1429,12 @@
     "text": "Machtkonkurrenz cup mahmud sevket pasha. Cup hatte wahlen gewonne, aber grenze militär und politik verwaschen, außerdem gab es das untergrundkommittee und dessen unsichtbare männer. Die wurden 1909 zur unionisten partei",
     "page": 519,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Sevket",
-      "Mahmud Sevket Pasha",
-      "Militär"
+      "Kongress für Einheit und Freiheit",
+      "Mahmud sevket",
+      "sevekt pasha"
     ]
   },
   {
@@ -1444,10 +1445,10 @@
     "text": "Cup findet hart durchgreifen für reichsrettung: streikverbote, eimnzug armee nichtmuslime",
     "page": 519,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1458,11 +1459,10 @@
     "text": "Sevket kriegsminister um ihn zu bändigen, setzt aber durch dass es keine kürzungen beim militär gibt",
     "page": 519,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "Sevket",
-      "Militär"
+      "sevekt pasha"
     ]
   },
   {
@@ -1473,7 +1473,7 @@
     "text": "Politischer mord an lib journalisten 1910",
     "page": 519,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -1485,11 +1485,10 @@
     "text": "November 1911 liberale union, gegründet und wieder aufgelöst und wieder gegrün det seit 1908 wurde zentrum der regierungsgegner, cup gewinnt wahlen, löst mit eigener mehrheit parlament auf. Dann wahlen 1912 wahlbetrug etc, mehr cup. Dann wiederum juli 1912 anti cup orga erzwang parlamentsauflösung: gerlernt: nicht fair spielen. Sultan kündigt wahlenan, dauert aber über ein jahr, zwischendurch fängt weltkrieg an",
     "page": 520,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Sultan"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1500,10 +1499,12 @@
     "text": "Revolution hat zwar in albanien begonnen, 3. Juli 1908, aber pressefreiheit danach macht nationalismus stark, cup wird 1909 skeptisch gegenüber albanischer nationalbewegung, brauchten es als puffer",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Religionsfreiheit",
+      "Albanians"
     ]
   },
   {
@@ -1514,11 +1515,12 @@
     "text": "Arabische regionen gab es auch mehr araber stolz, nach tanzimat und aufstieg in höhere Posiutionen unter abdülhamid. Waren eher liberal als CUP durchgriff. Beleidigung durch türkisch als gerichts- und sekundärschulsprache",
     "page": 521,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
-    "confidence": "medium",
+    "category": "Reichskrise",
+    "confidence": "high",
     "actors": [
-      "CUP",
-      "Abdülhamid"
+      "Kongress für Einheit und Freiheit",
+      "Tanzimat",
+      "Abdühlhamid"
     ]
   },
   {
@@ -1529,13 +1531,13 @@
     "text": "Cup versucht arabische provinzen, tradit unabnhängig, stärker zu kontrollieren, aufstände 1910 und 11 in syrien und arab halbinsel. Einige ägypter sind eigentlich für sultan khalif gegen briten, syrer, die nach ägypten gegangen waren, um griff des reiches zu entfliehen, waren weniger begeistert",
     "page": 522,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Revolutionsereignisse",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Syrien",
-      "Sultan",
-      "Ägypten"
+      "Kongress für Einheit und Freiheit",
+      "Revolte",
+      "ägypten",
+      "khalif"
     ]
   },
   {
@@ -1546,10 +1548,11 @@
     "text": "Krieg tripoli mustafa kemal und enver",
     "page": 522,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Enver"
+      "Enver",
+      "mustafa kemal"
     ]
   },
   {
@@ -1560,13 +1563,12 @@
     "text": "23. jan 1913 enver putsch gegen konzession edirne aufzugeben, erschoss kriegsminister nazim pasha, erzwang kamils rücktritt,, zwangen sultan mit waffe? Mahmud sevekt pasha zum neuen großwesir zu machen, außerdem kriegsminister (hatte das amt paar monate vorher erst verloren",
     "page": 523,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
       "Enver",
-      "Putsch",
-      "Sultan",
-      "Edirne"
+      "Edirne",
+      "sevekt pasha"
     ]
   },
   {
@@ -1577,7 +1579,7 @@
     "text": "Edirne dann doch verloren, dann doch friedensvertrag von london",
     "page": 523,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
       "Edirne"
@@ -1591,13 +1593,12 @@
     "text": "Enver hatte zwar regierung gestürzrt, militär hat das aber nichts gebracht, sevket pasha diskreditiert, 11 juni 1913 ermordet. Edirne wieder eingemommen weil balkankrieg 2",
     "page": 524,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
       "Enver",
-      "Sevket",
       "Edirne",
-      "Militär"
+      "sevekt pasha"
     ]
   },
   {
@@ -1608,13 +1609,11 @@
     "text": "Putsch januar 1913 zwar cup regierung, aber machtbasis balkan weg. Briten machen propaganda zur spaltung osmanen araber. Arabisch als schul und gerichtssprache wieder eingeführt. Sogar überlegungen hauptstadt aleppo savket pasha, weil nicht so verwundbar, andere schlagen anatolien vor.524",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Putsch",
-      "Anatolien",
-      "Balkanprovinzen"
+      "Kongress für Einheit und Freiheit",
+      "balkan"
     ]
   },
   {
@@ -1625,11 +1624,11 @@
     "text": "Lehre cup: islam als bindekraft nutzen, abdülhamid politik fortsetzen",
     "page": 525,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Abdülhamid"
+      "Kongress für Einheit und Freiheit",
+      "Abdühlhamid"
     ]
   },
   {
@@ -1640,11 +1639,9 @@
     "text": "Ökonomischhre krise 19 jh und europ ausbeutung führte zu halbkolonialen status osm reich. Infrastrukturunternehmen gehörten europäern: versicherungen, eisenbahngesellschaften, banken, häfen. Management der schulden durch 7er gremium, 5 davon ausländer",
     "page": 526,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Osm Reich"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0134",
@@ -1654,11 +1651,11 @@
     "text": "Ausländischer einfluss ist guter sündenbock für cup. Half gegen liberale opposition, die nach auf parlament 1912 stark war. Dann repression nach sevket pasha ermordung Juni 1913 – exekution, nicht wie sonder immer exil",
     "page": 526,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Sevket"
+      "Kongress für Einheit und Freiheit",
+      "sevekt pasha"
     ]
   },
   {
@@ -1669,7 +1666,7 @@
     "text": "Januar 1914 enver kriegsminister und militärgouverneur istanbuls, vorher pasha. Ahmed cemal pasha war in charge für rache an liberalen",
     "page": 526,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
       "Enver"
@@ -1683,10 +1680,10 @@
     "text": "Parlament 1914 mehr araber, aber cup mehrheit, also autokratie",
     "page": 527,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Institutionen",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1697,10 +1694,12 @@
     "text": "Abdu ̈lhamid’s reign was ultimately brought to an end by the convergence of two trends: the development of a growing opposition movement both inside and outside the empire; and the re-emergence of the Balkan problem, this time centring on the intractable situation in Macedonia",
     "page": 58,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Balkanprovinzen"
+      "balkan",
+      "Abdu ̈lhamid",
+      "Macedonia"
     ]
   },
   {
@@ -1711,14 +1710,16 @@
     "text": "hief ideologue of the CUP was Ahmed Rıza Bey, paris studiert agrikult, atheist, positivist, zeitschrift Me ̧sveret untertitel order and progress. murad bey, zeitschrift Mizan, literatur, stress mit regime, exil ägypten, frankreich. Sabaheddin, prinz und liberal, allianz mit brioten, armeniern, seine fraktion verliert bei spaltung 1902",
     "page": 59,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Paris",
-      "Ahmed Riza",
-      "Ägypten",
-      "Ahmed Rıza"
+      "Sabaheddin",
+      "Kongress für Einheit und Freiheit",
+      "ägypten",
+      "Ahmed Rıza Bey",
+      "̧sveret",
+      "murad bey",
+      "zeitschrift Mizan"
     ]
   },
   {
@@ -1729,10 +1730,11 @@
     "text": "militärs haben von ihren gegnern, mazedonischen gangs gelernt, sind hands on, nicht mehr glorifizierte debattiergesellschaft. Gründeten osm freedom society 1906, übernehmen effektiv cup",
     "page": 60,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Osmanische Freiheitsgesellschaft"
     ]
   },
   {
@@ -1743,10 +1745,10 @@
     "text": "sultantrupen gegen cup weigern sich zu kämpfen",
     "page": 60,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1757,9 +1759,12 @@
     "text": "konterrevolution 1909 kurz erfolgreich, im namen der sharia, ulama",
     "page": 61,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "sharia",
+      "Konterrevolution"
+    ]
   },
   {
     "segment_id": "s0142",
@@ -1769,7 +1774,7 @@
     "text": "Selbstbild revolutionäre: frz rev, am unab, osm revolution. Heute wird verfassungsperiode stiefmütterlich behandelt als zwischenzeit",
     "page": 62,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -1781,13 +1786,10 @@
     "text": "Verfassung 1877 war sehr schwach, keine parteien rechte, parlament als nette berater. Echtes limit des sultans war die bürokratie der hohen pforte, und die hat abdülhamid wirklich zurück gedrängt, macht zentralisiert und damit die möglichkeit des militärs geschaffen, ihn loszuwerden",
     "page": 63,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Bürokratie",
-      "Abdülhamid",
-      "Verfassung",
-      "Hochpforte"
+      "Abdühlhamid"
     ]
   },
   {
@@ -1798,10 +1800,10 @@
     "text": "Ziel cup: zusammenbruch verhindern",
     "page": 64,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1812,10 +1814,11 @@
     "text": "Wichtig: merger 1907 cpu und ottom freedom society, neue basis, mehr osmanismus, weniger turkismus, man will alle als support, auch nicht muslime, damit europäer nicht eingreifen",
     "page": 64,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "ottom freedom society"
     ]
   },
   {
@@ -1826,11 +1829,10 @@
     "text": "Zwei beweggründe geht los 3. juli: england russland wollen reform, Gerüchte abdülhamid will zugreifen",
     "page": 64,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Russland",
-      "Abdülhamid"
+      "Abdühlhamid"
     ]
   },
   {
@@ -1841,11 +1843,9 @@
     "text": "Incredibly, the revolution was so localised at the outset that news of it did not reach the public in Istanbul, the Asiatic provinces and Tripoli of Barbary until after the reinstatement of the constitution.",
     "page": 65,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": [
-      "Istanbul"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0148",
@@ -1855,11 +1855,10 @@
     "text": "Leute freuen sich dass jetzt alles besser wird, steuern etc, aber cup spricht schon vpn periode der implementeirung und aktion",
     "page": 65,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "medium",
     "actors": [
-      "CUP",
-      "Konst"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1870,9 +1869,11 @@
     "text": "The Young Turk Revolution overthrew the Hamidian regime under the banner of ‘Liberty, Equality, Fraternity and Justice’",
     "page": 65,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Young Turk"
+    ]
   },
   {
     "segment_id": "s0150",
@@ -1882,7 +1883,7 @@
     "text": "They envisaged a parliamentary democracy headed by a responsible government and administered by a meritocratic bureaucracy. They expected political parties to replace age-old institutions, such as notable houses and religious orders, as the principal mediums of political participation. They stood for a new fraternal Ottoman identity, united against European intervention in the affairs of the empire. They spoke of a free press, and of virtually unlimited individual liberties. Very few of these things came to pass.",
     "page": 66,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": []
   },
@@ -1894,7 +1895,7 @@
     "text": "Jungtürkenrevolution ungewöhnlich: konservativ, restaurativ, nicht zerstörend, einparteienherrschaft",
     "page": 66,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -1906,10 +1907,10 @@
     "text": "Neue freiheiten der kosnt ära machten richtig den deckel auf für alles mögliche: arbeiter, steuern, frauen, aber viel unruhe und da appeliert cup erst, dann verbietet sie",
     "page": 67,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1920,7 +1921,7 @@
     "text": "1908 wahlen überraschend frei, öffentliche freude",
     "page": 67,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -1932,9 +1933,11 @@
     "text": "System der repräsenation umstritten: minderheuten wollen es anders, nicht von türken und muslimen erdrückt werden – tanzimatgleichheit, nicht bürgergleichheit?",
     "page": 68,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "türken"
+    ]
   },
   {
     "segment_id": "s0155",
@@ -1944,7 +1947,7 @@
     "text": "Wahlen produzierten unabhängige kandidaten, die spätern kern der opposition bildeten",
     "page": 68,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": []
   },
@@ -1956,10 +1959,10 @@
     "text": "Cup wird paranoid – haben ja gerade selbst mit gewalt macht genommen",
     "page": 68,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1970,10 +1973,11 @@
     "text": "Opposition: Liberale, Bürokraten für hohe pforte (Kamil Pasha), nationalisten gegen schmale osmanismusdefinition, lokale gruppen wegen zentralisierung, islamisten wegen säkularismus, sozialisten",
     "page": 68,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "Kamil"
+      "säkularismus",
+      "sozialisten"
     ]
   },
   {
@@ -1984,10 +1988,11 @@
     "text": "Wichtiger oppositioneller: Sabahaddin Bey, kampf gg cup mit League of Private Initiative and Decentralisation",
     "page": 69,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Sabaheddin",
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -1998,10 +2003,10 @@
     "text": "Cup kooptiert, behauptet zb fälschlich dass  mit League of Private Initiative and Decentralisation ihr beigetreten sei. Andree gruppe angesprochen quasi. Funktioniert aber nicht",
     "page": 69,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "medium",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2012,10 +2017,11 @@
     "text": "Parteien: Mohammedan Union Party, the centre-left Democratic Party, the Liberal Party and the Moderate Freedom-Lovers’ Party, konnte aber nie cup herausfodern. Einparteiendominanz in multuparteienverfassung prodiziert spannungen",
     "page": 70,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Mohammedan Union Party"
     ]
   },
   {
@@ -2026,11 +2032,12 @@
     "text": "Konterrevolution: cup hatte keine vollständigen Zugriff auf armee, hat aber sultanstreue durch ränge aufgestiegene offiz versucht rauszuwerfen, hauptstadtarmee ganz ersetzt. Rebellion von 1. Und 3. Armee, die schon putsch gemacht hatte niedergeschlagen",
     "page": 70,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Putsch"
+      "Kongress für Einheit und Freiheit",
+      "Revolte",
+      "Konterrevolution"
     ]
   },
   {
@@ -2041,9 +2048,11 @@
     "text": "April 1909: gesetzte gegen streik, gegen Pressefreiheit",
     "page": 71,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Religionsfreiheit"
+    ]
   },
   {
     "segment_id": "s0163",
@@ -2053,10 +2062,10 @@
     "text": "1911 liberale entente partei, ulama und nicht muslime, mixtur, schafft es, cup herauszufordern",
     "page": 71,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2067,11 +2076,11 @@
     "text": "Entente sieg bei wahl istanbul, dann cup schnell neuwahlen ausgerufen februar bis april 1912, durch fälschungen gewonnen",
     "page": 72,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Istanbul"
+      "Kongress für Einheit und Freiheit",
+      "Wahl"
     ]
   },
   {
@@ -2082,12 +2091,12 @@
     "text": "Juli 1912 krise wegen albanien militär meuterei, kabinettskrise, dann kabinett unter Gazi Ahmed Muhtar Pas a, nicht cup unterstützer, senat drängt cup ab? Sind rest abdülhamid regime",
     "page": 72,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Abdülhamid",
-      "Militär"
+      "Kongress für Einheit und Freiheit",
+      "Albanians",
+      "Abdühlhamid"
     ]
   },
   {
@@ -2098,11 +2107,11 @@
     "text": "But unknown to the Committee, a secret military organisation, the Group of Saviour Officers, had come into being with the encouragement of a number of high-ranking commanders sidelined by the CUP. On 25 July 1912 this group issued an ultimatum demanding the dismissal of the chamber of deputies. The new, independent grand vezir seized the opportunity to ask the senate, composed of officers and high-ranking officials appointed by the sultan for life, to dismiss the chamber of deputies. Although the senate had little more than ceremonial significance, among its functions was the issue of decrees dissolving the chamber of deputies and calling for new elections, pending approval by the sultan. More significantly, it was an unreformed appendage of the old regime, consisting of prominent Ottomans who owed their careers to the sultan and could therefore be expected to side with the opponents of the CUP if the latter faltered. That the CUP had not seen fit to control this body until 1912 was therefore a serious error. On this occasion, the senate, approving of this civil coup against the CUP, dismissed the chamber convened less than four months before.  – das ist des ende der parlamentsperiode, nicht durch cup beendet",
     "page": 72,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Sultan"
+      "Kongress für Einheit und Freiheit",
+      "Organisation"
     ]
   },
   {
@@ -2113,11 +2122,10 @@
     "text": "Januar 1913 putsch balkankrieg für cup",
     "page": 73,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Putsch"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2128,10 +2136,10 @@
     "text": "Cup macht mitglieder nicht öffentlich wie viele jung jung, außerdem legitimität der alten institutionen nutzen dann aura des mysteriums, bisschen gelüftet bei offenem kongress 1909, aber blieb eigentlich bis ende",
     "page": 74,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2142,11 +2150,10 @@
     "text": "The crucial reorganisation of the CUP on the road to revolution was carried out by Dr Bahaeddin S ̧akir, a representative of the activist faction, in 1905–6. The shift to an activist platform marginalised the hitherto predominant intellectuals within the Committee. Dr Bahaeddin S ̧akir, frequently described as the Stalin of the CUP, and Dr Naˆzım, another of the architects of the reorganisation, became the e ́minences grises of the organi- sation. Although they distanced themselves from intellectual debate, they also represented the Turkist ideological strand within the Committee. The hand of the men of action was strengthened by the merger with the Ottoman Free- dom Society, following which Talaˆt Bey (Pas ̧a), organiser of dissident activity in Salonica, rose to prominence.",
     "page": 75,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Talaˆt"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2157,13 +2164,11 @@
     "text": "Cup gab schon mehr als enver und cemal bey, es gibt intellektuelle, Mehmed Cavid Bey, a financial expert, and Kara Kemal Bey, an organiser of societies and cooperatives, und soziologen Ziya Go ̈kalp aber das gremium sorgt dafür, dass niemand hervorsticht",
     "page": 75,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "Politische Akteure",
+    "confidence": "medium",
     "actors": [
-      "Enver",
-      "CUP",
-      "Mehmed Cavid",
-      "Kara Kemal"
+      "Kongress für Einheit und Freiheit",
+      "Enver"
     ]
   },
   {
@@ -2174,10 +2179,10 @@
     "text": "Cup wird mehr massenpartei, aber gleichzeitig konspirativ, vermeidet verwirklichung ein parteien staat",
     "page": 75,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2188,11 +2193,10 @@
     "text": "Aufgeblasene unterebeenen cup sollen wie massenpartei wirken. Partei war nicht parallelstruktur zum staat sondern in themensektionen aufgebaut. Strukturreform 1913, viele leute treten dann ein, zentrum nach osten verlegt (nach 1912 nicht mehr jährlich thessaloniki treffen",
     "page": 76,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Institutionen",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Thessaloniki"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2203,10 +2207,10 @@
     "text": "Problem Cup: imperium erhalten ist keine begeisterungsaufgabe für die massen, außerdem sind viele auch unzufrieden mit dem reich – besonders schwierig türkisten und unglückliche am rande des reiches",
     "page": 78,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2217,12 +2221,10 @@
     "text": "Schon vor sultan „Putsch“ hatte sultan sich kabinettsbenennungen herausnehmen wollen, cup suchte ausrede ihn loszuwerden",
     "page": 78,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Putsch",
-      "Sultan"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2233,11 +2235,9 @@
     "text": "Neuer sultan dienlicher, bekommt sogar befugnis parlament aufzulösen: praktisch, wenn er hört",
     "page": 79,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
-    "actors": [
-      "Sultan"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0176",
@@ -2247,11 +2247,10 @@
     "text": "When Kıbrıslı Kâmil Pascha (leader of the last effort of officialdom to restore responsible government in 1895)31 attempted to place the Sublime Porte above the parliament and the CUP, he received the first vote of no confidence in Ottoman history, on 13 February 1909. (bürokraten können parlament nicht ignorieren",
     "page": 80,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Kıbrıslı Kâmil"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2262,10 +2261,10 @@
     "text": "Parlament nervt cup, auch sorge, dass es ethnische spannungen verstärkt. Abschaffen geht nicht, also über kabinett umgehen",
     "page": 80,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2276,10 +2275,10 @@
     "text": "Alles entmachtet, einzig mächtige noch: die armee. Cup organisiert freiwilligenverbände. Armee ist mehr als für krieg es ist colmar von goltzes „Nation unter waffen“",
     "page": 81,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Institutionen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2290,7 +2289,7 @@
     "text": "Legitimationsressourcen: Armeegeist und „Das Volk“ enver zwingt großwesir beim rücktritt zu schreiben es sei aufdruck des volkes und der armee",
     "page": 82,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
       "Enver"
@@ -2304,10 +2303,10 @@
     "text": "Cup macht viel presse selbst, dann: ollowing the precedent set byA bdu ̈lhamidII, they also exercised a severe regime of censorship, beginning in 1913. The combination of a skilful propaganda machine, a loyal press and effective restrictions on freedom of speech ensured that CUP policy gained a favourable reception among large parts of the literate population, while the opposition, which initially posed a fierce challenge to the CUP-sponsored press, was effectively silenced, particularly after 1913.",
     "page": 83,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2318,10 +2317,10 @@
     "text": "he relative freedom of the first few years after 1908 did not do away with existing tensions; on the contrary, it aggravated them. Thus CUP policies only made things worse. The cancellation of all privileges of non-Turkish Muslim groups, the launching of an aggressive centralisation campaign and the demand that all citizens place their Ottoman identity above any other – all these were bound to provoke a strong reaction.",
     "page": 83,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2332,11 +2331,10 @@
     "text": "ticket cup war Europa behalten, sind dann in verantwortung und 1908 als österr ungarn bosnien und herzegowina annektiert können sie nur protestieren",
     "page": 84,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": [
-      "CUP",
-      "Bosnien und Herzegowina"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2347,7 +2345,7 @@
     "text": "man sei ja gegen imperialismus – allerdings muss man sich mit einer großmacht alliieren, trotz anti brit Rhetorik wenden sie sich zuerst an die briten, dann deutsche (gegen russen), deutsche weniger fähig garantien zu geben",
     "page": 84,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": []
   },
@@ -2359,7 +2357,7 @@
     "text": "1911 verzweifelte bitte, dass briten bei italienern tripili einmarsch verhindern – machen sie nicht",
     "page": 86,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -2371,10 +2369,10 @@
     "text": "Route mittelmeer von italienern, ägypten von briten blockiert, verteidigung tripoli erstaunlich gut – wird genau beobachtet. Italiener greifen rhodos etc an, um druck zu erhöhen",
     "page": 87,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Ägypten"
+      "ägypten"
     ]
   },
   {
@@ -2385,10 +2383,10 @@
     "text": "Balkan bricht aber krieg aus, da wird tripoli abgegeben. Takaway: können die küsten nicht verteidigen, navy nicht leisten – brauchen wirklich großen bruder",
     "page": 87,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Balkanprovinzen"
+      "balkan"
     ]
   },
   {
@@ -2399,13 +2397,10 @@
     "text": "Balkan eigentlich gespalten, angst vor dt, russland, bulgarien und osmanen. Aber dann machen serben und bulgaren pakt, sehr schlecht fürs reich, griechenland steigt sogar ein, eigentlich rivalen mit bulgarien über makedonien – ganz schlecht fürs reich 1912. Montenegro mit jeweiligen partnern auch abkommen",
     "page": 88,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "Russland",
-      "Bulgarien",
-      "Griechenland",
-      "Balkanprovinzen"
+      "balkan"
     ]
   },
   {
@@ -2416,10 +2411,11 @@
     "text": "8. oktober macht montenegro kreig, 18. Rest, innerhalb von wochen europ terret verloren, außer scutari, Janina und Edirne",
     "page": 88,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Edirne"
+      "Edirne",
+      "janina"
     ]
   },
   {
@@ -2430,13 +2426,10 @@
     "text": "Europäer wollen nicht russ-ungarn konflikt, drängen auf Einigung. Anstelle dessen cup putsch aber doch verlust edirne. Treaty of london 30. März 1913, dann aber resteverwertung osm reich konflikte. Rückeroberung edirne 22. juli",
     "page": 89,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Putsch",
-      "Russ",
-      "Osm Reich",
+      "Kongress für Einheit und Freiheit",
       "Edirne"
     ]
   },
@@ -2448,11 +2441,9 @@
     "text": "Inevitably, the loss of the European provinces prompted a revision of the geographical image of the empire among the Ottoman ruling elite. For centuries, the empire had rested on two central pillars, Rumelia and Anatolia, between which nested the imperial capital. Suddenly, the Arab periphery almost appeared as part of the new heartland. Some influential politicians and pundits went so far as to propose the removal of the capital from Istanbul to a major town in central Anatolia or northern Syria.5",
     "page": 90,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Istanbul"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0191",
@@ -2462,11 +2453,9 @@
     "text": "An sich bettelt osm reich um allianz mit Deutschland, hollweg will das nicht, nur kaiser will das (potenziell bürde im krieg",
     "page": 91,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
-    "actors": [
-      "Osm Reich"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0192",
@@ -2476,9 +2465,11 @@
     "text": "Formierung Jungtürken an der Royal Medical Academy",
     "page": 71,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Young Turk"
+    ]
   },
   {
     "segment_id": "s0193",
@@ -2488,10 +2479,11 @@
     "text": "Cup hatte viele Fraktionen, ist eigent,ich schon zuviel gesagt, so wenig zusammenhalt. Ihre gegner später kamen auch aus CUP: Liberale Sabahhedin Bey, Ulama Huca Kadri und Hoca Muhiddin",
     "page": 213,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Sabaheddin",
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -2502,12 +2494,9 @@
     "text": "Bis 1902 konservative, dann aktivistich-konservativ, jünger Ahmed Riza",
     "page": 213,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
-    "actors": [
-      "Ahmed Riza",
-      "Ahmed Rıza"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0195",
@@ -2517,7 +2506,7 @@
     "text": "Finanzierung durch: sale of journals, erpressung um an posten im palast zu kommen",
     "page": 214,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": []
   },
@@ -2529,7 +2518,7 @@
     "text": "Waren nie so tolle liberale/Konstitutionalisten, eher le Bon",
     "page": 214,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -2541,7 +2530,7 @@
     "text": "Hatten bisschen das problem, positivismus und islam zusammen zu bringen, waren erstmal materialisten",
     "page": 215,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -2553,7 +2542,7 @@
     "text": "Hoffnung verloren an 31 mart Vakasi 1909 und adana massaker april 1909",
     "page": 6,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionèreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -2565,9 +2554,11 @@
     "text": "Pressefreiheit ab 1909 frühling eingeschränkt",
     "page": 6,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Religionsfreiheit"
+    ]
   },
   {
     "segment_id": "s0200",
@@ -2577,7 +2568,7 @@
     "text": "Verfassungsüberarbeitung 1909 damit rev vorbei? Aber jan 1913 wieder revolutionsrhetorik",
     "page": 7,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": []
   },
@@ -2589,7 +2580,7 @@
     "text": "1908 wird gefolgt von vielen revolutionen: young Bewegungen von algier bis kabul, revolution Mexiko, china",
     "page": 9,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -2601,10 +2592,10 @@
     "text": "Kapitel 7: Religion, Politics and Society in the Wake f the Young Turk Revolution. The Ramadan of Freedom” in Istanbul – wirklich über monat Ramadan",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Istanbul"
+      "Young Turk"
     ]
   },
   {
@@ -2615,11 +2606,9 @@
     "text": "30.08.1908 feier revolution, rida anwesend, wird getragen, umarmt armenischen bischoff",
     "page": 1,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": [
-      "Rida"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0204",
@@ -2629,7 +2618,7 @@
     "text": "Nimr: we tasted the sweetness of Ottoman freedom and made the commitment to brotherhood and equality under the patronage of our empire",
     "page": 1,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -2641,7 +2630,7 @@
     "text": "Es wurde aber nie bürgergleichheit eingeführt. Ziele der revolution nie ausformuliert, immer ambivalent, nur so konnte sie alle unter einen hut bringen",
     "page": 2,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -2653,9 +2642,11 @@
     "text": "In the nineteenth century, the majority of the Ottoman Empire’s constituent groups did not see themselves as part of a nation but rather as part of an ethno-religious commu- nity. Their identities meshed in an array of overlapping identities, highlighted by religious, linguistic, and cultural diversity, on the one hand, and regional and local loyalties, on the other. (ethnien aber fluide",
     "page": 4,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Ottoman Empire"
+    ]
   },
   {
     "segment_id": "s0209",
@@ -2665,7 +2656,7 @@
     "text": "revolution: 1. Moderne, Konstitutionalismus um reich zu reparieren, 2. Zerstört empire, erschüttert fragile strukturen",
     "page": 6,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -2677,9 +2668,11 @@
     "text": "nach konterrevolution 1909: „For some of the Arab notables, this juncture resulted in an inability to reclaim their previous status, leading some to cooperate with the new regime while others began looking for alternative ways to express their grievances—through, for example, proto-nationalism that later crystallized into Arabism.“",
     "page": 6,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Konterrevolution"
+    ]
   },
   {
     "segment_id": "s0211",
@@ -2689,9 +2682,11 @@
     "text": "gleichheitsversprechen war schwer einzulösen, weil alle gruppen andere idee von osmanischer bürgerschaft hatten. Jungtürken wollten türkische sprache und zentralisierung, ethnien dezentralisierung – verteidigung gegen reich dann ethnisch",
     "page": 7,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Young Turk"
+    ]
   },
   {
     "segment_id": "s0212",
@@ -2701,11 +2696,11 @@
     "text": "osm reich defensive modernisierung (siehe ottoman history podcast, neue art des zugriffs): selim III+MahmudII, Tanzimat, Abdülhamid II",
     "page": 8,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Abdülhamid",
-      "Osm Reich"
+      "Tanzimat",
+      "Abdühlhamid"
     ]
   },
   {
@@ -2716,9 +2711,12 @@
     "text": "jungosmanen 1865 – 1878, gegen tnzimat weil imitation des westens",
     "page": 8,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Tanzimat",
+      "Jungosmanen"
+    ]
   },
   {
     "segment_id": "s0214",
@@ -2728,16 +2726,9 @@
     "text": "aremnier erste öffentliche sphäre 1. Konst periode, dann muslim zuwanderung, macht stress in agragland,hoffen erst auf sozialismus, dann auch europäer. Arf für osm reich, hunchaks dagegen. Massaker sassun 1894, europ untersuchung, reformforderung, sultan will nicht 9ff",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": [
-      "Sultan",
-      "Konst",
-      "Agragland",
-      "Osm Reich",
-      "Hunchaks",
-      "Sassun"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0215",
@@ -2747,11 +2738,11 @@
     "text": "arf Avedis Aharonian und hunchaks und jungtürken erst zusammen, 1902 auf kongress, armener für dezentr, jungtürken zetralisierung, armenier gehen",
     "page": 14,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "Armenier",
-      "Hunchaks"
+      "armenier",
+      "Young Turk"
     ]
   },
   {
@@ -2762,9 +2753,11 @@
     "text": "Armenian revolutionary Federation und juntürken annäherung 1905-8, auch wegen sabahhedin",
     "page": 15,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Sabaheddin"
+    ]
   },
   {
     "segment_id": "s0217",
@@ -2774,7 +2767,7 @@
     "text": "18. jh reformen nicht so relevant bei arabern, erst bemerkbar 2. Hälfte 19. Jh. werden garnicht als gruppe wahrgenommen, weil sie in ihren gebieten die mehrheit sind",
     "page": 18,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -2786,8 +2779,8 @@
     "text": "Nahda führt zu arab identität. promulgation of the 1856 Edict führt zu ethniendifferenz. Priv christen führt zu spannungen, auch damaskus 1860, das führt zu europ intrevention",
     "page": 19,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "high",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "medium",
     "actors": [
       "Damaskus"
     ]
@@ -2800,12 +2793,9 @@
     "text": "1861 Règlement Organique for Lebanon umorganisation durch osm reich, christliche händklerklasse, arabs für schutz durch osm reich",
     "page": 19,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte – Dokumente zur Revolution im Osmanischen Reich",
+    "category": "Machtstrukturen",
     "confidence": "high",
-    "actors": [
-      "Lebanon",
-      "Osm Reich"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0220",
@@ -2815,7 +2805,7 @@
     "text": "Arabs: nahda und islamische identität, zwei parallele entwicklungen",
     "page": 20,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -2827,16 +2817,11 @@
     "text": "Erste kosnt periode ist wichtig für araber diskussionen, als abdülhamid konst aufhebt, gehen viele nach ägypten, rida und al azm gründen Ottoman Consultative Society und al manar (also in ägypten) „The society, composed of Turks, Arabs, Armenians, Greeks, and Kurds, intended to unite the Ottoman nationalities in order to transform the Ottoman govern- ment into a constitutional regime and prevent the empire’s collapse.“",
     "page": 20,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "Abdülhamid",
-      "Konst",
-      "Rida",
-      "Al Azm",
-      "Ottoman Consultative Society",
-      "Al Manar",
-      "Ägypten"
+      "Abdühlhamid",
+      "ägypten"
     ]
   },
   {
@@ -2847,11 +2832,11 @@
     "text": "Abdülhamid hat angst vor abspenstigen arabern, zieht sie an den hof, konservative als seine berater, hijaz und syrien werden damit wichtiger am hof",
     "page": 20,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "Syrien",
-      "Abdülhamid"
+      "Hijaz",
+      "Abdühlhamid"
     ]
   },
   {
@@ -2862,11 +2847,10 @@
     "text": "Lokale familien werden mit bindung nach istanbul wichtiger : „For example, in Damascus, the non- scholarly, landowning bureaucrats played a dominant role in local politics dur- ing the Hamidian period.“ – osmanismus ist für sie eigene interessenvertretung, wollen wirklich keine revolution, waren garnicht teil jungtürken",
     "page": 20,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
-    "confidence": "high",
+    "category": "SocietalTensions",
+    "confidence": "medium",
     "actors": [
-      "Damaskus",
-      "Istanbul"
+      "Young Turk"
     ]
   },
   {
@@ -2877,7 +2861,7 @@
     "text": "Gab parade, einschließelich feier der türkisch-armenischen brüderlichkeit. Gleichzeitig beginn der öffentlichen sphäre",
     "page": 21,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": []
   },
@@ -2889,7 +2873,7 @@
     "text": "Versuch, civic religion zu gründen",
     "page": 22,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -2901,7 +2885,7 @@
     "text": "Feiern sind rituale der öffentlichkeit, gemeinsame sprache, beginn von öffentlichkeit, ohne dass es konsens gab. Delegationen werden im ganzen land begrüßt",
     "page": 23,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -2913,10 +2897,10 @@
     "text": "Minderheiten demonstrieren loyalität zu neuem regime (armenier, juden, griechen",
     "page": 24,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier"
     ]
   },
   {
@@ -2927,11 +2911,10 @@
     "text": "30. juli damaskus feier von militärakademiestudenten, befreien fouad Pascha, pol gefangenen",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Damaskus",
-      "fouad"
+      "Damaskus"
     ]
   },
   {
@@ -2942,7 +2925,7 @@
     "text": "In jerusalem einigkeit in verschiedenheit, viele feiern, arabische gedichte, isaia geschuite (musl, jüd) danach gehen alle in ihre viertel",
     "page": 30,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -2954,11 +2937,10 @@
     "text": "Kultfiguren der revolution sind: Niyazi and Enver Bey, minderheiten haben jeweilige helden: Madteos II Izmirlian armenischer patriarch istanbul,",
     "page": 32,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Enver",
-      "Istanbul"
+      "Enver"
     ]
   },
   {
@@ -2969,14 +2951,12 @@
     "text": "Araber Fuad Paşa, kerkesse born ägypten, held russ-türk krieg, marschall, 1902 beschuldigt gegen sultanzu intrigieren und nach damaskus verbannt, freigelassen bei feier durch druck der straße, dann gebet ummayyadenmoschee. 6. August nach Beirut, großer empfang, dabei riza bey cup und jurji bey sursuq, besuch bei freimaurern, am 12. August nach Istanbul",
     "page": 35,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
       "Damaskus",
-      "CUP",
-      "Istanbul",
-      "Russ",
-      "Ägypten"
+      "Kongress für Einheit und Freiheit",
+      "ägypten"
     ]
   },
   {
@@ -2987,9 +2967,11 @@
     "text": "Prinz sabahhedin gilt armeniern als helden, weil er für dezentralisierung war",
     "page": 35,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Sabaheddin"
+    ]
   },
   {
     "segment_id": "s0235",
@@ -2999,12 +2981,9 @@
     "text": "Gab planung für feiern, mussten draußen und relig neutral sein: . Taksim Garden (Istanbul), Municipal Garden (Adana), Hamidian Garden (Beirut), the Garden of the Defterdar (Damascus), and the Municipal Garden (Jerusalem). Oftmals garnicht dekoriert, natura ls deko. Viele beginnen aber in kirchen, die umdekoriert warden. Aber nicht in moscheen/synagogen",
     "page": 36,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": [
-      "Damaskus",
-      "Istanbul"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0236",
@@ -3014,7 +2993,7 @@
     "text": "In the postrevolutionary period, however, this function was thrown into the public domain. The public spheres of the postrevolutionary period seized symbolism from the monopoly of the state and the sovereign, appropriating it in an attempt to create a unified and overarching identity that itself became counterproductive.",
     "page": 40,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -3026,7 +3005,7 @@
     "text": "Wichtigstes symbol der revolution ist flagge, reden wurden teilweise in verschiedene sprachen übersetzt. Teilwesie begeleitung durch faggen von ethnien",
     "page": 41,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -3038,7 +3017,7 @@
     "text": "Gab banner wo verschiedene sprachen drauf waren symbol der solidarität. Teilweise auch aus versdcheidenen relig. Büchern. Revolution als göttliche intervention",
     "page": 44,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -3050,7 +3029,7 @@
     "text": "In zeitungen thema, dass teilweise reden nicht verstanden werden können wegen sprachdifferenzen",
     "page": 46,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "medium",
     "actors": []
   },
@@ -3062,12 +3041,10 @@
     "text": "Rafiq Bey al-‘Azm führender intellektueller in damaskus sagt erste konst periode war nation noch nicht bereit, jetzt ja",
     "page": 46,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "Damaskus",
-      "Konst",
-      "Rafiq"
+      "Damaskus"
     ]
   },
   {
@@ -3078,10 +3055,10 @@
     "text": "Viele reden über bruderschaft zwischen ethnien. Märtyrer der muslime und der armenier gemeinsam auf friedhof zb",
     "page": 47,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
-    "confidence": "medium",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier"
     ]
   },
   {
@@ -3092,11 +3069,9 @@
     "text": "Generally, the speeches ended with hand shaking and hugging between spiritual leaders of different ethnic groups. This symbolic move was a practical implementation of the principle discussed in the speeches. At one of the celebrations in Damascus, Sheikh ‘Abd al-Qadir al-Khatib al-Mughrabi made this connection particularly explicit. After comparing the despotic re- gime with the constitutional regime and defying fanaticism, he shook the hand of the Greek Catholic bishop",
     "page": 47,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": [
-      "Damaskus"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0243",
@@ -3106,7 +3081,7 @@
     "text": "With their condensation of meaning and multivocality, symbols demonstrated the existence of an ambiguous common symbolic culture aimed at uniting all ethnic groups under one identity: Ottomanism.",
     "page": 48,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -3118,7 +3093,7 @@
     "text": "euphoric feelings were particularly connected to the par- ticipation of subordinate groups as a legitimizing force for the Revolution and a consecration of the new era.",
     "page": 48,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -3130,7 +3105,7 @@
     "text": "Vor der revolution wurde im exil über Zukunft gesrpochen, danach im reich. Vorherrschend freiheit gleichheit brüderlichkeit, frz revolution, was das aber bedeute, ist für gruppen unterscheidlich",
     "page": 50,
     "doc_type": "Forschungsnotizen",
-    "category": "Exil und Diaspora",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -3142,10 +3117,10 @@
     "text": "The columns and articles in the newspapers of the ethnic groups provide us with a rich mine of data for analyzing political discourse in different geographic areas of the empire. In addition to constructing and molding discourses, the press played the role of mediator between politicians and the public, connecting the masses with politics. It also assumed the role of educating and disciplin- ing the public during the fragile postrevolutionary period, in which collective anxiety and confusion were expansive in all sectors of society. Dazu FN6: This role of the educator was mostly evident in the Young Turk press. Imme- diately after the Revolution, Tanin began publishing a series of articles under the title “Neler Bilmeliyiz: Öğreniyoruz Öğretmiyoruz” (What should we learn? We are learning and not teaching). The title indicates that the newspaper itself was in a process of learn- ing along with the masses and did not have any intention of imposing its own percep- tions on them. In each issue, the title was followed by different subjects dealing with various dimensions of politics. For example, see “Devlet nedir? gâyet nedir?” (What is the state? What is the aim?), Tanin, August 22, 1908, no. 22, 1; “Meclis-i Mebusanda Azalarin Mıkdarı” (The number of the members of the House of Deputies), August 16, 1908, no. 16, 2; “Intihabatta Iki Derece” (Two stages in the elections), September 7, 1908, no. 38, 1; “Hürriyet-i Matbuat” (Freedom of press), September 12, 1908, no. 43, 2.",
     "page": 50,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "Tanin"
+      "Young Turk"
     ]
   },
   {
@@ -3156,12 +3131,9 @@
     "text": "Als erstes drucken Zeitungen die Verfassung ab, mit DER SULTAN hat… sultan noch immer vorn, aber eigentlich wird nation und parlament die Autorität",
     "page": 50,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": [
-      "Sultan",
-      "Verfassung"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0248",
@@ -3171,12 +3143,11 @@
     "text": "Ethnische presse unterschlägt ein wenig die wichtigkeit der KEF, die versteckt sich hinter der amee, daher ist die dreifaltigkeit Sultan, Verfassung und Armee",
     "page": 51,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "Sultan",
-      "KEF",
-      "Verfassung"
+      "Kongress für Einheit und Freiheit",
+      "KEf"
     ]
   },
   {
@@ -3187,9 +3158,11 @@
     "text": "Wird erstmal über freiheit gesprochen, um sie zu definieren, damit sie nicht misbraucht werde: One writer for the Arabic newspaper Lisān al-Ḥāl said that the newspaper chose to define and explain the concept of freedom “in order to avoid bad behavior. … A correspondent for the Egyptian newspaper Al-Muqaṭṭam argued that the freedom resulting from the Revolution “does not have the right to intoxicate our minds with the wine of celebration and distract us from exam- ining its true structure.” The author further argued that the euphoric feelings of celebration did not reflect the deep animosities that existed in Beirut and other parts of the empire.12",
     "page": 51,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Egyptian"
+    ]
   },
   {
     "segment_id": "s0250",
@@ -3199,7 +3172,7 @@
     "text": "Freiheit wird mit sorge betrachtet als freibrief, der zu interethnischer gewalt führen könne. Einfluss frz postrevolutionäre literatur, lisan al hal: extremismus schlecht, außer in liebe zum vaterland",
     "page": 52,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -3211,7 +3184,7 @@
     "text": "Freiheit sei gesetztestreue",
     "page": 53,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -3223,10 +3196,11 @@
     "text": "Gleichheit: zwischen ethnien, jede trägt ihres bei. Besonders aber armenier und türken, müssen besonders gleich sein wegen drohendem Konflikt",
     "page": 54,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Societal Tensions",
     "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier",
+      "türken"
     ]
   },
   {
@@ -3237,8 +3211,8 @@
     "text": "Krise arm türk in papertanin",
     "page": 56,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": []
   },
   {
@@ -3249,7 +3223,7 @@
     "text": "Gibt auch argument, dass gleichheit heißt, dass nicht muslime privilegien verlieren",
     "page": 56,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -3261,8 +3235,8 @@
     "text": "Tag 1 nach revolution warnungen vor altem regime und seinen dienern. Nicht blutig, also sind sie noch da",
     "page": 57,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
-    "confidence": "high",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "medium",
     "actors": []
   },
   {
@@ -3273,11 +3247,9 @@
     "text": "6.08.1908 erst verhaftungen von encien regime nach fall regierung Said Pascha",
     "page": 57,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Said Pascha"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0257",
@@ -3287,12 +3259,9 @@
     "text": "Nach revolution gab es briefe nach istanbul über klagen dass altes regime noch regiert (anatolein hier",
     "page": 58,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": [
-      "Anatolein",
-      "Istanbul"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0258",
@@ -3302,11 +3271,11 @@
     "text": "Armenier diskutieren, weil alts regime noch da, ob nicht doch eigenregie, unabhängigkeit – cup sagt einfach die petitionen seien fälschungen der ARF",
     "page": 59,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Armenier"
+      "Kongress für Einheit und Freiheit",
+      "armenier"
     ]
   },
   {
@@ -3317,11 +3286,11 @@
     "text": "Arab newspaper warnen auch vor resten altes regime (viel seltener als armenier), Muqaṭṭam 27.08.1908(ägypten), loyalität einiger rel anführer infrage gestellt.",
     "page": 60,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Armenier",
-      "Ägypten"
+      "ägypten",
+      "armenier"
     ]
   },
   {
@@ -3332,7 +3301,7 @@
     "text": "Es entstehen klassische ethnische parteien. The immediate task of the political parties was to publish articles and give lectures to enlighten their communities about the policies they should em- brace.",
     "page": 61,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": []
   },
@@ -3344,7 +3313,7 @@
     "text": "Sabah Gulian, editor of Hunch‘ak Rede für demokratie und autonomie, nur so geht es, außerdem bewaffnet die revolution verteitigen",
     "page": 62,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -3356,11 +3325,9 @@
     "text": "Armenians were not alone in these efforts to establish political platforms. In Istanbul, about twenty-six hundred Arabs gathered in a theater to discuss the establishment of a society representing all Arabs in the provinces, as well as the publication of a newspaper that would explain the principles of constitu- tion, freedom, and fraternity to Ottoman Arabs. The Ottoman-Arab Brother- hood Society was established by the dismissed Arab functionaries of the ancien régime.70  - ihre zietung in osmanische und arabisch. Name gesellscahft macht sorgen wegen separatismus, sie predigen aber vor allem einheit",
     "page": 62,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Politische Akteure",
     "confidence": "high",
-    "actors": [
-      "Istanbul"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0263",
@@ -3370,7 +3337,7 @@
     "text": "Größter streitpunkz zwischen ethnien: neues politisches System",
     "page": 62,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -3382,9 +3349,11 @@
     "text": "Sabahhedin war für dezentralisierung und private initiative. Für ersteres stark kritisiert",
     "page": 63,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Sabaheddin"
+    ]
   },
   {
     "segment_id": "s0265",
@@ -3394,9 +3363,11 @@
     "text": "The question of whether to adopt a centralized or decentralized political system was also high on the agenda of the Arabs in the provinces. Some of these commentators indicated that the administrative councils in the prov- inces would complement administrative decentralization if they adhered to the principles of the constitution.96 Others, such as Edwar Murqus, explained that Prince Sabahaddin was right, if he was not an extremist, as some of the capital’s newspapers had claimed. Murqus said that if Sabahaddin wanted administra- tive decentralization for the provinces along the lines of Germany and Amer- ica, in which “every province will take care of its budget inside and outside, remove and appoint high and low officials, and make the provincial council as a miniature of the Parliament, I think he is going too far.”",
     "page": 67,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Sabaheddin"
+    ]
   },
   {
     "segment_id": "s0266",
@@ -3406,14 +3377,10 @@
     "text": "As a result, the people of Lebanon were divided into two groups: one believed that it was necessary to send deputies to the Ottoman Parliament to ensure political enfranchisement, whereas the other thought that Lebanon should defend its privileges by declining to send any delegates. Die die libanon in osm reich behalten wollten, wurden liberale genannt, die sind gegen Règlement Organique. Die, die dagegen sind sagen libanon ist wie ägypten, bulgarien, samos, fallen nicht unter die jurisdiktion der verfassung, sagen Règlement Organique sei nicht aufgehoben",
     "page": 67,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "Bulgarien",
-      "Lebanon",
-      "Osm Reich",
-      "Verfassung",
-      "Ägypten"
+      "ägypten"
     ]
   },
   {
@@ -3424,7 +3391,7 @@
     "text": "Anderes ethnien diskussionsfeld: bildung. Angst vor assimilation, verstehen aber auch notwendigkeit, kinder zur schule zu geben, türkisch und ottom geschichte zu lernen",
     "page": 68,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -3436,8 +3403,8 @@
     "text": "Araber sagen arabisch wichtiger als osmanisch, koran ist arabisch, lehrer soll araber sein",
     "page": 69,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
-    "confidence": "high",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "medium",
     "actors": []
   },
   {
@@ -3448,7 +3415,7 @@
     "text": "In addition to serving as a sounding board for these ideas, the ethnic press played the role of an educator attempting to discipline the masses during the fragile postrevolutionary period. This edu- cational role is particularly manifest in the newspapers’ struggles to define and elaborate on the concept of freedom in its different dimensions.",
     "page": 70,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -3460,7 +3427,7 @@
     "text": "Es formen sich ethnische sphären, immer belebter je mehr neue gruppen ethnische notablen herausfordern",
     "page": 71,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -3472,7 +3439,7 @@
     "text": "For those disenfranchised people who were dreaming of freedom, equality, and justice, the Revolution became their savior—the means by which a new and better future would be achieved and by which they themselves would be freed from the shackles of tyranny. For those traditional elites who were wary of the Revolution, however, it became their worst nightmare, shaking the pillars of their authority, endangering not only their power but also their survival.",
     "page": 73,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -3484,10 +3451,10 @@
     "text": "Jeweilige ethnische gruppen haben eigene kleine revolution, notablen verlieren posten (paar seiten über armenier, dann juden",
     "page": 74,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier"
     ]
   },
   {
@@ -3498,7 +3465,7 @@
     "text": "Araber: ihre abgesandten am hof sind teil der machtbalance",
     "page": 87,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": []
   },
@@ -3510,11 +3477,9 @@
     "text": "Als revoliution arab provinzen als nachricht erreichte, waren machthaber zögerlich, wollten die verfassung nicht für eingesetzt erklären. Skeptisch wg nachrichtenzuverlässigkeit und wegen stabilität",
     "page": 88,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
-    "actors": [
-      "Verfassung"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0275",
@@ -3524,11 +3489,10 @@
     "text": "In addition to the local officials, the notables and the ulema were stunned by the news, and some began to voice their opposition to the activities of the junior officers. They were afraid that the Revolution and the shift of the center of power from local authorities to the CUP would endanger their traditional source of legitimacy, power, status, and prestige. Stimmt wohl, erst gründeten sich überall cup kommitees, die dann Thessaloniki unterstellt wurden",
     "page": 88,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Thessaloniki"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3539,11 +3503,10 @@
     "text": "Damaskus: Among the Arab provinces, Damascus was an important center for the ac- tivities of the ulema, in part because the Ummayad Mosque made Damascus a traditional place of Islamic learning. Additionally, the notables in Damas- cus, numbering around fifty families, were a powerful force running the po- litical mechanism.  Transformation aber nicht so erfolgreich wie anderswo im reich",
     "page": 88,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": [
-      "Damaskus",
-      "Ummayad Mosque"
+      "Damaskus"
     ]
   },
   {
@@ -3554,11 +3517,10 @@
     "text": "In Damascus, the traditional networks of the notables and the ulema were stronger than the newer ties of the Revolution. The old power structures were, nonetheless, affected by the Revolution, which resulted in the emergence of new actors on the political scene, a mixture of military person- nel and civilians, mostly members of the newly emerging CUP branches.88",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "Damaskus",
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3569,11 +3531,10 @@
     "text": "As the CUP assumed that role, its first task in Damascus was to remove the ancien régime’s officials from positions of power. Hence, they pressured the governor to dismiss the head of the Administrative Council of the province, the mufti of Damascus, the chief clerk of the şeriat courts, the kaymakam of Zabadani, and Busra Eski-Sham, along with several other district officials.107 These actions caused some discontent among the ulema class,108 resulting in the establish- ment of an association meant to protect its interests.109",
     "page": 89,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte – Dokumente zur Revolution im Osmanischen Reich",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "Damaskus",
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3584,11 +3545,13 @@
     "text": "Rida tour nach revolution, rede in ummayadenmoschee, Salih Sharif al-Tunisi unterbricht wegen wahabismus, aufruhr, rida muss gehen, al tunisi festgenommen, dann bewaffneter auflauf fordert tunisis freilassung, wollen de fakto cup ruler syren As‘ad Bey töten, der flieht nach beirut. Ulama gewinnen dann wahl gegen cup, beschuldigen sie des säkularismus. Fußnote hier nicht auf Haqaiq sondern nur muqattam als quelle und erinnerungen",
     "page": 89,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Rida"
+      "Kongress für Einheit und Freiheit",
+      "Salih",
+      "Wahl",
+      "säkularismus"
     ]
   },
   {
@@ -3599,7 +3562,7 @@
     "text": "Beirut wird alter gouverneur aus stadt gescheucht, straßen gesäumt",
     "page": 91,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -3611,9 +3574,11 @@
     "text": "Postrevolutionary ethnic politics in the Ottoman Empire should not be viewed only from the prism of political parties but also through ecclesiastical politics, a key factor in defining inter- and intraethnic politics. Interestingly, even though the Revolution attempted to create the modern secular Ottoman citizen whose loyalty was going to be to the state, it nevertheless strengthened the ethno-religious political centers of the ethnic groups. It did so by creating the space in which fierce competition began among the different actors within these communities for control over the power positions.",
     "page": 94,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Ottoman Empire"
+    ]
   },
   {
     "segment_id": "s0282",
@@ -3623,7 +3588,7 @@
     "text": "Juden besorgt dass zionisten zorn bei osmanen hervorrufen, bei armeniern geht macht ovn patriarchat zur armenischen naitonalversammlung, dashnaken gestärkt",
     "page": 94,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -3635,7 +3600,7 @@
     "text": "Für alle, die neue rolle übernehmen ist es schwer die traditionellen bünde zu ersetzen. Besonders schwer ist die transition in damaskus, weil es keinen einzelnen kopf sondern netztwerk von notablen gibt",
     "page": 95,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
       "Damaskus"
@@ -3649,11 +3614,9 @@
     "text": "Mt lebanon etwas anders wegen ruhe nach 1860",
     "page": 95,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
-    "confidence": "high",
-    "actors": [
-      "Lebanon"
-    ]
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "medium",
+    "actors": []
   },
   {
     "segment_id": "s0285",
@@ -3663,11 +3626,11 @@
     "text": "Wahl 1908 natürlich nicht wirklich frei aber erfolgreiches experiment. CUP und liberale partei wichtigste",
     "page": 97,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Liberale Partei"
+      "Kongress für Einheit und Freiheit",
+      "Wahl"
     ]
   },
   {
@@ -3678,10 +3641,10 @@
     "text": "Erwartungen ethnischer repräsentation wurden enttäuscht und setzen sapnnungen in gang. Armenier und juden waren aber auch mit eigenen wahlen beschäftigt",
     "page": 98,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier"
     ]
   },
   {
@@ -3692,10 +3655,10 @@
     "text": "Araber fordern kein proporzsystem, weil sie in ihren wahlkreisen die mehrheit waren. Cup araber und ulama als unabhängige kandidaten",
     "page": 100,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3706,8 +3669,8 @@
     "text": "Juden waren ganz optimistisch, ihre kandidaten zu bekommen100",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
-    "confidence": "medium",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "high",
     "actors": []
   },
   {
@@ -3718,9 +3681,12 @@
     "text": "Jungtürken waren gegen proporzsystem, so baue man turm zu babel. Sie sind die einzigen gegen proporz, haben aber ja die wahl übnerhaupt erkämpft",
     "page": 101,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Wahl",
+      "Young Turk"
+    ]
   },
   {
     "segment_id": "s0290",
@@ -3730,7 +3696,7 @@
     "text": "Arf für föderalismus, betonen aber zugehörigkeit zum reich",
     "page": 102,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Institutionen",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -3742,10 +3708,10 @@
     "text": "Cup für nicht muslime militärdienst",
     "page": 102,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Institutionen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3756,7 +3722,7 @@
     "text": "urji Efendi Ghammashi of Beirut published his electoral platform in Lisān al-Ḥāl. Ghammashi divided his platform into three sections: a political plan, a reform plan, and a prosperity plan.",
     "page": 103,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": []
   },
@@ -3768,10 +3734,10 @@
     "text": "The major points of disagreement between the CUP and the nondominant ethnic groups were centered on the political system, the status of religious institutions, and education.",
     "page": 106,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "high",
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3782,11 +3748,11 @@
     "text": "Cup will zentralismus und schulunterricht türkisch, alle ethn privil weg, armenier halten das für türkischen nationalismus",
     "page": 107,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
     "actors": [
-      "CUP",
-      "Armenier"
+      "Kongress für Einheit und Freiheit",
+      "armenier"
     ]
   },
   {
@@ -3797,10 +3763,10 @@
     "text": "Wahlkampagnen liefen über kirchen etc, folgte millet system und lief cup zuwieder",
     "page": 107,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3811,7 +3777,7 @@
     "text": "Gab zt ethnische wahlallianzen, a uch in den provinzen",
     "page": 109,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -3823,10 +3789,10 @@
     "text": "Beirut zentrum cup in arabischen gebieten",
     "page": 113,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
-    "confidence": "medium",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3837,10 +3803,11 @@
     "text": "In Syria, alliances played almost no role, since the CUP was one of the only organized political parties to campaign for the elections. Indeed, the CUP had a strong presence there, since it had active branches in Syria and the party had sent delegates from Salonica as early as October. The CUP did not make any electoral deals with the local populations of Syria, as they had in other places. Harran argues that the reasons for this were, first, that the Syrians were predominantly Muslim and therefore had an interest in the survival of the an- cien régime, and, second, that they did not yet show any signs of an organized national movement.83 At any rate, the CUP nominated most of the deputies in Syria. The candidates in Syria were from different social backgrounds, but, as in the case of the vilayet of Beirut, most of them served the state in some ca- pacity and came from prominent families.84 In short, the deputies in the Arab provinces came from three backgrounds: ulema, landowners, or professional men from the towns.",
     "page": 113,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Syrians"
     ]
   },
   {
@@ -3851,7 +3818,7 @@
     "text": "Vorwahlphase wichtiger als wahlen, gab deals, The phase before the balloting was characterized by a heated battle over ideas in which every ethnic group declared its political platform, which became the blueprint for the political system that the ethnic group envisioned.",
     "page": 119,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -3863,10 +3830,10 @@
     "text": "Many of these partisan/national and individual electoral platforms had much in common, including disagreement with the policies envisioned by the Young Turks’ CUP. Therefore, administrative decentralization, ethno-religious privileges, national education, and proportional representation became key factors in the negotiation processes among the CUP, Armenians, Greeks, Alba- nians, and to a certain extent, Jews and Arabs.",
     "page": 119,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
-    "confidence": "high",
+    "category": "Politische Akteure",
+    "confidence": "medium",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3877,10 +3844,10 @@
     "text": "Araber und juden waren eigentlich zufrieden mit den wahlen, griechen und armenier nicht. In the Arab provinces, most of the deputies were notables and landowners who influenced the election results by using their sociopolitical status.",
     "page": 120,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier"
     ]
   },
   {
@@ -3891,10 +3858,12 @@
     "text": "Cup gewinnt wahl. Parlament ethnien: Of 281 deputies from the first round of elections, there were 151 Turks, 56 Arabs, 25 Albanians, 22 Greeks, 10 Arme- nians, 5 Kurds, 4 Bulgarians, 4 Jews, 3 Serbs, and 1 Vlach",
     "page": 120,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Institutionen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Wahl",
+      "Albanians"
     ]
   },
   {
@@ -3905,7 +3874,7 @@
     "text": "On the contrary, parliamentary politics became an important di- mension in the public spheres created after the Revolution. Parlament dauernd berichte in zeitungn By publishing such accounts, newspapers became the medium through which the masses became acquainted with and connected to parliamentary politics.",
     "page": 123,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Institutionen",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": []
   },
@@ -3917,10 +3886,10 @@
     "text": "Cup war klar, dass viele probleme zutage treten, weil sie diskutiert werden mussten, mit mehrheit und exekutivanordnungen konnten sie aber auch blockieren. Hoffnung der minderheiten lösen sich in ein partei system auf",
     "page": 124,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3931,7 +3900,7 @@
     "text": "At first, four main issues preoccupied the ethnic groups in Parliament: the Macedonian Question, concessions to foreign countries, reform in the Anato- lian provinces, and restrictions on the right to assembly. Erst 1911 zionismus",
     "page": 124,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -3943,7 +3912,7 @@
     "text": "Problem opposition: osmanismus betonen, geichzeitig ethnoagenda pushen",
     "page": 124,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -3955,11 +3924,10 @@
     "text": "Kamil pascha regierung, nur nominell von cup unterstützt. Er wendet sich über das jahr mehr liberalen union zu",
     "page": 125,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Kamil"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -3970,10 +3938,10 @@
     "text": "Oktober balkankrise, irgendwie Posten hin und her, werden kamil iweder los. Versammlungsfreiheit dann eingeschränkt",
     "page": 125,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Kamil"
+      "Religionsfreiheit"
     ]
   },
   {
@@ -3984,7 +3952,7 @@
     "text": "Mazedonienfrage zeigt, dass reich nicht religiös gespalten sondenr Parliament was divided along intrareligious and inter- ethnic lines in general and along Greek/Bulgarian lines regarding the Church Question.",
     "page": 128,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -3996,10 +3964,10 @@
     "text": "Meisten arab abgeordneten über cup, also große cup unterstützer However, at the end of 1909, some Arab deputies were able to create a bloc that would play an important role in power politics from 1909 to 1912",
     "page": 128,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4010,12 +3978,10 @@
     "text": "Ende 1909 aber arab block, spielt wichtige rolle bis 1912. Shafiq al-Mu’ayyad and Rushdi al-Sham‘a of Damascus, the leaders behind the creation of this bloc, were the same men whose election as parliamentary deputies had caused some anxiety among CUP circles in the Arab provinces. Other deputies who had been CUP supporters, including ‘Abd al-Hamid al-Zahrawi (Hama), shifted to- ward al-Mu’ayyad’s camp when they became disillusioned with the CUP party.",
     "page": 128,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "Damaskus",
-      "CUP",
-      "Shafiq"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4026,11 +3992,9 @@
     "text": "Ottoman- Arab Brotherhood Society in Istanbul wohl nicht so wichtig, nicht keim des blocks",
     "page": 128,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "medium",
-    "actors": [
-      "Istanbul"
-    ]
+    "category": "Machtstrukturen",
+    "confidence": "low",
+    "actors": []
   },
   {
     "segment_id": "s0313",
@@ -4040,7 +4004,7 @@
     "text": "Arab partei Al-I‘tidāl (Moderation) von im haus von sulh in beirut angedacht. Bekannt dann unter Liberal Moderate Party (Al-ḥizb al-ḥurr al-Mu‘tadil",
     "page": 128,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": []
   },
@@ -4052,9 +4016,11 @@
     "text": "It was also at the end of 1909 that a heated debate took place over the Lynch affair, which related to the government’s plan to provide commercial conces- sion in Iraq to a foreign enterprise: the British Lynch Company.",
     "page": 129,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Iraq"
+    ]
   },
   {
     "segment_id": "s0315",
@@ -4064,9 +4030,12 @@
     "text": "Four major issues were especially pertinent to the Arab deputies in the par- liamentary debates: ratification of the electoral results for four Arab deputies, including al-Mu’ayyad; the Mutran affair; the Hidjaz Railway; and the Baghdad Railway.",
     "page": 129,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Politische Akteure",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Hijaz",
+      "Iraq"
+    ]
   },
   {
     "segment_id": "s0316",
@@ -4076,13 +4045,10 @@
     "text": "Stress zw cup und arabern ua wegen Shafiq al- Mu’ayyad of Damascus, er sei mit sultan verbunden. Auch Yusuf Shitwan (Bingazi), ‘Umar Mansur (Bingazi) and Sayyid Talib (Basra). Andere araber verteidigen sie nicht, damit sie. Nicht in cup ungnade fallen129",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
-    "confidence": "high",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "medium",
     "actors": [
-      "Damaskus",
-      "CUP",
-      "Sultan",
-      "Shafiq"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4093,11 +4059,10 @@
     "text": "Mutran affäre Syrian Central Committee mit Rashid mutran (syrien griech kath) fordert in paris selbstregierung von syrien, erklärung zirkuliert 1908, fordert unabhängigkeit mit unterstützung des westens. Araber im parlament reagieren schnell und negativ",
     "page": 130,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Syrien",
-      "Paris"
+      "Syrians"
     ]
   },
   {
@@ -4108,9 +4073,11 @@
     "text": "Hijazbahn eingeweiht 1. Sept 1908, mit deutscher beratung gebaut. 1909 stress weil die nicht gut verwaltet wird. El ula nach medina noch nicht fertig",
     "page": 131,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
-    "confidence": "high",
-    "actors": []
+    "category": "Machtstrukturen",
+    "confidence": "medium",
+    "actors": [
+      "Hijaz"
+    ]
   },
   {
     "segment_id": "s0319",
@@ -4120,10 +4087,10 @@
     "text": "Bagdad bahn involviert nicht nur araber, es geht auch im strategie, um konzession an ausländische firmen, davon erste diskussion",
     "page": 134,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "Bahn"
+      "Iraq"
     ]
   },
   {
@@ -4134,8 +4101,8 @@
     "text": "One of the main factors that hampered Arab deputies’ from being more active participants in Parliament was their poor knowledge of Ottoman Turkish, as pointed out in an editorial in Al-Muqtabas in March 1909.",
     "page": 135,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
-    "confidence": "high",
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
     "actors": []
   },
   {
@@ -4146,7 +4113,7 @@
     "text": "Araber diskutieren araberthemen, bei anderen wichtrigen reden sie wenig mit, auch weil sie schlecht türkisch sprechen. Other reasons were the nonexistence of a major na- tional concern pertaining to the Arabs or the Arab provinces, whereas such issues were evident among Armenians, Greeks, and Bulgarians. After all, not until 1911 did Zionism and its projects in Palestine attract the criticism of many Arab deputies.",
     "page": 147,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -4158,12 +4125,11 @@
     "text": "Themen der armenier näher am herzen des imperiums, geht dann auch nicht nur um anatolien sondern auc hum versammlugnsrecht, beginnende repressionspolitik der cup",
     "page": 147,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Armenier",
-      "Anatolien"
+      "Kongress für Einheit und Freiheit",
+      "armenier"
     ]
   },
   {
@@ -4174,13 +4140,10 @@
     "text": "The Counterrevolution and the „Second Revolution”\nhochpunkt spannungen ermordung Hasan Fehmi, Redakteur Serbesti, Oppositionsblatt der anti-unionisten, besessen von bruder des sultans (Rashad Efendi). Hatte artikel gegen cup publiziert 149f",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Serbesti",
-      "Hasan Fehmi",
-      "Rashad Efendi",
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4191,10 +4154,10 @@
     "text": "Gegenrevolution zerstört zukunftstraum, cup danach auch repressive",
     "page": 149,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4205,9 +4168,11 @@
     "text": "Konterrevolution für ethnien eigentlich keine hoffnung, angst vor ancien regieme, notablen haben aber bock",
     "page": 149,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
-    "actors": []
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "medium",
+    "actors": [
+      "Konterrevolution"
+    ]
   },
   {
     "segment_id": "s0326",
@@ -4217,11 +4182,12 @@
     "text": "Konterrevolution auch komplex. Folge hauptsächlich cup politik gegen minderheiten, natürlich va armenier und mehr autoritarimus",
     "page": 150,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Armenier"
+      "Kongress für Einheit und Freiheit",
+      "armenier",
+      "Konterrevolution"
     ]
   },
   {
@@ -4232,10 +4198,10 @@
     "text": "Liberale beschuldigen cup des mordes an Fehmi, andere sagen war palast, beerdigung wird zu anti cup demo. In parlamentsdebatte setzt sich interpretation des pol mordes durch",
     "page": 150,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4246,10 +4212,12 @@
     "text": "5.04.1909 gründung ittihad-i muhammedi/Society of Muhammad), wird schnell hauptgegner cup anlässlich des Mordes. Islamisches, antiwestlioches programm, posiert als verteidiger der bürokraten, soldaten, niederen offizieren, religionsstudenten, waisen, armen, witwen, Retired military. Organ der oragnisation ist Volkan. Drohung mit revolte, kooperation mit liberalen. Außerdem partnerschaft mit 1. Armee corps",
     "page": 151,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Revolte",
+      "volkan"
     ]
   },
   {
@@ -4260,12 +4228,11 @@
     "text": "31.03.1909 kemalisten nennen es incident, andere: war es abdülhamid? Andere: waren es die liberalen? Andere: war es cup für repression, sultan loswerden?",
     "page": 151,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Sultan",
-      "Abdülhamid"
+      "Kongress für Einheit und Freiheit",
+      "Abdühlhamid"
     ]
   },
   {
@@ -4276,7 +4243,7 @@
     "text": "Sohrabi erklärung: klassengegensatz/altersgegensatz militärs/Bürokraten vs ihre untergebenen. Nicht fanatismus, zusammensetzung divers",
     "page": 151,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": []
   },
@@ -4288,10 +4255,10 @@
     "text": "Foderung nach Sharia war nicht gegen verfassung sondern verfassung im einklang mit sharia",
     "page": 152,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "high",
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
     "actors": [
-      "Verfassung"
+      "sharia"
     ]
   },
   {
@@ -4302,7 +4269,7 @@
     "text": "Sohrabi: auch wieder konflikt gebildete/ungebildete",
     "page": 152,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": []
   },
@@ -4314,7 +4281,7 @@
     "text": "Zeitgenössisch schon diagnose das problem sei, dass 85% der rank officers abgesägt worden waren, außerdem zugangsexamen",
     "page": 152,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": []
   },
@@ -4326,18 +4293,10 @@
     "text": "12.04.1909 marschiert 1. Armee corps mit riesen menge leuten. Rücktritt hilmi pascha, tevfik pasha von sultan eingesetzt. Cup hohe mitglieder fliehen oder verstecken sich: Ahmed Riza, Mehmed Cavid, bahaeddin Sakir, hüssein cahid. Büros zeitungen cup sura-yi Ümmet und Tanin zerstört",
     "page": 153,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Ahmed Riza",
-      "Hilmi Pascha",
-      "Sultan",
-      "Mehmed Cavid",
-      "Bahaeddin Sakir",
-      "Hüssein Cahid",
-      "Tanin",
-      "Ahmed Rıza"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4348,10 +4307,10 @@
     "text": "Cup festing rumelia, 3. Armee",
     "page": 153,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4362,12 +4321,10 @@
     "text": "17.04.1909 formung united ottoman association initiative ARF, cup istanbul, ottoman liberal party, albaner, kurden etc untersschreiben mit erklärung, dass trotzdem die Verfassung noch gelte wegen unklarheit",
     "page": 153,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": [
-      "CUP",
-      "Istanbul",
-      "Verfassung"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4378,12 +4335,10 @@
     "text": "17.04.1909 action army v thessaloniki los, verhandlungen mit neuer regierung scheitern, nemhen istanbul ein, paar tage später abdülhamid abgesetzt. Liberal Union führer flohen oder wurden verhaftet. Unblutig, aber weite Folgen",
     "page": 153,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Istanbul",
-      "Thessaloniki",
-      "Abdülhamid"
+      "Abdühlhamid"
     ]
   },
   {
@@ -4394,10 +4349,12 @@
     "text": "Ethnische presse neutral zu konterrevolution, Zhamanak publiziert interview mit muslim society, dass sharia auch beratung, parlament mit nicht mulsime meine. Als cup gewinnt, feiert sie das opportunistisch",
     "page": 154,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "sharia",
+      "Konterrevolution"
     ]
   },
   {
@@ -4408,9 +4365,11 @@
     "text": "Araber: Beirut entsetzen, va über eindringen ins parlament, mord an Amir Muhammad Arslan, arab deputy of Latakiyya",
     "page": 155,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Revolutionsereignisse",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Latakiyya"
+    ]
   },
   {
     "segment_id": "s0340",
@@ -4420,11 +4379,12 @@
     "text": "Armenier unterstützen cup stark bei kampf gg konterrevolution, teil action army. Juden auch",
     "page": 158,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Armenier"
+      "Kongress für Einheit und Freiheit",
+      "armenier",
+      "Konterrevolution"
     ]
   },
   {
@@ -4435,10 +4395,10 @@
     "text": "Hunchaken und Dashnaken waren eigentlich als gefählriche randerscheinung angesehen, mit cup herrschaft auf einmal das zentrum. Mögen notablen nicht in provinzen",
     "page": 161,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4449,10 +4409,11 @@
     "text": "Society of Muhammad machte nach konterrevolution provinztour, zweige in Damaskus, Homs, Mosul und Hama, in Damaskus support durch: abd al wadir al ajlani, amir abdullah son of abd al Qadir al Jazairi, sheikh bard al-din. Offene ohren bei Beduinen, kerkessen und kurden",
     "page": 161,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "Damaskus"
+      "Damaskus",
+      "Konterrevolution"
     ]
   },
   {
@@ -4463,11 +4424,12 @@
     "text": "Als konterrev nachricht in damaskus ankam, versammelten sich society of muslim mitglieder mit bevölkerung bewaffnet auf city Square und drohten in großer Moschee versammelte cup mitglieder zu töten, drei tage Feier der Konterrevolution. Muqtabas berichtet von schmuck municipality. Muqtabas: Damaszener wurden aufgehetzt von 5-6 notablen, die nicht von der konstitutionellen regierung befördert worden waren, daher ihre Feinde wurden (muqtabas 30.05.1909, nr 138,3-4",
     "page": 161,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
       "Damaskus",
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Konterrevolution"
     ]
   },
   {
@@ -4478,10 +4440,10 @@
     "text": "Keine unruhe weil armee droht. Als konterrevolution vorbei war, wurden agaitatoren nach istanbul geschickt, tried by court martial",
     "page": 162,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Istanbul"
+      "Konterrevolution"
     ]
   },
   {
@@ -4492,11 +4454,10 @@
     "text": "Latakia sammlung konterrevolutionäre dann. Ali ayni bey ist mutasarrif, bei ihm beschweren sich liberale und christen",
     "page": 162,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "Latakia",
-      "Ali Ayni Bey"
+      "Latakiyya"
     ]
   },
   {
@@ -4507,10 +4468,12 @@
     "text": "Adana Massaker: ein isfendiar, türke, griff eine armenier an, der ihn tötet, seine beerdigung wird zu gewalt, rache an neuer ordnung und armenischen kollaborateuren. Am 13.04. nach nachrticht konterrevolution, viele saisonarbeiter in der stadt, markttag, gehen nach markttag nicht weg, bleiben, 14.04. mit waffen. Armenier machen lädenzu, das macht muslime Paranoid, mob aus türken, kurden, Fellahs, Kerkessen, Zigeuner, Kreter fangen zu plündern an, armenier verbarrikadieren sich, polizei belagert sie. 4 tage belagerung, leute kommen aus Aleppo und Sivas, armenier bitten regierung um hilfe, die handelt frieden aus",
     "page": 167,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier",
+      "Konterrevolution",
+      "türken"
     ]
   },
   {
@@ -4521,13 +4484,11 @@
     "text": "Zweite welle schlimmer, rolle Ihsan Fikri? Der hetzt gg armenier, sie wollen Königreich Kilikien machen. Zeitung itidal (Mäßigung) hetzt, artikel von Fikri 20.04., armenier hätten nach unterdrückung revolution mit türken gemacht, dann die revolution betrogen und waffen gehortet. Hätten isfendiars mörder nicht ausgeliefert, gesetzesverachtung",
     "page": 167,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "Ihsan Fikri",
-      "Königreich Kilikien",
-      "itidal",
-      "Armenier"
+      "armenier",
+      "türken"
     ]
   },
   {
@@ -4538,10 +4499,11 @@
     "text": "Burhan nuri schreibt auch itital: armenier, 2 mio verstreute, können keinen staat gründen, es sei denn in afrika oder an den Polen",
     "page": 168,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Armenier"
+      "Nuri",
+      "armenier"
     ]
   },
   {
@@ -4552,10 +4514,10 @@
     "text": "Gerücht armenier hätten eigene häuser angezündet, um europäer zum eingreifen zu bewegen",
     "page": 168,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
-    "confidence": "medium",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier"
     ]
   },
   {
@@ -4566,10 +4528,10 @@
     "text": "25.04. teile action armee 3. U 2. Regiment kommen, schüsse auf ihr lager, seien armenier, ok machen die fertig, adana armenierviertel abgebrant. Gerücht: armenieraufstand, alle muslims tot",
     "page": 169,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier"
     ]
   },
   {
@@ -4580,11 +4542,11 @@
     "text": "Internat entsetzten, cup wieder an macht, untersuchung, fikri und andere verurteilt, aber eher softe urteile. Cup hat wohl angst vor hartem durchgreifne in schwacher position, fördert natürlich misstrauen der Armenier, nur Dashnaken kooperieren noch mit cup",
     "page": 169,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Armenier"
+      "Kongress für Einheit und Freiheit",
+      "armenier"
     ]
   },
   {
@@ -4595,10 +4557,10 @@
     "text": "Ethnien freuen sich über sturz abdülhamid, zweite revolution",
     "page": 170,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Abdülhamid"
+      "Abdühlhamid"
     ]
   },
   {
@@ -4609,11 +4571,11 @@
     "text": "Armenier weniger begeistert, vorwurf cup sage ich bin der staat",
     "page": 171,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Armenier"
+      "Kongress für Einheit und Freiheit",
+      "armenier"
     ]
   },
   {
@@ -4624,10 +4586,12 @@
     "text": "Cup begrenzt vereinsfreiheit, versammlungsfreiheit, Pressefreiheit, ihr war vorgeworfen worden, konterrevolution zugelassen zu haben, sieht sich als wächterin der revolution mit notwendigen, unkonstitutionellen mitteln",
     "page": 172,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Religionsfreiheit",
+      "Konterrevolution"
     ]
   },
   {
@@ -4638,11 +4602,10 @@
     "text": "Ethnien wollen von verfassung freiheit, cup will mit ihr das reich erhalten",
     "page": 172,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Verfassung"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4653,10 +4616,10 @@
     "text": "Cup machte konstitution und parlament, weil das die mittel der zeit waren, dann haben sie außerlegal gehandelt",
     "page": 176,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4667,10 +4630,11 @@
     "text": "Liberaler osmanismus mit pressefreiheit und nationalsprachen hatte fliehkräfte, cup dann einfach zentralismus, Cup hatte es schwerer gewalt zu rechtfertigen, benutzt dann doch expekutive, repression verhinder repräsentation",
     "page": 177,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Religionsfreiheit"
     ]
   },
   {
@@ -4681,7 +4645,7 @@
     "text": "Eröffnungssatz: Revolutionary theories are most useful when they attempt to define and interpret the causes and mechanisms of revolutions. However, when they attempt to forecast the outcomes and the impact of revolutions on their indigenous societies, they are largely unsuccessful.",
     "page": 189,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Revolutions-Ereignisse",
     "confidence": "high",
     "actors": []
   },
@@ -4693,10 +4657,10 @@
     "text": "Armenier, juden: mikrorevolution, bei arabern instabilität",
     "page": 189,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Armenier"
+      "armenier"
     ]
   },
   {
@@ -4707,7 +4671,7 @@
     "text": "within",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": []
   },
@@ -4719,7 +4683,7 @@
     "text": "these interconnected public spheres, new actors emerged, threatening the social and political stability of the existing orders not only to (re)define their identities in the post-revolutionary period by inventing their own ancien regimes, victories, and new orders, but more importantly by com- peting against each other over control of existing positions of power, and in some cases, creating new ones.",
     "page": 189,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": []
   },
@@ -4731,10 +4695,10 @@
     "text": "revolution der cup erfolgreicher bei zentralisierung der gemeinschaften",
     "page": 189,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4745,9 +4709,11 @@
     "text": "The notion of public sphere within the context of the Ottoman Empire, Mid- dle East, and Muslim world still remains in its infancy.2 Of course, the public sphere, both in its pre-modern and modern fonns, existed in the Ottoman Empire.",
     "page": 190,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "high",
-    "actors": []
+    "category": "IdeologischerWandel",
+    "confidence": "medium",
+    "actors": [
+      "Ottoman Empire"
+    ]
   },
   {
     "segment_id": "s0364",
@@ -4757,7 +4723,7 @@
     "text": "The official Ottoman press began to be published in the 19th century and was followed by the emergence of the private press. The transformation of the literary public spheres into political public spheres in the modern sense took place in the second half of the 19th century, reaching its peak with the promulgation of the Otto- man constitution in 1876.6 In fact, the creation of private press and the proliferation of the ethnic press in the second half of the 19th century further developed the notion of multiple public spheres as opposed to the public sphere dominated by the Ottoman ruling elite. Hence, public spheres already existed among the ethnic groups in the first half of the 19th century.",
     "page": 191,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -4769,11 +4735,12 @@
     "text": "Spionagesystem abdülhamid führt zu verschiebung from Lebanon, Syria, and Anatolia, to European cities and Egypt. … After the Young Turk revolution of 1908, this exilic public sphere was transformed into a homeland public sphere. The revolution allowed for an immediate boom in serial publications of different ethnic groups in the Empire.8",
     "page": 191,
     "doc_type": "Forschungsnotizen",
-    "category": "Exil und Diaspora",
+    "category": "Revolutions Ereignisse",
     "confidence": "high",
     "actors": [
-      "Lebanon",
-      "Abdülhamid"
+      "Egyptian",
+      "Abdühlhamid",
+      "Young Turk"
     ]
   },
   {
@@ -4784,7 +4751,7 @@
     "text": "Fußnote 8: he best study on the post-revolutionary press is that of Palmira Brummett, Image and Imperialism in the Ottoman Revolutionary Press, J908-J9JI (Albany: State Univer- sity of New York Press, 20(0). Despite the fact that it concentrates more on the satirical press during the post-revolutionary period, mainly in the Ottoman press, it still provides important information on political discourse in the Ottoman press from the Turkish per- spective. The same kind of work needs to be undertaken on the ethnic press.",
     "page": 191,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   },
@@ -4796,14 +4763,10 @@
     "text": "n addition to the CUP branches in Syria, the revolution also resulted in the creation of Arab political movements, the first of which was the Arab-Ottoman Brotherhood, established by the dismissed Arab functionaries ofthe ancien regime.94  founding members were Shafiq Bey al-Mu 'ayyad al-' Azm, Nadra Bey Mutfiin, Shukri: Bey al-I:IusaynI, 'Arif Bey al-MardInI, Shukri: Pa§a al-AyyiibI, SaQiq Pa§a al-Mu'ayyad al- 'Azm, SharIf Ja'far Pa§a and MuJ:!ammad Pa§a al-MakhzumI.",
     "page": 211,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Shafiq",
-      "Nadra",
-      "Arif",
-      "Mutfiin"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4814,12 +4777,9 @@
     "text": "Among the Arab provinces, Damascus was considered an important center for the activities of the ulema. With its Ummayad Mosque, it was a traditional place of Islamic learning. In addition the notables of Damas- cus, numbering around 50 families,95 composed a powerful stratum run- ning the political mechanism. The constitution became the ultimate threat to these families and to the ulema class",
     "page": 212,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Damaskus",
-      "Ummayad Mosque"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0369",
@@ -4829,7 +4789,7 @@
     "text": "Revolution in damaskus nicht so erfolgraich",
     "page": 212,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
       "Damaskus"
@@ -4843,11 +4803,10 @@
     "text": "UP branch of Damascus included Hussein Bey 'Awnl, who was the director of educa- tion (mudlr al-ma'iirij) in Damascus, Major SalIm al-Jaza'iri, and As'ad Bey, member of the general staff, who later became the chief of police of Damascus, and a certain Dr. f.laydar.",
     "page": 212,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Damaskus",
-      "Hussein"
+      "Salih"
     ]
   },
   {
@@ -4858,11 +4817,11 @@
     "text": "The temporary political vacuum that was created after the revolution was filled by CUP branches as they began running the affairs of the administration.96 The first task of the CUP in Damascus was to get rid of the officials from the ancien regime period. To this end, they pressured the Vali to dismiss the head of the Administrative Council of the Prov- ince, Muhammad Fawzi Pa~a al-'Azm, the Mufti of Damascus, the chief clerk of the Shari'a courts, as well as the kaimakam of Zabadani and Busra Eski Sham, among several other district governors. These actions caused some discontent among the ulema class. The British Consul Devey reported on the 12th of August, \"There is some discontent on the part of the ulema and certain leaders of the town, for the Union and Pro- gress Society is going forward in its own way and removing officials without consulting them.\"98 The discontent continued and resulted in the establishment of an association by the ulema.99 212f",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Damaskus",
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Wahl"
     ]
   },
   {
@@ -4873,10 +4832,10 @@
     "text": "Some protester referred to the CUP as the committee of disunity and decline (jam 'iyyat al-tafrlq wa- al-tadannl).",
     "page": 214,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -4887,9 +4846,11 @@
     "text": "his article has contended that post-revolutionary ethnic politics in the Ottoman Empire should not be viewed solely through the prism of political parties, but also through ecclesiastical poli- tics, a key factor in defining inter- and intra-ethnic politics. Interestingly, despite the fact that the revolution aimed at creating the modem secular Ottoman citizen whose loyalty would be to the state, it nevertheless strengthened the ethno-religious political centers of the ethnic groups. It did so by creating a multiplicity of interconnected public spheres over which fierce competition began among the different actors in these ethnic groups for control of power positions.",
     "page": 218,
     "doc_type": "Forschungsnotizen",
-    "category": "Soziale Bewegungen",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Ottoman Empire"
+    ]
   },
   {
     "segment_id": "s0374",
@@ -4899,12 +4860,12 @@
     "text": "Nazim pasha ist getöteter kriegsminister jan 13, davor war es Mahmud Sevket, der wird dann großwesir, obwohl garnicht mitglied CUP, erschossen 11. Juli 13, dann ist es said Halim. Tod sevket bringt andere militärs dazu, die verantwortung zu übernehmen – Hist. Phase damit vorbei, finaler aufstieg CUP",
     "page": 12,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Sevket",
-      "Halim"
+      "Kongress für Einheit und Freiheit",
+      "Mahmud sevket",
+      "sevekt pasha"
     ]
   },
   {
@@ -4915,10 +4876,10 @@
     "text": "Nach tod sevket jüngere dran, mehr dringlichkeit viele ideologische vorstellungen schnell zu implementieren, nicht mehr alte vorstellung dienst am Reich, keine gedult mehr für Verhandlungen",
     "page": 13,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "Sevket"
+      "sevekt pasha"
     ]
   },
   {
@@ -4929,10 +4890,10 @@
     "text": "Vor tanzimat waren millets einigermaßen selbstverwaltet, als sultans protected flock, konnten aber bei hoher Politik nicht mitreden. Tanzimat macht alle gemeinschaften gleich, erwartet damit auch loyalität. Damit geht auch einher: neue gerichte, neue formen landbesitz, neue steuern. Tanzimat wird nachahmen des westens vorgeworfen, manche versuchen altes system wiederherzustellen. 1860 mt lebanon maroniten vs drusen war konflikt im rahmen von tanzimat – mt leb als provinz mit christ. Gouverneur lässt viele darüber nachdenken, was ihr status im reich sein soll 15-",
     "page": 18,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": [
-      "Lebanon"
+      "Tanzimat"
     ]
   },
   {
@@ -4943,7 +4904,7 @@
     "text": "Ausländische mächte haben einfluss über handelsbeziehungen, schulen etc, sorge des hohen pfote",
     "page": 18,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": []
   },
@@ -4955,8 +4916,8 @@
     "text": "Public debt administration 1881",
     "page": 18,
     "doc_type": "Forschungsnotizen",
-    "category": "Ekonomie und Finanzen",
-    "confidence": "high",
+    "category": "Machtstrukturen",
+    "confidence": "medium",
     "actors": []
   },
   {
@@ -4967,7 +4928,7 @@
     "text": "Arf 1890, IMRO 1883",
     "page": 20,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": []
   },
@@ -4979,9 +4940,11 @@
     "text": "Unter abdühlhamid scho nverschiebung zu muslimen, generation von staatsdiener, die sich als muslimisch verstehen",
     "page": 22,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Abdühlhamid"
+    ]
   },
   {
     "segment_id": "s0381",
@@ -4991,10 +4954,10 @@
     "text": "Unter abdülhamid wird bürger des reiches sein viel sichtbarer",
     "page": 24,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": [
-      "Abdülhamid"
+      "Abdühlhamid"
     ]
   },
   {
@@ -5005,8 +4968,8 @@
     "text": "Teilweise hungersnöte, jahrhundertwende zeit der emigration",
     "page": 26,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": []
   },
   {
@@ -5017,7 +4980,7 @@
     "text": "Problem der unsicherheit der wege: banditen, polizisten, revolutionäre, sehr fließende grenzen – das ist sorge der jeweiligen gebiete",
     "page": 27,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -5029,9 +4992,11 @@
     "text": "Frühe jungtürken finden es schlecht, dass armeeleute etc einfluss beschnitten bekommen zugunsten palastgünstlinge, wollen allgemeine einbindung. Aber wie das gehen soll bleibt sehr strittig",
     "page": 27,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Young Turk"
+    ]
   },
   {
     "segment_id": "s0385",
@@ -5041,9 +5006,11 @@
     "text": "Gründung jungtürken",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Young Turk"
+    ]
   },
   {
     "segment_id": "s0386",
@@ -5053,14 +5020,9 @@
     "text": "Ahmed riza ist in der bürokratie, verbittert aber gegen kollegen und farmer, die keine modernen methoden anwenden, kündigt und geht nach paris. Einfluss comte und le bon. Massen verbessern, im herzen elitist 1889",
     "page": 28,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
-    "actors": [
-      "Bürokratie",
-      "Paris",
-      "Ahmed Riza",
-      "Ahmed Rıza"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0387",
@@ -5070,10 +5032,11 @@
     "text": "1902 spaltung cup, sabahhedin wollen schnell revolution (mit briten, scheitert), Riza gradueller. Mehr struktur cup Bahaeddin’s, Nazim",
     "page": 29,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Sabaheddin",
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -5084,13 +5047,11 @@
     "text": "Talat verhandelt merger cup und ottoman freedom soc (bio dateils Talat und Enver",
     "page": 31,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": [
-      "Enver",
-      "CUP",
-      "Talat",
-      "Talat"
+      "Kongress für Einheit und Freiheit",
+      "Enver"
     ]
   },
   {
@@ -5101,11 +5062,10 @@
     "text": "Bei nachricht dass es klappt mit revolution rufe thessaloniki „down with the spies“, weil erfolg gegen europa abspaltung balkan",
     "page": 33,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
     "actors": [
-      "Thessaloniki",
-      "Balkanprovinzen"
+      "balkan"
     ]
   },
   {
@@ -5116,11 +5076,10 @@
     "text": "Einige kommentatoren bei cup putsch sind vorsichtig, weil cup soviele muslime sind",
     "page": 34,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "medium",
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "high",
     "actors": [
-      "CUP",
-      "Putsch"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -5131,11 +5090,9 @@
     "text": "Gegenputsch hat zu tun mit Hasan Fehmi mord",
     "page": 36,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Revolutionäre Ereignisse",
     "confidence": "high",
-    "actors": [
-      "Hasan Fehmi"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0392",
@@ -5145,10 +5102,10 @@
     "text": "Gegenputsch 1909 hatte liberale verschont, schwäche cup gezeigt, aufwind liberale",
     "page": 36,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -5159,11 +5116,9 @@
     "text": "Gegenputsch folge massaker anatolien an armeniern",
     "page": 37,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "RevolutionäreEreignisse",
     "confidence": "high",
-    "actors": [
-      "Anatolien"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0394",
@@ -5173,10 +5128,11 @@
     "text": "Cup politik nach gegenputsch: militärränge säubern, unionisten machen verschrfung pressefreiheit",
     "page": 38,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit",
+      "Religionsfreiheit"
     ]
   },
   {
@@ -5187,10 +5143,10 @@
     "text": "Rethorisch cup natürlich gegen westeinmischung, aber bei lynch affäre dann wollen sie doch westprojekte im tausch für kredite durchdrücken – probleme er realpolitik. Gleiches bei zionismus: arabische abgeordnete finden wachsenden einfluss von juden im in und ausland schlecht, cup macht nichts, verteidigt sie als ehrliche arbeiter",
     "page": 39,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -5201,11 +5157,9 @@
     "text": "Verfassung 1908 macht türkisch lingua franca - In an effort to pro- mote a far more rationalized and integrated state, committee members reasoned that its use should also extend to local administrative offices and schools, as well among parliamentarians, senior bureaucrats, and officers",
     "page": 40,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Institutionen",
+    "category": "IdeologischerWandel",
     "confidence": "high",
-    "actors": [
-      "Verfassung"
-    ]
+    "actors": []
   },
   {
     "segment_id": "s0397",
@@ -5215,11 +5169,9 @@
     "text": "Hüseyin Cahid, pub- lisher of the pro-Unionist daily Tanin, pointed in part to the practical dimensions of such a policy. “To allow different languages in government,” he argued, “would be setting up a Tower of Babel.” Kayali 88",
     "page": 40,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
-    "actors": [
-      "Tanin"
-    ]
+    "category": "Politische Akteure",
+    "confidence": "medium",
+    "actors": []
   },
   {
     "segment_id": "s0398",
@@ -5229,10 +5181,10 @@
     "text": "Auch ehemalige cup unterstützer wie Shukri al-Asali ärgern sich über jungtürkische sprachpolitik",
     "page": 41,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -5243,10 +5195,10 @@
     "text": "Für cup ist türke sein sprache, also einschließend, universal – andere sehen das nicht so",
     "page": 41,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -5257,9 +5209,11 @@
     "text": "Albanien 1910 – 12 stress über politik der entwaffnung und einziehung – entwaffnung der bevölkerung für ehr kontrolle",
     "page": 42,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "medium",
-    "actors": []
+    "category": "GesellschaftlicheSpannungen",
+    "confidence": "high",
+    "actors": [
+      "Albanians"
+    ]
   },
   {
     "segment_id": "s0401",
@@ -5269,9 +5223,11 @@
     "text": "Liberale entende partei 1911 sabahhedin als gegenbewegung zur zentralisierungspolitik",
     "page": 42,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Politische Akteure",
     "confidence": "high",
-    "actors": []
+    "actors": [
+      "Sabaheddin"
+    ]
   },
   {
     "segment_id": "s0403",
@@ -5281,11 +5237,11 @@
     "text": "Cup doppelter charakter: bewegung, die direktkandidaten aufstellt und organisation mit sitz in thessaloniki, wird zu staat im staat, dessen politik ist geheim, aber manchmal funktionsieren befehlsketten auch nicht.",
     "page": 43,
     "doc_type": "Forschungsnotizen",
-    "category": "Revolutionsgeschichte",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "CUP",
-      "Thessaloniki"
+      "Kongress für Einheit und Freiheit",
+      "Organisation"
     ]
   },
   {
@@ -5296,11 +5252,11 @@
     "text": "Cup damaskus will delegierten schicken, will headquarter aber nicht",
     "page": 44,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
+    "category": "Machtstrukturen",
     "confidence": "high",
     "actors": [
       "Damaskus",
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -5311,10 +5267,10 @@
     "text": "Cup kongress 1910 wohl türkifizierung",
     "page": 45,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
-    "confidence": "high",
+    "category": "Politische Akteure",
+    "confidence": "medium",
     "actors": [
-      "CUP"
+      "Kongress für Einheit und Freiheit"
     ]
   },
   {
@@ -5325,13 +5281,15 @@
     "text": "With war raging in the far-off province of Libya, Unionist opponents in the national assembly grew more confident in the wake of the 1912 election. Tensions grew precipitously in the summer of 1912 as a cohort of dissident officers from the Balkans, with the support of Albanian rebels and the Liberal Entente, attempted to stage a coup organized by a shadowy group calling itself the League of Savior Officers. The revolt, which began outside the CUP stronghold of Manastır, created a political firestorm in the capital. Pressured by CUP opponents, the sultan responded to the crisis by appointing a new civilian cabinet and a grand vizier with decidedly anti–Young Turk tendencies. – dann balkankrise, enver putsch (immer angst vor der figure des unabhängigkeitskämpfers",
     "page": 48,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
+      "Kongress für Einheit und Freiheit",
       "Enver",
-      "CUP",
-      "Putsch",
-      "Sultan"
+      "Balkanerfahrungen",
+      "Albanians",
+      "Manastir",
+      "Young Turk"
     ]
   },
   {
@@ -5342,13 +5300,12 @@
     "text": "The creation of the CUP formed the critical point of separation between older figures like Mahmud Şevket and younger ones like Enver or Talat. The experience of mobilizing and agitating in closed quarters, for fear of government reprisal, left a lasting impact upon all those who participated in the Young Turk movement. – jungtürken bewegung junger leute, dann schaffen sie revolution, dann müssen se aufbauen, gegenwind, dann machen sie wieder wie revolution gewalt/geheimorganisation für das Reich",
     "page": 50,
     "doc_type": "Forschungsnotizen",
-    "category": "Politische Führung",
-    "confidence": "high",
+    "category": "Reichskrise",
+    "confidence": "medium",
     "actors": [
+      "Kongress für Einheit und Freiheit",
       "Enver",
-      "CUP",
-      "Talat",
-      "Talat"
+      "Young Turk"
     ]
   },
   {
@@ -5359,7 +5316,7 @@
     "text": "Collaps at the margins",
     "page": null,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "GesellschaftlicheSpannungen",
     "confidence": "high",
     "actors": []
   },
@@ -5371,11 +5328,10 @@
     "text": "Balkan krieg, bulgarien, libyen, später noch jemen",
     "page": 55,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "Reichskrise",
     "confidence": "high",
     "actors": [
-      "Bulgarien",
-      "Balkanprovinzen"
+      "balkan"
     ]
   },
   {
@@ -5386,7 +5342,7 @@
     "text": "Türkismus, Islamismus, Sozialdarwinismus, politisch rechte revolutionäre, ab 1913 ethnonationalismus mit Klassenkampf",
     "page": 75,
     "doc_type": "Forschungsnotizen",
-    "category": "Historischer Kontext",
+    "category": "IdeologischerWandel",
     "confidence": "high",
     "actors": []
   }

@@ -1,0 +1,801 @@
+[
+  {
+    "normalform": "Ismail Enver",
+    "typ": "Person",
+    "aliases": [
+      "Enver Pasha",
+      "Effendi",
+      "Pascha",
+      "Ismail Enver",
+      "Muhammad Kurd 'Ali",
+      "Kurdi Ali",
+      "Kurd Ali"
+    ]
+  },
+  {
+    "normalform": "Istanbul",
+    "typ": "Ort",
+    "aliases": [
+      "İstanbul",
+      "Istanbul",
+      "Stadt in der Türkei"
+    ]
+  },
+  {
+    "normalform": "Ottoman",
+    "typ": "Organisation",
+    "aliases": [
+      "Ottoman state",
+      "Osmanen",
+      "Ottoman nationhood",
+      "Ottoman Empire"
+    ]
+  },
+  {
+    "normalform": "Hamidian",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Second Constitutional Period",
+    "typ": "Konzept",
+    "aliases": [
+      "Watan Wa Al Wataniyya"
+    ]
+  },
+  {
+    "normalform": "CUP",
+    "typ": "Organisation",
+    "aliases": [
+      "Committee of Union and Progress",
+      "CUP"
+    ]
+  },
+  {
+    "normalform": "Mutadayyinun",
+    "typ": "Konzept",
+    "aliases": [
+      "Reform Club",
+      "Daʿwa al-Siyyasa al-Shaʿbiyya"
+    ]
+  },
+  {
+    "normalform": "Armenier",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Wahhab",
+    "typ": "Konzept",
+    "aliases": [
+      "Waḥhābīyūn"
+    ]
+  },
+  {
+    "normalform": "Ulama",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Badr al-Din al-Hasani",
+    "typ": "Person",
+    "aliases": [
+      "Badr al-Din al-Hasani",
+      "Mahmud al-Attar",
+      "Abd al-Hamid al-Daghestani"
+    ]
+  },
+  {
+    "normalform": "Antonius Hourani Sharabi",
+    "typ": "Person",
+    "aliases": [
+      "Antonius Hourani Sharabi"
+    ]
+  },
+  {
+    "normalform": "Commins Qasimi",
+    "typ": "Person",
+    "aliases": [
+      "Commins Qasimi"
+    ]
+  },
+  {
+    "normalform": "Bitars Khanis Ahmad al jazairi abd al ghani al ghunaymi abd al qadir al jazairi",
+    "typ": "Person",
+    "aliases": [
+      "Bitars, Khanis, Ahmad al jazairi, abd al ghani al ghunaymi"
+    ]
+  },
+  {
+    "normalform": "Muhammad Fawzi Pasha",
+    "typ": "Person",
+    "aliases": [
+      "Muhammad Fawzi Pasha al-Azm",
+      "al-'Azm"
+    ]
+  },
+  {
+    "normalform": "Damaskus",
+    "typ": "Ort",
+    "aliases": [
+      "Damaskus",
+      "Staat in der Region Nahost",
+      "Syrian State",
+      "Syrien",
+      "Syrische Hauptstadt"
+    ]
+  },
+  {
+    "normalform": "Turco-Syrian Committee",
+    "typ": "Organisation",
+    "aliases": [
+      "Turco-Syrian Committee"
+    ]
+  },
+  {
+    "normalform": "Rafiq",
+    "typ": "Person",
+    "aliases": [
+      "Rafiq"
+    ]
+  },
+  {
+    "normalform": "Haqqi al azm",
+    "typ": "Konzept",
+    "aliases": [
+      "Haqqi al azm",
+      "Arabismus",
+      "arabistische Bewegung",
+      "Arabisch"
+    ]
+  },
+  {
+    "normalform": "Faris",
+    "typ": "Person",
+    "aliases": [
+      "Firas"
+    ]
+  },
+  {
+    "normalform": "Ahmed Rıza",
+    "typ": "Person",
+    "aliases": [
+      "Ahmed Riza",
+      "Riza"
+    ]
+  },
+  {
+    "normalform": "Saud",
+    "typ": "Person",
+    "aliases": [
+      "Saudi"
+    ]
+  },
+  {
+    "normalform": "Faysal",
+    "typ": "Person",
+    "aliases": [
+      "Faysal",
+      "faysalistisch",
+      "Syrische Bewegung"
+    ]
+  },
+  {
+    "normalform": "Gelvin",
+    "typ": "Person",
+    "aliases": [
+      "Khalid Sharizuri",
+      "Sharizuri",
+      "d1827"
+    ]
+  },
+  {
+    "normalform": "Rafiq al-'Azm",
+    "typ": "Person",
+    "aliases": [
+      "Rafiq al-Azm"
+    ]
+  },
+  {
+    "normalform": "Shukri al-'Asali",
+    "typ": "Person",
+    "aliases": [
+      "Shukri al-Asali"
+    ]
+  },
+  {
+    "normalform": "notablen",
+    "typ": "Konzept",
+    "aliases": [
+      "notablen"
+    ]
+  },
+  {
+    "normalform": "Naqib al-Ashraf",
+    "typ": "Person",
+    "aliases": [
+      "Naqib al-Ashraf"
+    ]
+  },
+  {
+    "normalform": "ata Bakri",
+    "typ": "Person",
+    "aliases": [
+      "ata Bakri"
+    ]
+  },
+  {
+    "normalform": "Amir 'Abd al-Qadir",
+    "typ": "Person",
+    "aliases": [
+      "Amir 'Abd al-Qadir"
+    ]
+  },
+  {
+    "normalform": "Young Turk",
+    "typ": "Konzept",
+    "aliases": [
+      "Young Turk"
+    ]
+  },
+  {
+    "normalform": "salah al din al tunisi",
+    "typ": "Person",
+    "aliases": [
+      "salah al din al tunisi"
+    ]
+  },
+  {
+    "normalform": "muhammadisten",
+    "typ": "Konzept",
+    "aliases": [
+      "muhammadisten"
+    ]
+  },
+  {
+    "normalform": "reformisten",
+    "typ": "Konzept",
+    "aliases": [
+      "reformisten"
+    ]
+  },
+  {
+    "normalform": "jungtürken",
+    "typ": "Konzept",
+    "aliases": [
+      "jungtürken"
+    ]
+  },
+  {
+    "normalform": "Al tunisi",
+    "typ": "Person",
+    "aliases": [
+      "Al tunisi"
+    ]
+  },
+  {
+    "normalform": "Konservative",
+    "typ": "Konzept",
+    "aliases": [
+      "Konservative"
+    ]
+  },
+  {
+    "normalform": "Shafiq al- Mu'ayad",
+    "typ": "Person",
+    "aliases": [
+      "Shafiq al- Mu'ayad"
+    ]
+  },
+  {
+    "normalform": "'Abd al-Hamid Zahrawi",
+    "typ": "Person",
+    "aliases": [
+      "'Abd al-Hamid Zahrawi"
+    ]
+  },
+  {
+    "normalform": "Shukri al-' Asali",
+    "typ": "Person",
+    "aliases": [
+      "Shukri al-' Asali"
+    ]
+  },
+  {
+    "normalform": "Rushdi al-Sham'a",
+    "typ": "Person",
+    "aliases": [
+      "Rushdi al-Sham'a"
+    ]
+  },
+  {
+    "normalform": "Hafiz al-Sa'id",
+    "typ": "Person",
+    "aliases": [
+      "Hafiz al-Sa'id"
+    ]
+  },
+  {
+    "normalform": "Syria",
+    "typ": "Ort",
+    "aliases": [
+      "Syria"
+    ]
+  },
+  {
+    "normalform": "Beirut",
+    "typ": "Ort",
+    "aliases": [
+      "Beirut"
+    ]
+  },
+  {
+    "normalform": "Lisan al hal",
+    "typ": "Organisation",
+    "aliases": [
+      "Lisan al hal"
+    ]
+  },
+  {
+    "normalform": "kef",
+    "typ": "Organisation",
+    "aliases": [
+      "kef"
+    ]
+  },
+  {
+    "normalform": "Muhammad Kurd ‘Ali",
+    "typ": "Person",
+    "aliases": [
+      "Muhammad Kurd ‘Ali"
+    ]
+  },
+  {
+    "normalform": "Kurd ‘Ali",
+    "typ": "Person",
+    "aliases": [
+      "Kurd ‘Ali"
+    ]
+  },
+  {
+    "normalform": "Sectarianism",
+    "typ": "Konzept",
+    "aliases": [
+      "Sectarianism"
+    ]
+  },
+  {
+    "normalform": "Opposition",
+    "typ": "Konzept",
+    "aliases": [
+      "Opposition"
+    ]
+  },
+  {
+    "normalform": "Muqtabas",
+    "typ": "Organisation",
+    "aliases": [
+      "Muqtabas"
+    ]
+  },
+  {
+    "normalform": "Christen",
+    "typ": "Konzept",
+    "aliases": [
+      "Christen"
+    ]
+  },
+  {
+    "normalform": "banker",
+    "typ": "Konzept",
+    "aliases": [
+      "banker"
+    ]
+  },
+  {
+    "normalform": "Municipal Council (Majlis al-baladiyya)",
+    "typ": "Organisation",
+    "aliases": [
+      "Municipal Council (Majlis al-baladiyya)"
+    ]
+  },
+  {
+    "normalform": "Damascus",
+    "typ": "Ort",
+    "aliases": [
+      "Damascus"
+    ]
+  },
+  {
+    "normalform": "Council of the District (Majlis al-idara al-liwa')",
+    "typ": "Organisation",
+    "aliases": [
+      "Council of the District (Majlis al-idara al-liwa')"
+    ]
+  },
+  {
+    "normalform": "Kaylanis",
+    "typ": "Konzept",
+    "aliases": [
+      "Kaylanis"
+    ]
+  },
+  {
+    "normalform": "Hasibis",
+    "typ": "Konzept",
+    "aliases": [
+      "Hasibis"
+    ]
+  },
+  {
+    "normalform": "Ajlanis",
+    "typ": "Konzept",
+    "aliases": [
+      "Ajlanis"
+    ]
+  },
+  {
+    "normalform": "Ghazzi, Salih",
+    "typ": "Person",
+    "aliases": [
+      "Ghazzi, Salih"
+    ]
+  },
+  {
+    "normalform": "Ghazzis",
+    "typ": "Konzept",
+    "aliases": [
+      "Ghazzis"
+    ]
+  },
+  {
+    "normalform": "Qadiriyya",
+    "typ": "Organisation",
+    "aliases": [
+      "Qadiriyya"
+    ]
+  },
+  {
+    "normalform": "'Abd al-Latif",
+    "typ": "Person",
+    "aliases": [
+      "'Abd al-Latif"
+    ]
+  },
+  {
+    "normalform": "Municipal Council",
+    "typ": "Organisation",
+    "aliases": [
+      "Municipal Council"
+    ]
+  },
+  {
+    "normalform": "Tanzimat",
+    "typ": "Konzept",
+    "aliases": [
+      "Tanzimat"
+    ]
+  },
+  {
+    "normalform": "panislamismus",
+    "typ": "Konzept",
+    "aliases": [
+      "panislamismus"
+    ]
+  },
+  {
+    "normalform": "'Abd al-Rahman Pasha al-Yusuf",
+    "typ": "Person",
+    "aliases": [
+      "'Abd al-Rahman Pasha al-Yusuf"
+    ]
+  },
+  {
+    "normalform": "Shaykh Muhammad al-'Ajlani",
+    "typ": "Person",
+    "aliases": [
+      "Shaykh Muhammad al-'Ajlani"
+    ]
+  },
+  {
+    "normalform": "Shaykh Sulayman Jukhadar",
+    "typ": "Person",
+    "aliases": [
+      "Shaykh Sulayman Jukhadar"
+    ]
+  },
+  {
+    "normalform": "Rushdi Bey al-Sham'a",
+    "typ": "Person",
+    "aliases": [
+      "Rushdi Bey al-Sham'a"
+    ]
+  },
+  {
+    "normalform": "Shafiq Bey Mu'ayyad",
+    "typ": "Person",
+    "aliases": [
+      "Shafiq Bey Mu'ayyad"
+    ]
+  },
+  {
+    "normalform": "Muhammadan Union",
+    "typ": "Organisation",
+    "aliases": [
+      "Muhammadan Union"
+    ]
+  },
+  {
+    "normalform": "Gegenputsch",
+    "typ": "Konzept",
+    "aliases": [
+      "Gegenputsch"
+    ]
+  },
+  {
+    "normalform": "tütkifizierung",
+    "typ": "Konzept",
+    "aliases": [
+      "tütkifizierung"
+    ]
+  },
+  {
+    "normalform": "bürokratie",
+    "typ": "Konzept",
+    "aliases": [
+      "bürokratie"
+    ]
+  },
+  {
+    "normalform": "türken",
+    "typ": "Konzept",
+    "aliases": [
+      "türken"
+    ]
+  },
+  {
+    "normalform": "Arab Renaissance Society (jamHyyat al-nahda aWArabiyya)",
+    "typ": "Organisation",
+    "aliases": [
+      "Arab Renaissance Society (jamHyyat al-nahda aWArabiyya)"
+    ]
+  },
+  {
+    "normalform": "Shaykh Tahir al-Jaza'iri",
+    "typ": "Person",
+    "aliases": [
+      "Shaykh Tahir al-Jaza'iri"
+    ]
+  },
+  {
+    "normalform": "'Abd al-Rahman Shahbandar",
+    "typ": "Person",
+    "aliases": [
+      "'Abd al-Rahman Shahbandar"
+    ]
+  },
+  {
+    "normalform": "Rafiq al azm:",
+    "typ": "Person",
+    "aliases": [
+      "Rafiq al azm:"
+    ]
+  },
+  {
+    "normalform": "Kurd 'Ali",
+    "typ": "Person",
+    "aliases": [
+      "Kurd 'Ali"
+    ]
+  },
+  {
+    "normalform": "al-Qabas",
+    "typ": "Organisation",
+    "aliases": [
+      "al-Qabas"
+    ]
+  },
+  {
+    "normalform": "Ottoman Party of Administrative Decentralization (Hizb al-lamarkaziyya al-idariyya aWUihmani)",
+    "typ": "Organisation",
+    "aliases": [
+      "Ottoman Party of Administrative Decentralization (Hizb al-lamarkaziyya al-idariyya aWUihmani)"
+    ]
+  },
+  {
+    "normalform": "'Abd al-Hamid al-Zahrawi",
+    "typ": "Person",
+    "aliases": [
+      "'Abd al-Hamid al-Zahrawi"
+    ]
+  },
+  {
+    "normalform": "liberale union",
+    "typ": "Organisation",
+    "aliases": [
+      "liberale union"
+    ]
+  },
+  {
+    "normalform": "Muhammad Fawzi al-'Azm",
+    "typ": "Person",
+    "aliases": [
+      "Muhammad Fawzi al-'Azm"
+    ]
+  },
+  {
+    "normalform": "'Abd al-Rahman al-Yusuf",
+    "typ": "Person",
+    "aliases": [
+      "'Abd al-Rahman al-Yusuf"
+    ]
+  },
+  {
+    "normalform": "Ahmad al-Sham'a",
+    "typ": "Person",
+    "aliases": [
+      "Ahmad al-Sham'a"
+    ]
+  },
+  {
+    "normalform": "Nasib al-Hamza",
+    "typ": "Person",
+    "aliases": [
+      "Nasib al-Hamza"
+    ]
+  },
+  {
+    "normalform": "Sami Mardam-Beg",
+    "typ": "Person",
+    "aliases": [
+      "Sami Mardam-Beg"
+    ]
+  },
+  {
+    "normalform": "liberaler partei",
+    "typ": "Organisation",
+    "aliases": [
+      "liberaler partei"
+    ]
+  },
+  {
+    "normalform": "Unionisten",
+    "typ": "Konzept",
+    "aliases": [
+      "Unionisten"
+    ]
+  },
+  {
+    "normalform": "Liberale",
+    "typ": "Konzept",
+    "aliases": [
+      "Liberale"
+    ]
+  },
+  {
+    "normalform": "Young Arab Society (jamHyyat al-umma al-Arabiyya al-fatat",
+    "typ": "Organisation",
+    "aliases": [
+      "Young Arab Society (jamHyyat al-umma al-Arabiyya al-fatat"
+    ]
+  },
+  {
+    "normalform": "Jamil Mardam-Beg",
+    "typ": "Person",
+    "aliases": [
+      "Jamil Mardam-Beg"
+    ]
+  },
+  {
+    "normalform": "Nasib and Fawzi al-Bakri",
+    "typ": "Person",
+    "aliases": [
+      "Nasib and Fawzi al-Bakri"
+    ]
+  },
+  {
+    "normalform": "Fakhri al-Barudi",
+    "typ": "Person",
+    "aliases": [
+      "Fakhri al-Barudi"
+    ]
+  },
+  {
+    "normalform": "Muhibb al-Din al-Khatib",
+    "typ": "Person",
+    "aliases": [
+      "Muhibb al-Din al-Khatib"
+    ]
+  },
+  {
+    "normalform": "Ottoman Party of Administrative Decentralization",
+    "typ": "Organisation",
+    "aliases": [
+      "Ottoman Party of Administrative Decentralization"
+    ]
+  },
+  {
+    "normalform": "Fatat",
+    "typ": "Organisation",
+    "aliases": [
+      "Fatat"
+    ]
+  },
+  {
+    "normalform": "Arab nationalism",
+    "typ": "Konzept",
+    "aliases": [
+      "Arab nationalism"
+    ]
+  },
+  {
+    "normalform": "Islamic State",
+    "typ": "Konzept",
+    "aliases": [
+      "Islamic State"
+    ]
+  },
+  {
+    "normalform": "Arabists",
+    "typ": "Konzept",
+    "aliases": [
+      "Arabists"
+    ]
+  },
+  {
+    "normalform": "Union and Progress organization",
+    "typ": "Organisation",
+    "aliases": [
+      "Union and Progress organization"
+    ]
+  },
+  {
+    "normalform": "bureaucracy",
+    "typ": "Konzept",
+    "aliases": [
+      "bureaucracy"
+    ]
+  },
+  {
+    "normalform": "Mustafa Bey",
+    "typ": "Person",
+    "aliases": [
+      "Mustafa Bey"
+    ]
+  },
+  {
+    "normalform": "Shaykh Zafir",
+    "typ": "Person",
+    "aliases": [
+      "Shaykh Zafir"
+    ]
+  },
+  {
+    "normalform": "Abdülhamid",
+    "typ": "Person",
+    "aliases": [
+      "Abdülhamid"
+    ]
+  },
+  {
+    "normalform": "European imperialism",
+    "typ": "Konzept",
+    "aliases": [
+      "European imperialism"
+    ]
+  },
+  {
+    "normalform": "Tahir al-Jaza’iri’",
+    "typ": "Person",
+    "aliases": [
+      "Tahir al-Jaza’iri’"
+    ]
+  },
+  {
+    "normalform": "Shukri al-‘Asali",
+    "typ": "Person",
+    "aliases": [
+      "Shukri al-‘Asali"
+    ]
+  }
+]
