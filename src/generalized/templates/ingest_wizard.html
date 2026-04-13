@@ -468,6 +468,7 @@ function gotoStep(n) {
 btnBack.addEventListener('click', () => { if (currentStep > 1) gotoStep(currentStep - 1); });
 btnNext.addEventListener('click', async () => {
   if (currentStep === 4) {
+    if (taxData.length > 0) markTaxDirty();
     saveTaxonomy().then(() => gotoStep(5));
   } else if (currentStep === 5) {
     btnNext.disabled = true;
@@ -1101,7 +1102,7 @@ document.getElementById('tax-btn-propose').addEventListener('click', async () =>
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
       const msg = line.slice(6);
-      if (msg === '__done__') { await initTaxonomy(); btn.disabled = false; btn.textContent = 'KI-Vorschlag generieren'; return; }
+      if (msg === '__done__') { await initTaxonomy(); markTaxDirty(); btn.disabled = false; btn.textContent = 'KI-Vorschlag generieren'; return; }
       if (msg.startsWith('__error__')) { logEl.className = 'error'; logEl.textContent += '\\n' + msg.slice(9); btn.disabled = false; btn.textContent = 'KI-Vorschlag generieren'; return; }
       logEl.textContent += (logEl.textContent ? '\\n' : '') + msg; logEl.scrollTop = logEl.scrollHeight;
     }
