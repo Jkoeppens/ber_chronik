@@ -1,6 +1,6 @@
 # STATUS — Aktueller Stand des Projekts
 
-Stand: 2026-04-13 | Branch: wip/wizard-pipeline-fixes
+Stand: 2026-04-13 | Branch: wip/wizard-pipeline-fixes | D-P1–D-P5 umgesetzt + E2E-verifiziert
 
 ---
 
@@ -138,21 +138,21 @@ Führt D3-Force-Simulation offline durch und speichert Knotenpositionen als `net
 
 ## Bekannte Fallbacks und Workarounds
 
-### classify_segments.py — Kategorie-Normalisierung nur hier
+### ~~classify_segments.py — Kategorie-Normalisierung nur hier~~ ✓ behoben (D-P2)
 
-`normalize_category()` läuft: exakter Match → längster Substring-Match → `"(unbekannt)"`. Diese Normalisierung existiert **nur** in classify_segments.py. export_preview.py und export_exploration.py übernehmen `event_type` unverändert aus classified.json — Tippfehler oder `null`-Werte überleben bis in die Viz.
+normalize_category() läuft jetzt in allen drei Skripten.
 
 ### classify_segments.py — Resume mit alter Taxonomie
 
 Beim Neustart werden bereits klassifizierte Segmente aus classified.json übersprungen (`--force` überschreibt das). Wenn die Taxonomie zwischenzeitlich geändert wurde, enthält classified.json danach Einträge aus zwei verschiedenen Taxonomien.
 
-### export_exploration.py — entities-Fallback auf Dokumentebene
+### ~~export_exploration.py — entities-Fallback auf Dokumentebene~~ ✓ behoben (D-P4)
 
-Wenn `config.json["entities"]` leer ist, wird aus allen `documents/{doc_id}/entities_seed.json` gesammelt. Nachträglich eingebaut für das Damaskus-Projekt. Bei Projekten die beides haben, gewinnt config.json ohne Merge — doc-level Entities werden stillschweigend ignoriert.
+Fallback entfernt. Einzige Quelle: `config.json["entities"]`.
 
-### export_exploration.py — Taxonomie-Fallback aus event_type-Werten
+### ~~export_exploration.py — Taxonomie-Fallback aus event_type-Werten~~ ✓ behoben (D-P1/D-P5)
 
-Wenn keine Taxonomie in config.json: Kategorien werden aus den vorhandenen `event_type`-Strings in classified.json abgeleitet. Ergibt konsistente Farben, aber leere Beschreibungen und keine Keywords.
+Fallback entfernt. Fehlt Taxonomie in config.json → expliziter Fehler.
 
 ### export_exploration.py — segment_id-Präfix als Kollisionsvermeidung
 
@@ -198,31 +198,25 @@ Das Layout wird nicht automatisch aktualisiert wenn sich Akteure ändern. `npm r
 
 ## Offene Inkonsistenzen
 
-### I1 — Kategorie-Normalisierung fehlt in export-Skripten
+### ~~I1 — Kategorie-Normalisierung fehlt in export-Skripten~~ ✓ behoben (D-P2)
 
-`normalize_category()` läuft nur in classify_segments.py. export_preview.py und export_exploration.py verwenden `event_type` direkt. Manuelle Edits in classified.json oder LLM-Failures mit `category=None` erscheinen in der Viz als unbeschriftete Balken.
+`normalize_category()` läuft jetzt in classify_segments.py, export_preview.py und export_exploration.py.
 
-### I2 — Keine kanonische Taxonomiequelle
+### ~~I2 — Keine kanonische Taxonomiequelle~~ ✓ behoben (D-P1)
 
-Vier mögliche Quellen, je nach Skript:
-1. `projects/{project}/config.json["taxonomy"]` (bevorzugt)
-2. `documents/{doc_id}/taxonomy_proposal.json` (Fallback in classify + export_preview)
-3. Ableitung aus event_type-Werten in classified.json (Fallback in export_exploration)
-4. Direkt aus LLM-Ergebnis (in propose_taxonomy)
+Einzige gültige Quelle: `config.json["taxonomy"]`. Fallback auf taxonomy_proposal.json (classify) und event_type-Ableitung (export_exploration) entfernt. Fehlt Taxonomie → expliziter Fehler.
 
-Wenn die Taxonomie in config.json nach der Klassifizierung geändert wird, enthält classified.json Kategorien aus der alten Taxonomie — kein Skript warnt davor.
+### ~~I3 — classified.json wird von zwei Skripten unabhängig geschrieben~~ ✓ behoben (D-P3)
 
-### I3 — classified.json wird von zwei Skripten unabhängig geschrieben
-
-`classify_segments.py` schreibt `category` + `confidence`. `match_entities.py` ergänzt `actors` in-place. Wenn classify mit `--force` neu läuft, aber match_entities nicht: neue Kategorien + alte actors. Umgekehrt möglich. Kein Skript prüft die Konsistenz.
+`/ingest/run/step` schaltet match_entities automatisch nach classify nach. Kein Mischzustand mehr möglich wenn classify über den Wizard läuft.
 
 ### I4 — `precompute_network.js` liest BER-spezifische Pfade
 
 Liest hardcodiert `viz/data.json` und `viz/entities_seed.csv`. Für andere Projekte muss man die Datei manuell anpassen oder Dateien kopieren. Nicht generisch verwendbar.
 
-### I5 — entities in config.json vs. Dokumentebene: kein Merge
+### ~~I5 — entities in config.json vs. Dokumentebene: kein Merge~~ ✓ behoben (D-P4)
 
-Wenn `config.json["entities"]` befüllt ist, werden alle doc-level `entities_seed.json`-Dateien ignoriert. Wenn config leer ist, werden sie zusammengeführt. Ein Projekt das beides hat verliert die doc-level Entities stillschweigend.
+Entity-Editor speichert in `config.json["entities"]`. match_entities und export_exploration lesen ausschließlich von dort. Doc-level Fallback entfernt.
 
 ### I6 — 7 deprecated Funktionen noch in entity_llm.py
 
