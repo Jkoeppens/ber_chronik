@@ -252,7 +252,8 @@ def _compute_quality_report(project: str, doc_id: str) -> dict | None:
 
 async def recompute_sse(project: str, doc_id: str):
     d_args = ["--project", project, "--document", doc_id]
-    steps  = [(INTERPOLATE_SCRIPT, d_args), (EXPORT_SCRIPT, d_args)]
+    # I7: match_entities nach interpolate → actors nach manuellen Zeitkorrekturen aktuell
+    steps  = [(INTERPOLATE_SCRIPT, d_args), (MATCH_ENTITIES_SCRIPT, d_args), (EXPORT_SCRIPT, d_args)]
     async for chunk in run_pipeline_sse(steps):
         if chunk == "data: __done__\n\n":
             report = _compute_quality_report(project, doc_id)

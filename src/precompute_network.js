@@ -71,7 +71,7 @@ const nodes = [...nodeCounts.entries()].map(([id, count]) => ({
 }));
 
 const links = [...edgeCounts.entries()]
-  .filter(([, count]) => count >= 2)
+  .filter(([, count]) => count >= 1)
   .map(([key, count]) => {
     const [source, target] = key.split("\x00");
     return { source, target, count };
