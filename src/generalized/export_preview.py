@@ -491,22 +491,25 @@ def main() -> None:
                 classifications[r["segment_id"]] = r
         print(f"← {classified_path}  ({len(classifications)} Klassifizierungen geladen)")
 
-    # Taxonomie von Projektebene; Fallback: per-doc taxonomy_proposal.json
-    taxonomy: list[dict] | None = None
-    if config_path.exists():
-        taxonomy = json.loads(config_path.read_text(encoding="utf-8")).get("taxonomy") or None
-    if taxonomy is None:
-        fallback = doc_dir / "taxonomy_proposal.json"
-        if fallback.exists():
-            taxonomy = json.loads(fallback.read_text(encoding="utf-8"))
-    if taxonomy is not None:
-        print(f"← taxonomy  ({len(taxonomy)} Kategorien geladen)")
-        # D-P2: event_type jedes Eintrags gegen kanonische Taxonomie normalisieren
-        valid_names = [c["name"] for c in taxonomy if c.get("name")]
-        for cls in classifications.values():
-            raw = cls.get("category")
-            if raw is not None:
-                cls["category"] = normalize_category(raw, valid_names)
+    # D-P1: Taxonomie ausschließlich aus config.json — kein Fallback auf taxonomy_proposal.json
+    if not config_path.exists():
+        print(f"Fehler: config.json nicht gefunden: {config_path}", file=sys.stderr)
+        sys.exit(1)
+    taxonomy: list[dict] | None = json.loads(config_path.read_text(encoding="utf-8")).get("taxonomy") or None
+    if not taxonomy:
+        print(
+            f"Fehler: Keine Taxonomie in {config_path}\n"
+            "Bitte zuerst taxonomy/save ausführen bevor export_preview läuft.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    print(f"← taxonomy  ({len(taxonomy)} Kategorien geladen)")
+    # D-P2: event_type jedes Eintrags gegen kanonische Taxonomie normalisieren
+    valid_names = [c["name"] for c in taxonomy if c.get("name")]
+    for cls in classifications.values():
+        raw = cls.get("category")
+        if raw is not None:
+            cls["category"] = normalize_category(raw, valid_names)
 
     page_title: str | None = None
     if config_path.exists():

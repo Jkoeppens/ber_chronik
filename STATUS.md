@@ -238,6 +238,10 @@ Sonderbehandlung liegt in parse_document.py (Parser-Modus), detect_anchors.py (k
 
 `tests/viz.spec.js` öffnet hardcodiert `http://localhost:8765/` und setzt BER-Daten voraus. Keine Tests für andere Projekte oder für den Ingest-Wizard.
 
-### I11 — `/taxonomy/propose` übergibt keine Args an propose_taxonomy.py ✓ behoben
+### I11 — `/taxonomy/propose` + `taxonomy_editor.html` ohne Auth ✓ behoben
 
-`taxonomy_editor.html` ruft `POST /taxonomy/propose` auf. Der Endpoint übergab `project` und `document` nicht als `--project`/`--document` an `propose_taxonomy.py` → Skript-Fehler ("required argument --project"). Behoben: Endpoint liest jetzt Query-Params analog zu `/ingest/propose_taxonomy`.
+`taxonomy_editor.html` rief alle drei Endpoints (`/taxonomy/data`, `/taxonomy/save`, `/taxonomy/propose`) ohne `project`, `document` oder Token auf. `/taxonomy/propose` übergab außerdem keine Args an `propose_taxonomy.py`. Behoben: Endpoint liest Query-Params; Editor nutzt `_aq()` + `_th()` analog zu `entity_editor.html`.
+
+### I12 — `export_preview.py` D-P1-Fallback auf taxonomy_proposal.json ✓ behoben
+
+Fehlte `config.json["taxonomy"]`, fiel `export_preview.py` auf die per-doc `taxonomy_proposal.json` zurück — statt mit Fehler abzubrechen. Behoben: Fallback entfernt, expliziter Fehler wenn Taxonomie fehlt (analog `classify_segments.py` und `export_exploration.py`).
