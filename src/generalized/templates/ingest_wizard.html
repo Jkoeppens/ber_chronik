@@ -686,7 +686,7 @@ async function runClassifyAfterTaxonomy() {
         if (!line.startsWith('data: ')) continue;
         const msg = line.slice(6);
         if (msg === '__done__') {
-          logEl.textContent += '\n✓ Klassifizierung abgeschlossen';
+          logEl.textContent += '\n✓ Klassifizierung + Entity-Matching abgeschlossen';
           logEl.scrollTop = logEl.scrollHeight;
           // Preview neu generieren
           // Preview nur neu generieren wenn anchors_interpolated.json bereits existiert

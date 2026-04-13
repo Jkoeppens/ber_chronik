@@ -28,6 +28,8 @@ from datetime import date
 from io import StringIO
 from pathlib import Path
 
+from src.generalized.classify_segments import normalize_category
+
 ROOT = Path(__file__).resolve().parent.parent.parent
 
 # ── Farbpaletten ───────────────────────────────────────────────────────────────
@@ -295,6 +297,14 @@ def main() -> None:
 
     # ── data.json ──────────────────────────────────────────────────────────────
     entries = build_entries(all_anchors, all_cls_map)
+
+    # D-P2: event_type jedes Eintrags gegen kanonische Taxonomie normalisieren
+    if not _taxonomy_is_fallback and taxonomy:
+        valid_names = [c["name"] for c in taxonomy if c.get("name")]
+        for e in entries:
+            raw = e.get("event_type")
+            if raw is not None:
+                e["event_type"] = normalize_category(raw, valid_names)
 
     # Taxonomy-Fallback: event_type-Werte aus den Einträgen ableiten
     if _taxonomy_is_fallback:

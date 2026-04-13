@@ -155,18 +155,18 @@ async def main_async() -> None:
 
     segments = json.loads(SEGMENTS_PATH.read_text(encoding="utf-8"))
 
-    # Taxonomie von Projektebene (project_dir/config.json) lesen
+    # Taxonomie ausschließlich von Projektebene — D-P1: kein Fallback
     project_cfg_path = project_dir / "config.json"
-    taxonomy = []
-    if project_cfg_path.exists():
-        taxonomy = json.loads(project_cfg_path.read_text(encoding="utf-8")).get("taxonomy", [])
-    # Fallback: per-doc taxonomy_proposal.json
+    if not project_cfg_path.exists():
+        print(f"Fehler: config.json nicht gefunden: {project_cfg_path}", file=sys.stderr)
+        sys.exit(1)
+    taxonomy = json.loads(project_cfg_path.read_text(encoding="utf-8")).get("taxonomy", [])
     if not taxonomy:
-        fallback = doc_dir / "taxonomy_proposal.json"
-        if fallback.exists():
-            taxonomy = json.loads(fallback.read_text(encoding="utf-8"))
-    if not taxonomy:
-        print("Keine Taxonomie gefunden (weder project config noch taxonomy_proposal.json)", file=sys.stderr)
+        print(
+            f"Fehler: Keine Taxonomie in {project_cfg_path}\n"
+            "Bitte zuerst taxonomy/save ausführen bevor classify läuft.",
+            file=sys.stderr,
+        )
         sys.exit(1)
     # Normalisieren: einzelnes Dict → Liste; Strings/ungültige Einträge verwerfen
     if isinstance(taxonomy, dict):

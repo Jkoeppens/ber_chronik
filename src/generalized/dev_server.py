@@ -638,12 +638,22 @@ async def ingest_run_step(request: Request):
     script, args = _STEP_MAP[step]
 
     async def gen():
+        had_error = False
         async for chunk in run_script_sse(script, args):
             if chunk == "data: __ok__\n\n":
                 break
             yield chunk
             if "__error__" in chunk:
+                had_error = True
                 break
+        # D-P3: nach classify immer match_entities nachschalten
+        if not had_error and step == "classify_segments.py":
+            async for chunk in run_script_sse(MATCH_ENTITIES_SCRIPT, d_args):
+                if chunk == "data: __ok__\n\n":
+                    break
+                yield chunk
+                if "__error__" in chunk:
+                    break
         yield "data: __done__\n\n"
 
     return sse_response(gen())

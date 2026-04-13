@@ -25,6 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 
 from src.generalized.utils import render_template as _render_template  # noqa: E402
+from src.generalized.classify_segments import normalize_category  # noqa: E402
 
 # 10-Farben-Palette für Kategorien (Reihenfolge = Taxonomie-Reihenfolge)
 CAT_PALETTE = [
@@ -500,6 +501,12 @@ def main() -> None:
             taxonomy = json.loads(fallback.read_text(encoding="utf-8"))
     if taxonomy is not None:
         print(f"← taxonomy  ({len(taxonomy)} Kategorien geladen)")
+        # D-P2: event_type jedes Eintrags gegen kanonische Taxonomie normalisieren
+        valid_names = [c["name"] for c in taxonomy if c.get("name")]
+        for cls in classifications.values():
+            raw = cls.get("category")
+            if raw is not None:
+                cls["category"] = normalize_category(raw, valid_names)
 
     page_title: str | None = None
     if config_path.exists():
