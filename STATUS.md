@@ -237,3 +237,7 @@ Sonderbehandlung liegt in parse_document.py (Parser-Modus), detect_anchors.py (k
 ### I10 — Playwright-Tests testen nur BER-Projekt
 
 `tests/viz.spec.js` öffnet hardcodiert `http://localhost:8765/` und setzt BER-Daten voraus. Keine Tests für andere Projekte oder für den Ingest-Wizard.
+
+### I11 — `/taxonomy/propose` übergibt keine Args an propose_taxonomy.py ✓ behoben
+
+`taxonomy_editor.html` ruft `POST /taxonomy/propose` auf. Der Endpoint übergab `project` und `document` nicht als `--project`/`--document` an `propose_taxonomy.py` → Skript-Fehler ("required argument --project"). Behoben: Endpoint liest jetzt Query-Params analog zu `/ingest/propose_taxonomy`.

@@ -326,9 +326,12 @@ async def save_taxonomy(request: Request):
 
 @app.post("/taxonomy/propose")
 async def propose_taxonomy(request: Request):
-    if err := await _require_token(request): return err
+    project = request.query_params.get("project") or get_current_project()
+    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    if err := await _require_token(request, project): return err
     async def gen():
-        async for chunk in run_script_sse(PROPOSE_SCRIPT):
+        args = ["--project", project, "--document", doc_id]
+        async for chunk in run_script_sse(PROPOSE_SCRIPT, args):
             if chunk == "data: __ok__\n\n":
                 break
             yield chunk
