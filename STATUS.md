@@ -1,118 +1,245 @@
-# STATUS.md — Systemzustand (Stand: 2026-04-10)
+# STATUS — Aktueller Stand des Projekts
 
-## Aktives Modell
-
-| Konfiguration              | Wert            |
-|----------------------------|-----------------|
-| LLM_PROVIDER               | ollama          |
-| OLLAMA_MODEL               | llama3.2:3b     |
-| Task-spezifische Overrides | — (alle auskommentiert) |
-
-Alle Pipeline-Schritte verwenden derzeit `llama3.2:3b`.
+Stand: 2026-04-13 | Branch: wip/wizard-pipeline-fixes
 
 ---
 
-## Pipeline-Schritte und Implementierungsstand
+## Pipeline-Schritte
 
-### Vollständig implementiert (Proposal → Feedback → Run)
+### 1. `parse_document.py` — Dokument parsen
 
-| Schritt           | Propose                          | Editor/Feedback        | Run                            |
-|-------------------|----------------------------------|------------------------|--------------------------------|
-| Taxonomy          | `taxonomy/propose` (POST)        | Wizard Step 4 (UI)     | `taxonomy/save` + `ingest/run` |
-| Entity-Extraktion | `extract_entities_v2.py` (manuell) | Entity-Editor (Wizard Step 5) | Re-Run manuell        |
+Liest eine DOCX-Datei und zerlegt sie in typisierte Segmente (heading, bibliography, content).
 
-### Nur Run, kein Review-Loop in der Wizard-UI
-
-| Schritt                | Endpunkt              | Anmerkung                          |
-|------------------------|-----------------------|------------------------------------|
-| Anchor-Detection       | Teil von `ingest/run` | Kein eigener Proposal-Step         |
-| Interpolation          | Teil von `ingest/run` | Kein eigener Proposal-Step         |
-| Segment-Klassifikation | Teil von `ingest/run` | Kein eigener Proposal-Step         |
-| Entity-Matching        | Teil von `ingest/run` | Matching läuft, keine Merge-UI     |
-
-### `ingest/run` Schrittreihenfolge (tatsächlich im Code)
-
-1. parse → 2. detect_anchors → 3. interpolate → 4. classify_segments →
-5. match_entities → 6. export_preview → 7. export_exploration
-
-Entity-Extraktion ist **nicht Teil von `ingest/run`** — sie muss manuell via Wizard Step 6 oder CLI ausgeführt werden.
+| | |
+|---|---|
+| **Input** | DOCX-Datei (Pfad aus CLI oder `documents/{doc_id}/config.json`) |
+| **Output** | `documents/{doc_id}/segments.json` |
+| **LLM** | Nein |
+| **Auslöser** | Wizard Schritt 3 (Analyse-Button) → POST `/ingest/run` Schritt 1 |
 
 ---
 
-## Entity-Pipeline (4 LLM-Schritte)
+### 2. `detect_anchors.py` — Zeitanker erkennen
 
-`extract_entities_v2.py` → `entity_llm.py`
+Findet Jahreszahlen, Dekaden und benannte Ereignisse in Segmenten via Regex und Ereignisliste.
 
-| Schritt | Funktion                | Modus        |
-|---------|-------------------------|--------------|
-| 1       | `_llm_sample_iteration` | immer        |
-| 2       | `_llm_full_extract`     | full + Seed  |
-| 3       | `_llm_dedup`            | immer        |
-| 4       | `_llm_task1_normalize`  | immer        |
-
-Checkpoint/Resume: Schritt 2 hat Sub-Batch-Resume; alle anderen Schritte über `_run_stage`.
+| | |
+|---|---|
+| **Input** | `documents/{doc_id}/segments.json` |
+| **Output** | `documents/{doc_id}/anchors.json` |
+| **LLM** | Nein |
+| **Auslöser** | POST `/ingest/run` Schritt 2 |
 
 ---
 
-## Deprecated / Dead Code
+### 3. `interpolate_anchors.py` — Lücken interpolieren
 
-### Dateien — vorhanden, aber nicht mehr importiert
+Füllt undatierte Segmente durch lineare Interpolation zwischen datierten Nachbarn.
 
-| Datei                                  | Status                                           |
-|----------------------------------------|--------------------------------------------------|
-| `src/generalized/entity_classifier.py` | Nicht importiert von `extract_entities_v2.py` — dead code |
-| `src/generalized/entity_cosine.py`     | Nicht importiert von `extract_entities_v2.py` — dead code |
-
-### Funktionen in `entity_llm.py` — markiert als `# DEPRECATED`
-
-- `_llm_task2_validate_aliases`
-- `_llm_task3_clarify_types` *(enthält noch Import von `entity_classifier` in Funktionskörper — kein Runtime-Problem solange nicht aufgerufen)*
-- `_select_uncovered_stratified`
-- `_llm_extract_uncovered`
-
-### Konstanten in `entity_llm.py` — markiert als `# DEPRECATED`
-
-- `SEGMENT_BATCH`, `SAMPLE_UNCOVERED`, `ALIAS_VALIDATE_PROMPT`, `CLARIFY_TYPE_PROMPT`
+| | |
+|---|---|
+| **Input** | `documents/{doc_id}/anchors.json`, optional `documents/{doc_id}/overrides.json` |
+| **Output** | `documents/{doc_id}/anchors_interpolated.json` |
+| **LLM** | Nein |
+| **Auslöser** | POST `/ingest/run` Schritt 3 |
 
 ---
 
-## Abweichungen zwischen Dokumentation und Code
+### 4. `propose_taxonomy.py` — Taxonomie vorschlagen
 
-| Dokument                           | Was steht drin                                    | Was der Code macht                                          |
-|------------------------------------|---------------------------------------------------|-------------------------------------------------------------|
-| `docs/GENERALIZED_ARCHITECTURE.md` | Drei-Pfad Entity-Pipeline: iter1 / classifier / cosine | Nur 4-Schritt LLM-Pipeline, kein classifier/cosine    |
-| `docs/GENERALIZED_DECISIONS.md`    | Begründung für mBERT+LogReg und SBERT+DBSCAN      | Beide Ansätze aus Produktionspipeline entfernt              |
-| `dev_server.py` Header-Docstring   | Listet alte Endpunkte auf                         | Fehlt: `/ingest/entities/merge`, `/api/projects`, `/api/projects/{id}` |
-| `docs/INGEST_WORKFLOW.md`          | Entity-Extraktion als Teil des Wizard-Flows       | Separater manueller Step, nicht in `ingest/run`             |
+Sampelt 50 Segmente in 5 Batches, lässt LLM je 4–6 Kategorien generieren, mergt zu 6–8 Endkategorien.
 
----
-
-## Offene Punkte
-
-- `entity_classifier.py` und `entity_cosine.py` können gelöscht werden, sobald sicher ist, dass kein anderer Code sie importiert
-- Task-spezifische Modell-Overrides (`.env`) sind vorbereitet aber nicht aktiv — falls unterschiedliche Modelle pro Schritt gewünscht werden
-- `taxonomy/propose` übergibt kein `project`/`document` Argument an das Propose-Script — nutzt globalen State-Fallback; sollte wie alle anderen Endpoints auf Request-Parameter umgestellt werden
-- Entity-Extraktion läuft nicht automatisch in `ingest/run` — Entscheidung offen: automatisch integrieren oder manueller Schritt mit eigenem Wizard-Button (aktuell: manuell via Wizard Step 6)
-- **Schritt 3 (bestehendes Projekt): Fehler obwohl segments.json existiert** — Wizard zeigt Parse-Fehler, statt zu prüfen ob bereits geparst wurde; soll bei vorhandener segments.json direkt zu Schritt 4 springen
-- **Schritt 4: year_min/year_max nicht wiederhergestellt** — Felder zeigen immer 1800/1920 statt der gespeicherten Werte aus config.json
-- **Schritt 4: Zeitanker-iframe erscheint zu spät** — iframe soll sofort eingeblendet werden wenn preview.html bereits existiert, nicht erst nach einem Hinweistext
-- **Schritt 5: Taxonomie-Prompt erzeugt zu viele Kategorien** — LLM liefert ~20 Kategorien statt der gewünschten 6–8; Beschreibungen fehlen in der Ausgabe
-- **Schritt 6: Entity-Editor nicht eingebettet** — Editor öffnet als separate Seite statt direkt in den Wizard integriert zu sein
-- **Schritt 7: Pipeline-Buttons zusammenführen** — „Pipeline starten" und „Alles erneut ausführen" sollen ein einziger Button sein; einzelne Schritte sollen direkt anklickbar sein ohne erst die Gesamtpipeline zu starten
+| | |
+|---|---|
+| **Input** | `documents/{doc_id}/segments.json` |
+| **Output** | `documents/{doc_id}/taxonomy_proposal.json` |
+| **LLM** | Ja (Claude Sonnet, parallel für Anthropic, sequenziell für Ollama) |
+| **Auslöser** | Wizard Schritt 5 (Taxonomie-Button) → POST `/ingest/propose_taxonomy` |
 
 ---
 
-## Priorisierte Baustellen
+### 5. `classify_segments.py` — Segmente klassifizieren
 
-1. ~~**Preview-Editor in Wizard integrieren**~~ — erledigt: Button „Zeitanker bearbeiten →" in Step 7 nach Pipeline-Run + im `/editor`-Header unter „Daten bearbeiten".
-2. ~~**Taxonomie-Stichprobe erhöhen**~~ — erledigt: `N_SAMPLES = 50` in `propose_taxonomy.py`.
-3. ~~**Dead code löschen**~~ — erledigt: `entity_classifier.py`, `entity_cosine.py` gelöscht; `src/berchronik/` existiert nicht (bereits entfernt).
-4. ~~**`taxonomy/propose` Parameter-Fix**~~ — kein Fix nötig: Wizard schickt `_aq()` mit, globaler Fallback wird nie aktiv. Muster ist konsistent mit allen anderen Endpoints.
-5. ~~**Entity-Extraktion in `ingest/run`**~~ — Entscheidung: bleibt manueller Wizard-Schritt (Schritt 6). Passt zu Vorschlag→Feedback→Run Prinzip aus VISION.md.
-6. **Periodisierungs-Editor fehlt im Wizard** — `overrides.json` + `interpolate_anchors.py` sind implementiert, aber der Editor (preview.html mit Bearbeiten-Buttons) ist nur über `/preview` erreichbar, nicht als integrierter Wizard-Schritt. Screenshot zeigt wie es aussehen sollte.
-7. ~~**Taxonomie-Vorschlag: kein Fortschrittsindikator**~~ — erledigt: Batches à 10 Segmente mit SSE-Fortschritt, gemma4:e4b Fallback-Fix in llm.py, Prompts auf Deutsch + genau 3 Keywords.
-8. ~~**Kein Wizard-Einstieg für bestehende Projekte**~~ — erledigt: Projektliste in Schritt 1, Klick setzt State und springt zu Schritt 6. `/api/projects/{id}/token` gibt jetzt auch `doc_id` zurück.
-9. **Exploration-Link hardcoded auf `localhost:8765`** — `dev_server.py:555` sendet `__link__:http://localhost:8765/viz/…` via SSE; `ingest_wizard.html:930` hat denselben Fallback-Link hardcoded. Bricht sobald der Viz-Server auf einem anderen Port läuft.
-10. **`GET /api/projects/{id}/token` ohne Auth** — Kommentar im Code: `# TODO: Schütze diesen Endpoint`. Gibt das Projekt-Token ohne Authentifizierung zurück. Unkritisch solange Server nur lokal läuft.
-11. **Schritt 3 (Einlesen) startet Pipeline neu** — wenn Nutzer zurück zu Schritt 3 navigiert, wird das Analyse-Skript neu gestartet und bricht ab. Navigation zwischen Wizard-Schritten darf keine Pipeline-Schritte neu triggern.
-12. **Zeitperiode wird vergessen** — `state.year_min` und `state.year_max` gehen verloren, auch innerhalb einer Session. Werden in Schritt 3 gesetzt aber irgendwo überschrieben oder nicht persistiert.
+Weist jedem content-Segment genau eine Kategorie + Konfidenz zu; resume-fähig.
+
+| | |
+|---|---|
+| **Input** | `documents/{doc_id}/segments.json`, Taxonomie aus `projects/{project}/config.json` (Fallback: `taxonomy_proposal.json`) |
+| **Output** | `documents/{doc_id}/classified.json` (Felder `category`, `confidence`) |
+| **LLM** | Ja (Claude Haiku, bis 10 parallele Requests) |
+| **Auslöser** | POST `/ingest/run` Schritt 4 |
+
+---
+
+### 6. `extract_entities_v2.py` — Entities extrahieren
+
+4-stufige Pipeline: Sample → Vollextraktion mit Few-Shot → LLM-Dedup → Normalisierung.
+
+| | |
+|---|---|
+| **Input** | `documents/{doc_id}/segments.json`, optional `entities_seed.json`, `entities_rejected.json` |
+| **Output** | `documents/{doc_id}/entities_proposal.json`, Checkpoint in `_v2_checkpoint.json` |
+| **LLM** | Ja (Claude Sonnet, alle 4 Stufen) |
+| **Auslöser** | POST `/ingest/run` Schritt 5; oder manuell aus Entity-Editor |
+
+---
+
+### 7. `match_entities.py` — Entities in Segmente eintragen
+
+Regex-Matching aller Entity-Aliases gegen Segment-Texte; schreibt `actors`-Felder in classified.json.
+
+| | |
+|---|---|
+| **Input** | `documents/{doc_id}/segments.json`, `documents/{doc_id}/classified.json`, Entities aus `projects/{project}/config.json` (Fallback: `entities_seed.json`) |
+| **Output** | `documents/{doc_id}/classified.json` (in-place, ergänzt `actors`-Felder) |
+| **LLM** | Nein |
+| **Auslöser** | POST `/ingest/run` Schritt 6 |
+
+---
+
+### 8. `export_preview.py` — Vorschau generieren
+
+Erzeugt eine eigenständige HTML-Datei mit interaktiver Timeline, Filterbuttons und Inline-Editierformularen.
+
+| | |
+|---|---|
+| **Input** | `documents/{doc_id}/anchors_interpolated.json`, `documents/{doc_id}/classified.json`, optional `overrides.json`, Taxonomie |
+| **Output** | `documents/{doc_id}/preview.html` |
+| **LLM** | Nein |
+| **Auslöser** | POST `/ingest/run` Schritt 7; oder nach manueller Korrektur im Preview-Editor |
+
+---
+
+### 9. `export_exploration.py` — Exploration-Export
+
+Merged alle Dokumente eines Projekts in den Visualization-Ordner.
+
+| | |
+|---|---|
+| **Input** | Alle `documents/{doc_id}/anchors_interpolated.json` + `classified.json` im Projekt, `projects/{project}/config.json` |
+| **Output** | `projects/{project}/exploration/data.json`, `entities_seed.csv`, `project_meta.json` |
+| **LLM** | Nein |
+| **Auslöser** | POST `/ingest/run` Schritt 8 (letzter Schritt) |
+
+---
+
+### 10. `precompute_network.js` — Netzwerk-Layout vorberechnen
+
+Führt D3-Force-Simulation offline durch und speichert Knotenpositionen als `network_layout.json`.
+
+| | |
+|---|---|
+| **Input** | `viz/data.json`, `viz/entities_seed.csv` (hardcodiert auf BER-Pfade, nicht auf `data/projects/…`) |
+| **Output** | `viz/network_layout.json` |
+| **LLM** | Nein |
+| **Auslöser** | Manuell: `npm run precompute-network` |
+
+---
+
+## Bekannte Fallbacks und Workarounds
+
+### classify_segments.py — Kategorie-Normalisierung nur hier
+
+`normalize_category()` läuft: exakter Match → längster Substring-Match → `"(unbekannt)"`. Diese Normalisierung existiert **nur** in classify_segments.py. export_preview.py und export_exploration.py übernehmen `event_type` unverändert aus classified.json — Tippfehler oder `null`-Werte überleben bis in die Viz.
+
+### classify_segments.py — Resume mit alter Taxonomie
+
+Beim Neustart werden bereits klassifizierte Segmente aus classified.json übersprungen (`--force` überschreibt das). Wenn die Taxonomie zwischenzeitlich geändert wurde, enthält classified.json danach Einträge aus zwei verschiedenen Taxonomien.
+
+### export_exploration.py — entities-Fallback auf Dokumentebene
+
+Wenn `config.json["entities"]` leer ist, wird aus allen `documents/{doc_id}/entities_seed.json` gesammelt. Nachträglich eingebaut für das Damaskus-Projekt. Bei Projekten die beides haben, gewinnt config.json ohne Merge — doc-level Entities werden stillschweigend ignoriert.
+
+### export_exploration.py — Taxonomie-Fallback aus event_type-Werten
+
+Wenn keine Taxonomie in config.json: Kategorien werden aus den vorhandenen `event_type`-Strings in classified.json abgeleitet. Ergibt konsistente Farben, aber leere Beschreibungen und keine Keywords.
+
+### export_exploration.py — segment_id-Präfix als Kollisionsvermeidung
+
+Jede segment_id bekommt ein `{doc_id}-`-Präfix, weil der Parser segment_ids nur pro Dokument eindeutig vergibt. Workaround für fehlende globale IDs.
+
+### interpolate_anchors.py — Presseartikel-Bypass ohne Warnung
+
+Bei `doc_type=presseartikel` wird die gesamte Interpolation übersprungen. Kein Hinweis in der Ausgabe.
+
+### interpolate_anchors.py — `_undatable`-Flag undokumentiert
+
+Segmente mit `"action": "undatable"` in overrides.json bekommen ein internes `_undatable`-Flag in der Ausgabe. Das Flag wird von keinem nachgelagerten Skript erklärt.
+
+### parse_document.py — Hardcodierte Organizer-Headings
+
+`ORGANIZER_H1 = {"Notizen", "Übertrag von Zeitschriften"}` ist BER-spezifisch und nicht konfigurierbar. Für andere Projekte mit anderen Gliederungsüberschriften wird das falsch.
+
+### entity_llm.py — Few-Shot-Limit auf 10 Seed-Entities
+
+Nur die ersten 10 Entities aus `entities_seed.json` werden als Few-Shot-Beispiele ins Prompt gegeben. Projekte mit 60+ Seed-Entities verlieren den Großteil ihres Kontexts.
+
+### entity_llm.py — Levenshtein selbst implementiert
+
+Dedup-Erkennung nutzt eine eingebettete Levenshtein-Funktion statt einer Bibliothek. Für kurze Strings ausreichend, für längere Namen unzuverlässig.
+
+### boot.js — Stille Fallbacks bei fehlenden Dateien
+
+`entities_seed.csv`, `entities_summary.json`, `project_meta.json` werden mit `.catch(() => {})` geladen. Wenn sie fehlen: Entity-Highlighting fehlt, Knoten-Zusammenfassungen fehlen, Farbkarten fallen auf Hardcoded-Defaults zurück. Keine Fehlermeldung für den Nutzer.
+
+### boot.js — node.typ-Fallback bei unbekannten Akteuren
+
+Wenn ein Akteur nicht in der aliasMap ist, wird der Typ via `Object.keys(NODE_COLOR).find(k => /org/i.test(k))` bestimmt — erster Org-ähnlicher Schlüssel, dann erster Schlüssel überhaupt. Alle unbekannten Akteure bekommen dieselbe Farbe.
+
+### network.js — Layout-Fallback bei fehlenden Knoten
+
+Knoten die nicht in `network_layout.json` stehen, bekommen eine zufällige Position (80% der Canvas-Fläche). Bis April 2026 war der Fallback `(W/2, H/2)` — das führte zu einem Knotenhaufen im Zentrum der alle Playwright-Tests und die Viz brach.
+
+### network_layout.json — manuelle Regenerierung nötig
+
+Das Layout wird nicht automatisch aktualisiert wenn sich Akteure ändern. `npm run precompute-network` muss manuell laufen. Vergisst man es, landen neue Knoten im Zufalls-Fallback.
+
+---
+
+## Offene Inkonsistenzen
+
+### I1 — Kategorie-Normalisierung fehlt in export-Skripten
+
+`normalize_category()` läuft nur in classify_segments.py. export_preview.py und export_exploration.py verwenden `event_type` direkt. Manuelle Edits in classified.json oder LLM-Failures mit `category=None` erscheinen in der Viz als unbeschriftete Balken.
+
+### I2 — Keine kanonische Taxonomiequelle
+
+Vier mögliche Quellen, je nach Skript:
+1. `projects/{project}/config.json["taxonomy"]` (bevorzugt)
+2. `documents/{doc_id}/taxonomy_proposal.json` (Fallback in classify + export_preview)
+3. Ableitung aus event_type-Werten in classified.json (Fallback in export_exploration)
+4. Direkt aus LLM-Ergebnis (in propose_taxonomy)
+
+Wenn die Taxonomie in config.json nach der Klassifizierung geändert wird, enthält classified.json Kategorien aus der alten Taxonomie — kein Skript warnt davor.
+
+### I3 — classified.json wird von zwei Skripten unabhängig geschrieben
+
+`classify_segments.py` schreibt `category` + `confidence`. `match_entities.py` ergänzt `actors` in-place. Wenn classify mit `--force` neu läuft, aber match_entities nicht: neue Kategorien + alte actors. Umgekehrt möglich. Kein Skript prüft die Konsistenz.
+
+### I4 — `precompute_network.js` liest BER-spezifische Pfade
+
+Liest hardcodiert `viz/data.json` und `viz/entities_seed.csv`. Für andere Projekte muss man die Datei manuell anpassen oder Dateien kopieren. Nicht generisch verwendbar.
+
+### I5 — entities in config.json vs. Dokumentebene: kein Merge
+
+Wenn `config.json["entities"]` befüllt ist, werden alle doc-level `entities_seed.json`-Dateien ignoriert. Wenn config leer ist, werden sie zusammengeführt. Ein Projekt das beides hat verliert die doc-level Entities stillschweigend.
+
+### I6 — 7 deprecated Funktionen noch in entity_llm.py
+
+`_llm_task2_validate_aliases`, `_llm_task3_clarify_types`, `_llm_extract_uncovered`, `_select_uncovered_stratified` und drei weitere sind als `# DEPRECATED` markiert aber nicht entfernt, zusammen mit den zugehörigen Prompt-Strings.
+
+### I7 — `actors` wird nach Override nicht aktualisiert
+
+Wenn ein Segment via overrides.json manuell datiert wird, läuft match_entities.py nicht automatisch neu. Das `actors`-Feld stammt aus dem letzten Lauf und kann veraltet sein.
+
+### I8 — presseartikel-Logik verteilt über 3 Skripte
+
+Sonderbehandlung liegt in parse_document.py (Parser-Modus), detect_anchors.py (kein Fließtext-Regex) und interpolate_anchors.py (Interpolation übersprungen). Kein zentraler Ort, der beschreibt was presseartikel-Dokumente anders machen.
+
+### I9 — Link-Schwelle unterschiedlich in precompute vs. boot
+
+`precompute_network.js` filtert Links mit `count >= 2`. `boot.js` lässt alle Links durch (`threshold = 1`). Das Layout wird für einen anderen Graphen vorberechnet als den, der in der Viz erscheint.
+
+### I10 — Playwright-Tests testen nur BER-Projekt
+
+`tests/viz.spec.js` öffnet hardcodiert `http://localhost:8765/` und setzt BER-Daten voraus. Keine Tests für andere Projekte oder für den Ingest-Wizard.

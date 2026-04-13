@@ -1,0 +1,35 @@
+{
+  "title": "Test E2E Osmanisches Reich",
+  "taxonomy": [
+    {
+      "name": "Politik",
+      "description": "Staatliche Strukturen, Regierung, Außenpolitik",
+      "keywords": [
+        "Regierung",
+        "Sultan",
+        "Parlament",
+        "Krieg"
+      ]
+    },
+    {
+      "name": "Gesellschaft",
+      "description": "Bevölkerung, Ethnien, Religion, Kultur",
+      "keywords": [
+        "Bevölkerung",
+        "Islam",
+        "Minderheiten",
+        "Bildung"
+      ]
+    },
+    {
+      "name": "Wirtschaft",
+      "description": "Handel, Finanzen, Landwirtschaft, Industrie",
+      "keywords": [
+        "Handel",
+        "Finanzen",
+        "Steuern",
+        "Export"
+      ]
+    }
+  ]
+}

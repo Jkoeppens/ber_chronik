@@ -9,7 +9,7 @@
         - generic [ref=e8]: ▾
       - navigation [ref=e9]:
         - button "Timeline" [ref=e10] [cursor=pointer]
-        - button "Netzwerk" [active] [ref=e11] [cursor=pointer]
+        - button "Netzwerk" [ref=e11] [cursor=pointer]
       - generic "Tutorial starten" [ref=e12] [cursor=pointer]: "?"
     - generic [ref=e13]:
       - img [ref=e14]:

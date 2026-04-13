@@ -4,6 +4,34 @@ Designentscheidungen die nicht aus dem Code hervorgehen. Warum etwas so ist wie 
 
 ---
 
+## Pipeline
+
+### D-P1 — Kanonische Taxonomiequelle
+Einzige gültige Quelle: `projects/{project}/config.json["taxonomy"]`.
+Kein Fallback auf taxonomy_proposal.json oder event_type-Ableitung.
+Konsequenz: taxonomy/save muss immer laufen bevor classify läuft.
+Fehlt taxonomy in config.json: Fehler, kein stiller Fallback.
+
+### D-P2 — normalize_category() läuft überall
+classify_segments.py, export_preview.py und export_exploration.py
+rufen alle normalize_category() auf — nicht nur classify.
+Normalisierung: exakter Match → längster Substring-Match → "(unbekannt)".
+
+### D-P3 — classified.json ist ein gemeinsames Dokument
+classify_segments.py schreibt category+confidence.
+match_entities.py ergänzt actors in-place.
+Regel: nach jedem classify-Lauf muss match_entities neu laufen.
+Kein Mischzustand (neue Kategorien + alte actors) ist erlaubt.
+
+### D-P4 — Entities haben eine einzige Quelle
+Einzige gültige Quelle: `projects/{project}/config.json["entities"]`.
+Kein doc-level Fallback, kein stilles Ignorieren.
+Konsequenz: Entity-Editor speichert immer in config.json, nie in entities_seed.json.
+
+### D-P5 — Schritt-Verträge sind explizit
+Jedes Skript prüft beim Start ob seine Input-Dateien existieren.
+Fehlt eine Input-Datei: Fehler mit klarem Text, kein Weiterlaufen.
+
 ## Architektur
 
 ### Kein Build-Tool, keine ES-Module
