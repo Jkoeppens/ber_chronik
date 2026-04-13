@@ -717,16 +717,18 @@ async def get_entities_data(request: Request):
     project = request.query_params.get("project") or get_current_project()
     doc_id  = request.query_params.get("document") or get_current_document() or "main"
     doc_dir = get_doc_dir(project, doc_id)
-    # Priority: merged (has _status) > seed (all confirmed) > proposal (all new)
+    # D-P4: config.json["entities"] hat höchste Priorität
+    config_p = get_project_dir(project) / "config.json"
+    if config_p.exists():
+        cfg_entities = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
+        if cfg_entities:
+            return JSONResponse([dict(**{k: v for k, v in e.items() if not k.startswith("_")},
+                                      _status="confirmed") for e in cfg_entities])
+    # Noch keine Entities in config.json: merged (mit _status) > proposal (alles neu)
     merged_path   = doc_dir / "entities_merged.json"
-    seed_path     = doc_dir / "entities_seed.json"
     proposal_path = doc_dir / "entities_proposal.json"
     if merged_path.exists():
         return JSONResponse(json.loads(merged_path.read_text(encoding="utf-8")))
-    if seed_path.exists():
-        data = json.loads(seed_path.read_text(encoding="utf-8"))
-        return JSONResponse([dict(**{k: v for k, v in e.items() if not k.startswith("_")},
-                                  _status="confirmed") for e in data])
     if proposal_path.exists():
         data = json.loads(proposal_path.read_text(encoding="utf-8"))
         return JSONResponse([dict(**{k: v for k, v in e.items() if not k.startswith("_")},
@@ -742,15 +744,22 @@ async def save_entities(request: Request):
     body = await request.json()
     if not isinstance(body, list):
         return JSONResponse({"ok": False, "error": "Body muss ein JSON-Array sein"}, status_code=400)
-    doc_dir = get_doc_dir(project, doc_id)
-    doc_dir.mkdir(parents=True, exist_ok=True)
-    # Strip internal fields (_status, _source, etc.) before writing seed
+    # Strip internal fields (_status, _source, etc.) before writing
     clean = [{k: v for k, v in e.items() if not k.startswith("_")} for e in body]
-    (doc_dir / "entities_seed.json").write_text(
-        json.dumps(clean, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    # Delete stale merged file so next load reads fresh seed
-    merged = doc_dir / "entities_merged.json"
+    # D-P4: Entities in project config.json speichern, nie in doc-level entities_seed.json
+    project_dir = get_project_dir(project)
+    project_dir.mkdir(parents=True, exist_ok=True)
+    config_p = project_dir / "config.json"
+    cfg: dict = {}
+    if config_p.exists():
+        try:
+            cfg = json.loads(config_p.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    cfg["entities"] = clean
+    config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    # Delete stale merged file so next load reads fresh data
+    merged = get_doc_dir(project, doc_id) / "entities_merged.json"
     if merged.exists():
         merged.unlink()
     return {"ok": True, "count": len(clean)}
@@ -774,11 +783,17 @@ def _do_merge(project: str, doc_id: str) -> tuple[list[dict], dict]:
     Alias-Überschneidung vorhanden ist.
     """
     doc_dir       = get_doc_dir(project, doc_id)
-    seed_path     = doc_dir / "entities_seed.json"
     proposal_path = doc_dir / "entities_proposal.json"
     rejected_path = doc_dir / "entities_rejected.json"
 
-    seed     = json.loads(seed_path.read_text(encoding="utf-8"))     if seed_path.exists()     else []
+    # D-P4: seed aus config.json["entities"] (kanonische Quelle)
+    config_p = get_project_dir(project) / "config.json"
+    seed: list[dict] = []
+    if config_p.exists():
+        try:
+            seed = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
+        except Exception:
+            pass
     proposal = json.loads(proposal_path.read_text(encoding="utf-8")) if proposal_path.exists() else []
     rejected = json.loads(rejected_path.read_text(encoding="utf-8")) if rejected_path.exists() else []
 

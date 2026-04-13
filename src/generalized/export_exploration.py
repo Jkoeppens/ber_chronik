@@ -227,8 +227,7 @@ def main() -> None:
     config_path = project_dir / "config.json"
     config      = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
     taxonomy    = config.get("taxonomy") or []
-    entities    = config.get("entities") or []
-    _entities_from_docs = False  # wird nach Dokumenten-Loop ggf. überschrieben
+    entities    = config.get("entities") or []  # D-P4: einzige gültige Quelle
 
     _taxonomy_is_fallback = not taxonomy
 
@@ -250,7 +249,6 @@ def main() -> None:
     # ── Alle Dokumente einlesen + mergen ───────────────────────────────────────
     all_anchors: list[dict]  = []
     all_cls_map: dict[str, dict] = {}
-    doc_entities: list[dict] = []  # entities_seed.json aus Dokumenten
 
     for doc_id in doc_ids:
         doc_dir         = docs_dir / doc_id
@@ -266,11 +264,6 @@ def main() -> None:
 
         anchors    = json.loads(anchors_path.read_text(encoding="utf-8"))
         classified = json.loads(classified_path.read_text(encoding="utf-8"))
-
-        # entities_seed.json auf Dokumentebene einsammeln (Fallback falls config leer)
-        ent_seed_path = doc_dir / "entities_seed.json"
-        if ent_seed_path.exists():
-            doc_entities.extend(json.loads(ent_seed_path.read_text(encoding="utf-8")))
 
         # segment_id mit doc_id-Präfix versehen (Kollisionsvermeidung)
         for seg in anchors:
@@ -289,11 +282,6 @@ def main() -> None:
     if not all_anchors:
         print("Keine Daten gefunden.", file=sys.stderr)
         sys.exit(1)
-
-    # Fallback: entities aus Dokumenten verwenden wenn config leer
-    if not entities and doc_entities:
-        entities = doc_entities
-        print(f"⚠ entities in config.json leer — Fallback: {len(entities)} Entities aus documents/*/entities_seed.json")
 
     # ── data.json ──────────────────────────────────────────────────────────────
     entries = build_entries(all_anchors, all_cls_map)
