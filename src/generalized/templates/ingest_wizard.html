@@ -663,12 +663,27 @@ function renderAnalysisResult(a) {
     ? `<h4>Erkannte Ereignisse</h4>${evHtml}` : '';
 }
 
+// ── Taxonomie-Guard ────────────────────────────────────────────────────────────
+async function hasTaxonomy() {
+  try {
+    const res = await fetch('/taxonomy/data' + _aq());
+    if (!res.ok) return false;
+    const tax = await res.json();
+    return Array.isArray(tax) && tax.length > 0;
+  } catch (_) { return false; }
+}
+
 // ── Step 4: Taxonomy → classify ────────────────────────────────────────────────
 async function runClassifyAfterTaxonomy() {
   const section = document.getElementById('tax-classify-section');
   const logEl   = document.getElementById('tax-classify-log');
   section.style.display = 'block';
   logEl.textContent = '⟳ Neu klassifizieren…';
+  if (!await hasTaxonomy()) {
+    logEl.innerHTML = '<span style="color:#f87171">✗ Keine Taxonomie gespeichert — bitte zuerst Taxonomie-Vorschlag generieren und speichern.</span>';
+    logEl.scrollTop = logEl.scrollHeight;
+    return;
+  }
   let buf = '';
   try {
     const resp = await fetch('/ingest/run/step' + _aq(), {
@@ -772,10 +787,11 @@ async function runAnchorPipeline() {
   logEl.textContent    = '';
   statusEl.textContent = '';
 
+  const taxOk = await hasTaxonomy();
   const STEPS = [
     { step: 'detect_anchors.py',      label: '⟳ Zeitanker erkennen…' },
     { step: 'interpolate_anchors.py', label: '⟳ Interpolieren…' },
-    { step: 'export_preview.py',      label: '⟳ Preview generieren…' },
+    ...(taxOk ? [{ step: 'export_preview.py', label: '⟳ Preview generieren…' }] : []),
   ];
 
   for (const { step, label } of STEPS) {
@@ -817,8 +833,14 @@ async function runAnchorPipeline() {
     logEl.scrollTop = logEl.scrollHeight;
   }
 
-  statusEl.textContent = '✓ Fertig';
   renderEventsList();
+  if (!taxOk) {
+    logEl.textContent += '\n— Preview erst nach Taxonomie-Speicherung verfügbar';
+    logEl.scrollTop = logEl.scrollHeight;
+    statusEl.textContent = '✓ Zeitanker fertig';
+    return true;
+  }
+  statusEl.textContent = '✓ Fertig';
   // Preview-iframe neu laden
   const frame = document.getElementById('step5-preview');
   frame.src = '/preview' + _aq();
