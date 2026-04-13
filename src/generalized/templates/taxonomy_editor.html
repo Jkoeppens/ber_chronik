@@ -55,8 +55,12 @@ const gridEl=document.getElementById("grid"),statusEl=document.getElementById("s
       logEl=document.getElementById("log"),btnSave=document.getElementById("btn-save"),
       btnProp=document.getElementById("btn-propose"),btnAdd=document.getElementById("btn-add");
 let taxonomy=[],dirty=false;
+const _urlParams=new URLSearchParams(location.search);
+const _tok=_urlParams.get("token")||"",_proj=_urlParams.get("project")||"",_doc=_urlParams.get("document")||"";
+function _aq(){const p=new URLSearchParams();if(_tok)p.set("token",_tok);if(_proj)p.set("project",_proj);if(_doc)p.set("document",_doc);const s=p.toString();return s?"?"+s:"";}
+function _th(){const h={"Content-Type":"application/json"};if(_tok)h["X-Project-Token"]=_tok;return h;}
 async function load(){
-  const res=await fetch("/taxonomy/data");taxonomy=await res.json();render();
+  const res=await fetch("/taxonomy/data"+_aq());taxonomy=await res.json();render();
   statusEl.textContent=taxonomy.length?`${taxonomy.length} Kategorien geladen`:"Noch keine Taxonomie";
 }
 function render(){
@@ -94,13 +98,13 @@ btnAdd.addEventListener("click",()=>{taxonomy.push({name:"",description:"",keywo
   const cards=gridEl.querySelectorAll(".cat");if(cards.length)cards[cards.length-1].querySelector(".cat-name").focus();});
 btnSave.addEventListener("click",async()=>{
   btnSave.disabled=true;btnSave.textContent="Speichere…";
-  const res=await fetch("/taxonomy/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(taxonomy)});
+  const res=await fetch("/taxonomy/save"+_aq(),{method:"POST",headers:_th(),body:JSON.stringify(taxonomy)});
   if(res.ok){dirty=false;statusEl.textContent=`${taxonomy.length} Kategorien gespeichert ✓`;}
   btnSave.textContent="Speichern";if(!res.ok)btnSave.disabled=false;
 });
 btnProp.addEventListener("click",async()=>{
   btnProp.disabled=true;btnProp.textContent="Läuft…";logEl.className="";logEl.textContent="";logEl.style.display="block";
-  const res=await fetch("/taxonomy/propose",{method:"POST"});
+  const res=await fetch("/taxonomy/propose"+_aq(),{method:"POST",headers:_th()});
   const reader=res.body.getReader(),decoder=new TextDecoder();let buf="";
   while(true){
     const{done,value}=await reader.read();if(done)break;
