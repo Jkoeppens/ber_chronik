@@ -52,18 +52,13 @@ def main() -> None:
             print(f"Datei nicht gefunden: {path}", file=sys.stderr)
             sys.exit(1)
 
-    # Entities von Projektebene (project_dir/config.json) lesen
+    # D-P4: Entities ausschließlich aus project config.json
     project_cfg_path = project_dir / "config.json"
     entities = []
     if project_cfg_path.exists():
         entities = json.loads(project_cfg_path.read_text(encoding="utf-8")).get("entities", [])
-    # Fallback: per-doc entities_seed.json
     if not entities:
-        fallback = doc_dir / "entities_seed.json"
-        if fallback.exists():
-            entities = json.loads(fallback.read_text(encoding="utf-8"))
-    if not entities:
-        print("Warnung: Keine Entities definiert – actors-Felder bleiben leer.", file=sys.stderr)
+        print("Warnung: Keine Entities in config.json – actors-Felder bleiben leer.", file=sys.stderr)
     segments   = json.loads(SEGMENTS_PATH.read_text(encoding="utf-8"))
     classified = json.loads(CLASSIFIED_PATH.read_text(encoding="utf-8"))
 

@@ -225,11 +225,19 @@ def main() -> None:
 
     # ── Projekt-Config (Taxonomie + Entities) ──────────────────────────────────
     config_path = project_dir / "config.json"
-    config      = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
-    taxonomy    = config.get("taxonomy") or []
-    entities    = config.get("entities") or []  # D-P4: einzige gültige Quelle
-
-    _taxonomy_is_fallback = not taxonomy
+    if not config_path.exists():
+        print(f"Fehler: config.json nicht gefunden: {config_path}", file=sys.stderr)
+        sys.exit(1)
+    config   = json.loads(config_path.read_text(encoding="utf-8"))
+    taxonomy = config.get("taxonomy") or []
+    entities = config.get("entities") or []  # D-P4: einzige gültige Quelle
+    if not taxonomy:
+        print(
+            f"Fehler: Keine Taxonomie in {config_path}\n"
+            "Bitte zuerst taxonomy/save ausführen bevor exploration exportiert wird.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     # ── Dokumente auflisten ────────────────────────────────────────────────────
     docs_dir = project_dir / "documents"
@@ -287,19 +295,11 @@ def main() -> None:
     entries = build_entries(all_anchors, all_cls_map)
 
     # D-P2: event_type jedes Eintrags gegen kanonische Taxonomie normalisieren
-    if not _taxonomy_is_fallback and taxonomy:
-        valid_names = [c["name"] for c in taxonomy if c.get("name")]
-        for e in entries:
-            raw = e.get("event_type")
-            if raw is not None:
-                e["event_type"] = normalize_category(raw, valid_names)
-
-    # Taxonomy-Fallback: event_type-Werte aus den Einträgen ableiten
-    if _taxonomy_is_fallback:
-        seen_types = sorted({e["event_type"] for e in entries if e.get("event_type")})
-        taxonomy = [{"name": t, "description": "", "keywords": []} for t in seen_types]
-        if taxonomy:
-            print(f"⚠ taxonomy in config.json leer — Fallback: {len(taxonomy)} event_type-Werte aus klassifizierten Segmenten")
+    valid_names = [c["name"] for c in taxonomy if c.get("name")]
+    for e in entries:
+        raw = e.get("event_type")
+        if raw is not None:
+            e["event_type"] = normalize_category(raw, valid_names)
 
     data_obj = {
         "generated": str(date.today()),
