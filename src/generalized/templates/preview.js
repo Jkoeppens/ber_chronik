@@ -169,10 +169,10 @@ DATA.forEach(seg => {
   const color = PREC_COLOR[prec] ?? "#999";
   const label = PREC_LABEL[prec] ?? prec;
   const numTl = tf == null ? "undatiert"
-                : tt && tt !== tf ? tf + "\\u2013" + tt : String(tf);
+                : tt && tt !== tf ? tf + "\u2013" + tt : String(tf);
   const tl    = (!ov && seg.date_raw) ? seg.date_raw : numTl;
   const displayText = (ov?.action === "set_anchor" && ov.text) ? ov.text : seg.text;
-  const page  = seg.page ? `<span class="card-page">S.\\u202f${seg.page}</span>` : "";
+  const page  = seg.page ? `<span class="card-page">S.\u202f${seg.page}</span>` : "";
   const noteHtml = ov?.note
     ? `<div class="card-note">\u270f ${esc(ov.note)}</div>` : "";
 
@@ -356,10 +356,10 @@ function refreshCard(segId) {
   const color = PREC_COLOR[prec ?? "null"] ?? "#999";
   const label = PREC_LABEL[prec ?? "null"] ?? String(prec);
   const numTlR = tf == null ? "undatiert"
-                : tt && tt !== tf ? tf + "\\u2013" + tt : String(tf);
+                : tt && tt !== tf ? tf + "\u2013" + tt : String(tf);
   const tl     = (!ov && seg.date_raw) ? seg.date_raw : numTlR;
   const displayText = (ov?.action === "set_anchor" && ov.text) ? ov.text : seg.text;
-  const page  = seg.page ? `<span class="card-page">S.\\u202f${seg.page}</span>` : "";
+  const page  = seg.page ? `<span class="card-page">S.\u202f${seg.page}</span>` : "";
   const noteHtml = ov?.note ? `<div class="card-note">\u270f ${esc(ov.note)}</div>` : "";
 
   cardEl.dataset.prec = prec === null ? "null" : (prec ?? "null");
