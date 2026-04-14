@@ -72,7 +72,10 @@ test('Network node click → panel shows actor summary', async ({ page }) => {
   const firstNode = page.locator('#network g[cursor="pointer"]').first();
   // Read label text before clicking so we can verify the panel title
   const labelText = await firstNode.locator('text').textContent();
-  await firstNode.click();
+  // dispatchEvent dispatches directly to the <g> element (bypasses browser hit-testing),
+  // which is necessary because force:true still resolves target by screen coordinates
+  // and the SVG zoom layer can intercept before the node <g> receives the event.
+  await firstNode.dispatchEvent('click', { bubbles: true, cancelable: true });
 
   // Panel title should match the clicked node's label
   if (labelText) {
@@ -91,9 +94,11 @@ test('Network edge click → panel shows article list for connected actors', asy
   await openNetwork(page);
 
   // Hit areas are transparent <line> elements with stroke-width 14 and cursor:pointer.
-  // force:true is needed because the stroke is transparent (invisible to hit-testing heuristics).
+  // dispatchEvent dispatches directly to the element (bypasses browser hit-testing),
+  // which is necessary because force:true still fires at screen coordinates where
+  // the browser may resolve a different target (empty SVG, overlapping node, etc.).
   const hitLine = page.locator('#network line[stroke="transparent"]').first();
-  await hitLine.click({ force: true });
+  await hitLine.dispatchEvent('click', { bubbles: true, cancelable: true });
 
   // Panel title takes the form "A + B · alle Verbindungen"
   await expect(page.locator('#panel-title'))

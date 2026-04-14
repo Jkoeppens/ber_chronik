@@ -29,6 +29,7 @@ from io import StringIO
 from pathlib import Path
 
 from src.generalized.classify_segments import normalize_category
+from src.generalized.generate_entity_summaries import build_summaries as _build_summaries
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -316,6 +317,14 @@ def main() -> None:
         csv_out.write_text(csv_text, encoding="utf-8")
         n_rows = csv_text.count("\n") - 1
         print(f"→ {csv_out}  ({n_rows} Alias-Zeilen)")
+
+    # ── entities_summary.json ──────────────────────────────────────────────────
+    summary_out = exploration_dir / "entities_summary.json"
+    if entities:
+        print("\nErzeuge Entity-Summaries (LLM) …")
+        _build_summaries(entries, entities, summary_out, min_mentions=3)
+    else:
+        print("→ entities_summary.json übersprungen (keine Entities in config.json)")
 
     # ── project_meta.json ──────────────────────────────────────────────────────
     meta = build_meta(config, taxonomy, entities)
