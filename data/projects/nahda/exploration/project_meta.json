@@ -1,0 +1,100 @@
+{
+  "title": "Nahda",
+  "doc_type": "buchnotizen",
+  "taxonomy": [
+    {
+      "name": "Nahda und Arabische Intellektualität",
+      "description": "Beschreibung: Diese Kategorie beschäftigt sich mit der Arabischen Intellektualität während der Nahda und ihren Ideen über Selbst- und Fremdes.",
+      "keywords": [
+        "nahda",
+        "arabische intellektualität",
+        "selbst"
+      ]
+    },
+    {
+      "name": "Kolonialismus und Auswirkungen",
+      "description": "Beschreibung: Diese Kategorie analysiert die Auswirkungen des Kolonialismus auf das arabisch-muslimische Denken und die Entwicklung von neuen Ideen über Selbst- und Fremdes.",
+      "keywords": [
+        "kolonialismus",
+        "auswirkung",
+        "selbst"
+      ]
+    },
+    {
+      "name": "Liberalismus und Demokratie",
+      "description": "Beschreibung: Diese Kategorie beschäftigt sich mit dem Liberalismus und seinen Auswirkungen auf das arabisch-muslimische Denken, insbesondere in Bezug auf Demokratie und individuelle Rechte.",
+      "keywords": [
+        "liberalismus",
+        "demokratie",
+        "individuelle rechte"
+      ]
+    },
+    {
+      "name": "Über die Identität der Araber",
+      "description": "Beschreibung: Diese Kategorie untersucht die Frage nach der kulturellen arabischen Identität und wie sie im Kontext des Kolonialismus und Liberalismus geprägt wird.",
+      "keywords": [
+        "arabische identität",
+        "kulturelle prägung"
+      ]
+    },
+    {
+      "name": "Kritik an Albert Hourani",
+      "description": "Beschreibung: Diese Kategorie enthält Notizen zu einer Rezension von Dyala Hamzah, die eine Kritik an Albert Houranis These \"derivative liberalism\" (abstammender Liberalismus) vorstellt.",
+      "keywords": [
+        "albert hourani",
+        "kritik"
+      ]
+    },
+    {
+      "name": "Theoretische Kontexte",
+      "description": "Beschreibung: Diese Kategorie enthält Notizen zu theoretischen Konzepten wie dem öffentlichen Raum, der Ideensphäre und der Koordinierung von Selbst- und Fremdes.",
+      "keywords": [
+        "öffentlicher raum",
+        "ideensphäre",
+        "koordination"
+      ]
+    },
+    {
+      "name": "Nahda-Bewegung und ihre Ideologie",
+      "description": "Beschreibung: Die Notizen beschäftigen sich mit der Nahda-Bewegung, ihrer Geschichte und ihren Ideen.",
+      "keywords": [
+        "Nahda",
+        "Arabismus",
+        "Idealismus"
+      ]
+    },
+    {
+      "name": "Europäische Einflüsse auf die Nahda-Bewegung",
+      "description": "Beschreibung: Die Notizen untersuchen die Auswirkungen europäischer Ideen und Kulturen auf die Nahda-Bewegung.",
+      "keywords": [
+        "Europäischer Einfluss",
+        "Liberalismus",
+        "Humanismus"
+      ]
+    }
+  ],
+  "entity_types": [
+    "Konzept",
+    "Organisation",
+    "Ort",
+    "Person"
+  ],
+  "color_map": {
+    "Nahda und Arabische Intellektualität": "#3b82f6",
+    "Kolonialismus und Auswirkungen": "#f59e0b",
+    "Liberalismus und Demokratie": "#10b981",
+    "Über die Identität der Araber": "#8b5cf6",
+    "Kritik an Albert Hourani": "#ef4444",
+    "Theoretische Kontexte": "#06b6d4",
+    "Nahda-Bewegung und ihre Ideologie": "#f97316",
+    "Europäische Einflüsse auf die Nahda-Bewegung": "#6366f1"
+  },
+  "node_color_map": {
+    "Konzept": "#60a5fa",
+    "Organisation": "#fbbf24",
+    "Ort": "#34d399",
+    "Person": "#c084fc"
+  },
+  "year_min": 1806,
+  "year_max": 1962
+}

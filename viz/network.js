@@ -8,6 +8,11 @@ let netLinkSelection = null;      // D3 selection of all <line> elements
 
 function nodeRadius(d) { return Math.max(5, Math.min(28, Math.log(d.count + 1) * 7)); }
 function labelSize(d)  { return nodeRadius(d) >= 12 ? 11 : 10; }
+function pairKey(a, b) {
+  const sid = (b === undefined) ? (a.source?.id ?? a.source) : a;
+  const tid = (b === undefined) ? (a.target?.id ?? a.target) : b;
+  return [sid, tid].sort().join("\x00");
+}
 
 // Fetch precomputed layout eagerly so it's ready before first tab-open
 let _networkLayout = null;
@@ -136,6 +141,7 @@ function drawNetwork(nodes, links) {
 
   const zoomBehavior = d3.zoom()
     .scaleExtent([0.15, 5])
+    .filter(event => !event.button && !event.target.closest('g[cursor="pointer"]'))
     .on("zoom", e => g.attr("transform", e.transform));
   svg.call(zoomBehavior);
 
@@ -264,56 +270,8 @@ function drawNetwork(nodes, links) {
     .attr("stroke-width",   d => Math.max(1, Math.log(d.count + 1)))
     .attr("pointer-events", "none");
 
-  // ── Invisible hit areas (one per pair, wide stroke, carries all handlers) ─────
-  let hitG   = g.append("g");
-  let hitSel = hitG
-    .selectAll("line").data(hitLinks).join("line")
-    .attr("stroke",         "transparent")
-    .attr("stroke-width",   14)
-    .attr("fill",           "none")
-    .attr("cursor",         "pointer")
-    .on("mouseenter", (event, d) => {
-      const sid = d.source?.id ?? d.source, tid = d.target?.id ?? d.target;
-      const k   = pairKey(d);
-      const n   = pairTotalCount.get(k) || 0;
-      showTip(
-        `<div class="tip-entry" style="gap:4px">` +
-        `<span>${escapeHtml(sid)} + ${escapeHtml(tid)}</span>` +
-        `<span style="color:#888">· ${n}×</span></div>`,
-        event);
-      // Brighten all visible parallel lines in this pair
-      linkSel.filter(l => pairKey(l) === k).attr("stroke-opacity", 0.85);
-    })
-    .on("mousemove", moveTip)
-    .on("mouseleave", (event, d) => {
-      hideTip();
-      const k = pairKey(d);
-      if (netFocusNode || hlState.mode !== "none") { applyNetworkState(); return; }
-      linkSel.filter(l => pairKey(l) === k).attr("stroke-opacity", 0.5);
-    })
-    .on("click", (event, d) => {
-      hideTip();
-      // Release any pinned ego node
-      if (netFocusNode) {
-        const prev = nodes.find(n => n.id === netFocusNode);
-        if (prev) { prev.fx = null; prev.fy = null; }
-        netFocusNode = null;
-      }
-      const sid = d.source?.id ?? d.source, tid = d.target?.id ?? d.target;
-      const key = pairKey(sid, tid);
-      netFocusPair = { key, sid, tid };
-      const shared = (entriesByActor.get(sid) || [])
-        .filter(e => Array.isArray(e.actors) && e.actors.includes(tid))
-        .sort((a, b) => (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
-      const title = `${sid} + ${tid} · alle Verbindungen`;
-      showView("timeline", title, viewEl => {
-        viewEl.innerHTML = shared.length
-          ? renderParaList(shared)
-          : `<div class="chat-params">Keine gemeinsamen Artikel.</div>`;
-      });
-      // setHighlight triggers applyNetworkState; netFocusPair is already set so edge branch wins
-      setHighlight("answer", new Set(shared.map(e => e.doc_anchor).filter(Boolean)));
-    });
+  let hitG   = null;
+  let hitSel = null;
 
   function rerender() {
     linkSel.each(function(d) {
@@ -454,7 +412,7 @@ function drawNetwork(nodes, links) {
   const node  = nodeG
     .selectAll("g").data(nodes).join("g")
     .attr("cursor",         "pointer")
-    .attr("pointer-events", "all")   // g itself receives clicks (circle has pointer-events:none)
+    .attr("pointer-events", "all")
     .call(d3.drag()
       .on("start", (e, d) => { if (!e.active) sim.alpha(0.1).restart(); d.fx = d.x; d.fy = d.y; })
       .on("drag",  (e, d) => { d.fx = e.x; d.fy = e.y; })
@@ -469,8 +427,7 @@ function drawNetwork(nodes, links) {
     .attr("fill",             d => NODE_COLOR[d.typ] || "#bbb")
     .attr("stroke",           "#F7F5F0")
     .attr("stroke-width",     2)
-    .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3")
-    .attr("pointer-events",   "none");  // clicks pass through to parent <g>
+    .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
 
   node.append("text")
     .attr("class",       "net-label")
@@ -481,6 +438,7 @@ function drawNetwork(nodes, links) {
 
   node
     .on("mouseenter", (event, d) => {
+      console.log("NODE HOVER", d.id);
       showTip(`${d.count} Nennungen`, event);
       // Suppress hover effect when ego or KI highlight is active
       if (netFocusNode || hlState.mode !== "none") return;
@@ -505,6 +463,7 @@ function drawNetwork(nodes, links) {
       linkSel.attr("stroke-opacity", 0.5);
     })
     .on("click", (event, d) => {
+      console.log("NODE CLICK", d.id);
       hideTip();
       // Release any previously pinned ego node; clear edge-focus state
       if (netFocusNode && netFocusNode !== d.id) {
@@ -521,9 +480,9 @@ function drawNetwork(nodes, links) {
       svg.transition().duration(300).call(zoomBehavior.translateTo, d.x, d.y);
     });
 
-  // ── Invisible hit areas — appended AFTER nodeG so they render on top ──────────
+  // ── Invisible hit areas — inserted BEFORE nodeG so nodes sit on top in Z-order ──
   // Hit lines are trimmed to node radii in rerender(), so they don't cover circles.
-  hitG   = g.append("g");
+  hitG   = g.insert("g", () => nodeG.node());
   hitSel = hitG
     .selectAll("line").data(hitLinks).join("line")
     .attr("stroke",         "transparent")

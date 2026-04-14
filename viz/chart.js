@@ -273,7 +273,7 @@ function _applyChartEntityHighlight() {
 
   _chartG.selectAll(".line-label").style("opacity", 0.1);
   relevantTypes.forEach(et => {
-    _chartG.selectAll(`.line-label-${et.replace(/\s/g, '-')}`).style("opacity", 1);
+    _chartG.selectAll(`.line-label-${CSS.escape(et.replace(/\s/g, '-'))}`).style("opacity", 1);
   });
 
   if (focusEntity) {
