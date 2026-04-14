@@ -9,8 +9,13 @@ Designentscheidungen die nicht aus dem Code hervorgehen. Warum etwas so ist wie 
 ### D-P1 — Kanonische Taxonomiequelle
 Einzige gültige Quelle: `projects/{project}/config.json["taxonomy"]`.
 Kein Fallback auf taxonomy_proposal.json oder event_type-Ableitung.
-Konsequenz: taxonomy/save muss immer laufen bevor classify läuft.
+Konsequenz: nach propose_taxonomy direkt in config.json — taxonomy/save
+ist weiterhin der offizielle Speicherpfad aus dem Wizard.
 Fehlt taxonomy in config.json: Fehler, kein stiller Fallback.
+
+`taxonomy_proposal.json` ist abgeschafft: wird nicht mehr geschrieben,
+nicht mehr gelesen. Bestehende Dateien können liegenbleiben, sind aber
+ohne Funktion. `propose_taxonomy.py` schreibt direkt in config.json["taxonomy"].
 
 ### D-P2 — normalize_category() läuft überall
 classify_segments.py, export_preview.py und export_exploration.py
@@ -31,6 +36,67 @@ Konsequenz: Entity-Editor speichert immer in config.json, nie in entities_seed.j
 ### D-P5 — Schritt-Verträge sind explizit
 Jedes Skript prüft beim Start ob seine Input-Dateien existieren.
 Fehlt eine Input-Datei: Fehler mit klarem Text, kein Weiterlaufen.
+
+### D-P6 — Keine verwaisten Endpoints
+Jeder Endpoint in dev_server.py wird von mindestens einer 
+bekannten Stelle aufgerufen. Nach jedem Feature-Block: 
+grep aller Endpoints gegen ingest_wizard.html und 
+taxonomy_editor.html. Verwaiste Endpoints werden 
+entweder gefixt oder gelöscht.
+
+## Entity-Extraktion
+
+### D-E1 — Plaintext-Format für alle geparsten LLM-Ausgaben
+LLM-Antworten die anschließend geparst werden verwenden kein JSON,
+sondern einfache Plaintext-Formate. Gilt für Entity-Extraktion und
+Taxonomie-Vorschlag.
+
+**Entity-Extraktion** (`_llm_sample_iteration`, `_llm_full_extract`, `_llm_task1_normalize`):
+```
+# Personen
+Enver, Enver Pasha, Enver Bey
+Muhammad Ali, Muhammad Ali Pasha
+
+# Organisationen
+Osmanisches Reich, Hohe Pforte
+
+# Orte
+Kairo, al-Qahira
+
+# Konzepte
+Nahda, arabische Aufklärung
+```
+Parser: `#`-Zeile = Typ-Header; alle anderen Zeilen kommasepariert,
+erste Schreibweise = Normalform, Rest = Aliases.
+
+**Taxonomie-Vorschlag** (`propose_taxonomy.py`):
+```
+## Kategoriename
+Beschreibung in einem Satz.
+Keywords: keyword1, keyword2, keyword3
+
+## Zweite Kategorie
+...
+```
+Parser: `##`-Zeile = Kategoriename; nächste nicht-leere Zeile = Beschreibung;
+`Keywords:`-Zeile = kommaseparierte Keywords.
+
+Merge-Schritt beim Taxonomie-Vorschlag per Code (nicht per LLM):
+5 Batch-Ergebnisse werden nach Häufigkeit sortiert und auf 6–8 Kategorien
+gekürzt. Kein zweiter LLM-Call.
+
+Warum kein JSON:
+- Kleine Modelle (llama3.2:3b, llama3.1:8b) brechen bei langen JSON-Arrays häufig
+  die Struktur ab oder geben ein einzelnes Objekt statt Array zurück
+- Plaintext-Format ist robuster: jede korrekte Zeile/Block ist verwertbar,
+  auch wenn das Ende der Antwort fehlt oder Sonderzeichen falsch escaped sind
+- `complete_json()` fällt bei jedem Syntaxfehler komplett aus;
+  Plaintext-Parser verwerfen nur den fehlerhaften Block
+
+Ausnahme: Dedup (`_llm_dedup`) bleibt JSON — binäre keep/merge-Entscheidungen
+sind als strukturierter Paarvergleich besser formulierbar.
+
+---
 
 ## Architektur
 

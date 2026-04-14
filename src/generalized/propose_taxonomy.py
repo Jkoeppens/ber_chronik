@@ -2,22 +2,30 @@
 propose_taxonomy.py — Taxonomie-Vorschlag via LLM
 
 5 Batches à 10 Segmente → je ein LLM-Call → Zwischenlisten.
-Danach ein Merge-Call der alle Zwischenlisten zu 6-8 finalen Kategorien zusammenführt.
+Danach Code-Merge: Duplikate nach Name zusammenlegen, nach Häufigkeit
+sortieren, auf 6-8 kürzen. Kein zweiter LLM-Call für den Merge (D-E1).
 
 Anthropic: Batches parallel (max_concurrency=10).
 Ollama:    Batches sequenziell.
 
+LLM-Output-Format (Plaintext, kein JSON):
+
+  ## Kategoriename
+  Beschreibung in einem Satz.
+  Keywords: keyword1, keyword2, keyword3
+
 Input:  data/projects/{project}/documents/{document}/segments.json
-Output: data/projects/{project}/documents/{document}/taxonomy_proposal.json
+Output: data/projects/{project}/config.json["taxonomy"]  (D-P1)
 """
 
 import argparse
 import asyncio
-import json
 import random
 import sys
+from collections import Counter
 from pathlib import Path
 
+import json
 from dotenv import load_dotenv
 
 from src.generalized.llm import get_provider, TASK_ANALYZE
@@ -35,39 +43,20 @@ Analysiere diese Notizen. Erkenne selbst um welches Thema und welchen historisch
 Schlage 4–6 Kategorien vor, die für eine systematische Klassifizierung dieses spezifischen Materials sinnvoll sind.
 
 Für jede Kategorie:
-- name: kurzer Bezeichner (PascalCase, max. 2 Wörter)
-- description: ein Satz, der beschreibt welche Inhalte diese Kategorie umfasst
-- keywords: genau 3 Schlüsselwörter, nicht mehr, nicht weniger
 
-Wichtig:
-- Antworte ausschließlich auf Deutsch. Keine englischen Begriffe.
-- Antworte ausschließlich als JSON-Array, ohne Erklärungen, ohne Markdown-Codeblöcke.
+## Kategoriename
+Beschreibung in einem Satz.
+Keywords: keyword1, keyword2, keyword3
 
-Format: [{{"name": "...", "description": "...", "keywords": ["...", "...", "..."]}}]
+Regeln:
+- Namen in PascalCase, max. 2 Wörter
+- Genau 3 Keywords, kommasepariert
+- Ausschließlich auf Deutsch, keine englischen Begriffe
+- Nur die Kategorieblöcke ausgeben, kein Kommentar, kein JSON
 
 Notizen:
 ---
 {segments}"""
-
-MERGE_TEMPLATE = """\
-Du hast {n} Teilanalysen desselben historischen Quellmaterials erhalten.
-Jede enthält Kategorie-Vorschläge. Führe sie zu 6–8 finalen Kategorien zusammen.
-
-Regeln:
-- Ähnliche oder überlappende Kategorien zusammenführen
-- Kategorien die das Material nicht gut abdecken weglassen
-- Namen in PascalCase, max. 2 Wörter
-- Jede Kategorie hat genau 3 Keywords, nicht mehr, nicht weniger
-
-Wichtig:
-- Antworte ausschließlich auf Deutsch. Keine englischen Begriffe.
-- Antworte ausschließlich als JSON-Array, ohne Erklärungen, ohne Markdown-Codeblöcke.
-
-Format: [{{"name": "...", "description": "...", "keywords": ["...", "...", "..."]}}]
-
-Teilanalysen:
----
-{partial}"""
 
 
 def format_segment(s: dict) -> str:
@@ -76,12 +65,55 @@ def format_segment(s: dict) -> str:
     return f"[{source}{page}]\n{s['text']}"
 
 
-def _normalize(raw) -> list[dict]:
-    if isinstance(raw, dict):
-        raw = [raw]
-    if not isinstance(raw, list):
-        return []
-    return [c for c in raw if isinstance(c, dict) and c.get("name")]
+def _parse_plaintext_taxonomy(text: str) -> list[dict]:
+    """Parst das ## Name / Beschreibung / Keywords: … Format."""
+    results: list[dict] = []
+    current: dict | None = None
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("##"):
+            if current and current.get("name"):
+                results.append(current)
+            current = {"name": line.lstrip("#").strip(), "description": "", "keywords": []}
+        elif current is not None:
+            if line.lower().startswith("keywords:"):
+                kws_raw = line[len("keywords:"):].strip()
+                current["keywords"] = [k.strip() for k in kws_raw.split(",") if k.strip()][:3]
+                results.append(current)
+                current = None
+            elif not current["description"]:
+                current["description"] = line
+    if current and current.get("name"):
+        results.append(current)
+    return [c for c in results if c.get("name")]
+
+
+def _merge_taxonomy(partial_lists: list[list[dict]]) -> list[dict]:
+    """Code-Merge: Duplikate nach Name zusammenlegen, nach Häufigkeit sortieren, top 8."""
+    name_count: Counter = Counter()
+    first_seen: dict[str, dict] = {}
+
+    for cats in partial_lists:
+        seen_this_batch: set[str] = set()
+        for cat in cats:
+            key = (cat.get("name") or "").strip().lower()
+            if not key:
+                continue
+            if key not in first_seen:
+                first_seen[key] = dict(cat)
+            if key not in seen_this_batch:
+                name_count[key] += 1
+                seen_this_batch.add(key)
+
+    sorted_keys = sorted(first_seen, key=lambda k: -name_count[k])
+    result = [first_seen[k] for k in sorted_keys[:8]]
+
+    total = sum(name_count.values())
+    print(f"Merge: {len(first_seen)} eindeutige Kategorien aus {total} Batch-Einträgen "
+          f"→ {len(result)} übernommen", flush=True)
+    return result
 
 
 def _run_batch(provider, batch: list[dict], idx: int, total: int) -> list[dict]:
@@ -89,12 +121,8 @@ def _run_batch(provider, batch: list[dict], idx: int, total: int) -> list[dict]:
     segments_text = "\n\n".join(format_segment(s) for s in batch)
     prompt = BATCH_TEMPLATE.format(segments=segments_text)
     for attempt in range(2):
-        try:
-            raw = provider.complete_json(prompt, system=SYSTEM_PROMPT)
-        except (json.JSONDecodeError, ValueError) as e:
-            print(f"  Batch {idx}: JSON-Fehler ({e})" + (" — Retry…" if attempt == 0 else " — übersprungen"), file=sys.stderr)
-            continue
-        result = _normalize(raw)
+        text = provider.complete(prompt, system=SYSTEM_PROMPT)
+        result = _parse_plaintext_taxonomy(text or "")
         if len(result) >= 2:
             print(f"  Batch {idx}: {len(result)} Kategorien", flush=True)
             return result
@@ -110,30 +138,6 @@ async def _run_batch_async(provider, batch: list[dict], idx: int, total: int,
         return await asyncio.to_thread(_run_batch, provider, batch, idx, total)
 
 
-def _merge(provider, partial_lists: list[list[dict]]) -> list[dict]:
-    print("Merge-Call…", flush=True)
-    parts = []
-    for i, cats in enumerate(partial_lists, 1):
-        block = json.dumps(cats, ensure_ascii=False)
-        parts.append(f"Teilanalyse {i}:\n{block}")
-    prompt = MERGE_TEMPLATE.format(n=len(partial_lists), partial="\n\n".join(parts))
-    try:
-        raw = provider.complete_json(prompt, system=SYSTEM_PROMPT)
-    except (json.JSONDecodeError, ValueError) as e:
-        print(f"Merge JSON-Fehler: {e}", file=sys.stderr)
-        # Fallback: alle Zwischenlisten flach zusammenführen, Duplikate nach Name entfernen
-        seen: set[str] = set()
-        fallback = []
-        for cats in partial_lists:
-            for c in cats:
-                key = c.get("name", "").lower()
-                if key and key not in seen:
-                    seen.add(key)
-                    fallback.append(c)
-        return fallback[:8]
-    return _normalize(raw)
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description="Taxonomie-Vorschlag per LLM")
     ap.add_argument("--project",  required=True)
@@ -141,8 +145,8 @@ def main() -> None:
     args = ap.parse_args()
 
     doc_dir     = ROOT / "data" / "projects" / args.project / "documents" / args.document
+    config_path = ROOT / "data" / "projects" / args.project / "config.json"
     input_path  = doc_dir / "segments.json"
-    output_path = doc_dir / "taxonomy_proposal.json"
 
     if not input_path.exists():
         print(f"Datei nicht gefunden: {input_path}", file=sys.stderr)
@@ -158,9 +162,8 @@ def main() -> None:
     if len(pool) < n_total:
         print(f"Warnung: nur {len(pool)} geeignete Segmente (< {n_total})", file=sys.stderr)
 
-    sample = random.sample(pool, min(n_total, len(pool)))
+    sample  = random.sample(pool, min(n_total, len(pool)))
     batches = [sample[i:i + BATCH_SIZE] for i in range(0, len(sample), BATCH_SIZE)]
-    # Trim to N_BATCHES in case sample < n_total produced fewer chunks
     batches = batches[:N_BATCHES]
 
     print(f"Modell: {provider.model}  |  {len(batches)} Batches à {BATCH_SIZE} Segmente")
@@ -188,17 +191,20 @@ def main() -> None:
         print("Keine gültigen Batch-Ergebnisse", file=sys.stderr)
         sys.exit(1)
 
-    # ── Merge-Phase ────────────────────────────────────────────────────────────
-    taxonomy = _merge(provider, partial_lists)
+    # ── Merge-Phase (Code, kein LLM) ──────────────────────────────────────────
+    taxonomy = _merge_taxonomy(partial_lists)
 
     if not taxonomy:
         print("Merge ergab keine Kategorien", file=sys.stderr)
         sys.exit(1)
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(taxonomy, ensure_ascii=False, indent=2), encoding="utf-8")
+    # D-P1: direkt in config.json["taxonomy"] schreiben — kein taxonomy_proposal.json mehr
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    cfg = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
+    cfg["taxonomy"] = taxonomy
+    config_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"→ {output_path}  ({len(taxonomy)} Kategorien)\n")
+    print(f"→ {config_path}  ({len(taxonomy)} Kategorien)\n")
     for cat in taxonomy:
         kw = ", ".join(cat.get("keywords", []))
         print(f"  {cat['name']:20s}  {cat.get('description','')[:60]}…")
