@@ -20,6 +20,7 @@ Output: data/projects/{project}/config.json["taxonomy"]  (D-P1)
 
 import argparse
 import asyncio
+import re
 import random
 import sys
 from collections import Counter
@@ -59,6 +60,13 @@ Notizen:
 {segments}"""
 
 
+def clean_name(raw: str) -> str:
+    """Entfernt Nummerierungspräfixe und Markdown-Sternchen aus Kategorienamen."""
+    name = re.sub(r'^\d+\.\s*', '', raw)   # "1. " am Anfang
+    name = re.sub(r'\*+', '', name)         # ** oder *
+    return name.strip()
+
+
 def format_segment(s: dict) -> str:
     source = s.get("source") or "?"
     page   = f", S. {s['page']}" if s.get("page") else ""
@@ -76,7 +84,7 @@ def _parse_plaintext_taxonomy(text: str) -> list[dict]:
         if line.startswith("##"):
             if current and current.get("name"):
                 results.append(current)
-            current = {"name": line.lstrip("#").strip(), "description": "", "keywords": []}
+            current = {"name": clean_name(line.lstrip("#").strip()), "description": "", "keywords": []}
         elif current is not None:
             if line.lower().startswith("keywords:"):
                 kws_raw = line[len("keywords:"):].strip()

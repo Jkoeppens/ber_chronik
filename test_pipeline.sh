@@ -100,6 +100,10 @@ absent "D1" "entities_seed.json nicht als Write-Ziel in *.py" \
 found "D1" "propose_taxonomy.py Output-Pfad ist config.json" \
     -n "config.json" "${SRC}/propose_taxonomy.py"
 
+# propose_taxonomy.py: clean_name() entfernt Nummerierungen und **-Markdown
+found "D1" "propose_taxonomy.py: clean_name() definiert" \
+    -q "def clean_name" "${SRC}/propose_taxonomy.py"
+
 # /taxonomy/data-Block enthält keinen taxonomy_proposal.json-Fallback mehr
 if python3 - <<'PYEOF'
 import re, sys
@@ -328,6 +332,16 @@ pyok "SM" "D-P1: config.json[taxonomy] nach Pipeline befüllt" "
 import json; from pathlib import Path
 cfg = json.loads(Path('${PROJECT_DIR}/config.json').read_text())
 assert cfg.get('taxonomy'), 'taxonomy leer in config.json'
+"
+
+pyok "SM" "D-P1: Kategorienamen ohne ** und Nummerierungspräfixe" "
+import json, re
+from pathlib import Path
+cfg = json.loads(Path('${PROJECT_DIR}/config.json').read_text())
+for cat in cfg.get('taxonomy', []):
+    n = cat.get('name', '')
+    assert not re.search(r'\*\*', n),      f'** in Kategoriename: {n!r}'
+    assert not re.match(r'^\d+\.', n),     f'Nummerierung in Kategoriename: {n!r}'
 "
 
 if [[ ! -f "${DOC_DIR}/taxonomy_proposal.json" ]]; then

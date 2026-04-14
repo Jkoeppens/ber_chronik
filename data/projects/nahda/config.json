@@ -1,0 +1,630 @@
+{
+  "title": "Nahda",
+  "taxonomy": [
+    {
+      "name": "Nahda und Arabische Intellektualität",
+      "description": "Beschreibung: Diese Kategorie beschäftigt sich mit der Arabischen Intellektualität während der Nahda und ihren Ideen über Selbst- und Fremdes.",
+      "keywords": [
+        "nahda",
+        "arabische intellektualität",
+        "selbst"
+      ]
+    },
+    {
+      "name": "Kolonialismus und Auswirkungen",
+      "description": "Beschreibung: Diese Kategorie analysiert die Auswirkungen des Kolonialismus auf das arabisch-muslimische Denken und die Entwicklung von neuen Ideen über Selbst- und Fremdes.",
+      "keywords": [
+        "kolonialismus",
+        "auswirkung",
+        "selbst"
+      ]
+    },
+    {
+      "name": "Liberalismus und Demokratie",
+      "description": "Beschreibung: Diese Kategorie beschäftigt sich mit dem Liberalismus und seinen Auswirkungen auf das arabisch-muslimische Denken, insbesondere in Bezug auf Demokratie und individuelle Rechte.",
+      "keywords": [
+        "liberalismus",
+        "demokratie",
+        "individuelle rechte"
+      ]
+    },
+    {
+      "name": "Über die Identität der Araber",
+      "description": "Beschreibung: Diese Kategorie untersucht die Frage nach der kulturellen arabischen Identität und wie sie im Kontext des Kolonialismus und Liberalismus geprägt wird.",
+      "keywords": [
+        "arabische identität",
+        "kulturelle prägung"
+      ]
+    },
+    {
+      "name": "Kritik an Albert Hourani",
+      "description": "Beschreibung: Diese Kategorie enthält Notizen zu einer Rezension von Dyala Hamzah, die eine Kritik an Albert Houranis These \"derivative liberalism\" (abstammender Liberalismus) vorstellt.",
+      "keywords": [
+        "albert hourani",
+        "kritik"
+      ]
+    },
+    {
+      "name": "Theoretische Kontexte",
+      "description": "Beschreibung: Diese Kategorie enthält Notizen zu theoretischen Konzepten wie dem öffentlichen Raum, der Ideensphäre und der Koordinierung von Selbst- und Fremdes.",
+      "keywords": [
+        "öffentlicher raum",
+        "ideensphäre",
+        "koordination"
+      ]
+    },
+    {
+      "name": "Nahda-Bewegung und ihre Ideologie",
+      "description": "Beschreibung: Die Notizen beschäftigen sich mit der Nahda-Bewegung, ihrer Geschichte und ihren Ideen.",
+      "keywords": [
+        "Nahda",
+        "Arabismus",
+        "Idealismus"
+      ]
+    },
+    {
+      "name": "Europäische Einflüsse auf die Nahda-Bewegung",
+      "description": "Beschreibung: Die Notizen untersuchen die Auswirkungen europäischer Ideen und Kulturen auf die Nahda-Bewegung.",
+      "keywords": [
+        "Europäischer Einfluss",
+        "Liberalismus",
+        "Humanismus"
+      ]
+    }
+  ],
+  "year_min": 1806,
+  "year_max": 1962,
+  "events": [
+    {
+      "name": "Tanzimat",
+      "year_from": 1839,
+      "year_to": 1876,
+      "id": 0,
+      "color": "#6d28d9"
+    },
+    {
+      "name": "Nahda",
+      "year_from": 1860,
+      "year_to": 1939,
+      "id": 1,
+      "color": "#2563eb"
+    },
+    {
+      "name": "Arab Liberalism",
+      "year_from": 1882,
+      "year_to": 1914,
+      "id": 2,
+      "color": "#16a34a"
+    },
+    {
+      "name": "Young Turk Revolution",
+      "year_from": 1908,
+      "year_to": 1918,
+      "id": 3,
+      "color": "#d97706"
+    }
+  ],
+  "entities": [
+    {
+      "normalform": "Nā‘īf al-Yāzijī",
+      "typ": "Person",
+      "aliases": [
+        "Nā‚īf al-Yāzijī",
+        "Nā‘īf al-Yāziji"
+      ]
+    },
+    {
+      "normalform": "Faris al-Shidyaq",
+      "typ": "Person",
+      "aliases": [
+        "Ahmad Faris al-Shidyaq",
+        "Aamad Fāris al-Shidyāq",
+        "Aamad Fāris",
+        "Fāris al-Shidyāq"
+      ]
+    },
+    {
+      "normalform": "Buṭrus al-Bustānī",
+      "typ": "Person",
+      "aliases": [
+        "Bu†rus al-Bustānī",
+        "Būṭrus al-Bustānī"
+      ]
+    },
+    {
+      "normalform": "Juri' Zaydán",
+      "typ": "Person",
+      "aliases": [
+        "Jurji Zaydan",
+        "Zaydan",
+        "Zaydan, Jurji"
+      ]
+    },
+    {
+      "normalform": "Chair al-Dīn Pashah",
+      "typ": "Person",
+      "aliases": [
+        "Khayr al-Din Pasha",
+        "Khayr al-Dīn Paschā"
+      ]
+    },
+    {
+      "normalform": "Miḥīl ʿAlfāq",
+      "typ": "Person",
+      "aliases": [
+        "Michel ʿAflaq",
+        "Mīchīl al-‘Ālūq"
+      ]
+    },
+    {
+      "normalform": "Mehmet Ali",
+      "typ": "Person",
+      "aliases": [
+        "Mehmet Ali"
+      ]
+    },
+    {
+      "normalform": "Muhammads Abduh",
+      "typ": "Person",
+      "aliases": [
+        "Abduh",
+        "MUHAMMAD 􏰋ABDUH"
+      ]
+    },
+    {
+      "normalform": "Antun",
+      "typ": "Person",
+      "aliases": [
+        "Ibn Khaldun"
+      ]
+    },
+    {
+      "normalform": "Friedrich Nietzsche",
+      "typ": "Person",
+      "aliases": [
+        "Nietzsche"
+      ]
+    },
+    {
+      "normalform": "Enver",
+      "typ": "Person",
+      "aliases": [
+        "Enver"
+      ]
+    },
+    {
+      "normalform": "Georg Wilhelm Friedrich Hegel",
+      "typ": "Person",
+      "aliases": [
+        "Hegel"
+      ]
+    },
+    {
+      "normalform": "Syria",
+      "typ": "Ort",
+      "aliases": [
+        "Syrien"
+      ]
+    },
+    {
+      "normalform": "Nahda",
+      "typ": "Konzept",
+      "aliases": [
+        "Arab Renaissance"
+      ]
+    },
+    {
+      "normalform": "Beirut",
+      "typ": "Ort",
+      "aliases": [
+        "Beirut"
+      ]
+    },
+    {
+      "normalform": "Ottoman Empire",
+      "typ": "Organisation",
+      "aliases": [
+        "Osmanisches Reich",
+        "Imperium Ottomanum"
+      ]
+    },
+    {
+      "normalform": "West",
+      "typ": "Konzept",
+      "aliases": [
+        "West"
+      ]
+    },
+    {
+      "normalform": "Anatolia",
+      "typ": "Ort",
+      "aliases": []
+    },
+    {
+      "normalform": "Ismail Enver",
+      "typ": "Person",
+      "aliases": [
+        "Enver, Ismail",
+        "Enver, I.",
+        "Ismail Enver"
+      ]
+    },
+    {
+      "normalform": "CUP",
+      "typ": "Organisation",
+      "aliases": [
+        "CUP"
+      ]
+    },
+    {
+      "normalform": "Khaled el-Rouayeb",
+      "typ": "Person",
+      "aliases": [
+        "el-Rouayeb, Khaled",
+        "Khaled el-Rouayeb"
+      ]
+    },
+    {
+      "normalform": "Şerif Mardin",
+      "typ": "Person",
+      "aliases": [
+        "Mardin, Şerif",
+        "Şerif Mardin"
+      ]
+    },
+    {
+      "normalform": "Hourani",
+      "typ": "Person",
+      "aliases": [
+        "Hourani"
+      ]
+    },
+    {
+      "normalform": "Benjamin",
+      "typ": "Person",
+      "aliases": [
+        "Benjamin"
+      ]
+    },
+    {
+      "normalform": "Ibn al-Athir",
+      "typ": "Person",
+      "aliases": [
+        "Ibn al-Athir",
+        "al-Athir, Ibn"
+      ]
+    },
+    {
+      "normalform": "Al-Bustani",
+      "typ": "Person",
+      "aliases": [
+        "al-Bustani",
+        "Bustani, Al-"
+      ]
+    },
+    {
+      "normalform": "Abd Allah al-Nadim",
+      "typ": "Person",
+      "aliases": [
+        "Abd Allah al-Nadim"
+      ]
+    },
+    {
+      "normalform": "Adib Ishaq",
+      "typ": "Person",
+      "aliases": [
+        "Ishaq, Adib",
+        "Adib Ishaq"
+      ]
+    },
+    {
+      "normalform": "al-Íabbān",
+      "typ": "Person",
+      "aliases": [
+        "Al-İbbān",
+        "al-İbbān"
+      ]
+    },
+    {
+      "normalform": "al-Zabīdī",
+      "typ": "Person",
+      "aliases": [
+        "al-Zabidī",
+        "al-Zabidi"
+      ]
+    },
+    {
+      "normalform": "al-Jabartī",
+      "typ": "Person",
+      "aliases": [
+        "al-Jabartī",
+        "al-Jabarti"
+      ]
+    },
+    {
+      "normalform": "al-‘A††ār",
+      "typ": "Person",
+      "aliases": [
+        "al-‘Aṭṭār",
+        "al-‘Atṭār"
+      ]
+    },
+    {
+      "normalform": "Faraāt",
+      "typ": "Person",
+      "aliases": [
+        "Faraāt",
+        "Farāṭ"
+      ]
+    },
+    {
+      "normalform": "Al-Ahmadiyya",
+      "typ": "Organisation",
+      "aliases": [
+        "al-Āḥmadiyya",
+        "al-Aḥmadiyya"
+      ]
+    },
+    {
+      "normalform": "al-Shidyāq",
+      "typ": "Person",
+      "aliases": [
+        "al-Šidyaq"
+      ]
+    },
+    {
+      "normalform": "Mahmud II",
+      "typ": "Person",
+      "aliases": [
+        "Mahmūd II",
+        "Mahmûd II"
+      ]
+    },
+    {
+      "normalform": "Meiji",
+      "typ": "Konzept",
+      "aliases": [
+        "Meiji Japan"
+      ]
+    },
+    {
+      "normalform": "Indian Ocean",
+      "typ": "Ort",
+      "aliases": [
+        "Indischer Ozean"
+      ]
+    },
+    {
+      "normalform": "Europe",
+      "typ": "Ort",
+      "aliases": [
+        "Europa"
+      ]
+    },
+    {
+      "normalform": "Lebanon",
+      "typ": "Ort",
+      "aliases": []
+    },
+    {
+      "normalform": "Philippines",
+      "typ": "Konzept",
+      "aliases": [
+        "Philippinen"
+      ]
+    },
+    {
+      "normalform": "China",
+      "typ": "Konzept",
+      "aliases": []
+    },
+    {
+      "normalform": "Kurd Ali",
+      "typ": "Person",
+      "aliases": [
+        "Kurd Ali"
+      ]
+    },
+    {
+      "normalform": "Ridas",
+      "typ": "Person",
+      "aliases": []
+    },
+    {
+      "normalform": "al-Hilal",
+      "typ": "Organisation",
+      "aliases": [
+        "al-Hilal"
+      ]
+    },
+    {
+      "normalform": "World War I",
+      "typ": "Konzept",
+      "aliases": [
+        "World War I"
+      ]
+    },
+    {
+      "normalform": "al- Qasimi",
+      "typ": "Person",
+      "aliases": [
+        "al- Qasimi"
+      ]
+    },
+    {
+      "normalform": "al-Khatib",
+      "typ": "Person",
+      "aliases": [
+        "al-Khatib"
+      ]
+    },
+    {
+      "normalform": "Jungtürkenrevolution",
+      "typ": "Konzept",
+      "aliases": [
+        "Jungtürkenrevolution"
+      ]
+    },
+    {
+      "normalform": "Öffentlichkeit",
+      "typ": "Konzept",
+      "aliases": [
+        "Öffentlichkeit"
+      ]
+    },
+    {
+      "normalform": "Tunesien",
+      "typ": "Ort",
+      "aliases": [
+        "Tunesien"
+      ]
+    },
+    {
+      "normalform": "tanzimat",
+      "typ": "Konzept",
+      "aliases": [
+        "tanzimat"
+      ]
+    },
+    {
+      "normalform": "Nabhani",
+      "typ": "Person",
+      "aliases": [
+        "Nabhani"
+      ]
+    },
+    {
+      "normalform": "Khayr al-Din al-Tunisi",
+      "typ": "Person",
+      "aliases": [
+        "Khayr al-Din al-Tunisi"
+      ]
+    },
+    {
+      "normalform": "ʿulamaʾ",
+      "typ": "Konzept",
+      "aliases": [
+        "ʿulamaʾ"
+      ]
+    },
+    {
+      "normalform": "Young Turks",
+      "typ": "Konzept",
+      "aliases": [
+        "Young Turks"
+      ]
+    },
+    {
+      "normalform": "constitutionalism",
+      "typ": "Konzept",
+      "aliases": [
+        "constitutionalism"
+      ]
+    },
+    {
+      "normalform": "Nablus",
+      "typ": "Ort",
+      "aliases": [
+        "Nablus"
+      ]
+    },
+    {
+      "normalform": "Aleppo",
+      "typ": "Ort",
+      "aliases": [
+        "Aleppo"
+      ]
+    },
+    {
+      "normalform": "Damascus",
+      "typ": "Ort",
+      "aliases": [
+        "Damascus"
+      ]
+    },
+    {
+      "normalform": "Butrus al-Bustani",
+      "typ": "Person",
+      "aliases": [
+        "Butrus al-Bustani"
+      ]
+    },
+    {
+      "normalform": "Yusuf al-Nabhani",
+      "typ": "Person",
+      "aliases": [
+        "Yusuf al-Nabhani"
+      ]
+    },
+    {
+      "normalform": "Al jinan",
+      "typ": "Organisation",
+      "aliases": [
+        "Al jinan"
+      ]
+    },
+    {
+      "normalform": "muqtataf",
+      "typ": "Organisation",
+      "aliases": [
+        "muqtataf"
+      ]
+    },
+    {
+      "normalform": "Hilal",
+      "typ": "Organisation",
+      "aliases": [
+        "Hilal"
+      ]
+    },
+    {
+      "normalform": "Manar",
+      "typ": "Organisation",
+      "aliases": [
+        "Manar"
+      ]
+    },
+    {
+      "normalform": "salim al bustani",
+      "typ": "Person",
+      "aliases": [
+        "salim al bustani"
+      ]
+    },
+    {
+      "normalform": "Iraq",
+      "typ": "Ort",
+      "aliases": [
+        "Iraq"
+      ]
+    },
+    {
+      "normalform": "Egypt",
+      "typ": "Ort",
+      "aliases": [
+        "Egypt"
+      ]
+    },
+    {
+      "normalform": "Morocco",
+      "typ": "Ort",
+      "aliases": [
+        "Morocco"
+      ]
+    },
+    {
+      "normalform": "Albert Hourani",
+      "typ": "Person",
+      "aliases": [
+        "Albert Hourani"
+      ]
+    },
+    {
+      "normalform": "iskanderani",
+      "typ": "Person",
+      "aliases": [
+        "iskanderani"
+      ]
+    }
+  ]
+}
