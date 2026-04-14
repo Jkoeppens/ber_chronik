@@ -265,8 +265,8 @@ function drawNetwork(nodes, links) {
     .attr("pointer-events", "none");
 
   // ── Invisible hit areas (one per pair, wide stroke, carries all handlers) ─────
-  const hitG   = g.append("g");
-  const hitSel = hitG
+  let hitG   = g.append("g");
+  let hitSel = hitG
     .selectAll("line").data(hitLinks).join("line")
     .attr("stroke",         "transparent")
     .attr("stroke-width",   14)
