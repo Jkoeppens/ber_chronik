@@ -124,10 +124,12 @@ class OllamaProvider(LLMProvider):
         self.model    = model
         self.base_url = base_url.rstrip("/")
 
-    def complete(self, prompt: str, system: str = None) -> str:
+    def complete(self, prompt: str, system: str = None, json_mode: bool = False) -> str:
         payload: dict = {"model": self.model, "prompt": prompt, "stream": False}
         if system:
             payload["system"] = system
+        if json_mode:
+            payload["format"] = "json"
         try:
             r = requests.post(
                 f"{self.base_url}/api/generate",
@@ -138,6 +140,10 @@ class OllamaProvider(LLMProvider):
             return r.json().get("response", "").strip()
         except requests.RequestException as e:
             raise RuntimeError(f"Ollama nicht erreichbar ({self.base_url}): {e}") from e
+
+    def complete_json(self, prompt: str, system: str = None):
+        raw = self.complete(prompt, system=system, json_mode=True)
+        return _extract_json(raw)
 
 
 def get_provider(

@@ -136,6 +136,9 @@ def _llm_sample_iteration(
             print(f"  JSON-Fehler: {e}", file=sys.stderr)
             out = None
 
+        # Ollama mit format:json gibt manchmal einzelnes Objekt statt Array
+        if isinstance(out, dict) and "normalform" in out:
+            out = [out]
         if isinstance(out, list):
             for ent in out:
                 if isinstance(ent, dict):
@@ -195,6 +198,9 @@ def _llm_task1_normalize(
             if attempt == 0:
                 print(f"  Retry Batch {idx + 1} …", flush=True)
 
+        # Ollama mit format:json gibt manchmal einzelnes Objekt statt Array
+        if isinstance(out, dict) and "normalform" in out:
+            out = [out]
         if isinstance(out, list):
             for ent in out:
                 if isinstance(ent, dict):
