@@ -6,7 +6,7 @@ Endpoints:
   POST /recompute              — interpolate → export als SSE
   GET  /preview                — preview.html ausliefern
   GET  /taxonomy               — Taxonomy-Editor HTML
-  GET  /taxonomy/data          — taxonomy_proposal.json
+  GET  /taxonomy/data          — config.json["taxonomy"]
   POST /taxonomy/save          — Taxonomie speichern
   POST /taxonomy/propose       — propose_taxonomy.py als SSE
   GET  /ingest                 — Ingest-Wizard HTML
@@ -237,13 +237,10 @@ def _compute_quality_report(project: str, doc_id: str) -> dict | None:
     try:
         from src.generalized.export_preview import build_quality_report
         classified = json.loads(classified_p.read_text(encoding="utf-8"))
-        taxonomy   = None
+        # D-P1: einzige Quelle ist config.json["taxonomy"] — kein Fallback mehr
+        taxonomy = None
         if config_p.exists():
             taxonomy = json.loads(config_p.read_text(encoding="utf-8")).get("taxonomy") or None
-        if taxonomy is None:
-            fallback = doc_dir / "taxonomy_proposal.json"
-            if fallback.exists():
-                taxonomy = json.loads(fallback.read_text(encoding="utf-8"))
         classifications = {r["segment_id"]: r for r in classified if r.get("segment_id")}
         return build_quality_report(list(classifications.values()), classifications, taxonomy)
     except Exception:
@@ -291,15 +288,10 @@ async def get_taxonomy_data(request: Request):
     doc_id  = request.query_params.get("document") or get_current_document() or "main"
     if err := await _require_token(request, project): return err
     config_p = get_project_dir(project) / "config.json"
+    # D-P1: einzige Quelle ist config.json["taxonomy"] — kein Fallback mehr
     if config_p.exists():
-        cfg = json.loads(config_p.read_text(encoding="utf-8"))
-        taxonomy = cfg.get("taxonomy") or []
-        if taxonomy:
-            return JSONResponse(taxonomy)
-    # Fallback: per-doc taxonomy_proposal.json
-    fallback = get_doc_dir(project, doc_id) / "taxonomy_proposal.json"
-    if fallback.exists():
-        return JSONResponse(json.loads(fallback.read_text(encoding="utf-8")))
+        taxonomy = json.loads(config_p.read_text(encoding="utf-8")).get("taxonomy") or []
+        return JSONResponse(taxonomy)
     return JSONResponse([])
 
 
@@ -853,19 +845,6 @@ def _do_merge(project: str, doc_id: str) -> tuple[list[dict], dict]:
     return result, stats
 
 
-@app.post("/ingest/entities/merge")
-async def merge_entities_endpoint(request: Request):
-    if err := await _require_token(request): return err
-    body    = {}
-    try:
-        body = await request.json()
-    except Exception:
-        pass
-    project = body.get("project") or request.query_params.get("project") or get_current_project()
-    doc_id  = body.get("document") or request.query_params.get("document") or get_current_document() or "main"
-    result, _stats = _do_merge(project, doc_id)
-    return JSONResponse(result)
-
 
 @app.post("/ingest/entities/reject")
 async def reject_entity(request: Request):
@@ -990,6 +969,7 @@ async def get_project_endpoint(project_id: str):
         "year_min": cfg.get("year_min"),
         "year_max": cfg.get("year_max"),
         "events":   cfg.get("events") or [],
+        "taxonomy": cfg.get("taxonomy") or [],
     })
 
 
