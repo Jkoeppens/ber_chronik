@@ -54,8 +54,8 @@ def normalize_category(raw: str | None, valid_names: list[str]) -> str | None:
     2. Kein exakter Match → längsten gültigen Namen der als Substring vorkommt nehmen
     3. Kein Substring-Match → "(unbekannt)"
     """
-    if raw is None:
-        return None
+    if not isinstance(raw, str):
+        return "(unbekannt)"
     # 1. Exakt
     if raw in valid_names:
         return raw
