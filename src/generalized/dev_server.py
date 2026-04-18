@@ -116,7 +116,7 @@ def get_current_project() -> str:
             cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
             if cfg.get("project"):
                 return cfg["project"]
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
     return "ber"   # Fallback
 
@@ -127,7 +127,7 @@ def get_current_document() -> str | None:
         try:
             cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
             return cfg.get("document") or None
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
     return None
 
@@ -148,7 +148,7 @@ def _save_config_pointer(project: str, document: str | None = None) -> None:
     if CONFIG_PATH.exists():
         try:
             ptr = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
     ptr["project"] = project
     if document is not None:
@@ -325,7 +325,7 @@ async def save_taxonomy(request: Request):
     if config_p.exists():
         try:
             cfg = json.loads(config_p.read_text(encoding="utf-8"))
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
     cfg["taxonomy"] = body
     config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -506,7 +506,7 @@ async def ingest_save_config(request: Request):
     if proj_cfg_path.exists():
         try:
             proj_cfg = json.loads(proj_cfg_path.read_text(encoding="utf-8"))
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
     for field in ("title", "year_min", "year_max", "taxonomy", "entities"):
         if field in body:
@@ -530,7 +530,7 @@ async def ingest_save_config(request: Request):
     if doc_cfg_path.exists():
         try:
             doc_cfg = json.loads(doc_cfg_path.read_text(encoding="utf-8"))
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
     for field in ("doc_type", "original_filename"):
         if field in body:
@@ -769,7 +769,7 @@ async def save_entities(request: Request):
     if config_p.exists():
         try:
             cfg = json.loads(config_p.read_text(encoding="utf-8"))
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
     cfg["entities"] = clean
     config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -791,7 +791,7 @@ def _do_merge(project: str, doc_id: str) -> tuple[list[dict], dict]:
     if config_p.exists():
         try:
             seed = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
     proposal = json.loads(proposal_path.read_text(encoding="utf-8")) if proposal_path.exists() else []
     rejected = json.loads(rejected_path.read_text(encoding="utf-8")) if rejected_path.exists() else []
@@ -904,7 +904,7 @@ async def list_projects_endpoint():
         if data_path.exists():
             try:
                 entry_count = json.loads(data_path.read_text(encoding="utf-8")).get("count", 0)
-            except Exception:
+            except (json.JSONDecodeError, OSError):
                 pass
         result.append({
             "id":          row["id"],
@@ -925,7 +925,7 @@ async def get_project_endpoint(project_id: str):
     if cfg_path.exists():
         try:
             cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
     return JSONResponse({
         "ok":       True,
@@ -956,8 +956,9 @@ async def update_project_endpoint(project_id: str, request: Request):
             cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
             cfg["title"] = title
             cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
-        except Exception:
-            pass
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"Warnung: config.json für {project_id} konnte nicht aktualisiert werden: {e}",
+                  file=sys.stderr)
     return JSONResponse({"ok": True, "id": project_id, "title": title})
 
 
@@ -979,8 +980,9 @@ async def delete_project_endpoint(project_id: str, request: Request):
             cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
             if cfg.get("project") == project_id:
                 CONFIG_PATH.write_text("{}", encoding="utf-8")
-        except Exception:
-            pass
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"Warnung: project_config.json konnte nach Löschen von {project_id} nicht zurückgesetzt werden: {e}",
+                  file=sys.stderr)
     return JSONResponse({"ok": True})
 
 
@@ -1005,7 +1007,7 @@ async def get_editor(request: Request):
                 if cfg_p.exists():
                     try:
                         ingested_at = json.loads(cfg_p.read_text(encoding="utf-8")).get("ingested_at", "")
-                    except Exception:
+                    except (json.JSONDecodeError, OSError):
                         pass
                 candidates.append((ingested_at, doc_dir.name, doc_dir))
         if candidates:
@@ -1053,7 +1055,7 @@ async def get_project_token(project_id: str, request: Request):
                 if cfg_p.exists():
                     try:
                         ingested_at = json.loads(cfg_p.read_text(encoding="utf-8")).get("ingested_at", "")
-                    except Exception:
+                    except (json.JSONDecodeError, OSError):
                         pass
                 candidates.append((ingested_at, d.name))
         if candidates:
