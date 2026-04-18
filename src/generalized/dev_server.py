@@ -30,6 +30,7 @@ import uuid
 from pathlib import Path
 from typing import List
 
+from src.generalized.entity_utils import merge_proposal
 from src.generalized.llm import get_provider, TASK_ANALYZE
 import shutil
 
@@ -779,28 +780,12 @@ async def save_entities(request: Request):
     return {"ok": True, "count": len(clean)}
 
 
-def _all_aliases_lc(ent: dict) -> set[str]:
-    names = {(ent.get("normalform") or "").lower()}
-    for a in ent.get("aliases") or []:
-        if a:
-            names.add(a.lower())
-    return names - {""}
-
-
 def _do_merge(project: str, doc_id: str) -> tuple[list[dict], dict]:
-    """
-    Mergt proposal + seed + rejected → entities_merged.json mit _status-Feldern.
-    Gibt (result, stats) zurück. stats enthält Zählungen für Debug-Ausgabe.
-
-    Hinweis: entities_proposal.json enthält seed-Entities (da extract_entities_v2
-    intern merged), daher werden diese korrekt als confirmed erkannt sofern
-    Alias-Überschneidung vorhanden ist.
-    """
+    """I/O-Wrapper um merge_proposal: liest Dateien, schreibt entities_merged.json."""
     doc_dir       = get_doc_dir(project, doc_id)
     proposal_path = doc_dir / "entities_proposal.json"
     rejected_path = doc_dir / "entities_rejected.json"
 
-    # D-P4: seed aus config.json["entities"] (kanonische Quelle)
     config_p = get_project_dir(project) / "config.json"
     seed: list[dict] = []
     if config_p.exists():
@@ -811,44 +796,7 @@ def _do_merge(project: str, doc_id: str) -> tuple[list[dict], dict]:
     proposal = json.loads(proposal_path.read_text(encoding="utf-8")) if proposal_path.exists() else []
     rejected = json.loads(rejected_path.read_text(encoding="utf-8")) if rejected_path.exists() else []
 
-    stats = {
-        "seed": len(seed),
-        "proposal": len(proposal),
-        "rejected_file": len(rejected),
-        "prop_confirmed": 0,
-        "prop_new": 0,
-        "prop_skipped_rejected": 0,
-    }
-
-    rejected_lc: set[str] = set()
-    for e in rejected:
-        rejected_lc |= _all_aliases_lc(e)
-
-    # Seed → confirmed (strip internal fields from any previous run)
-    result: list[dict] = [
-        dict(**{k: v for k, v in e.items() if not k.startswith("_")}, _status="confirmed")
-        for e in seed
-    ]
-
-    for prop in proposal:
-        prop_lc = _all_aliases_lc(prop)
-        if prop_lc & rejected_lc:
-            stats["prop_skipped_rejected"] += 1
-            continue
-        match = next((e for e in result if _all_aliases_lc(e) & prop_lc), None)
-        if match:
-            # Merge any new aliases into the confirmed entry
-            # Include normalform so it isn't re-added as an alias
-            existing_lc = _all_aliases_lc(match)
-            for a in prop.get("aliases") or []:
-                if a and a.lower() not in existing_lc:
-                    match.setdefault("aliases", []).append(a)
-                    existing_lc.add(a.lower())
-            stats["prop_confirmed"] += 1
-        else:
-            clean = {k: v for k, v in prop.items() if not k.startswith("_")}
-            result.append(dict(**clean, _status="new"))
-            stats["prop_new"] += 1
+    result, stats = merge_proposal(seed, proposal, rejected)
 
     doc_dir.mkdir(parents=True, exist_ok=True)
     (doc_dir / "entities_merged.json").write_text(

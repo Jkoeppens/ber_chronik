@@ -170,6 +170,57 @@ def _all_aliases(ent: dict) -> set[str]:
     return names - {""}
 
 
+def merge_proposal(
+    seed: list[dict],
+    proposal: list[dict],
+    rejected: list[dict],
+) -> tuple[list[dict], dict]:
+    """Mergt proposal + seed gegen rejected → Liste mit _status-Feldern.
+
+    Gibt (result, stats) zurück. Kein File-I/O — Caller liest und schreibt.
+
+    result-Einträge haben _status="confirmed" (aus seed) oder _status="new"
+    (neue Vorschläge ohne Alias-Überschneidung mit seed).
+    """
+    stats = {
+        "seed":                  len(seed),
+        "proposal":              len(proposal),
+        "rejected_file":         len(rejected),
+        "prop_confirmed":        0,
+        "prop_new":              0,
+        "prop_skipped_rejected": 0,
+    }
+
+    rejected_lc: set[str] = set()
+    for e in rejected:
+        rejected_lc |= _all_aliases(e)
+
+    result: list[dict] = [
+        dict(**{k: v for k, v in e.items() if not k.startswith("_")}, _status="confirmed")
+        for e in seed
+    ]
+
+    for prop in proposal:
+        prop_lc = _all_aliases(prop)
+        if prop_lc & rejected_lc:
+            stats["prop_skipped_rejected"] += 1
+            continue
+        match = next((e for e in result if _all_aliases(e) & prop_lc), None)
+        if match:
+            existing_lc = _all_aliases(match)
+            for a in prop.get("aliases") or []:
+                if a and a.lower() not in existing_lc:
+                    match.setdefault("aliases", []).append(a)
+                    existing_lc.add(a.lower())
+            stats["prop_confirmed"] += 1
+        else:
+            clean = {k: v for k, v in prop.items() if not k.startswith("_")}
+            result.append(dict(**clean, _status="new"))
+            stats["prop_new"] += 1
+
+    return result, stats
+
+
 def _merge(groups: list[list[dict]]) -> list[dict]:
     merged: list[dict] = []
     for group in groups:
