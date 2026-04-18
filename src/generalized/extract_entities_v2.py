@@ -92,12 +92,10 @@ def _load_seed_and_rejected(doc_dir: Path) -> tuple[list[dict], set[str]]:
     rejected_path = doc_dir / "entities_rejected.json"
     if rejected_path.exists():
         for e in json.loads(rejected_path.read_text(encoding="utf-8")):
-            rejected_lc.add((e.get("normalform") or "").lower())
-            for a in e.get("aliases") or []:
-                if a:
-                    rejected_lc.add(a.lower())
-        rejected_lc.discard("")
-        print(f"Rejected: {len(rejected_lc)} Tokens gefiltert")
+            norm = (e.get("normalform") or "").lower()
+            if norm:
+                rejected_lc.add(norm)
+        print(f"Rejected: {len(rejected_lc)} Normalformen gefiltert")
 
     return seed, rejected_lc
 

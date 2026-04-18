@@ -27,20 +27,23 @@ CAPITAL_RE = re.compile(
 
 
 def _normalize_entity(ent: dict, source: str, rejected_lc: set[str] = frozenset()) -> dict | None:
-    """Setzt _source, korrigiert typ, verwirft Entities mit leerem normalform oder in rejected-Liste."""
+    """Gibt eine bereinigte Kopie zurück, oder None wenn die Entity verworfen werden soll.
+
+    Verwirft nur wenn die Normalform in rejected_lc steht — Aliases werden nicht geprüft,
+    da ein einzelner gemeinsamer Alias zwei verschiedene Entities fälschlicherweise
+    blocken würde (z.B. rejected "Paris" → würde "Paris Agreement" mitblocken).
+    """
     norm = (ent.get("normalform") or "").strip()
     if not norm:
         return None
     if norm.lower() in rejected_lc:
         return None
-    for a in ent.get("aliases") or []:
-        if a and a.lower() in rejected_lc:
-            return None
-    ent["normalform"] = norm
-    ent["_source"] = source
-    if ent.get("typ") not in VALID_TYPES:
-        ent["typ"] = "Konzept"
-    return ent
+    return {
+        **ent,
+        "normalform": norm,
+        "_source":    source,
+        "typ":        ent.get("typ") if ent.get("typ") in VALID_TYPES else "Konzept",
+    }
 
 
 def _extract_tokens(segments: list[dict]) -> Counter:

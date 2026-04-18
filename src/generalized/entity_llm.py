@@ -21,51 +21,69 @@ from src.generalized.entity_utils import (
     _save_checkpoint,
 )
 
-SYSTEM_PROMPT   = "Du klassifizierst Kandidaten aus historischen Texten. Antworte ausschließlich als JSON."
+SYSTEM_PROMPT   = "Du extrahierst Eigennamen aus historischen Texten."
 NORMALIZE_BATCH = 20
 SAMPLE_SEGS     = 50
-ITER1_BATCH     = 10
+ITER1_BATCH     = 5
 SAVE_INTERVAL   = 10
+
+# D-E1: Plaintext-Listenformat — kein JSON
+_PLAINTEXT_FORMAT_EXAMPLE = """\
+Ausgabe — gruppiert nach Typ, erste Schreibweise = Normalform, Rest = Synonyme:
+
+# Personen
+Mehmed Talat Pascha, Talat, Talat Pascha
+Ismail Enver, Enver Pascha
+Salim al-Bustani, Bustani
+
+# Organisationen
+CUP, Komitee für Einheit und Fortschritt
+Al-Jinan
+Al-Muqtataf, Muqtataf
+
+# Orte
+Mount Lebanon, Lebanon
+Damaskus, Damascus, الشام
+
+# Konzepte
+Nahda, arabische Aufklärung
+
+(Leere Abschnitte weglassen. Nur die Aufzählung ausgeben, kein JSON, kein Kommentar.)"""
 
 ITER1_PROMPT = """\
 {few_shot_block}Erkenne alle Eigennamen in diesem Text.
-Für jeden Namen:
-- normalform: genau wie im Text, Großschreibung bereinigt
-- typ: Person / Ort / Organisation / Konzept
-- aliases: alle Schreibweisen die du in DIESEM Text siehst
 
-Wichtig:
-- Ein Name = eine Entity, nicht zusammenfassen
-- Titel (Pasha, Bey, Sultan, Effendi, Pascha) sind keine Normalform,
-  nur Alias: "Enver" nicht "Enver Pasha"
-- Keine Beschreibungen als Normalform:
-  RICHTIG: "Syrien"
-  FALSCH: "Staat in der Region Nahost"
+Der Text kann mehrsprachig sein — Deutsch, Englisch, Arabisch, Osmanisch-Türkisch.
+Eigennamen in allen Sprachen erkennen. Arabische Namen: lateinische Transliteration
+als Normalform, arabische Schrift als Synonym (z.B. "Damaskus, Damascus, الشام").
+
+Regeln:
+- Normalform = der Name selbst, Großschreibung bereinigt, KEINE Beschreibung
+  RICHTIG: "Syrien", "Ismail Enver"   FALSCH: "Staat in Nahost", "türk. Offizier"
+- Personen: Vor- UND Nachname wenn im Text erkennbar — nicht nur "Talat" wenn
+  "Mehmed Talat" oder "Talat Pascha" im Text steht. Einzelwort nur wenn kein
+  vollständiger Name aus dem Kontext ableitbar ist.
+- Titel (Pasha, Bey, Sultan, Effendi, Pascha) nicht zur Normalform — als Synonym
 - Monatsnamen und generische Begriffe weglassen
+- Synonyme = alle Schreibweisen aus DIESEM Text, kommasepariert
 
-JSON: [{{"normalform": "...", "typ": "Person|Organisation|Ort|Konzept", "aliases": [...]}}]
+{format_example}
 
 Text:
 {text}"""
 
 NORMALIZE_PROMPT = """\
 {few_shot_block}Bereinige diese Entitäts-Kandidaten aus einem historischen Text.
-Für jeden Kandidaten:
-- normalform: Eigenname bereinigt (Großschreibung, OCR-Fehler korrigiert)
-- typ: Person / Organisation / Ort / Konzept — nutze Hinweis als Orientierung
-- aliases: alle bekannten Schreibweisen inkl. Titeln als Aliases
 
 Regeln:
-- Normalform = Name selbst, KEINE Beschreibung
-  RICHTIG: "Ismail Enver", "Damaskus", "CUP"
-  FALSCH: "türkischer Offizier", "Hauptstadt Syriens"
-- Titel (Pasha, Bey, Pascha, Sultan, Effendi, Vizier, Emir, Khedive) in aliases, nicht in normalform
+- Normalform = Eigenname bereinigt (Großschreibung, OCR-Fehler korrigiert), KEINE Beschreibung
+  RICHTIG: "Ismail Enver", "Damaskus", "CUP"   FALSCH: "türk. Offizier", "Hauptstadt Syriens"
+- Titel (Pasha, Bey, Pascha, Sultan, Effendi, Vizier, Emir, Khedive) als Synonyme, nicht Normalform
 - OCR-Fehler korrigieren wenn offensichtlich
 - Weglassen wenn kein Eigenname (Monatsnamen, generische Begriffe, alleinstehende Titel)
-- typ MUSS exakt: Person, Organisation, Ort oder Konzept
+- Typ-Hinweis als Orientierung nutzen, aber korrigieren wenn falsch
 
-Antworte als JSON-Array ([] wenn alles verworfen):
-[{{"normalform": "...", "typ": "Person|Organisation|Ort|Konzept", "aliases": [...]}}]
+{format_example}
 
 Kandidaten:
 {kandidaten}"""
@@ -73,17 +91,61 @@ Kandidaten:
 EXTRACT_TEMPLATE = """\
 {few_shot_block}Extrahiere alle Eigennamen aus diesem historischen Text.
 
+Der Text kann mehrsprachig sein — Deutsch, Englisch, Arabisch, Osmanisch-Türkisch.
+Eigennamen in allen Sprachen erkennen. Arabische Namen: lateinische Transliteration
+als Normalform, arabische Schrift als Synonym (z.B. "Damaskus, Damascus, الشام").
+
 Regeln:
 - Normalform = der Name selbst, KEINE Beschreibung
-- Titel (Pasha, Bey, Effendi usw.) nicht zur Normalform
-- aliases = alle Schreibweisen wie der Name im Text vorkommt
+- Personen: Vor- UND Nachname wenn im Text erkennbar — nicht nur "Talat" wenn
+  "Mehmed Talat" oder "Talat Pascha" im Text steht. Einzelwort nur wenn kein
+  vollständiger Name aus dem Kontext ableitbar ist.
+- Titel (Pasha, Bey, Effendi usw.) nicht zur Normalform, aber als Synonym
+- Synonyme = alle Schreibweisen wie der Name im Text vorkommt
 - Nur eindeutige Eigennamen, keine generischen Begriffe
 
-Antworte als JSON-Array (leer [] wenn keine Eigennamen):
-[{{"normalform": "...", "typ": "Person|Organisation|Ort|Konzept", "aliases": [...]}}]
+{format_example}
 
 Text:
 {text}"""
+
+
+# D-E1: Parser für Plaintext-Listenformat
+_PLAINTEXT_TYPE_MAP: dict[str, str] = {
+    "personen":      "Person",
+    "person":        "Person",
+    "organisationen": "Organisation",
+    "organisation":  "Organisation",
+    "orte":          "Ort",
+    "ort":           "Ort",
+    "konzepte":      "Konzept",
+    "konzept":       "Konzept",
+}
+
+
+def _parse_plaintext_entities(text: str) -> list[dict]:
+    """Parst das D-E1-Plaintext-Format in eine Liste von Entity-Dicts."""
+    results: list[dict] = []
+    current_type: str | None = None
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            header = line.lstrip("#").strip().lower()
+            current_type = _PLAINTEXT_TYPE_MAP.get(header)
+            continue
+        if current_type is None:
+            continue
+        parts = [p.strip() for p in line.split(",") if p.strip()]
+        if not parts:
+            continue
+        results.append({
+            "normalform": parts[0],
+            "typ":        current_type,
+            "aliases":    parts[1:],
+        })
+    return results
 
 
 def _find_context_sentences(token: str, content_segs: list[dict], max_n: int = 3) -> list[str]:
@@ -128,25 +190,21 @@ def _llm_sample_iteration(
 
     for idx, batch in enumerate(batches):
         text   = "\n---\n".join(s.get("text", "") for s in batch)
-        prompt = ITER1_PROMPT.format(few_shot_block=few_shot, text=text)
+        prompt = ITER1_PROMPT.format(
+            few_shot_block=few_shot,
+            format_example=_PLAINTEXT_FORMAT_EXAMPLE,
+            text=text,
+        )
         print(f"  Batch {idx + 1}/{len(batches)} …", flush=True)
-        try:
-            out = provider.complete_json(prompt, system=SYSTEM_PROMPT)
-        except (json.JSONDecodeError, ValueError) as e:
-            print(f"  JSON-Fehler: {e}", file=sys.stderr)
-            out = None
-
-        # Ollama mit format:json gibt manchmal einzelnes Objekt statt Array
-        if isinstance(out, dict) and "normalform" in out:
-            out = [out]
-        if isinstance(out, list):
-            for ent in out:
-                if isinstance(ent, dict):
-                    n = _normalize_entity(ent, "llm_iter1", rejected_lc)
-                    if n is not None:
-                        results.append(n)
-        elif out is not None:
-            print(f"  Batch {idx + 1}: kein Array ({type(out).__name__})", file=sys.stderr)
+        raw = provider.complete(prompt, system=SYSTEM_PROMPT)
+        parsed = _parse_plaintext_entities(raw)
+        if not parsed and raw.strip():
+            print(f"  Batch {idx + 1}: Plaintext-Parser: 0 Entities aus nicht-leerem Output",
+                  file=sys.stderr)
+        for ent in parsed:
+            n = _normalize_entity(ent, "llm_iter1", rejected_lc)
+            if n is not None:
+                results.append(n)
 
         if checkpoint_path and (idx + 1) % SAVE_INTERVAL == 0:
             _save_checkpoint(checkpoint_path, {"iter1_entities": results})
@@ -182,44 +240,34 @@ def _llm_task1_normalize(
         kandidaten = "\n".join(
             f"{i + 1}. {_format_candidate_for_task1(c)}" for i, c in enumerate(batch)
         )
-        prompt = NORMALIZE_PROMPT.format(few_shot_block=few_shot, kandidaten=kandidaten)
+        prompt = NORMALIZE_PROMPT.format(
+            few_shot_block=few_shot,
+            format_example=_PLAINTEXT_FORMAT_EXAMPLE,
+            kandidaten=kandidaten,
+        )
         print(f"  Batch {idx + 1}/{len(batches)} …", flush=True)
 
-        out = None
-        for attempt in range(2):   # einmal versuchen, einmal wiederholen
-            try:
-                out = provider.complete_json(prompt, system=SYSTEM_PROMPT)
-            except (json.JSONDecodeError, ValueError) as e:
-                print(f"  JSON-Fehler Batch {idx + 1} (Versuch {attempt + 1}): {e}",
-                      file=sys.stderr)
-                out = None
-            if isinstance(out, list):
-                break
-            if attempt == 0:
-                print(f"  Retry Batch {idx + 1} …", flush=True)
+        raw    = provider.complete(prompt, system=SYSTEM_PROMPT)
+        parsed = _parse_plaintext_entities(raw)
 
-        # Ollama mit format:json gibt manchmal einzelnes Objekt statt Array
-        if isinstance(out, dict) and "normalform" in out:
-            out = [out]
-        if isinstance(out, list):
-            for ent in out:
-                if isinstance(ent, dict):
-                    norm_lc = (ent.get("normalform") or "").lower()
-                    orig = next(
-                        (c for c in batch if (c.get("normalform") or "").lower() == norm_lc),
-                        None,
-                    )
-                    if orig and orig.get("_confidence") is not None:
-                        ent["_confidence"] = orig["_confidence"]
-                    n = _normalize_entity(ent, "llm_task1", rejected_lc)
-                    if n is not None:
-                        accumulated.append(n)
+        if parsed:
+            for ent in parsed:
+                norm_lc = ent["normalform"].lower()
+                orig = next(
+                    (c for c in batch if (c.get("normalform") or "").lower() == norm_lc),
+                    None,
+                )
+                if orig and orig.get("_confidence") is not None:
+                    ent["_confidence"] = orig["_confidence"]
+                n = _normalize_entity(ent, "llm_task1", rejected_lc)
+                if n is not None:
+                    accumulated.append(n)
         else:
             # Fallback: Original-Kandidaten des Batches unverändert übernehmen
             print(f"  Batch {idx + 1}: Fallback — {len(batch)} Original-Kandidaten übernommen",
                   file=sys.stderr)
             for c in batch:
-                n = _normalize_entity(dict(c), "llm_task1", rejected_lc)
+                n = _normalize_entity(c, "llm_task1", rejected_lc)
                 if n is not None:
                     accumulated.append(n)
 
@@ -299,22 +347,21 @@ def _llm_full_extract(
             continue
 
         text   = "\n---\n".join(s.get("text", "") for s in batch)
-        prompt = EXTRACT_TEMPLATE.format(few_shot_block=few_shot, text=text)
+        prompt = EXTRACT_TEMPLATE.format(
+            few_shot_block=few_shot,
+            format_example=_PLAINTEXT_FORMAT_EXAMPLE,
+            text=text,
+        )
         print(f"  Batch {idx + 1}/{len(batches)} …", flush=True)
-        try:
-            out = provider.complete_json(prompt, system=SYSTEM_PROMPT)
-        except (json.JSONDecodeError, ValueError) as e:
-            print(f"  JSON-Fehler Batch {idx + 1}: {e}", file=sys.stderr)
-            out = None
-
-        if isinstance(out, list):
-            for ent in out:
-                if isinstance(ent, dict):
-                    n = _normalize_entity(ent, "llm_full", rejected_lc)
-                    if n is not None:
-                        results.append(n)
-        elif out is not None:
-            print(f"  Batch {idx + 1}: kein Array", file=sys.stderr)
+        raw    = provider.complete(prompt, system=SYSTEM_PROMPT)
+        parsed = _parse_plaintext_entities(raw)
+        if not parsed and raw.strip():
+            print(f"  Batch {idx + 1}: Plaintext-Parser: 0 Entities aus nicht-leerem Output",
+                  file=sys.stderr)
+        for ent in parsed:
+            n = _normalize_entity(ent, "llm_full", rejected_lc)
+            if n is not None:
+                results.append(n)
 
         if checkpoint_path and (idx + 1) % SAVE_INTERVAL == 0:
             _save_checkpoint(checkpoint_path, {
@@ -383,6 +430,9 @@ def _llm_dedup(
         print(f"  JSON-Fehler Dedup: {e} — übersprungen", file=sys.stderr)
         return entities
 
+    # Ollama mit format:json gibt manchmal einzelnes Objekt statt Array
+    if isinstance(out, dict) and "pair" in out:
+        out = [out]
     if not isinstance(out, list):
         print(f"  Dedup: kein Array zurück ({type(out).__name__}) — übersprungen",
               file=sys.stderr)
