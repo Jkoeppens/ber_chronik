@@ -98,7 +98,7 @@ async def _require_token(request: Request, project: str | None = None) -> JSONRe
     )
     if not token:
         return JSONResponse({"ok": False, "error": "Token fehlt"}, status_code=403)
-    proj_id = project or request.query_params.get("project") or get_current_project()
+    proj_id = project or request.query_params.get("project")
     db_proj = await get_project(proj_id)
     if not db_proj:
         return JSONResponse({"ok": False, "error": "Projekt nicht gefunden"}, status_code=403)
@@ -395,7 +395,9 @@ async def ingest_analyze(request: Request):
     doc_type = body.get("doc_type", "")
     doc_type = _DOC_TYPE_MAP.get(doc_type, doc_type)  # Wizard-Label → interner Wert
     project_name = body.get("project_name", "").strip()
-    project  = _slugify(project_name) if project_name else (body.get("project") or get_current_project())
+    project  = _slugify(project_name) if project_name else body.get("project")
+    if not project:
+        return JSONResponse({"ok": False, "error": "project_name oder project im Body erforderlich"}, status_code=400)
     doc_id   = body.get("document") or str(uuid.uuid4())[:8]
 
     input_file = RAW_DIR / filename
@@ -488,8 +490,10 @@ async def ingest_analyze(request: Request):
 
 @app.post("/ingest/propose_taxonomy")
 async def ingest_propose_taxonomy(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     async def gen():
         args = ["--project", project, "--document", doc_id]
@@ -506,8 +510,10 @@ async def ingest_propose_taxonomy(request: Request):
 @app.post("/ingest/save_config")
 async def ingest_save_config(request: Request):
     body    = await request.json()
-    project = body.get("project") or request.query_params.get("project") or get_current_project()
-    doc_id  = body.get("document") or request.query_params.get("document") or get_current_document() or "main"
+    project = body.get("project") or request.query_params.get("project")
+    doc_id  = body.get("document") or request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"ok": False, "error": "project und document erforderlich"}, status_code=400)
 
     # ── Projektebene: title, year_min/max, taxonomy, entities ──────────────────
     project_dir = get_project_dir(project)
@@ -574,8 +580,10 @@ async def ingest_save_config(request: Request):
 async def ingest_run(request: Request):
     body     = await request.json()
     filename = body.get("filename", "")
-    project  = body.get("project") or request.query_params.get("project") or get_current_project()
-    doc_id   = body.get("document") or request.query_params.get("document") or get_current_document() or str(uuid.uuid4())[:8]
+    project  = body.get("project") or request.query_params.get("project")
+    doc_id   = body.get("document") or request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     input_file = RAW_DIR / filename if filename else None
 
@@ -639,8 +647,10 @@ async def ingest_run_step(request: Request):
     step     = body.get("step", "")
     filename = body.get("filename", "")
     force    = body.get("force", False)
-    project  = body.get("project") or request.query_params.get("project") or get_current_project()
-    doc_id   = body.get("document") or request.query_params.get("document") or get_current_document() or "main"
+    project  = body.get("project") or request.query_params.get("project")
+    doc_id   = body.get("document") or request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
 
     input_file    = RAW_DIR / filename if filename else None
@@ -687,8 +697,10 @@ async def ingest_run_step(request: Request):
 
 @app.post("/ingest/extract_entities")
 async def ingest_extract_entities(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     async def gen():
         args = ["--project", project, "--document", doc_id, "--mode", "sample"]
@@ -713,8 +725,10 @@ async def ingest_extract_entities(request: Request):
 
 @app.post("/ingest/extract_entities_full")
 async def ingest_extract_entities_full(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     async def gen():
         args = ["--project", project, "--document", doc_id, "--mode", "full"]
@@ -739,9 +753,11 @@ async def ingest_extract_entities_full(request: Request):
 
 @app.get("/ingest/entities/data")
 async def get_entities_data(request: Request):
-    if err := await _require_token(request): return err
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
+    if err := await _require_token(request, project): return err
     doc_dir = get_doc_dir(project, doc_id)
     # D-P4: config.json["entities"] hat höchste Priorität
     config_p = get_project_dir(project) / "config.json"
@@ -764,8 +780,10 @@ async def get_entities_data(request: Request):
 
 @app.post("/ingest/entities/save")
 async def save_entities(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"ok": False, "error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     body = await request.json()
     if not isinstance(body, list):
@@ -828,8 +846,10 @@ async def reject_entity(request: Request):
     body = await request.json()
     if not isinstance(body, dict):
         return JSONResponse({"ok": False, "error": "Body muss ein Objekt sein"}, status_code=400)
-    project = body.get("project") or request.query_params.get("project") or get_current_project()
-    doc_id  = body.get("document") or request.query_params.get("document") or get_current_document() or "main"
+    project = body.get("project") or request.query_params.get("project")
+    doc_id  = body.get("document") or request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"ok": False, "error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     doc_dir       = get_doc_dir(project, doc_id)
     rejected_path = doc_dir / "entities_rejected.json"
@@ -849,8 +869,10 @@ async def reject_entity(request: Request):
 
 @app.get("/ingest/doc_status")
 async def get_doc_status(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     doc_dir = get_doc_dir(project, doc_id)
     return JSONResponse({
@@ -864,8 +886,10 @@ async def get_doc_status(request: Request):
 @app.post("/ingest/classified/update")
 async def update_classified(request: Request):
     body       = await request.json()
-    project    = request.query_params.get("project") or get_current_project()
-    doc_id     = request.query_params.get("document") or get_current_document() or "main"
+    project    = request.query_params.get("project")
+    doc_id     = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"ok": False, "error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     segment_id = body.get("segment_id")
     category   = body.get("category") or ""
@@ -890,8 +914,10 @@ async def update_classified(request: Request):
 
 @app.get("/ingest/segments/data")
 async def get_segments_data(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     doc_dir = get_doc_dir(project, doc_id)
     segs_path = doc_dir / "segments.json"
@@ -999,7 +1025,7 @@ async def delete_project_endpoint(project_id: str, request: Request):
 
 @app.get("/editor")
 async def get_editor(request: Request):
-    project_id = request.query_params.get("project") or get_current_project()
+    project_id = request.query_params.get("project")
     if not project_id:
         return HTMLResponse("<p>Kein Projekt angegeben.</p>", status_code=400)
     proj = await get_project(project_id)
