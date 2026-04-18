@@ -70,6 +70,22 @@ async def startup():
 
 # ── Token-Prüfung ──────────────────────────────────────────────────────────────
 
+def _require_admin_key(request: Request) -> JSONResponse | None:
+    """
+    Prüft optionalen ADMIN_KEY aus .env.
+    Wenn nicht gesetzt: immer erlaubt (lokaler Dev-Modus).
+    Wenn gesetzt: muss als 'Authorization: Bearer <key>' oder ?admin_key= übergeben werden.
+    """
+    admin_key = os.environ.get("ADMIN_KEY")
+    if not admin_key:
+        return None
+    auth = request.headers.get("Authorization", "")
+    provided = auth.removeprefix("Bearer ").strip() or request.query_params.get("admin_key", "")
+    if provided != admin_key:
+        return JSONResponse({"ok": False, "error": "Admin-Key fehlt oder ungültig"}, status_code=403)
+    return None
+
+
 async def _require_token(request: Request, project: str | None = None) -> JSONResponse | None:
     """
     Liest Token aus ?token= oder X-Project-Token Header.
@@ -346,9 +362,12 @@ async def ingest_upload(files: List[UploadFile] = File(...)):
     saved = []
     for f in files:
         content = await f.read()
-        dest = RAW_DIR / f.filename
+        safe_name = Path(f.filename).name
+        if not safe_name:
+            continue
+        dest = RAW_DIR / safe_name
         dest.write_bytes(content)
-        saved.append({"name": f.filename, "size": len(content)})
+        saved.append({"name": safe_name, "size": len(content)})
     return {"ok": True, "files": saved}
 
 
@@ -1070,8 +1089,8 @@ async def get_editor(request: Request):
 
 
 @app.get("/api/projects/{project_id}/token")
-async def get_project_token(project_id: str):
-    # TODO: Schütze diesen Endpoint mit Auth sobald der Server öffentlich erreichbar ist
+async def get_project_token(project_id: str, request: Request):
+    if err := _require_admin_key(request): return err
     proj = await get_project(project_id)
     if not proj:
         return JSONResponse({"ok": False, "error": "Projekt nicht gefunden"}, status_code=404)

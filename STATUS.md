@@ -196,6 +196,16 @@ Das Layout wird nicht automatisch aktualisiert wenn sich Akteure ändern. `npm r
 
 ---
 
+## Offene Sicherheitsprobleme
+
+### Token-Endpoint ohne Auth wenn ADMIN_KEY nicht gesetzt
+
+`GET /api/projects/{id}/token` ist nur geschützt wenn `ADMIN_KEY` in `.env` gesetzt ist. Ohne
+gesetzten Key gibt der Endpoint das Token ohne Auth zurück.
+Vor öffentlicher Nutzung: `ADMIN_KEY=<secret>` in `.env` setzen.
+
+---
+
 ## Offene Inkonsistenzen
 
 ### ~~I1 — Kategorie-Normalisierung fehlt in export-Skripten~~ ✓ behoben (D-P2)
