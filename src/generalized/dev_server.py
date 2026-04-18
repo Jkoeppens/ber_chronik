@@ -287,8 +287,10 @@ async def recompute(request: Request):
 
 @app.get("/preview")
 async def get_preview(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     preview_p = get_doc_dir(project, doc_id) / "preview.html"
     if not preview_p.exists():
