@@ -126,15 +126,37 @@ def _add_multiword_aliases(
 
 
 def _build_few_shot_block(seed: list[dict]) -> str:
+    """Baut Few-Shot-Block im Plaintext-Listenformat (D-E1) aus bestätigten Seed-Entities."""
     if not seed:
         return ""
-    lines = []
-    for ent in seed[:10]:
-        aliases   = ent.get("aliases", [])
-        alias_str = ", ".join(aliases[:3]) if aliases else ent.get("normalform", "")
-        lines.append(f"- {ent.get('normalform','')} ({ent.get('typ','?')}): {alias_str}")
-    header = "Bekannte Entities in diesem Material (Orientierung für Stil und Domäne):\n"
-    return header + "\n".join(lines) + "\n\n"
+    _TYPE_ORDER  = ["Person", "Organisation", "Ort", "Konzept"]
+    _TYPE_HEADER = {
+        "Person":       "Personen",
+        "Organisation": "Organisationen",
+        "Ort":          "Orte",
+        "Konzept":      "Konzepte",
+    }
+    groups: dict[str, list[dict]] = defaultdict(list)
+    for ent in seed:
+        typ = ent.get("typ", "Konzept")
+        if typ in _TYPE_ORDER and len(groups[typ]) < 3:
+            groups[typ].append(ent)
+
+    lines = ["Bekannte Entities in diesem Material (als Stilmuster):"]
+    has_any = False
+    for typ in _TYPE_ORDER:
+        ents = groups[typ]
+        if not ents:
+            continue
+        has_any = True
+        lines.append(f"# {_TYPE_HEADER[typ]}")
+        for ent in ents:
+            parts = [ent.get("normalform", "")]
+            parts += [a for a in ent.get("aliases", []) if a][:3]
+            lines.append(", ".join(parts))
+    if not has_any:
+        return ""
+    return "\n".join(lines) + "\n\n"
 
 
 def _all_aliases(ent: dict) -> set[str]:

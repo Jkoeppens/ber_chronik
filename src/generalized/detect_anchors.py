@@ -27,9 +27,9 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-# ── Konfiguration ──────────────────────────────────────────────────────────────
+from src.generalized.config import ROOT
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+# ── Konfiguration ──────────────────────────────────────────────────────────────
 
 # ── Lebensdaten-Filter (vor Jahreszahl-Erkennung entfernen) ───────────────────
 # (YYYY–YYYY) oder (YYYY?–YYYY): beide Zahlen 1700–2000, Abstand < 120 Jahre

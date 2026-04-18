@@ -42,8 +42,8 @@ from src.generalized.entity_llm import (
     _llm_task1_normalize,
 )
 
-ROOT            = Path(__file__).resolve().parent.parent.parent
-BATCH_SIZE      = 10          # Segmente pro Batch in Schritt 2
+from src.generalized.config import ROOT
+BATCH_SIZE      = 5           # Segmente pro Batch in Schritt 2
 CHECKPOINT_NAME = "_v2_checkpoint.json"
 
 

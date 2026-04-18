@@ -24,14 +24,11 @@ import re
 import random
 import sys
 from collections import Counter
-from pathlib import Path
-
 import json
 from dotenv import load_dotenv
 
+from src.generalized.config import ROOT
 from src.generalized.llm import get_provider, TASK_ANALYZE
-
-ROOT = Path(__file__).resolve().parent.parent.parent
 
 N_BATCHES  = 5
 BATCH_SIZE = 10

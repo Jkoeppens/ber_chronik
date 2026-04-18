@@ -36,7 +36,7 @@ from pathlib import Path
 
 import docx
 
-ROOT   = Path(__file__).resolve().parent.parent.parent
+from src.generalized.config import ROOT
 INPUT  = ROOT / "data" / "raw" / "Damakus Notizen.docx"
 OUTPUT = ROOT / "data" / "interim" / "generalized" / "segments.json"
 

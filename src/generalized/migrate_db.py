@@ -10,9 +10,7 @@ Ausführen:
 
 import asyncio
 import json
-from pathlib import Path
-
-ROOT         = Path(__file__).resolve().parent.parent.parent
+from src.generalized.config import ROOT
 PROJECTS_DIR = ROOT / "data" / "projects"
 
 

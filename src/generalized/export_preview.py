@@ -22,7 +22,7 @@ import sys
 from html import escape
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+from src.generalized.config import ROOT
 
 from src.generalized.utils import render_template as _render_template  # noqa: E402
 from src.generalized.classify_segments import normalize_category  # noqa: E402

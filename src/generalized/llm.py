@@ -36,9 +36,8 @@ import os
 from pathlib import Path
 
 import requests
-from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+from src.generalized.config import ROOT
 
 # ── Task-Konstanten ────────────────────────────────────────────────────────────
 
@@ -158,7 +157,6 @@ def get_provider(
     task   – TASK_CLASSIFY / TASK_ANALYZE / TASK_EXTRACT; bestimmt das Modell.
     model  – Expliziter Modell-Override; hat Vorrang vor task.
     """
-    load_dotenv(ROOT / ".env")
     provider_name = (name or os.environ.get("LLM_PROVIDER", "ollama")).lower()
 
     if provider_name == "anthropic":

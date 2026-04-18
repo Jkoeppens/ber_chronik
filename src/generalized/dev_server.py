@@ -43,7 +43,7 @@ from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 
-ROOT               = Path(__file__).resolve().parent.parent.parent
+from src.generalized.config import ROOT
 CONFIG_PATH        = ROOT / "data" / "interim" / "generalized" / "project_config.json"
 PROJECTS_DIR       = ROOT / "data" / "projects"
 RAW_DIR            = ROOT / "data" / "raw"
@@ -56,7 +56,6 @@ EXPORT_SCRIPT              = ROOT / "src" / "generalized" / "export_preview.py"
 EXPORT_EXPLORATION_SCRIPT  = ROOT / "src" / "generalized" / "export_exploration.py"
 PROPOSE_SCRIPT             = ROOT / "src" / "generalized" / "propose_taxonomy.py"
 EXTRACT_ENTITIES_SCRIPT    = ROOT / "src" / "generalized" / "extract_entities_v2.py"
-EXTRACT_ENTITIES_FULL_SCRIPT = EXTRACT_ENTITIES_SCRIPT  # selbes Skript, anderer --mode
 MATCH_ENTITIES_SCRIPT      = ROOT / "src" / "generalized" / "match_entities.py"
 
 app = FastAPI(title="Generalized Dev Server")
@@ -707,7 +706,7 @@ async def ingest_extract_entities_full(request: Request):
     if err := await _require_token(request, project): return err
     async def gen():
         args = ["--project", project, "--document", doc_id, "--mode", "full"]
-        async for chunk in run_script_sse(EXTRACT_ENTITIES_FULL_SCRIPT, args):
+        async for chunk in run_script_sse(EXTRACT_ENTITIES_SCRIPT, args):
             if chunk == "data: __ok__\n\n":
                 break
             yield chunk

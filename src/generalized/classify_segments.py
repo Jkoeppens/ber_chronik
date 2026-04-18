@@ -17,14 +17,11 @@ import argparse
 import asyncio
 import json
 import sys
-from pathlib import Path
-
 from dotenv import load_dotenv
 
+from src.generalized.config import ROOT
 from src.generalized.llm import get_provider, TASK_CLASSIFY
 from tqdm import tqdm
-
-ROOT = Path(__file__).resolve().parent.parent.parent
 
 BATCH_PAUSE    = 12.0   # Sekunden nach jedem Batch (10 req / 12s ≈ 50 RPM); 0 bei max_concurrency==1
 SAVE_INTERVAL  = 2      # nach je N Batches zwischenspeichern

@@ -438,7 +438,6 @@ function drawNetwork(nodes, links) {
 
   node
     .on("mouseenter", (event, d) => {
-      console.log("NODE HOVER", d.id);
       showTip(`${d.count} Nennungen`, event);
       // Suppress hover effect when ego or KI highlight is active
       if (netFocusNode || hlState.mode !== "none") return;
@@ -463,7 +462,6 @@ function drawNetwork(nodes, links) {
       linkSel.attr("stroke-opacity", 0.5);
     })
     .on("click", (event, d) => {
-      console.log("NODE CLICK", d.id);
       hideTip();
       // Release any previously pinned ego node; clear edge-focus state
       if (netFocusNode && netFocusNode !== d.id) {

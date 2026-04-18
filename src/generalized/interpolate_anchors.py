@@ -36,7 +36,7 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+from src.generalized.config import ROOT
 
 
 def _source_key(seg: dict) -> str:

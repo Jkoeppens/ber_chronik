@@ -32,8 +32,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parent.parent.parent
-
+from src.generalized.config import ROOT
 from src.generalized.llm import get_provider, TASK_ANALYZE
 
 MAX_PARAGRAPHS = 30

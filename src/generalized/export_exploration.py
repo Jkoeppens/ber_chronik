@@ -29,9 +29,8 @@ from io import StringIO
 from pathlib import Path
 
 from src.generalized.classify_segments import normalize_category
+from src.generalized.config import ROOT
 from src.generalized.generate_entity_summaries import build_summaries as _build_summaries
-
-ROOT = Path(__file__).resolve().parent.parent.parent
 
 # ── Farbpaletten ───────────────────────────────────────────────────────────────
 CAT_PALETTE = [

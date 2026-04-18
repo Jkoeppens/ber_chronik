@@ -14,11 +14,9 @@ Token-TTL: 30 Tage ab created_at
 
 import secrets
 from datetime import datetime, timezone, timedelta
-from pathlib import Path
-
 import aiosqlite
 
-ROOT    = Path(__file__).resolve().parent.parent.parent
+from src.generalized.config import ROOT
 DB_PATH = ROOT / "data" / "projects.db"
 
 TOKEN_TTL_DAYS = 30

@@ -14,9 +14,7 @@ import argparse
 import json
 import re
 import sys
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent.parent
+from src.generalized.config import ROOT
 
 
 def build_patterns(entities: list[dict]) -> list[tuple[str, re.Pattern]]:
