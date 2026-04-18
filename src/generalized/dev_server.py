@@ -45,7 +45,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 
 from src.generalized.config import ROOT
-CONFIG_PATH        = ROOT / "data" / "interim" / "generalized" / "project_config.json"
 PROJECTS_DIR       = ROOT / "data" / "projects"
 RAW_DIR            = ROOT / "data" / "raw"
 
@@ -109,29 +108,6 @@ async def _require_token(request: Request, project: str | None = None) -> JSONRe
 
 # ── Projekt-Hilfsfunktionen ────────────────────────────────────────────────────
 
-def get_current_project() -> str:
-    """Liest den aktuellen Projektnamen aus project_config.json."""
-    if CONFIG_PATH.exists():
-        try:
-            cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-            if cfg.get("project"):
-                return cfg["project"]
-        except (json.JSONDecodeError, OSError):
-            pass
-    return "ber"   # Fallback
-
-
-def get_current_document() -> str | None:
-    """Liest die aktuelle Dokument-ID aus project_config.json."""
-    if CONFIG_PATH.exists():
-        try:
-            cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-            return cfg.get("document") or None
-        except (json.JSONDecodeError, OSError):
-            pass
-    return None
-
-
 def _slugify(name: str) -> str:
     """Menschlicher Projektname → technische ID (lowercase, Leerzeichen→_, Sonderzeichen weg)."""
     s = name.lower().strip()
@@ -139,21 +115,6 @@ def _slugify(name: str) -> str:
     s = re.sub(r"[\s_-]+", "_", s)
     s = s.strip("_")
     return s or "projekt"
-
-
-def _save_config_pointer(project: str, document: str | None = None) -> None:
-    """Schreibt project (+ optional document) in project_config.json."""
-    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    ptr: dict = {}
-    if CONFIG_PATH.exists():
-        try:
-            ptr = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-    ptr["project"] = project
-    if document is not None:
-        ptr["document"] = document
-    CONFIG_PATH.write_text(json.dumps(ptr, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def get_project_dir(project: str) -> Path:
@@ -407,9 +368,6 @@ async def ingest_analyze(request: Request):
     if not input_file.exists():
         return JSONResponse({"ok": False, "error": f"Datei nicht gefunden: {filename}"}, status_code=404)
 
-    # Store doc_id in project_config.json for subsequent requests
-    _save_config_pointer(project, doc_id)
-
     # 1. parse_document → documents/{doc_id}/segments.json
     parse_args = ["--project", project, "--document", doc_id, str(input_file)]
     if doc_type:
@@ -554,9 +512,6 @@ async def ingest_save_config(request: Request):
             doc_cfg[field] = body[field]
     doc_cfg_path.write_text(json.dumps(doc_cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # ── Pointer ────────────────────────────────────────────────────────────────
-    _save_config_pointer(project, doc_id)
-
     # ── DB: Projekt anlegen oder Metadaten aktualisieren ───────────────────────
     db_proj = await get_project(project)
     if db_proj is None:
@@ -586,9 +541,6 @@ async def ingest_run(request: Request):
         return JSONResponse({"error": "project und document erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     input_file = RAW_DIR / filename if filename else None
-
-    # Ensure doc_id is persisted
-    _save_config_pointer(project, doc_id)
 
     parse_args = ["--project", project, "--document", doc_id] + ([str(input_file)] if input_file else [])
     d_args     = ["--project", project, "--document", doc_id]
@@ -1011,15 +963,6 @@ async def delete_project_endpoint(project_id: str, request: Request):
     if project_dir.exists():
         shutil.rmtree(project_dir)
     await delete_project(project_id)
-    # project_config.json zurücksetzen wenn es auf dieses Projekt zeigt
-    if CONFIG_PATH.exists():
-        try:
-            cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-            if cfg.get("project") == project_id:
-                CONFIG_PATH.write_text("{}", encoding="utf-8")
-        except (json.JSONDecodeError, OSError) as e:
-            print(f"Warnung: project_config.json konnte nach Löschen von {project_id} nicht zurückgesetzt werden: {e}",
-                  file=sys.stderr)
     return JSONResponse({"ok": True})
 
 
