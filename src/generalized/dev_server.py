@@ -302,8 +302,9 @@ async def get_preview(request: Request):
 
 @app.get("/taxonomy/data")
 async def get_taxonomy_data(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    if not project:
+        return JSONResponse({"error": "project Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     config_p = get_project_dir(project) / "config.json"
     # D-P1: einzige Quelle ist config.json["taxonomy"] — kein Fallback mehr
@@ -315,7 +316,9 @@ async def get_taxonomy_data(request: Request):
 
 @app.post("/taxonomy/save")
 async def save_taxonomy(request: Request):
-    project = request.query_params.get("project") or get_current_project()
+    project = request.query_params.get("project")
+    if not project:
+        return JSONResponse({"ok": False, "error": "project Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     body = await request.json()
     if not isinstance(body, list):
@@ -336,8 +339,10 @@ async def save_taxonomy(request: Request):
 
 @app.post("/taxonomy/propose")
 async def propose_taxonomy(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     async def gen():
         args = ["--project", project, "--document", doc_id]
