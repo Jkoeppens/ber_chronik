@@ -15,6 +15,18 @@ const _qp   = new URLSearchParams(location.search);
 const _proj = _qp.get('project')  || '';
 const _doc  = _qp.get('document') || '';
 const _tok  = _qp.get('token')    || '';
+function _aq() {
+  const p = new URLSearchParams();
+  if (_proj) p.set('project', _proj);
+  if (_doc)  p.set('document', _doc);
+  if (_tok)  p.set('token', _tok);
+  const s = p.toString(); return s ? '?' + s : '';
+}
+function _th() {
+  const h = {'Content-Type': 'application/json'};
+  if (_tok) h['X-Project-Token'] = _tok;
+  return h;
+}
 
 const PREC_LABEL = {
   exact: "exact", heading: "heading", event: "event",
@@ -46,9 +58,9 @@ btnExport.addEventListener("click", async () => {
   btnExport.disabled = true;
   btnExport.textContent = "Speichere…";
   try {
-    const res = await fetch("/overrides", {
+    const res = await fetch("/overrides" + _aq(), {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: _th(),
       body: JSON.stringify(arr),
     });
     if (res.ok) {
@@ -82,7 +94,7 @@ btnRecompute.addEventListener("click", async () => {
   logEl.style.display = "block";
 
   try {
-    const res = await fetch("/recompute", {method: "POST"});
+    const res = await fetch("/recompute" + _aq(), {method: "POST", headers: _th()});
     if (!res.ok || !res.body) throw new Error("Server-Fehler " + res.status);
 
     const reader  = res.body.getReader();

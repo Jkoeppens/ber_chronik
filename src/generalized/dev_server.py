@@ -227,8 +227,10 @@ async def run_pipeline_sse(steps: list[tuple]):
 
 @app.post("/overrides")
 async def save_overrides(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"ok": False, "error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     body = await request.json()
     if not isinstance(body, list):
@@ -277,8 +279,10 @@ async def recompute_sse(project: str, doc_id: str):
 
 @app.post("/recompute")
 async def recompute(request: Request):
-    project = request.query_params.get("project") or get_current_project()
-    doc_id  = request.query_params.get("document") or get_current_document() or "main"
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     return sse_response(recompute_sse(project, doc_id))
 
