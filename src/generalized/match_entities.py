@@ -68,6 +68,10 @@ def main() -> None:
     print(f"Patterns:   {len(patterns)}")
     print(f"Segmente:   {len(segments)} gesamt, {sum(1 for s in segments if s.get('type')=='content')} content")
 
+    # Alle classified-Einträge bekommen actors=[] — auch nicht-content-Segmente
+    for r in classified:
+        r["actors"] = []
+
     matched = 0
     for seg in segments:
         if seg.get("type") != "content":
