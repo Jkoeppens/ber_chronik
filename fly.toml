@@ -10,7 +10,8 @@ primary_region = 'fra'
   dockerfile = "Dockerfile"
 
 [env]
-  DATA_ROOT = '/mnt/data'
+  DATA_ROOT  = '/mnt/data'
+  PYTHONPATH = '/app'
 
 [processes]
   app = '/app/.venv/bin/uvicorn src.generalized.dev_server:app --host 0.0.0.0 --port 8001'

@@ -404,6 +404,7 @@ async def ingest_analyze(request: Request):
         sys.executable, str(PARSE_SCRIPT), *parse_args,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
         cwd=str(ROOT),
+        env={**os.environ, "PYTHONPATH": str(ROOT)},
     )
     out, _ = await proc.communicate()
     if proc.returncode != 0:
