@@ -88,8 +88,10 @@ const nodes = [...nodeCounts.entries()].map(([id, count]) => ({
   typ: aliasMap[id.toLowerCase()]?.typ || "Org",
 }));
 
+// LINK_MIN_COUNT = 2 — muss mit boot.js übereinstimmen
+const LINK_MIN_COUNT = 2;
 const links = [...edgeCounts.entries()]
-  .filter(([, count]) => count >= 1)
+  .filter(([, count]) => count >= LINK_MIN_COUNT)
   .map(([key, count]) => {
     const [source, target] = key.split("\x00");
     return { source, target, count };

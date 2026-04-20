@@ -95,11 +95,12 @@ Promise.all([
          Object.keys(NODE_COLOR)[0] || "Org",
   }));
 
-  // One link per (pair, event_type); include all pairs (threshold = 1)
+  // LINK_MIN_COUNT = 2 — muss mit precompute_network.js übereinstimmen
+  const LINK_MIN_COUNT = 2;
   netLinks = [];
   for (const [key, byType] of edgesByType) {
     const total = [...byType.values()].reduce((s, c) => s + c, 0);
-    if (total < 1) continue;
+    if (total < LINK_MIN_COUNT) continue;
     const [source, target] = key.split("\x00");
     for (const [event_type, count] of byType) {
       netLinks.push({ source, target, event_type, count });
