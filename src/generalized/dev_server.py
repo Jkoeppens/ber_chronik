@@ -8,7 +8,6 @@ Endpoints:
   GET  /taxonomy               — Taxonomy-Editor HTML
   GET  /taxonomy/data          — config.json["taxonomy"]
   POST /taxonomy/save          — Taxonomie speichern
-  POST /taxonomy/propose       — propose_taxonomy.py als SSE
   GET  /ingest                 — Ingest-Wizard HTML
   POST /ingest/upload          — Dateien nach data/raw/ speichern
   POST /ingest/analyze         — parse + LLM-Analyse, gibt JSON zurück
@@ -348,25 +347,6 @@ async def save_taxonomy(request: Request):
     return {"ok": True, "count": len(body)}
 
 
-@app.post("/taxonomy/propose")
-async def propose_taxonomy(request: Request):
-    project = request.query_params.get("project")
-    doc_id  = request.query_params.get("document")
-    if not project or not doc_id:
-        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
-    if err := await _require_token(request, project): return err
-    async def gen():
-        args = ["--project", project, "--document", doc_id]
-        async for chunk in run_script_sse(PROPOSE_SCRIPT, args):
-            if chunk == "data: __ok__\n\n":
-                break
-            yield chunk
-            if "__error__" in chunk:
-                return
-        yield "data: __done__\n\n"
-    return sse_response(gen())
-
-
 @app.get("/taxonomy")
 async def get_taxonomy_editor():
     return HTMLResponse(content=_render_template("taxonomy_editor.html", APP_CSS=APP_CSS))
@@ -700,36 +680,16 @@ async def ingest_extract_entities(request: Request):
     if not project or not doc_id:
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+    mode = body.get("mode", "sample")
+    if mode not in ("sample", "full"):
+        return JSONResponse({"error": "mode muss 'sample' oder 'full' sein"}, status_code=400)
     async def gen():
-        args = ["--project", project, "--document", doc_id, "--mode", "sample"]
-        async for chunk in run_script_sse(EXTRACT_ENTITIES_SCRIPT, args):
-            if chunk == "data: __ok__\n\n":
-                break
-            yield chunk
-            if "__error__" in chunk:
-                return
-        yield "data: Merge…\n\n"
-        try:
-            _, stats = _do_merge(project, doc_id)
-            yield (f"data: Merge: {stats['seed']} Seed + {stats['proposal']} Vorschläge "
-                   f"→ {stats['prop_confirmed']} confirmed, {stats['prop_new']} NEU"
-                   + (f", {stats['prop_skipped_rejected']} abgelehnt" if stats['prop_skipped_rejected'] else "")
-                   + "\n\n")
-        except Exception as exc:
-            yield f"data: Merge-Fehler: {exc}\n\n"
-        yield "data: __done__\n\n"
-    return sse_response(gen())
-
-
-@app.post("/ingest/extract_entities_full")
-async def ingest_extract_entities_full(request: Request):
-    project = request.query_params.get("project")
-    doc_id  = request.query_params.get("document")
-    if not project or not doc_id:
-        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
-    if err := await _require_token(request, project): return err
-    async def gen():
-        args = ["--project", project, "--document", doc_id, "--mode", "full"]
+        args = ["--project", project, "--document", doc_id, "--mode", mode]
         async for chunk in run_script_sse(EXTRACT_ENTITIES_SCRIPT, args):
             if chunk == "data: __ok__\n\n":
                 break

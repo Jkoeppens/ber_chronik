@@ -579,7 +579,7 @@ document.getElementById('btn-save').addEventListener('click', async () => {
 });
 
 // ── SSE helper + extraction buttons ───────────────────────────────────────────
-async function _runSse(endpoint, btnEl) {
+async function _runSse(endpoint, btnEl, body = null) {
   const logEl = document.getElementById('log');
   const origLabel = btnEl.textContent;
   logEl.className = ''; logEl.style.display = 'block'; logEl.textContent = '';
@@ -589,7 +589,9 @@ async function _runSse(endpoint, btnEl) {
   document.getElementById('btn-sample').disabled = true;
   document.getElementById('btn-full').disabled = true;
   try {
-    const res = await fetch(endpoint + _tq(), { method: 'POST', headers: _th() });
+    const fetchOpts = { method: 'POST', headers: _th() };
+    if (body) fetchOpts.body = JSON.stringify(body);
+    const res = await fetch(endpoint + _tq(), fetchOpts);
     const reader = res.body.getReader(), decoder = new TextDecoder(); let buf = '';
     while (true) {
       const { done, value } = await reader.read(); if (done) break;
@@ -632,10 +634,10 @@ async function _runSse(endpoint, btnEl) {
 }
 
 document.getElementById('btn-sample').addEventListener('click', function() {
-  _runSse('/ingest/extract_entities', this);
+  _runSse('/ingest/extract_entities', this, {mode: 'sample'});
 });
 document.getElementById('btn-full').addEventListener('click', function() {
-  _runSse('/ingest/extract_entities_full', this);
+  _runSse('/ingest/extract_entities', this, {mode: 'full'});
 });
 
 load();

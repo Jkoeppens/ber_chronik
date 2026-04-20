@@ -106,7 +106,7 @@ btnSave.addEventListener("click",async()=>{
 });
 btnProp.addEventListener("click",async()=>{
   btnProp.disabled=true;btnProp.textContent="Läuft…";logEl.className="";logEl.textContent="";logEl.style.display="block";
-  const res=await fetch("/taxonomy/propose"+_aq(),{method:"POST",headers:_th()});
+  const res=await fetch("/ingest/propose_taxonomy"+_aq(),{method:"POST",headers:_th()});
   const reader=res.body.getReader(),decoder=new TextDecoder();let buf="";
   while(true){
     const{done,value}=await reader.read();if(done)break;
