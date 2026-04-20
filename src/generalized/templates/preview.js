@@ -15,6 +15,7 @@ const _qp   = new URLSearchParams(location.search);
 const _proj = _qp.get('project')  || '';
 const _doc  = _qp.get('document') || '';
 const _tok  = _qp.get('token')    || '';
+const _INVITE = (document.cookie.match(/invite_token=([^;]+)/) || [])[1] || '';
 function _aq() {
   const p = new URLSearchParams();
   if (_proj) p.set('project', _proj);
@@ -24,7 +25,8 @@ function _aq() {
 }
 function _th() {
   const h = {'Content-Type': 'application/json'};
-  if (_tok) h['X-Project-Token'] = _tok;
+  if (_tok)    h['X-Project-Token'] = _tok;
+  if (_INVITE) h['X-Invite-Token']  = _INVITE;
   return h;
 }
 

@@ -39,6 +39,7 @@ from src.generalized.db import (
     update_project, delete_project, token_valid,
 )
 from src.generalized.utils import render_template as _render_template
+from src.generalized.invite_auth import invite_required, invite_valid, invite_info
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -62,12 +63,56 @@ app = FastAPI(title="Generalized Dev Server")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
+def _get_invite(request: Request) -> str:
+    return (
+        request.query_params.get("invite")
+        or request.headers.get("X-Invite-Token")
+        or request.cookies.get("invite_token")
+        or ""
+    )
+
+
+@app.middleware("http")
+async def invite_gate_middleware(request: Request, call_next):
+    """Invite-Token-Gate: aktiv sobald invites.json existiert und Einträge hat."""
+    if not invite_required():
+        return await call_next(request)
+    # Validation endpoint immer freigeben
+    if request.url.path == "/api/check_invite":
+        return await call_next(request)
+    # Admin-Bypass (nur wenn ADMIN_KEY konfiguriert)
+    admin_key = os.environ.get("ADMIN_KEY")
+    if admin_key:
+        auth     = request.headers.get("Authorization", "")
+        provided = auth.removeprefix("Bearer ").strip() or request.query_params.get("admin_key", "")
+        if provided == admin_key:
+            return await call_next(request)
+    if invite_valid(_get_invite(request)):
+        return await call_next(request)
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        gate_html = _render_template("invite_gate.html")
+        return HTMLResponse(gate_html, status_code=401)
+    return JSONResponse({"error": "Einladungstoken fehlt oder ungültig"}, status_code=401)
+
+
 @app.on_event("startup")
 async def startup():
     await init_db()
 
 
-# ── Token-Prüfung ──────────────────────────────────────────────────────────────
+# ── Invite-Token Validation ────────────────────────────────────────────────────
+
+@app.get("/api/check_invite")
+async def check_invite(request: Request):
+    token = _get_invite(request)
+    if invite_valid(token):
+        info = invite_info(token) or {}
+        return JSONResponse({"ok": True, "name": info.get("name", "")})
+    return JSONResponse({"ok": False}, status_code=401)
+
+
+# ── Projekt-Token-Prüfung ──────────────────────────────────────────────────────
 
 def _require_admin_key(request: Request) -> JSONResponse | None:
     """

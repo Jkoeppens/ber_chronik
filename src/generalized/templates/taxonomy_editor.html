@@ -55,10 +55,12 @@ const gridEl=document.getElementById("grid"),statusEl=document.getElementById("s
       logEl=document.getElementById("log"),btnSave=document.getElementById("btn-save"),
       btnProp=document.getElementById("btn-propose"),btnAdd=document.getElementById("btn-add");
 let taxonomy=[],dirty=false;
+(function(){const inv=new URLSearchParams(location.search).get('invite');if(inv){document.cookie=`invite_token=${inv}; path=/; SameSite=Lax; max-age=2592000`;const u=new URL(location.href);u.searchParams.delete('invite');history.replaceState({},'',u.toString());}})();
+const _INVITE=(document.cookie.match(/invite_token=([^;]+)/)||[])[1]||'';
 const _urlParams=new URLSearchParams(location.search);
 const _tok=_urlParams.get("token")||"",_proj=_urlParams.get("project")||"",_doc=_urlParams.get("document")||"";
 function _aq(){const p=new URLSearchParams();if(_tok)p.set("token",_tok);if(_proj)p.set("project",_proj);if(_doc)p.set("document",_doc);const s=p.toString();return s?"?"+s:"";}
-function _th(){const h={"Content-Type":"application/json"};if(_tok)h["X-Project-Token"]=_tok;return h;}
+function _th(){const h={"Content-Type":"application/json"};if(_tok)h["X-Project-Token"]=_tok;if(_INVITE)h["X-Invite-Token"]=_INVITE;return h;}
 async function load(){
   const res=await fetch("/taxonomy/data"+_aq());taxonomy=await res.json();render();
   statusEl.textContent=taxonomy.length?`${taxonomy.length} Kategorien geladen`:"Noch keine Taxonomie";

@@ -12,6 +12,7 @@ data/raw/
 
 # Secrets
 .env
+invites.json
 
 # Logs
 logs/
