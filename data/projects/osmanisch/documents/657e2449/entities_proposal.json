@@ -23,7 +23,8 @@
     "aliases": [
       "KEf",
       "CUP",
-      "cpu"
+      "cpu",
+      "Komitee für Einheit und Fortschritt"
     ]
   },
   {
@@ -149,7 +150,13 @@
       "Talât Pascha",
       "talaat",
       "Talat",
-      "mehmat Talat"
+      "mehmat Talat",
+      "Talat Pascha",
+      "Mehmed Talat",
+      "Nazim",
+      "Said Halim",
+      "Abdühlhamid",
+      "Abdülhamid"
     ]
   },
   {
@@ -196,8 +203,7 @@
       "Macedonia",
       "Makedonien",
       "Macedonian",
-      "Mazedonien (Manastir, Kosovo)",
-      "makedon"
+      "Mazedonien (Manastir, Kosovo)"
     ]
   },
   {
@@ -389,8 +395,7 @@
     "aliases": [
       "syrien",
       "Syrian",
-      "Syria",
-      "surien"
+      "Syria"
     ]
   },
   {
@@ -504,8 +509,7 @@
     "normalform": "anatolien",
     "typ": "Ort",
     "aliases": [
-      "anatolien",
-      "Anatolia"
+      "anatolien"
     ]
   },
   {
@@ -701,9 +705,7 @@
   {
     "normalform": "Europa",
     "typ": "Ort",
-    "aliases": [
-      "Europa"
-    ]
+    "aliases": []
   },
   {
     "normalform": "Shukri",
@@ -822,8 +824,7 @@
     "normalform": "'Umar Mansur",
     "typ": "Person",
     "aliases": [
-      "'Umar Mansur",
-      "Bingazi"
+      "'Umar Mansur"
     ]
   },
   {
@@ -941,8 +942,7 @@
     "typ": "Person",
     "aliases": [
       "Sayyid Talib (Basra)",
-      "Sayyid Talib",
-      "Basra"
+      "Sayyid Talib"
     ]
   },
   {
@@ -1320,8 +1320,7 @@
     "normalform": "Yusuf Shitwan",
     "typ": "Person",
     "aliases": [
-      "Shitwan",
-      "Bingazi"
+      "Shitwan"
     ]
   },
   {
@@ -1338,9 +1337,7 @@
     "typ": "Ort",
     "aliases": [
       "Polen",
-      "Mt lebanon",
-      "Lebanon",
-      "lebanoen"
+      "Mt lebanon"
     ]
   },
   {
@@ -1349,28 +1346,60 @@
     "aliases": []
   },
   {
-    "normalform": "Shafiq al-Mu'ayyad",
-    "typ": "Person",
-    "aliases": []
-  },
-  {
-    "normalform": "Mahmud Sevket Pasha",
-    "typ": "Person",
-    "aliases": []
-  },
-  {
-    "normalform": "Australien",
-    "typ": "Konzept",
-    "aliases": [
-      "Australien"
-    ]
-  },
-  {
-    "normalform": "Egypten",
+    "normalform": "Kairo",
     "typ": "Ort",
     "aliases": [
-      "Egypten",
-      "misir"
+      "al-Qahira"
     ]
+  },
+  {
+    "normalform": "Shafiq al-Mu’ayyad",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Rushdi al-Sham‘a",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "'Abd al-Hamid al-Zahrawi",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Ismail Enver",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Mehmed Talat Pascha",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Muhammad Ali Pasha",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Beirut",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Scutari",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "Shukri al-Asali",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Liberal Union",
+    "typ": "Organisation",
+    "aliases": []
   }
 ]

@@ -1,0 +1,147 @@
+[
+  {
+    "normalform": "George Antonius",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "Mehmed Talat Pascha",
+    "typ": "Person",
+    "aliases": [
+      "Talat",
+      "Talat Pascha",
+      "Mehmed Talat"
+    ]
+  },
+  {
+    "normalform": "Ismail Enver",
+    "typ": "Person",
+    "aliases": [
+      "Enver Pascha",
+      "Ismail Enver"
+    ]
+  },
+  {
+    "normalform": "Salim al-Bustani",
+    "typ": "Person",
+    "aliases": [
+      "Bustani",
+      "Salim Bustani"
+    ]
+  },
+  {
+    "normalform": "Ali Tahtawi",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "CUP",
+    "typ": "Organisation",
+    "aliases": [
+      "Komitee für Einheit und Fortschritt",
+      "CUP",
+      "Al-Jinan",
+      "Al-Muqtataf"
+    ]
+  },
+  {
+    "normalform": "Al-Jinan",
+    "typ": "Organisation",
+    "aliases": [
+      "Al-Muqtataf",
+      "Muqtataf"
+    ]
+  },
+  {
+    "normalform": "Lebanon",
+    "typ": "Ort",
+    "aliases": [
+      "Mount Lebanon",
+      "Damaskus",
+      "الشام",
+      "Lebanon",
+      "Damascus",
+      "ash-Sham"
+    ]
+  },
+  {
+    "normalform": "Damaskus",
+    "typ": "Ort",
+    "aliases": [
+      "الشام",
+      "Damascus"
+    ]
+  },
+  {
+    "normalform": "Nahda",
+    "typ": "Konzept",
+    "aliases": [
+      "arabische Aufklärung"
+    ]
+  },
+  {
+    "normalform": "1. Schildgen",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "2. Allen",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "3. Al-Shidyāq",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "4. Trabulsi",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "5. Zahawi",
+    "typ": "Person",
+    "aliases": []
+  },
+  {
+    "normalform": "6. CUP",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "7. Komitee für Einheit und Fortschritt",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "8. Al-Jinan",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "9. Muqtataf",
+    "typ": "Organisation",
+    "aliases": []
+  },
+  {
+    "normalform": "10. Damaskus",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "11. Lebanon",
+    "typ": "Ort",
+    "aliases": []
+  },
+  {
+    "normalform": "12. Nahda",
+    "typ": "Konzept",
+    "aliases": []
+  },
+  {
+    "normalform": "Rida",
+    "typ": "Person",
+    "aliases": []
+  }
+]
