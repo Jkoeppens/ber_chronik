@@ -4,14 +4,12 @@ entity_llm.py — LLM-basierte Entity-Extraktion und Bereinigung.
 Aktiv genutzt (4-Schritte-Pipeline):
   - Schritt 1: _llm_sample_iteration
   - Schritt 2: _llm_full_extract
-  - Schritt 3: _llm_dedup
+  - Schritt 3: _llm_group  (Schreibvarianten zusammenführen, Batches à 30)
   - Schritt 4: _llm_task1_normalize
 """
 
-import json
 import random
 import sys
-from collections import Counter
 from pathlib import Path
 
 from src.generalized.entity_utils import (
@@ -148,17 +146,6 @@ def _parse_plaintext_entities(text: str) -> list[dict]:
     return results
 
 
-def _find_context_sentences(token: str, content_segs: list[dict], max_n: int = 3) -> list[str]:
-    token_lc = token.lower()
-    hits: list[str] = []
-    for seg in content_segs:
-        if token_lc in seg.get("text", "").lower():
-            hits.append(seg["text"])
-            if len(hits) >= max_n:
-                break
-    return hits
-
-
 def _format_candidate_for_task1(cand: dict) -> str:
     name = cand.get("normalform", "")
     hint = cand.get("typ") or cand.get("_type_hint", "")
@@ -281,45 +268,6 @@ def _llm_task1_normalize(
     return accumulated
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Neue Pipeline (Schritte 2–3)
-# ══════════════════════════════════════════════════════════════════════════════
-
-DEDUP_BATCH_PROMPT = """\
-Prüfe diese {n} Kandidatenpaare aus einem historischen Text.
-Sind A und B jeweils dieselbe Entity (Schreibvariante, Kurzform, Transliteration)?
-
-{pairs_block}
-
-Regeln:
-- Nur zusammenführen wenn eindeutig gleich. Im Zweifel: keep.
-- Bei merge: "winner" = "a" wenn A die bessere Normalform ist, sonst "b".
-
-JSON-Array, ein Eintrag pro Paar in gleicher Reihenfolge:
-[
-  {{"pair": 1, "action": "keep"}},
-  {{"pair": 2, "action": "merge", "winner": "a"}}
-]"""
-
-
-def _levenshtein(a: str, b: str) -> int:
-    """Einfache Levenshtein-Distanz ohne externe Abhängigkeit."""
-    if a == b:
-        return 0
-    if not a:
-        return len(b)
-    if not b:
-        return len(a)
-    prev = list(range(len(b) + 1))
-    for ca in a:
-        curr = [prev[0] + 1]
-        for j, cb in enumerate(b):
-            curr.append(min(prev[j] + (0 if ca == cb else 1),
-                            curr[j] + 1, prev[j + 1] + 1))
-        prev = curr
-    return prev[-1]
-
-
 def _llm_full_extract(
     segments: list[dict],
     provider,
@@ -373,114 +321,95 @@ def _llm_full_extract(
     return results
 
 
-def _llm_dedup(
+GROUP_BATCH  = 30
+
+GROUP_PROMPT = """\
+Hier ist eine Liste von Entity-Namen aus einem historischen Text.
+Fasse zusammen, welche Einträge dieselbe Person, denselben Ort oder dieselbe Organisation bezeichnen
+(Schreibvarianten, Kurzformen, Transliterationen).
+
+Ausgabe — eine Zeile pro Gruppe:
+Normalform zuerst, weitere Varianten kommasepariert dahinter.
+Entities ohne Varianten: nur den Namen, keine Kommas.
+Nur eindeutige Zusammenführungen. Im Zweifel: getrennt lassen.
+Keine Kommentare, kein JSON, keine leeren Zeilen am Ende.
+
+Eingabe:
+{entities_block}
+
+Ausgabe:"""
+
+
+def _llm_group(
     entities: list[dict],
     provider,
-    content_segs: list[dict],
     rejected_lc: set[str] = frozenset(),
 ) -> list[dict]:
-    """Schritt 3: Duplikat-Erkennung – alle verdächtigen Paare in einem LLM-Request."""
+    """Schritt 3: Schreibvarianten gruppieren — Plaintext-Format, Batches à GROUP_BATCH."""
+    # lookup: jeder bekannte Name (normalform + aliases) → entity dict
+    lookup: dict[str, dict] = {}
+    for ent in entities:
+        norm_lc = (ent.get("normalform") or "").lower()
+        if norm_lc:
+            lookup[norm_lc] = ent
+        for alias in ent.get("aliases", []):
+            if alias:
+                lookup[alias.lower()] = ent
 
-    def _names(e: dict) -> set[str]:
-        result = {(e.get("normalform") or "").lower()}
-        for a in (e.get("aliases") or []):
-            if a:
-                result.add(a.lower())
-        return result - {""}
+    batches = [entities[i:i + GROUP_BATCH] for i in range(0, len(entities), GROUP_BATCH)]
+    print(f"Schritt 3 (Gruppieren): {len(entities)} Entities in "
+          f"{len(batches)} Batch(es) à {GROUP_BATCH} …")
 
-    # Kandidatenpaare finden: Levenshtein < 3 auf Normalformen oder Alias-Überschneidung
-    pairs: list[tuple[int, int]] = []
-    for i in range(len(entities)):
-        na       = (entities[i].get("normalform") or "").lower()
-        aliases_i = _names(entities[i])
-        for j in range(i + 1, len(entities)):
-            nb = (entities[j].get("normalform") or "").lower()
-            if _levenshtein(na, nb) < 3 or (aliases_i & _names(entities[j])):
-                pairs.append((i, j))
+    all_results: list[dict] = []
 
-    if not pairs:
-        print("Schritt 3 (Dedup): keine Kandidatenpaare gefunden")
-        return entities
-
-    print(f"Schritt 3 (Dedup): {len(pairs)} Paare in einem LLM-Request …")
-
-    # Alle Paare mit Kontext formatieren
-    pair_blocks: list[str] = []
-    for pair_idx, (i, j) in enumerate(pairs, 1):
-        ea, eb    = entities[i], entities[j]
-        ctx_a     = _find_context_sentences(ea["normalform"], content_segs, max_n=2)
-        ctx_b     = _find_context_sentences(eb["normalform"], content_segs, max_n=2)
-        ctx_a_str = " | ".join(ctx_a) if ctx_a else "(kein Kontext)"
-        ctx_b_str = " | ".join(ctx_b) if ctx_b else "(kein Kontext)"
-        pair_blocks.append(
-            f"Paar {pair_idx}:\n"
-            f"  A: \"{ea['normalform']}\" (Typ: {ea.get('typ', '?')})\n"
-            f"  B: \"{eb['normalform']}\" (Typ: {eb.get('typ', '?')})\n"
-            f"  Kontext A: {ctx_a_str}\n"
-            f"  Kontext B: {ctx_b_str}"
+    for idx, batch in enumerate(batches):
+        entities_block = "\n".join(
+            ent["normalform"] for ent in batch if ent.get("normalform")
         )
+        prompt = GROUP_PROMPT.format(entities_block=entities_block)
+        print(f"  Batch {idx + 1}/{len(batches)} …", flush=True)
 
-    prompt = DEDUP_BATCH_PROMPT.format(
-        n=len(pairs),
-        pairs_block="\n\n".join(pair_blocks),
-    )
-    try:
-        out = provider.complete_json(prompt, system=SYSTEM_PROMPT)
-    except (json.JSONDecodeError, ValueError) as e:
-        print(f"  JSON-Fehler Dedup: {e} — übersprungen", file=sys.stderr)
-        return entities
+        raw   = provider.complete(prompt, system=SYSTEM_PROMPT)
+        lines = [ln.strip() for ln in raw.splitlines()
+                 if ln.strip() and not ln.strip().startswith("#")]
 
-    # Ollama mit format:json gibt manchmal einzelnes Objekt statt Array
-    if isinstance(out, dict) and "pair" in out:
-        out = [out]
-    if not isinstance(out, list):
-        print(f"  Dedup: kein Array zurück ({type(out).__name__}) — übersprungen",
-              file=sys.stderr)
-        return entities
-
-    # Entscheidungen indexieren (pair-Nummer 1-basiert)
-    decisions: dict[int, dict] = {
-        dec["pair"]: dec
-        for dec in out
-        if isinstance(dec, dict) and isinstance(dec.get("pair"), int)
-    }
-
-    to_remove: set[int] = set()
-    updated   = list(entities)
-    n_merged  = 0
-
-    for pair_idx, (i, j) in enumerate(pairs, 1):
-        if i in to_remove or j in to_remove:
-            continue
-        dec = decisions.get(pair_idx, {})
-        if dec.get("action") != "merge":
+        if not lines:
+            print(f"  Batch {idx + 1}: Gruppen-LLM lieferte 0 Zeilen "
+                  f"— {len(batch)} Entities unverändert übernommen", file=sys.stderr)
+            for ent in batch:
+                n = _normalize_entity(ent, "llm_group", rejected_lc)
+                if n is not None:
+                    all_results.append(n)
             continue
 
-        ea, eb = updated[i], updated[j]
+        for line in lines:
+            parts = [p.strip() for p in line.split(",") if p.strip()]
+            if not parts:
+                continue
+            normalform    = parts[0]
+            extra_aliases = parts[1:]
 
-        # winner bestimmt welche Normalform/Typ gewinnt; Aliases aus beiden zusammenführen
-        winner = dec.get("winner", "a")
-        primary, secondary = (ea, eb) if winner != "b" else (eb, ea)
+            # Typ aus ursprünglichem Entity ableiten
+            orig = lookup.get(normalform.lower())
+            if orig is None:
+                for alias in extra_aliases:
+                    orig = lookup.get(alias.lower())
+                    if orig:
+                        break
+            typ = (orig.get("typ") if orig else None) or "Konzept"
 
-        all_aliases = list({
-            *(primary.get("aliases")   or []),
-            *(secondary.get("aliases") or []),
-            secondary.get("normalform", ""),
-        })
-        all_aliases = [a for a in all_aliases if a and a != primary["normalform"]]
+            # Aliases: erst aus dem Original, dann LLM-Varianten
+            seen_lc: set[str] = {normalform.lower()}
+            grouped_aliases: list[str] = []
+            for a in list(orig.get("aliases", []) if orig else []) + extra_aliases:
+                if a and a.lower() not in seen_lc:
+                    grouped_aliases.append(a)
+                    seen_lc.add(a.lower())
 
-        updated[i] = {
-            "normalform": primary["normalform"],
-            "typ":        primary.get("typ", "Konzept"),
-            "aliases":    all_aliases,
-            "_source":    "llm_dedup",
-        }
-        to_remove.add(j)
-        n_merged += 1
-        print(f"  Merge {pair_idx}: {ea['normalform']!r} + {eb['normalform']!r} "
-              f"→ {updated[i]['normalform']!r} (winner={winner})")
+            candidate = {"normalform": normalform, "typ": typ, "aliases": grouped_aliases}
+            n = _normalize_entity(candidate, "llm_group", rejected_lc)
+            if n is not None:
+                all_results.append(n)
 
-    result = [e for idx, e in enumerate(updated) if idx not in to_remove]
-    print(f"  {len(entities)} → {len(result)} Entities nach Dedup "
-          f"({n_merged} zusammengeführt)")
-    return result
+    print(f"  {len(entities)} → {len(all_results)} Entities nach Gruppierung")
+    return all_results

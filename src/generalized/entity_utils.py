@@ -3,15 +3,10 @@ entity_utils.py — Gemeinsame Konstanten und Hilfsfunktionen für Entity-Erkenn
 """
 
 import json
-import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-import numpy as np
-
-VALID_TYPES   = {"Person", "Organisation", "Ort", "Konzept"}
-STOPLIST_SIZE = 50
-MIN_TOKEN_LEN = 3
+VALID_TYPES = {"Person", "Organisation", "Ort", "Konzept"}
 
 SOURCE_PRIORITY = {
     "seed": 0,
@@ -19,12 +14,6 @@ SOURCE_PRIORITY = {
     "llm_full": 1, "llm_dedup": 1,
     "classifier": 2, "embedding": 2,
 }
-
-CAPITAL_RE = re.compile(
-    r'\b([A-ZÄÖÜÀÁÂÃÈÉÊËÌÍÎÏÒÓÔÕÙÚÛÝ\u0400-\u042F]'
-    r'[\w\u00C0-\u024F\u1E00-\u1EFF\u0400-\u04FF]{2,})\b'
-)
-
 
 def _normalize_entity(ent: dict, source: str, rejected_lc: set[str] = frozenset()) -> dict | None:
     """Gibt eine bereinigte Kopie zurück, oder None wenn die Entity verworfen werden soll.
@@ -44,88 +33,6 @@ def _normalize_entity(ent: dict, source: str, rejected_lc: set[str] = frozenset(
         "_source":    source,
         "typ":        ent.get("typ") if ent.get("typ") in VALID_TYPES else "Konzept",
     }
-
-
-def _extract_tokens(segments: list[dict]) -> Counter:
-    counter: Counter = Counter()
-    for seg in segments:
-        for m in CAPITAL_RE.finditer(seg.get("text", "")):
-            counter[m.group(1)] += 1
-    return counter
-
-
-def _make_stoplist(counter: Counter, n: int = STOPLIST_SIZE) -> set[str]:
-    return {tok for tok, _ in counter.most_common(n)}
-
-
-def _embed(model, texts: list[str]) -> np.ndarray:
-    return model.encode(texts, batch_size=256, normalize_embeddings=True,
-                        show_progress_bar=False)
-
-
-def _add_multiword_aliases(
-    candidates: list[dict],
-    content_segs: list[dict],
-    stoplist: set[str],
-    window: int = 2,
-    min_count: int = 1,
-) -> None:
-    WORD_RE = re.compile(r'\b([\w\u00C0-\u024F\u1E00-\u1EFF\u0400-\u04FF]{2,})\b')
-    CAP_RE  = re.compile(r'^[A-ZÄÖÜÀÁÂÃÈÉÊËÌÍÎÏÒÓÔÕÙÚÛÝ\u0400-\u042F]')
-
-    corpus: list[tuple[str, list[tuple[str, int, int]]]] = []
-    for seg in content_segs:
-        text  = seg.get("text", "")
-        words = [(m.group(), m.start(), m.end()) for m in WORD_RE.finditer(text)]
-        corpus.append((text, words))
-
-    positions: dict[str, list[tuple[int, int]]] = defaultdict(list)
-    for ci, (_, words) in enumerate(corpus):
-        for wi, (w, _, _) in enumerate(words):
-            positions[w.lower()].append((ci, wi))
-
-    total_added = 0
-    for cand in candidates:
-        all_tokens   = [cand["normalform"]] + list(cand.get("aliases", []))
-        single_tokens = [t for t in all_tokens if t and len(t.split()) == 1]
-
-        phrase_counter: Counter = Counter()
-        for tok in single_tokens:
-            for ci, wi in positions.get(tok.lower(), []):
-                text, words = corpus[ci]
-
-                left  = wi - 1
-                steps = 0
-                while left >= 0 and steps < window:
-                    if CAP_RE.match(words[left][0]) and words[left][0] not in stoplist:
-                        left -= 1; steps += 1
-                    else:
-                        break
-                left += 1
-
-                right = wi + 1
-                steps = 0
-                while right < len(words) and steps < window:
-                    if CAP_RE.match(words[right][0]) and words[right][0] not in stoplist:
-                        right += 1; steps += 1
-                    else:
-                        break
-
-                if right - left <= 1:
-                    continue
-
-                phrase = text[words[left][1]:words[right - 1][2]].strip()
-                if phrase.lower() != tok.lower():
-                    phrase_counter[phrase] += 1
-
-        existing_lc = {s.lower() for s in [cand["normalform"]] + cand.get("aliases", [])}
-        for phrase, count in phrase_counter.items():
-            if count >= min_count and phrase.lower() not in existing_lc:
-                cand.setdefault("aliases", []).append(phrase)
-                existing_lc.add(phrase.lower())
-                total_added += 1
-
-    print(f"  Mehrwort-Pass: {total_added} Aliases ergänzt")
 
 
 def _build_few_shot_block(seed: list[dict]) -> str:

@@ -7,8 +7,8 @@ Schritt 1 – Stichprobe (immer):
 Schritt 2 – Vollextraktion mit Few-Shot (nur full-Modus, nur wenn Seed vorhanden):
   Alle Segmente in Batches à BATCH_SIZE, erste 10 Seed-Entities als Beispiele.
 
-Schritt 3 – Duplikat-Erkennung:
-  Levenshtein < 3 oder Alias-Überschneidung → ein LLM-Request für alle Paare.
+Schritt 3 – Schreibvarianten gruppieren:
+  Alle Entities in Batches à 30, LLM fasst Schreibvarianten/Kurzformen zusammen.
 
 Schritt 4 – Normalform bereinigen:
   Titel entfernen, Großschreibung korrigieren. Batches à 20.
@@ -38,7 +38,7 @@ from src.generalized.entity_utils import (
 from src.generalized.entity_llm import (
     _llm_sample_iteration,
     _llm_full_extract,
-    _llm_dedup,
+    _llm_group,
     _llm_task1_normalize,
 )
 
@@ -151,8 +151,7 @@ def main() -> None:
             print("Checkpoint ungültig — starte von vorn", file=sys.stderr)
             cp = {}
 
-    cp_path      = checkpoint_path if args.mode == "full" else None
-    content_segs = [s for s in segments if s.get("type") == "content"]
+    cp_path = checkpoint_path if args.mode == "full" else None
 
     # ── Schritt 1: Stichprobe (immer) ─────────────────────────────────────────
     step1_entities = _run_stage(
@@ -192,10 +191,10 @@ def main() -> None:
     combined = _merge([step1_entities, step2_entities]) if step2_entities \
                else step1_entities
 
-    # ── Schritt 3: Duplikat-Erkennung ─────────────────────────────────────────
+    # ── Schritt 3: Schreibvarianten gruppieren ────────────────────────────────
     step3_entities = _run_stage(
         "Schritt 3", "step3", cp, cp_path,
-        lambda: _llm_dedup(combined, provider, content_segs, rejected_lc),
+        lambda: _llm_group(combined, provider, rejected_lc),
     )
 
     # ── Schritt 4: Normalform bereinigen ──────────────────────────────────────
