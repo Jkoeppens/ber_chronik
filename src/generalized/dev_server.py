@@ -267,7 +267,8 @@ def _compute_quality_report(project: str, doc_id: str) -> dict | None:
             taxonomy = json.loads(config_p.read_text(encoding="utf-8")).get("taxonomy") or None
         classifications = {r["segment_id"]: r for r in classified if r.get("segment_id")}
         return build_quality_report(list(classifications.values()), classifications, taxonomy)
-    except Exception:
+    except Exception as e:
+        print(f"_compute_quality_report fehlgeschlagen: {e}", file=sys.stderr)
         return None
 
 
@@ -683,7 +684,7 @@ async def ingest_extract_entities(request: Request):
     body = {}
     try:
         body = await request.json()
-    except Exception:
+    except (json.JSONDecodeError, ValueError):
         pass
     mode = body.get("mode", "sample")
     if mode not in ("sample", "full"):
