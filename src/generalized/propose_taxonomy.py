@@ -27,7 +27,7 @@ from collections import Counter
 import json
 from dotenv import load_dotenv
 
-from src.generalized.config import ROOT
+from src.generalized.config import ROOT, PROJECTS_DIR
 from src.generalized.llm import get_provider, TASK_ANALYZE
 
 N_BATCHES  = 5
@@ -149,8 +149,8 @@ def main() -> None:
     ap.add_argument("--document", required=True)
     args = ap.parse_args()
 
-    doc_dir     = ROOT / "data" / "projects" / args.project / "documents" / args.document
-    config_path = ROOT / "data" / "projects" / args.project / "config.json"
+    doc_dir     = PROJECTS_DIR / args.project / "documents" / args.document
+    config_path = PROJECTS_DIR / args.project / "config.json"
     input_path  = doc_dir / "segments.json"
 
     if not input_path.exists():

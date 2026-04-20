@@ -19,7 +19,7 @@ import json
 import sys
 from dotenv import load_dotenv
 
-from src.generalized.config import ROOT
+from src.generalized.config import ROOT, PROJECTS_DIR
 from src.generalized.llm import get_provider, TASK_CLASSIFY
 from tqdm import tqdm
 
@@ -138,7 +138,7 @@ async def main_async() -> None:
     ap.add_argument("--force", action="store_true", help="Cache ignorieren, alle Segmente neu klassifizieren")
     args = ap.parse_args()
 
-    project_dir   = ROOT / "data" / "projects" / args.project
+    project_dir   = PROJECTS_DIR / args.project
     doc_dir       = project_dir / "documents" / args.document
     SEGMENTS_PATH = doc_dir / "segments.json"
     OUTPUT_PATH   = doc_dir / "classified.json"

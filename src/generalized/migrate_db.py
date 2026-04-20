@@ -10,8 +10,8 @@ Ausführen:
 
 import asyncio
 import json
-from src.generalized.config import ROOT
-PROJECTS_DIR = ROOT / "data" / "projects"
+from src.generalized.config import ROOT, PROJECTS_DIR
+PROJECTS_DIR = PROJECTS_DIR
 
 
 async def main() -> None:

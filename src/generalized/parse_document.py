@@ -36,8 +36,8 @@ from pathlib import Path
 
 import docx
 
-from src.generalized.config import ROOT
-INPUT  = ROOT / "data" / "raw" / "Damakus Notizen.docx"
+from src.generalized.config import ROOT, PROJECTS_DIR, RAW_DIR
+INPUT  = RAW_DIR / "Damakus Notizen.docx"
 OUTPUT = ROOT / "data" / "interim" / "generalized" / "segments.json"
 
 # ── Seitenzahl-Extraktion ──────────────────────────────────────────────────────
@@ -199,7 +199,7 @@ def main() -> None:
                     help="Dokumenttyp (default: buchnotizen)")
     args = ap.parse_args()
 
-    project_dir = ROOT / "data" / "projects" / args.project
+    project_dir = PROJECTS_DIR / args.project
     doc_dir = project_dir / "documents" / args.document
     doc_dir.mkdir(parents=True, exist_ok=True)
 
@@ -214,7 +214,7 @@ def main() -> None:
         input_path = Path(args.input)
         original_filename = Path(args.input).name
     elif doc_config.get("original_filename"):
-        input_path = ROOT / "data" / "raw" / doc_config["original_filename"]
+        input_path = RAW_DIR / doc_config["original_filename"]
         original_filename = doc_config["original_filename"]
     else:
         print("Kein Input-Pfad angegeben und doc config.json hat kein original_filename.", file=sys.stderr)

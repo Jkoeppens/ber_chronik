@@ -22,7 +22,7 @@ import sys
 from html import escape
 from pathlib import Path
 
-from src.generalized.config import ROOT
+from src.generalized.config import ROOT, PROJECTS_DIR
 
 from src.generalized.utils import render_template as _render_template  # noqa: E402
 from src.generalized.classify_segments import normalize_category  # noqa: E402
@@ -465,7 +465,7 @@ def main() -> None:
     ap.add_argument("--document", required=True, help="Dokument-ID (z.B. main)")
     args = ap.parse_args()
 
-    project_dir     = ROOT / "data" / "projects" / args.project
+    project_dir     = PROJECTS_DIR / args.project
     doc_dir         = project_dir / "documents" / args.document
     input_path      = doc_dir / "anchors_interpolated.json"
     output_path     = doc_dir / "preview.html"

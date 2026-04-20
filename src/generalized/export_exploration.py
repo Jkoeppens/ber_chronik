@@ -29,7 +29,7 @@ from io import StringIO
 from pathlib import Path
 
 from src.generalized.classify_segments import normalize_category
-from src.generalized.config import ROOT
+from src.generalized.config import ROOT, PROJECTS_DIR
 from src.generalized.generate_entity_summaries import build_summaries as _build_summaries
 
 # ── Farbpaletten ───────────────────────────────────────────────────────────────
@@ -217,7 +217,7 @@ def main() -> None:
     ap.add_argument("--document", default=None,  help="Nur dieses Dokument exportieren (optional)")
     args = ap.parse_args()
 
-    project_dir     = ROOT / "data" / "projects" / args.project
+    project_dir     = PROJECTS_DIR / args.project
     exploration_dir = project_dir / "exploration"
     data_out  = exploration_dir / "data.json"
     csv_out   = exploration_dir / "entities_seed.csv"

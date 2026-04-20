@@ -16,8 +16,8 @@ import secrets
 from datetime import datetime, timezone, timedelta
 import aiosqlite
 
-from src.generalized.config import ROOT
-DB_PATH = ROOT / "data" / "projects.db"
+from src.generalized.config import DATA_ROOT
+DB_PATH = DATA_ROOT / "projects.db"
 
 TOKEN_TTL_DAYS = 30
 

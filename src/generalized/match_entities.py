@@ -14,7 +14,7 @@ import argparse
 import json
 import re
 import sys
-from src.generalized.config import ROOT
+from src.generalized.config import ROOT, PROJECTS_DIR
 
 
 def build_patterns(entities: list[dict]) -> list[tuple[str, re.Pattern]]:
@@ -40,7 +40,7 @@ def main() -> None:
     ap.add_argument("--document", required=True, help="Dokument-ID (z.B. main)")
     args = ap.parse_args()
 
-    project_dir     = ROOT / "data" / "projects" / args.project
+    project_dir     = PROJECTS_DIR / args.project
     doc_dir         = project_dir / "documents" / args.document
     SEGMENTS_PATH   = doc_dir / "segments.json"
     CLASSIFIED_PATH = doc_dir / "classified.json"

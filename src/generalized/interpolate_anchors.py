@@ -36,7 +36,7 @@ import json
 import sys
 from pathlib import Path
 
-from src.generalized.config import ROOT
+from src.generalized.config import ROOT, PROJECTS_DIR
 
 
 def _source_key(seg: dict) -> str:
@@ -216,7 +216,7 @@ def main() -> None:
     ap.add_argument("--document", required=True, help="Dokument-ID (z.B. main)")
     args = ap.parse_args()
 
-    project_dir    = ROOT / "data" / "projects" / args.project
+    project_dir    = PROJECTS_DIR / args.project
     doc_dir        = project_dir / "documents" / args.document
     input_path     = doc_dir / "anchors.json"
     output_path    = doc_dir / "anchors_interpolated.json"

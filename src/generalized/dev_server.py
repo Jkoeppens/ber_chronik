@@ -46,9 +46,9 @@ from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 
-from src.generalized.config import ROOT
-PROJECTS_DIR       = ROOT / "data" / "projects"
-RAW_DIR            = ROOT / "data" / "raw"
+from src.generalized.config import ROOT, DATA_ROOT
+PROJECTS_DIR       = DATA_ROOT / "projects"
+RAW_DIR            = DATA_ROOT / "raw"
 
 PARSE_SCRIPT               = ROOT / "src" / "generalized" / "parse_document.py"
 DETECT_SCRIPT              = ROOT / "src" / "generalized" / "detect_anchors.py"

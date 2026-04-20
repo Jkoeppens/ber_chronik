@@ -32,7 +32,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from src.generalized.config import ROOT
+from src.generalized.config import ROOT, PROJECTS_DIR
 from src.generalized.llm import get_provider, TASK_ANALYZE
 
 MAX_PARAGRAPHS = 30
@@ -198,7 +198,7 @@ def main() -> None:
                     help="Alle Summaries neu generieren (ignoriert bestehende)")
     args = ap.parse_args()
 
-    project_dir     = ROOT / "data" / "projects" / args.project
+    project_dir     = PROJECTS_DIR / args.project
     exploration_dir = project_dir / "exploration"
     data_path       = exploration_dir / "data.json"
     config_path     = project_dir / "config.json"

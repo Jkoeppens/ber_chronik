@@ -42,7 +42,7 @@ from src.generalized.entity_llm import (
     _llm_task1_normalize,
 )
 
-from src.generalized.config import ROOT
+from src.generalized.config import ROOT, PROJECTS_DIR, DEFAULTS_DIR
 BATCH_SIZE      = 5           # Segmente pro Batch in Schritt 2
 CHECKPOINT_NAME = "_v2_checkpoint.json"
 
@@ -73,7 +73,7 @@ def _parse_args():
     ap.add_argument("--document", required=True)
     ap.add_argument("--mode", choices=["sample", "full"], default="sample")
     args    = ap.parse_args()
-    doc_dir = ROOT / "data" / "projects" / args.project / "documents" / args.document
+    doc_dir = PROJECTS_DIR / args.project / "documents" / args.document
     return args, doc_dir
 
 
@@ -98,7 +98,7 @@ def _load_seed_and_rejected(doc_dir: Path) -> tuple[list[dict], set[str]]:
             except (json.JSONDecodeError, OSError):
                 pass
         if doc_type:
-            default_p = ROOT / "data" / "defaults" / f"entities_{doc_type}.json"
+            default_p = DEFAULTS_DIR / f"entities_{doc_type}.json"
             if default_p.exists():
                 try:
                     default_entities = json.loads(default_p.read_text(encoding="utf-8"))
