@@ -7,6 +7,7 @@ app = 'ber-chronik'
 primary_region = 'fra'
 
 [build]
+  dockerfile = "Dockerfile"
 
 [env]
   DATA_ROOT = '/mnt/data'
