@@ -89,6 +89,25 @@ def _load_seed_and_rejected(doc_dir: Path) -> tuple[list[dict], set[str]]:
         except (json.JSONDecodeError, OSError):
             pass
     if not seed:
+        # Fallback: Default-Entities für den Dokumenttyp laden
+        doc_cfg_p = doc_dir / "config.json"
+        doc_type  = ""
+        if doc_cfg_p.exists():
+            try:
+                doc_type = json.loads(doc_cfg_p.read_text(encoding="utf-8")).get("doc_type", "")
+            except (json.JSONDecodeError, OSError):
+                pass
+        if doc_type:
+            default_p = ROOT / "data" / "defaults" / f"entities_{doc_type}.json"
+            if default_p.exists():
+                try:
+                    default_entities = json.loads(default_p.read_text(encoding="utf-8"))
+                    if default_entities:
+                        seed = [dict(e, _source="seed") for e in default_entities]
+                        print(f"Seed: {len(seed)} Default-Entities für doc_type '{doc_type}'")
+                except (json.JSONDecodeError, OSError):
+                    pass
+    if not seed:
         print("Kein Seed — Extraktion startet ohne Few-Shot-Beispiele")
 
     rejected_lc: set[str] = set()
