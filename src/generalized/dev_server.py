@@ -21,6 +21,7 @@ Starten:
 """
 
 import asyncio
+import html
 import json
 import os
 import random
@@ -1004,6 +1005,8 @@ async def delete_project_endpoint(project_id: str, request: Request):
     proj = await get_project(project_id)
     if not proj:
         return JSONResponse({"ok": False, "error": "Nicht gefunden"}, status_code=404)
+    if ".." in project_id or "/" in project_id:
+        return JSONResponse({"error": "Ungültige project_id"}, status_code=400)
     project_dir = PROJECTS_DIR / project_id
     if project_dir.exists():
         shutil.rmtree(project_dir)
@@ -1053,7 +1056,7 @@ async def get_editor(request: Request):
         f'<div style="background:#1e293b;color:#fff;padding:10px 20px;font-size:13px;'
         f'font-family:system-ui,sans-serif;display:flex;align-items:center;gap:12px;">'
         f'<strong>Daten bearbeiten</strong><span style="color:#94a3b8;">–</span>'
-        f'<span>{title}</span>'
+        f'<span>{html.escape(title)}</span>'
         f'<a href="{preview_url}" style="margin-left:auto;padding:5px 12px;background:#2563eb;'
         f'color:#fff;border-radius:4px;text-decoration:none;font-size:11px;font-weight:600;">'
         f'Zeitanker bearbeiten \u2192</a></div>'
