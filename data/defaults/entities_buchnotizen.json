@@ -1,1 +1,10 @@
-[]
+[
+  {"normalform": "Bismarck",              "typ": "Person",       "aliases": ["Otto von Bismarck", "Reichskanzler Bismarck", "Fürst Bismarck"]},
+  {"normalform": "Wilhelm II.",           "typ": "Person",       "aliases": ["Kaiser Wilhelm", "Kaiser Wilhelm II.", "Deutscher Kaiser"]},
+  {"normalform": "Deutsches Kaiserreich", "typ": "Organisation", "aliases": ["Deutsches Reich", "Kaiserreich", "Wilhelminisches Reich"]},
+  {"normalform": "Preußen",              "typ": "Organisation",  "aliases": ["Königreich Preußen", "Preußischer Staat", "Hohenzollernmonarchie"]},
+  {"normalform": "Berlin",               "typ": "Ort",           "aliases": ["Reichshauptstadt Berlin", "Residenzstadt Berlin"]},
+  {"normalform": "Rheinland",            "typ": "Ort",           "aliases": ["Rheinprovinz", "Rheinisches Tiefland"]},
+  {"normalform": "Industrialisierung",   "typ": "Konzept",       "aliases": ["industrielle Revolution", "Industriezeitalter", "Industriegesellschaft"]},
+  {"normalform": "Nationalismus",        "typ": "Konzept",       "aliases": ["nationale Bewegung", "Nationalbewegung", "Nationalstaatsgedanke"]}
+]

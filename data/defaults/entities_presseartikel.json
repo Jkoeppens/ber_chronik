@@ -1,1 +1,10 @@
-[]
+[
+  {"normalform": "Merkel",          "typ": "Person",       "aliases": ["Angela Merkel", "Bundeskanzlerin Merkel", "CDU-Chefin Merkel"]},
+  {"normalform": "Scholz",          "typ": "Person",       "aliases": ["Olaf Scholz", "Bundeskanzler Scholz", "SPD-Kanzler"]},
+  {"normalform": "Bundesregierung", "typ": "Organisation", "aliases": ["Koalitionsregierung", "Berliner Koalition", "Kabinett"]},
+  {"normalform": "EU",              "typ": "Organisation", "aliases": ["Europäische Union", "EU-Kommission", "Brüssel"]},
+  {"normalform": "Berlin",          "typ": "Ort",          "aliases": ["Bundeshauptstadt", "Hauptstadt", "Berliner Senat"]},
+  {"normalform": "NRW",             "typ": "Ort",          "aliases": ["Nordrhein-Westfalen", "bevölkerungsreichstes Bundesland"]},
+  {"normalform": "Klimaschutz",     "typ": "Konzept",      "aliases": ["Klimapolitik", "CO2-Reduktion", "Dekarbonisierung"]},
+  {"normalform": "Inflation",       "typ": "Konzept",      "aliases": ["Teuerung", "Preissteigerung", "Kaufkraftverlust"]}
+]
