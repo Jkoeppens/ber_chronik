@@ -29,6 +29,7 @@ import sys
 import uuid
 from pathlib import Path
 from typing import List
+from urllib.parse import urlencode
 
 from src.generalized.entity_utils import merge_proposal
 from src.generalized.llm import get_provider, TASK_ANALYZE
@@ -1006,7 +1007,6 @@ async def get_editor(request: Request):
             doc_id = best.name
     if not preview_html:
         return HTMLResponse(f"<p>Keine Preview f\u00fcr Projekt \"{title}\" gefunden.</p>", status_code=404)
-    from urllib.parse import urlencode
     preview_params = {"project": project_id}
     if doc_id:
         preview_params["document"] = doc_id

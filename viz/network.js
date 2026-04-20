@@ -8,9 +8,10 @@ let netLinkSelection = null;      // D3 selection of all <line> elements
 
 function nodeRadius(d) { return Math.max(5, Math.min(28, Math.log(d.count + 1) * 7)); }
 function labelSize(d)  { return nodeRadius(d) >= 12 ? 11 : 10; }
+function nodeId(x)     { return x?.id ?? x; }
 function pairKey(a, b) {
-  const sid = (b === undefined) ? (a.source?.id ?? a.source) : a;
-  const tid = (b === undefined) ? (a.target?.id ?? a.target) : b;
+  const sid = (b === undefined) ? nodeId(a.source) : a;
+  const tid = (b === undefined) ? nodeId(a.target) : b;
   return [sid, tid].sort().join("\x00");
 }
 
@@ -62,7 +63,7 @@ function applyNetworkState() {
     netLinkSelection
       .attr("stroke-width", defaultWidth)
       .attr("stroke-opacity", l => {
-        const sid = l.source?.id ?? l.source, tid = l.target?.id ?? l.target;
+        const sid = nodeId(l.source), tid = nodeId(l.target);
         return (inEgo({ id: sid }) && inEgo({ id: tid }) && activeNetThemes.has(l.event_type))
           ? 0.85 : 0.05;
       });
@@ -82,11 +83,11 @@ function applyNetworkState() {
       .attr("stroke-dasharray", d => summaryMap[d.id] ? null : "4,3");
     netLinkSelection
       .attr("stroke-opacity", l => {
-        const sk = pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target);
+        const sk = pairKey(nodeId(l.source), nodeId(l.target));
         return sk === focusKey ? 0.85 : 0.05;
       })
       .attr("stroke-width", l => {
-        const sk = pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target);
+        const sk = pairKey(nodeId(l.source), nodeId(l.target));
         return sk === focusKey ? Math.max(2, Math.log((l.count || 1) + 1) * 1.5) : defaultWidth(l);
       });
     return;
@@ -120,7 +121,7 @@ function applyNetworkState() {
   netLinkSelection
     .attr("stroke-width",   defaultWidth)
     .attr("stroke-opacity", l => {
-      const sid = l.source?.id ?? l.source, tid = l.target?.id ?? l.target;
+      const sid = nodeId(l.source), tid = nodeId(l.target);
       return (answerActors.has(sid) && answerActors.has(tid)) ? 0.85 : 0.05;
     });
 }
@@ -204,8 +205,8 @@ function drawNetwork(nodes, links) {
   // ── Simulation: one link per pair (avoids duplicate forces) ─────────────────
   const pairSeen = new Set();
   const simLinks = links.filter(l => {
-    const sid = l.source?.id ?? l.source;
-    const tid = l.target?.id ?? l.target;
+    const sid = nodeId(l.source);
+    const tid = nodeId(l.target);
     const k = pairKey(sid, tid);
     if (pairSeen.has(k)) return false;
     pairSeen.add(k); return true;
@@ -230,12 +231,12 @@ function drawNetwork(nodes, links) {
   function computeOffsets(visibleLinks) {
     const groups = new Map();
     visibleLinks.forEach(l => {
-      const k = pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target);
+      const k = pairKey(nodeId(l.source), nodeId(l.target));
       if (!groups.has(k)) groups.set(k, []);
       groups.get(k).push(l);
     });
     visibleLinks.forEach(l => {
-      const grp = groups.get(pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target));
+      const grp = groups.get(pairKey(nodeId(l.source), nodeId(l.target)));
       l._offsetTotal = grp.length;
       l._offsetIndex = grp.indexOf(l);
     });
@@ -248,18 +249,13 @@ function drawNetwork(nodes, links) {
   const pairTotalCount = new Map(); // pairKey → total co-occurrence count
   const pairEventTypes = new Map(); // pairKey → Set<event_type>
   links.forEach(l => {
-    const k = pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target);
+    const k = pairKey(nodeId(l.source), nodeId(l.target));
     pairTotalCount.set(k, (pairTotalCount.get(k) || 0) + l.count);
     if (!pairEventTypes.has(k)) pairEventTypes.set(k, new Set());
     pairEventTypes.get(k).add(l.event_type);
   });
-  // Deduplicated: one representative link per pair
-  const pairSeen2 = new Set();
-  const hitLinks  = links.filter(l => {
-    const k = pairKey(l.source?.id ?? l.source, l.target?.id ?? l.target);
-    if (pairSeen2.has(k)) return false;
-    pairSeen2.add(k); return true;
-  });
+  // Deduplicated: one representative link per pair — same set as simLinks
+  const hitLinks = simLinks;
 
   // ── Visible lines (no pointer events — hit layer handles interaction) ─────────
   const linkG   = g.append("g");
@@ -447,7 +443,7 @@ function drawNetwork(nodes, links) {
         .attr("r",    nodeRadius(d) * 1.25)
         .attr("fill", NODE_COLOR[d.typ] || "#999");
       linkSel.attr("stroke-opacity", l => {
-        const s = l.source?.id ?? l.source, t = l.target?.id ?? l.target;
+        const s = nodeId(l.source), t = nodeId(l.target);
         return (s === d.id || t === d.id) ? 0.85 : 0.05;
       });
     })
@@ -488,7 +484,7 @@ function drawNetwork(nodes, links) {
     .attr("fill",           "none")
     .attr("cursor",         "pointer")
     .on("mouseenter", (event, d) => {
-      const sid = d.source?.id ?? d.source, tid = d.target?.id ?? d.target;
+      const sid = nodeId(d.source), tid = nodeId(d.target);
       const k   = pairKey(d);
       const n   = pairTotalCount.get(k) || 0;
       showTip(
@@ -514,7 +510,7 @@ function drawNetwork(nodes, links) {
         if (prev) { prev.fx = null; prev.fy = null; }
         netFocusNode = null;
       }
-      const sid = d.source?.id ?? d.source, tid = d.target?.id ?? d.target;
+      const sid = nodeId(d.source), tid = nodeId(d.target);
       const key = pairKey(sid, tid);
       netFocusPair = { key, sid, tid };
       const shared = (entriesByActor.get(sid) || [])
