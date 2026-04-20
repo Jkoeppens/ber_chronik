@@ -79,14 +79,17 @@ def _parse_args():
 
 def _load_seed_and_rejected(doc_dir: Path) -> tuple[list[dict], set[str]]:
     seed: list[dict] = []
-    seed_path = doc_dir / "entities_seed.json"
-    if seed_path.exists():
-        seed = json.loads(seed_path.read_text(encoding="utf-8"))
-        for ent in seed:
-            ent["_source"] = "seed"
-        print(f"Seed: {len(seed)} Entities")
-    else:
-        print("Kein entities_seed.json — nur Schritt 1 (Stichprobe)")
+    config_p = doc_dir.parent.parent / "config.json"
+    if config_p.exists():
+        try:
+            cfg_entities = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
+            if cfg_entities:
+                seed = [dict(e, _source="seed") for e in cfg_entities]
+                print(f"Seed: {len(seed)} bestätigte Entities aus config.json")
+        except (json.JSONDecodeError, OSError):
+            pass
+    if not seed:
+        print("Kein Seed — Extraktion startet ohne Few-Shot-Beispiele")
 
     rejected_lc: set[str] = set()
     rejected_path = doc_dir / "entities_rejected.json"
