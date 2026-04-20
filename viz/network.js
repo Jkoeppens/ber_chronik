@@ -49,7 +49,7 @@ function applyNetworkState() {
 
   // ── 1. Ego-graph ───────────────────────────────────────────────────────────
   if (netFocusNode) {
-    const nbrs = netNeighbors.get(netFocusNode) || new Set();
+    const nbrs = new Set([...(netNeighbors.get(netFocusNode) || [])].filter(id => _lastVisibleIds.has(id)));
     const inEgo = d => d.id === netFocusNode || nbrs.has(d.id);
     netNodeSelection
       .attr("opacity", d => inEgo(d) ? 1 : DIM);

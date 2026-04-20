@@ -350,7 +350,7 @@ async def save_taxonomy(request: Request):
 
 @app.get("/taxonomy")
 async def get_taxonomy_editor():
-    return HTMLResponse(content=_render_template("taxonomy_editor.html", APP_CSS=APP_CSS))
+    return HTMLResponse(content=_render_template("taxonomy_editor.html"))
 
 
 # ── Ingest endpoints ───────────────────────────────────────────────────────────
@@ -887,7 +887,7 @@ async def get_segments_data(request: Request):
 
 @app.get("/ingest/entities")
 async def get_entity_editor():
-    return HTMLResponse(content=_render_template("entity_editor.html", APP_CSS=APP_CSS))
+    return HTMLResponse(content=_render_template("entity_editor.html"))
 
 
 @app.get("/api/projects")
@@ -1056,68 +1056,7 @@ async def get_project_token(project_id: str, request: Request):
 
 @app.get("/ingest")
 async def get_ingest_wizard():
-    return HTMLResponse(content=_render_template("ingest_wizard.html", APP_CSS=APP_CSS))
-
-
-# ── Shared CSS (tokens + base classes, injected into every page) ───────────────
-
-APP_CSS = """\
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:13px}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-     background:var(--c-bg);color:var(--c-text);min-height:100vh;display:flex;flex-direction:column}
-:root{
-  --c-bg:#f4f3f0;--c-surface:#fff;
-  --c-border:#e5e2dc;--c-border-ui:#e0ddd8;
-  --c-text:#1a1a1a;--c-text-2:#555;--c-text-3:#888;--c-text-4:#aaa;
-  --c-primary:#6d28d9;--c-primary-h:#5b21b6;
-  --c-primary-tint:#ede9fe;--c-primary-bg:#faf5ff;--c-primary-ring:#c4b5fd;
-  --c-success:#16a34a;--c-danger:#dc2626;
-  --c-danger-bg:#fef2f2;--c-danger-border:#fca5a5;
-  --c-code-bg:#f8fafc;--c-code-border:#e2e8f0;
-}
-.app-header{background:var(--c-surface);border-bottom:1px solid var(--c-border-ui);
-            padding:11px 24px;display:flex;align-items:center;gap:10px;
-            position:sticky;top:0;z-index:10;flex-wrap:wrap}
-.app-header h1{font-size:14px;font-weight:600;color:var(--c-text);flex:1;margin-right:auto}
-.app-status{font-size:11px;color:var(--c-text-3)}
-.btn{padding:5px 12px;border-radius:4px;font-size:12px;cursor:pointer;
-     border:1px solid var(--c-border);background:var(--c-surface);color:var(--c-text-2);
-     transition:background .15s,color .15s,border-color .15s;white-space:nowrap;
-     font-family:inherit;text-decoration:none;display:inline-flex;align-items:center}
-.btn:hover:not(:disabled){background:#f3f4f6}
-.btn:disabled{opacity:.4;cursor:default}
-.btn-primary{background:var(--c-primary);border-color:var(--c-primary);color:#fff}
-.btn-primary:hover:not(:disabled){background:var(--c-primary-h);border-color:var(--c-primary-h)}
-.btn-outline{border-color:var(--c-primary);color:var(--c-primary)}
-.btn-outline:hover:not(:disabled){background:var(--c-primary);color:#fff}
-.btn-success{border-color:var(--c-success);color:var(--c-success)}
-.btn-success:hover:not(:disabled){background:var(--c-success);color:#fff;border-color:var(--c-success)}
-.btn-dashed{border:1px dashed var(--c-primary-ring);background:var(--c-primary-bg);color:var(--c-primary)}
-.btn-dashed:hover:not(:disabled){background:var(--c-primary-tint)}
-.btn-sm{padding:3px 9px;font-size:11px;border-radius:3px}
-.card{background:var(--c-surface);border:1px solid var(--c-border);border-radius:6px}
-.card:hover{border-color:var(--c-primary-ring)}
-.input{padding:4px 8px;border:1px solid #d1d5db;border-radius:3px;font-size:12px;
-       font-family:inherit;background:var(--c-surface)}
-.input:hover:not(:focus){border-color:#9ca3af}
-.input:focus{border-color:var(--c-primary);outline:none;background:var(--c-primary-bg)}
-.log-box{font-size:11px;font-family:ui-monospace,monospace;white-space:pre-wrap;
-         background:var(--c-code-bg);border:1px solid var(--c-code-border);
-         border-radius:4px;padding:8px 12px;max-height:200px;overflow-y:auto;display:none}
-.log-box.collapsed{max-height:40px;overflow:hidden;cursor:default}
-.log-box.error{background:var(--c-danger-bg);border-color:var(--c-danger-border);color:var(--c-danger)}
-.log-toggle{font-size:10px;cursor:pointer;color:var(--c-muted);user-select:none;
-            margin-top:3px;display:none}
-.log-toggle:hover{color:var(--c-text)}
-.section-label{font-size:10px;font-weight:600;color:var(--c-text-3);
-               text-transform:uppercase;letter-spacing:.06em}
-.chip{display:inline-flex;align-items:center;gap:3px;background:var(--c-primary-tint);
-      border-radius:10px;padding:2px 8px;font-size:11px;color:#4c1d95}
-.chip-del{border:none;background:none;cursor:pointer;color:var(--c-primary);
-          font-size:12px;line-height:1;padding:0 2px}
-.chip-del:hover{color:var(--c-danger)}
-"""
+    return HTMLResponse(content=_render_template("ingest_wizard.html"))
 
 
 
