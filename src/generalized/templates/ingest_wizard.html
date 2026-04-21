@@ -478,6 +478,9 @@ loadProjectList();
     };
     document.getElementById('project-name-input').value    = state.project_title;
     document.getElementById('project-name-input').disabled = true;
+    if (Array.isArray(cfg.taxonomy) && cfg.taxonomy.length > 0) {
+      taxData = cfg.taxonomy;
+    }
     maxReachedStep = step;
     gotoStep(step);
   } catch (_) { /* Fehler ignorieren — frischer Start */ }
@@ -1303,9 +1306,9 @@ document.getElementById('btn-run-pipeline').addEventListener('click', async () =
     doc_type:    state.doc_type,
     analysis:    state.analysis,
     time_config: state.time_config,
-    taxonomy:    taxData,
     created_at:  new Date().toISOString(),
   };
+  if (taxData.length > 0) config.taxonomy = taxData;
   await fetch('/ingest/save_config', {
     method: 'POST', headers: authHeaders(), body: JSON.stringify(config)
   });
