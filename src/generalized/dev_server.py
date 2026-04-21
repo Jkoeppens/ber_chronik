@@ -578,19 +578,14 @@ async def ingest_run(request: Request):
     d_args     = ["--project", project, "--document", doc_id]
     p_args     = ["--project", project]  # project-only (for exploration export)
 
-    # Zeitanker-Schritte überspringen wenn anchors_interpolated.json neuer als segments.json
-    doc_dir        = get_doc_dir(project, doc_id)
-    anchors_path   = doc_dir / "anchors_interpolated.json"
-    segments_path  = doc_dir / "segments.json"
-    anchors_fresh  = (
-        anchors_path.exists() and segments_path.exists() and
-        anchors_path.stat().st_mtime > segments_path.stat().st_mtime
-    )
+    doc_dir       = get_doc_dir(project, doc_id)
+    has_segments  = (doc_dir / "segments.json").exists()
+    has_anchors   = (doc_dir / "anchors_interpolated.json").exists()
 
-    steps = [
-        (PARSE_SCRIPT,           parse_args),
-    ]
-    if not anchors_fresh:
+    steps = []
+    if not has_segments:
+        steps.append((PARSE_SCRIPT, parse_args))
+    if not has_anchors:
         steps += [
             (DETECT_SCRIPT,      d_args),
             (INTERPOLATE_SCRIPT, d_args),
@@ -599,7 +594,7 @@ async def ingest_run(request: Request):
         (CLASSIFY_SCRIPT,        d_args),
         (MATCH_ENTITIES_SCRIPT,  d_args),
     ]
-    if not anchors_fresh:
+    if not has_anchors:
         steps.append((EXPORT_SCRIPT, d_args))
 
     async def gen():
