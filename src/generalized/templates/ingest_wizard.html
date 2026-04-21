@@ -212,6 +212,8 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
 .proj-card-title{font-size:13px;font-weight:600;color:var(--c-text);flex:1}
 .proj-card-meta{font-size:11px;color:var(--c-text-3)}
 .proj-card-open{font-size:11px;color:var(--c-primary);font-weight:600;flex-shrink:0}
+.proj-card-add{font-size:11px;font-weight:600;flex-shrink:0;padding:3px 8px;border:1px solid var(--c-primary);border-radius:4px;background:var(--c-primary-bg);color:var(--c-primary);cursor:pointer;line-height:1.4}
+.proj-card-add:hover{background:var(--c-primary);color:#fff}
 </style>
 </head>
 <body>
@@ -396,6 +398,7 @@ const state = {
   token: null,
   project: null,
   project_title: '',
+  isExistingProject: false,
 };
 
 function slugify(name) {
@@ -479,7 +482,9 @@ function gotoStep(n) {
 
 btnBack.addEventListener('click', () => { if (currentStep > 1) gotoStep(currentStep - 1); });
 btnNext.addEventListener('click', async () => {
-  if (currentStep === 4) {
+  if (currentStep === 3 && state.isExistingProject) {
+    gotoStep(5);
+  } else if (currentStep === 4) {
     if (taxData.length > 0) markTaxDirty();
     saveTaxonomy().then(() => gotoStep(5));
   } else if (currentStep === 5) {
@@ -494,7 +499,7 @@ btnNext.addEventListener('click', async () => {
 
 async function onEnterStep(n) {
   btnNext.disabled = false;
-  if (n === 1) updateStep1Next();
+  if (n === 1) { document.getElementById('project-name-input').disabled = false; state.isExistingProject = false; updateStep1Next(); }
   if (n === 3) {
     if (state.analysis) {
       renderAnalysisResult(state.analysis);
@@ -631,20 +636,21 @@ async function runAnalysis() {
     };
 
     // Minimal save_config to create DB entry + get token for subsequent requests
+    const scBody = {
+      project:    state.project  || undefined,
+      document:   state.document || undefined,
+      input_file: state.files[0]?.name || '',
+      doc_type:   state.doc_type,
+      analysis:   state.analysis,
+      time_config: state.time_config,
+      title:      state.project_title || undefined,
+      created_at: new Date().toISOString(),
+    };
+    if (!state.isExistingProject) scBody.taxonomy = [];
     const scRes = await fetch('/ingest/save_config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        project:    state.project  || undefined,
-        document:   state.document || undefined,
-        input_file: state.files[0]?.name || '',
-        doc_type:   state.doc_type,
-        analysis:   state.analysis,
-        time_config: state.time_config,
-        taxonomy:   [],
-        title:      state.project_title || undefined,
-        created_at: new Date().toISOString(),
-      }),
+      body: JSON.stringify(scBody),
     });
     const scData = await scRes.json();
     if (scData.token) state.token = scData.token;
@@ -1138,14 +1144,47 @@ async function loadProjectList() {
       <div class="proj-card" data-id="${escHtml(p.id)}" data-title="${escHtml(p.title)}" data-doctype="${escHtml(p.doc_type||'')}">
         <div class="proj-card-title">${escHtml(p.title)}</div>
         <div class="proj-card-meta">${escHtml(p.doc_type||'—')}${p.entry_count ? ' · ' + p.entry_count + '\u00a0Einträge' : ''}</div>
+        <button class="proj-card-add" data-id="${escHtml(p.id)}" data-title="${escHtml(p.title)}">+ Dokument</button>
         <span class="proj-card-open">öffnen →</span>
       </div>`).join('');
     listEl.querySelectorAll('.proj-card').forEach(card => {
+      card.querySelector('.proj-card-add').addEventListener('click', e => {
+        e.stopPropagation();
+        addDocumentToProject(card.dataset.id, card.dataset.title);
+      });
       card.addEventListener('click', () =>
         openExistingProject(card.dataset.id, card.dataset.title, card.dataset.doctype));
     });
   } catch (_) {
     listEl.innerHTML = '<span style="font-size:11px;color:var(--c-text-3)">Projekte konnten nicht geladen werden.</span>';
+  }
+}
+
+async function addDocumentToProject(id, title) {
+  const listEl = document.getElementById('proj-list');
+  listEl.style.opacity = '0.5';
+  listEl.style.pointerEvents = 'none';
+  try {
+    const tokenRes = await fetch('/api/projects/' + encodeURIComponent(id) + '/token');
+    if (!tokenRes.ok) throw new Error('Server-Fehler ' + tokenRes.status);
+    const tokenData = await tokenRes.json();
+    if (!tokenData.ok) throw new Error(tokenData.error || 'Fehler');
+    state.project            = id;
+    state.project_title      = title;
+    state.token              = tokenData.token;
+    state.document           = crypto.randomUUID().slice(0, 8);
+    state.files              = [];
+    state.analysis           = null;
+    state.isExistingProject  = true;
+    document.getElementById('project-name-input').value = title;
+    document.getElementById('project-name-input').disabled = true;
+    maxReachedStep = 1;
+    gotoStep(2);
+  } catch (e) {
+    alert('Fehler: ' + e.message);
+  } finally {
+    listEl.style.opacity = '';
+    listEl.style.pointerEvents = '';
   }
 }
 
