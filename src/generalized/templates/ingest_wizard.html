@@ -449,6 +449,40 @@ function buildDots() {
 buildDots();
 loadProjectList();
 
+// ── URL-State-Restore (nach Page-Reload) ──────────────────────────────────────
+(async function restoreFromUrl() {
+  const p    = new URLSearchParams(location.search);
+  const proj = p.get('project');
+  const doc  = p.get('document');
+  const step = parseInt(p.get('step') || '1', 10);
+  if (!proj || !doc || step <= 1) return;
+  try {
+    const [tokenRes, cfgRes] = await Promise.all([
+      fetch('/api/projects/' + encodeURIComponent(proj) + '/token'),
+      fetch('/api/projects/' + encodeURIComponent(proj)),
+    ]);
+    if (!tokenRes.ok) return;
+    const tokenData = await tokenRes.json();
+    if (!tokenData.ok) return;
+    const cfg = cfgRes.ok ? await cfgRes.json() : {};
+    state.project       = proj;
+    state.document      = doc;
+    state.token         = tokenData.token;
+    state.project_title = cfg.title || proj;
+    state.doc_type      = cfg.doc_type || state.doc_type;
+    state.isExistingProject = true;
+    state.time_config   = {
+      year_min: cfg.year_min ?? 1800,
+      year_max: cfg.year_max ?? 1920,
+      events:   (cfg.events || []).map((e, i) => ({ ...e, id: evNextId++, color: EVENT_COLORS[i % EVENT_COLORS.length] })),
+    };
+    document.getElementById('project-name-input').value    = state.project_title;
+    document.getElementById('project-name-input').disabled = true;
+    maxReachedStep = step;
+    gotoStep(step);
+  } catch (_) { /* Fehler ignorieren — frischer Start */ }
+})();
+
 function updateProgress(n) {
   if (n > maxReachedStep) maxReachedStep = n;
   for (let i = 1; i <= TOTAL; i++) {
@@ -477,6 +511,13 @@ function gotoStep(n) {
   btnBack.disabled = n === 1;
   btnNext.style.display = n === TOTAL ? 'none' : '';
   currentStep = n;
+  if (state.project && state.document) {
+    const u = new URL(location.href);
+    u.searchParams.set('project',  state.project);
+    u.searchParams.set('document', state.document);
+    u.searchParams.set('step',     n);
+    history.replaceState({}, '', u.toString());
+  }
   onEnterStep(n);
 }
 
@@ -1309,7 +1350,7 @@ document.getElementById('btn-run-pipeline').addEventListener('click', async () =
           btn.textContent = 'Pipeline erneut starten';
           if (state.project && !logEl.parentElement.querySelector('.explo-link')) {
             const linkEl = document.createElement('a');
-            linkEl.href = 'http://localhost:8765/viz/?project=' + encodeURIComponent(state.project);
+            linkEl.href = '/viz/?project=' + encodeURIComponent(state.project);
             linkEl.target = '_blank'; linkEl.className = 'explo-link';
             linkEl.textContent = 'Zur Exploration →';
             linkEl.style.cssText = 'display:inline-block;margin-top:10px;padding:6px 14px;background:#6d28d9;color:#fff;border-radius:4px;text-decoration:none;font-size:12px;font-weight:600';

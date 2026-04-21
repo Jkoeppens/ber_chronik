@@ -616,7 +616,7 @@ async def ingest_run(request: Request):
             yield chunk
             if "__error__" in chunk:
                 break  # non-fatal: exploration failure doesn't abort
-        yield f"data: __link__:http://localhost:8765/viz/?project={project}\n\n"
+        yield f"data: __link__:/viz/?project={project}\n\n"
         yield "data: __done__\n\n"
 
     return sse_response(gen())
