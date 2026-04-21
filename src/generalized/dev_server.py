@@ -33,7 +33,6 @@ from pathlib import Path
 from typing import List
 from urllib.parse import urlencode
 
-from src.generalized.entity_utils import merge_proposal
 from src.generalized.llm import get_provider, TASK_ANALYZE
 import shutil
 
@@ -703,15 +702,6 @@ async def ingest_extract_entities(request: Request):
             yield chunk
             if "__error__" in chunk:
                 return
-        yield "data: Merge…\n\n"
-        try:
-            _, stats = _do_merge(project, doc_id)
-            yield (f"data: Merge: {stats['seed']} Seed + {stats['proposal']} Vorschläge "
-                   f"→ {stats['prop_confirmed']} confirmed, {stats['prop_new']} NEU"
-                   + (f", {stats['prop_skipped_rejected']} abgelehnt" if stats['prop_skipped_rejected'] else "")
-                   + "\n\n")
-        except Exception as exc:
-            yield f"data: Merge-Fehler: {exc}\n\n"
         yield "data: __done__\n\n"
     return sse_response(gen())
 
@@ -723,23 +713,19 @@ async def get_entities_data(request: Request):
     if not project or not doc_id:
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
-    doc_dir = get_doc_dir(project, doc_id)
-    # D-P4: config.json["entities"] hat höchste Priorität
+    doc_dir      = get_doc_dir(project, doc_id)
+    proposal_path = doc_dir / "entities_proposal.json"
+    if proposal_path.exists():
+        data = json.loads(proposal_path.read_text(encoding="utf-8"))
+        return JSONResponse([dict(**{k: v for k, v in e.items() if not k.startswith("_")},
+                                  _status="confirmed") for e in data])
+    # Kein frischer Extraction-Run: config.json["entities"] als Fallback
     config_p = get_project_dir(project) / "config.json"
     if config_p.exists():
         cfg_entities = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
         if cfg_entities:
             return JSONResponse([dict(**{k: v for k, v in e.items() if not k.startswith("_")},
                                       _status="confirmed") for e in cfg_entities])
-    # Noch keine Entities in config.json: merged (mit _status) > proposal (alles neu)
-    merged_path   = doc_dir / "entities_merged.json"
-    proposal_path = doc_dir / "entities_proposal.json"
-    if merged_path.exists():
-        return JSONResponse(json.loads(merged_path.read_text(encoding="utf-8")))
-    if proposal_path.exists():
-        data = json.loads(proposal_path.read_text(encoding="utf-8"))
-        return JSONResponse([dict(**{k: v for k, v in e.items() if not k.startswith("_")},
-                                  _status="new") for e in data])
     return JSONResponse([])
 
 
@@ -755,7 +741,13 @@ async def save_entities(request: Request):
         return JSONResponse({"ok": False, "error": "Body muss ein JSON-Array sein"}, status_code=400)
     # Strip internal fields (_status, _source, etc.) before writing
     clean = [{k: v for k, v in e.items() if not k.startswith("_")} for e in body]
-    # D-P4: Entities in project config.json speichern, nie in doc-level entities_seed.json
+    # Kanonische Quelle: entities_proposal.json (doc-level)
+    doc_dir = get_doc_dir(project, doc_id)
+    doc_dir.mkdir(parents=True, exist_ok=True)
+    (doc_dir / "entities_proposal.json").write_text(
+        json.dumps(clean, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    # Spiegel in config.json["entities"] für Pipeline-Schritte (classify, match_entities)
     project_dir = get_project_dir(project)
     project_dir.mkdir(parents=True, exist_ok=True)
     config_p = project_dir / "config.json"
@@ -767,42 +759,8 @@ async def save_entities(request: Request):
             pass
     cfg["entities"] = clean
     config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
-    # Delete stale merged file so next load reads fresh data
-    merged = get_doc_dir(project, doc_id) / "entities_merged.json"
-    if merged.exists():
-        merged.unlink()
     return {"ok": True, "count": len(clean)}
 
-
-def _do_merge(project: str, doc_id: str) -> tuple[list[dict], dict]:
-    """I/O-Wrapper um merge_proposal: liest Dateien, schreibt entities_merged.json."""
-    doc_dir       = get_doc_dir(project, doc_id)
-    proposal_path = doc_dir / "entities_proposal.json"
-    rejected_path = doc_dir / "entities_rejected.json"
-
-    config_p = get_project_dir(project) / "config.json"
-    seed: list[dict] = []
-    if config_p.exists():
-        try:
-            seed = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
-        except (json.JSONDecodeError, OSError):
-            pass
-    proposal = json.loads(proposal_path.read_text(encoding="utf-8")) if proposal_path.exists() else []
-    rejected = json.loads(rejected_path.read_text(encoding="utf-8")) if rejected_path.exists() else []
-
-    result, stats = merge_proposal(seed, proposal, rejected)
-
-    doc_dir.mkdir(parents=True, exist_ok=True)
-    (doc_dir / "entities_merged.json").write_text(
-        json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    print(
-        f"[merge] seed={stats['seed']} proposal={stats['proposal']} "
-        f"→ confirmed={stats['prop_confirmed']} new={stats['prop_new']} "
-        f"skipped(rejected)={stats['prop_skipped_rejected']} "
-        f"total_result={len(result)}"
-    )
-    return result, stats
 
 
 
@@ -823,12 +781,12 @@ async def reject_entity(request: Request):
     if norm_lc and not any((e.get("normalform") or "").lower() == norm_lc for e in rejected):
         rejected.append({"normalform": body["normalform"], "aliases": body.get("aliases") or []})
         rejected_path.write_text(json.dumps(rejected, ensure_ascii=False, indent=2), encoding="utf-8")
-    # Remove from merged.json immediately so editor reflects change
-    merged_path = doc_dir / "entities_merged.json"
-    if merged_path.exists():
-        merged = json.loads(merged_path.read_text(encoding="utf-8"))
-        merged = [e for e in merged if (e.get("normalform") or "").lower() != norm_lc]
-        merged_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
+    # Remove from entities_proposal.json immediately so editor reflects change
+    proposal_path = doc_dir / "entities_proposal.json"
+    if proposal_path.exists():
+        proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
+        proposal = [e for e in proposal if (e.get("normalform") or "").lower() != norm_lc]
+        proposal_path.write_text(json.dumps(proposal, ensure_ascii=False, indent=2), encoding="utf-8")
     return JSONResponse({"ok": True})
 
 
