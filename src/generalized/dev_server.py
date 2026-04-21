@@ -14,6 +14,8 @@ Endpoints:
   POST /ingest/propose_taxonomy — propose_taxonomy.py auf aktuellen Segmenten, SSE
   POST /ingest/save_config     — project_config.json schreiben
   POST /ingest/run             — vollständige Pipeline als SSE
+  GET  /viz/                   — Exploration-Viz (StaticFiles aus viz/)
+  GET  /data/projects/         — Projektdaten (StaticFiles, für viz/DATA_BASE)
 
 Starten:
   uvicorn src.generalized.dev_server:app --port 8001 --reload
@@ -45,10 +47,12 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.generalized.config import ROOT, DATA_ROOT
 PROJECTS_DIR       = DATA_ROOT / "projects"
 RAW_DIR            = DATA_ROOT / "raw"
+VIZ_DIR            = ROOT / "viz"
 
 PARSE_SCRIPT               = ROOT / "src" / "generalized" / "parse_document.py"
 DETECT_SCRIPT              = ROOT / "src" / "generalized" / "detect_anchors.py"
@@ -1060,4 +1064,11 @@ async def get_ingest_wizard():
     return HTMLResponse(content=_render_template("ingest_wizard.html"))
 
 
+# ── Static file mounts (after all route handlers) ─────────────────────────────
+# /viz/ → viz/ (Exploration-Visualisierung)
+# /data/projects/ → data/projects/ (exploration/*.json für boot.js via DATA_BASE)
+if VIZ_DIR.exists():
+    app.mount("/viz", StaticFiles(directory=VIZ_DIR, html=True), name="viz")
+if PROJECTS_DIR.exists():
+    app.mount("/data/projects", StaticFiles(directory=PROJECTS_DIR), name="projects_data")
 
