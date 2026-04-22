@@ -173,7 +173,7 @@ function drawNetwork(nodes, links) {
 
   // Apply precomputed positions
   const nodeById = new Map(nodes.map(n => [n.id, n]));
-  if (_networkLayout) {
+  if (_networkLayout?.nodes) {
     const sx = W / _networkLayout.width;
     const sy = H / _networkLayout.height;
     const posMap = new Map(_networkLayout.nodes.map(n => [n.id, n]));

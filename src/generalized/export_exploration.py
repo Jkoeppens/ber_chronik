@@ -22,6 +22,7 @@ Mapping precision → date_precision:
 import argparse
 import csv
 import json
+import subprocess
 import sys
 from collections import Counter
 from datetime import date
@@ -329,6 +330,20 @@ def main() -> None:
     meta = build_meta(config, taxonomy, entities)
     meta_out.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"→ {meta_out}")
+
+    # ── network_layout.json ────────────────────────────────────────────────────
+    precompute = ROOT / "src" / "generalized" / "precompute_network.js"
+    if precompute.exists():
+        print("\nBerechne Netzwerk-Layout …")
+        result = subprocess.run(
+            ["node", str(precompute), "--project", args.project],
+            capture_output=True, text=True,
+        )
+        if result.returncode == 0:
+            print(f"→ {exploration_dir / 'network_layout.json'}")
+        else:
+            print(f"Warnung: precompute_network.js fehlgeschlagen:\n{result.stderr.strip()}",
+                  file=sys.stderr)
 
     # ── Validierung ────────────────────────────────────────────────────────────
     validate_and_stats(entries)
