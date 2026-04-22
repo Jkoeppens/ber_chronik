@@ -109,7 +109,7 @@
 
   if (currentProject) {
     paEdit.href   = `${DEV_API}/ingest?project=${currentProject}&step=4`;
-    paAddSrc.href = `${DEV_API}/ingest?project=${currentProject}`;
+    paAddSrc.href = `${DEV_API}/ingest?add_to=${currentProject}`;
     actEl.style.display = "";
   } else {
     actEl.style.display = "none";

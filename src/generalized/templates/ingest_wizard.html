@@ -468,7 +468,12 @@ function buildDots() {
   }
 }
 buildDots();
-loadProjectList();
+loadProjectList().then(() => {
+  const addTo = new URLSearchParams(location.search).get('add_to');
+  if (!addTo) return;
+  const card = document.querySelector(`.proj-card[data-id="${CSS.escape(addTo)}"]`);
+  if (card) card.closest('.proj-card-wrap')?.querySelector('.proj-card-add')?.click();
+});
 
 // ── URL-State-Restore (nach Page-Reload) ──────────────────────────────────────
 (async function restoreFromUrl() {
@@ -545,13 +550,16 @@ function gotoStep(n) {
   onEnterStep(n);
 }
 
-btnBack.addEventListener('click', () => { if (currentStep > 1) gotoStep(currentStep - 1); });
+btnBack.addEventListener('click', () => {
+  if (currentStep === 6 && state.isExistingProject) gotoStep(4);
+  else if (currentStep > 1) gotoStep(currentStep - 1);
+});
 btnNext.addEventListener('click', async () => {
   if (currentStep === 3 && state.isExistingProject) {
-    gotoStep(5);
+    gotoStep(4);
   } else if (currentStep === 4) {
     if (taxData.length > 0) markTaxDirty();
-    saveTaxonomy().then(() => gotoStep(5));
+    saveTaxonomy().then(() => gotoStep(state.isExistingProject ? 6 : 5));
   } else if (currentStep === 5) {
     btnNext.disabled = true;
     const ok = await runAnchorPipeline();
