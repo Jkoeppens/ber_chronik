@@ -62,6 +62,7 @@ EXPORT_EXPLORATION_SCRIPT  = ROOT / "src" / "generalized" / "export_exploration.
 PROPOSE_SCRIPT             = ROOT / "src" / "generalized" / "propose_taxonomy.py"
 EXTRACT_ENTITIES_SCRIPT    = ROOT / "src" / "generalized" / "extract_entities_v2.py"
 MATCH_ENTITIES_SCRIPT      = ROOT / "src" / "generalized" / "match_entities.py"
+INGEST_ZOTERO_SCRIPT       = ROOT / "src" / "generalized" / "ingest_zotero.py"
 
 app = FastAPI(title="Generalized Dev Server")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -905,6 +906,17 @@ async def get_project_endpoint(project_id: str):
             cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             pass
+    zc = cfg.get("zotero") or {}
+    zotero_info = None
+    if zc.get("collection"):
+        raw_key = zc.get("api_key", "")
+        masked  = (raw_key[:4] + "…" + raw_key[-4:]) if len(raw_key) > 8 else ("●" * len(raw_key))
+        zotero_info = {
+            "user_id":    zc.get("user_id", ""),
+            "collection": zc.get("collection", ""),
+            "doc_type":   zc.get("doc_type", "presseartikel"),
+            "api_key_masked": masked,
+        }
     return JSONResponse({
         "ok":       True,
         "id":       proj["id"],
@@ -914,6 +926,7 @@ async def get_project_endpoint(project_id: str):
         "year_max": cfg.get("year_max"),
         "events":   cfg.get("events") or [],
         "taxonomy": cfg.get("taxonomy") or [],
+        "zotero":   zotero_info,
     })
 
 
@@ -1016,6 +1029,76 @@ async def get_project_token(project_id: str, request: Request):
     doc_id = _get_latest_doc_id(project_id)
     return JSONResponse({"ok": True, "id": proj["id"], "token": proj["token"],
                          "created_at": proj["created_at"], "doc_id": doc_id})
+
+
+@app.post("/api/projects/{project_id}/zotero/config")
+async def save_zotero_config(project_id: str, request: Request):
+    if err := _require_admin_key(request): return err
+    body = await request.json()
+    cfg_path = PROJECTS_DIR / project_id / "config.json"
+    cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
+    existing = cfg.get("zotero") or {}
+    api_key = body.get("api_key", "").strip()
+    if not api_key:
+        api_key = existing.get("api_key", "")
+    cfg["zotero"] = {
+        "api_key":    api_key,
+        "user_id":    body.get("user_id", "").strip(),
+        "collection": body.get("collection", "").strip(),
+        "doc_type":   body.get("doc_type", "presseartikel"),
+    }
+    cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    return JSONResponse({"ok": True})
+
+
+@app.get("/api/projects/{project_id}/zotero/test")
+async def test_zotero_config(project_id: str, request: Request,
+                              api_key: str = "", user_id: str = "", collection: str = ""):
+    if err := _require_admin_key(request): return err
+    if not api_key or not user_id or not collection:
+        return JSONResponse({"ok": False, "error": "api_key, user_id und collection erforderlich"}, status_code=400)
+    import asyncio
+    def _check():
+        try:
+            from pyzotero import zotero as pyz
+            zot = pyz.Zotero(user_id, "user", api_key)
+            items = zot.everything(zot.collection_items(collection))
+            items = [it for it in items if it.get("data", {}).get("itemType") not in ("attachment", "note")]
+            return {"ok": True, "count": len(items)}
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+    result = await asyncio.get_event_loop().run_in_executor(None, _check)
+    return JSONResponse(result)
+
+
+@app.post("/api/projects/{project_id}/zotero/sync")
+async def zotero_sync(project_id: str, request: Request):
+    if err := _require_admin_key(request): return err
+    cfg_path = PROJECTS_DIR / project_id / "config.json"
+    if not cfg_path.exists():
+        return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
+    cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    zc  = cfg.get("zotero") or {}
+    api_key    = zc.get("api_key") or os.environ.get("ZOTERO_API_KEY", "")
+    user_id    = zc.get("user_id") or os.environ.get("ZOTERO_USER_ID", "")
+    collection = zc.get("collection", "")
+    doc_type   = zc.get("doc_type", "presseartikel")
+    if not api_key or not user_id or not collection:
+        return JSONResponse({"ok": False, "error": "Zotero nicht konfiguriert (api_key, user_id, collection)"}, status_code=400)
+    args = ["--project", project_id,
+            "--api-key", api_key,
+            "--user-id", str(user_id),
+            "--collection", collection,
+            "--doc-type", doc_type]
+    async def gen():
+        async for chunk in run_script_sse(INGEST_ZOTERO_SCRIPT, args):
+            if chunk == "data: __ok__\n\n":
+                break
+            yield chunk
+            if "__error__" in chunk:
+                break
+        yield "data: __done__\n\n"
+    return sse_response(gen())
 
 
 @app.get("/ingest")

@@ -236,6 +236,27 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
          padding:8px 10px;max-height:120px;overflow-y:auto;white-space:pre-wrap;color:var(--c-text-2);margin:0}
 .adp-close{font-size:11px;color:var(--c-text-3);cursor:pointer;text-decoration:underline;align-self:flex-end}
 .adp-close:hover{color:var(--c-text)}
+/* Zotero-Konfigurations-Panel */
+.proj-card-zotero{font-size:11px;font-weight:500;flex-shrink:0;padding:3px 8px;border:1px solid #d1fae5;
+                  border-radius:4px;background:#f0fdf4;color:#059669;cursor:pointer;line-height:1.4}
+.proj-card-zotero.configured{background:#d1fae5}
+.proj-card-zotero:hover{background:#059669;color:#fff;border-color:#059669}
+.proj-card-wrap.zotero-open .proj-card{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+.zotero-panel{border:1px solid #059669;border-top:none;border-radius:0 0 6px 6px;
+              padding:14px 14px 12px;background:#f0fdf4;display:none;flex-direction:column;gap:8px}
+.proj-card-wrap.zotero-open .zotero-panel{display:flex}
+.zp-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.zp-label{font-size:11px;color:var(--c-text-3);white-space:nowrap;min-width:60px}
+.zp-input{font-size:11px;padding:4px 7px;border:1px solid var(--c-border);border-radius:4px;
+          background:var(--c-surface);color:var(--c-text);flex:1;min-width:80px}
+.zp-select{font-size:11px;padding:4px 7px;border:1px solid var(--c-border);border-radius:4px;
+           background:var(--c-surface);color:var(--c-text);cursor:pointer}
+.zp-btn{font-size:11px;font-weight:600;padding:5px 10px;border:none;border-radius:4px;cursor:pointer;flex-shrink:0}
+.zp-test{background:#e0f2fe;color:#0284c7}.zp-test:hover{background:#0284c7;color:#fff}
+.zp-save{background:#059669;color:#fff}.zp-save:hover{background:#047857}
+.zp-status{font-size:11px;color:var(--c-text-3);flex:1}
+.zp-close{font-size:11px;color:#059669;cursor:pointer;text-decoration:underline;align-self:flex-end}
+.zp-close:hover{color:#047857}
 </style>
 </head>
 <body>
@@ -1211,6 +1232,7 @@ async function loadProjectList() {
           <div class="proj-card-title">${escHtml(p.title)}</div>
           <div class="proj-card-meta">${escHtml(p.doc_type||'—')}${p.entry_count ? ' · ' + p.entry_count + ' Einträge' : ''}</div>
           ${p.doc_id ? `<a class="proj-card-edit" href="/ingest?project=${encodeURIComponent(p.id)}&document=${encodeURIComponent(p.doc_id)}&step=4">Bearbeiten</a>` : ''}
+          <button class="proj-card-zotero${p.zotero ? ' configured' : ''}">Zotero${p.zotero ? ' ●' : ''}</button>
           <button class="proj-card-add">+ Dokument</button>
           <span class="proj-card-open">öffnen →</span>
         </div>
@@ -1225,6 +1247,29 @@ async function loadProjectList() {
           </div>
           <pre class="adp-log" style="display:none"></pre>
           <span class="adp-close">Abbrechen</span>
+        </div>
+        <div class="zotero-panel">
+          <div class="zp-row">
+            <span class="zp-label">API-Key</span>
+            <input class="zp-input zp-apikey" type="password" placeholder="Zotero API-Key …" autocomplete="new-password">
+          </div>
+          <div class="zp-row">
+            <span class="zp-label">User-ID</span>
+            <input class="zp-input zp-userid" type="text" placeholder="123456" style="max-width:100px">
+            <span class="zp-label" style="min-width:auto">Collection</span>
+            <input class="zp-input zp-collection" type="text" placeholder="ABCDEF" style="max-width:100px">
+            <span class="zp-label" style="min-width:auto">Typ</span>
+            <select class="zp-select zp-doctype">
+              <option value="presseartikel">Presseartikel</option>
+              <option value="buchnotizen">Buchnotizen</option>
+            </select>
+          </div>
+          <div class="zp-row">
+            <button class="zp-btn zp-test">Testen</button>
+            <button class="zp-btn zp-save">Speichern</button>
+            <span class="zp-status"></span>
+          </div>
+          <span class="zp-close">Schließen</span>
         </div>
       </div>`).join('');
     listEl.querySelectorAll('.proj-card-wrap').forEach(wrap => {
@@ -1241,6 +1286,64 @@ async function loadProjectList() {
 
       if (editLnk) editLnk.addEventListener('click', e => e.stopPropagation());
 
+      // ── Zotero-Panel ────────────────────────────────────────────────────────
+      const zBtn      = wrap.querySelector('.proj-card-zotero');
+      const zPanel    = wrap.querySelector('.zotero-panel');
+      const zApiKey   = zPanel.querySelector('.zp-apikey');
+      const zUserId   = zPanel.querySelector('.zp-userid');
+      const zCollect  = zPanel.querySelector('.zp-collection');
+      const zDocType  = zPanel.querySelector('.zp-doctype');
+      const zTest     = zPanel.querySelector('.zp-test');
+      const zSave     = zPanel.querySelector('.zp-save');
+      const zStatus   = zPanel.querySelector('.zp-status');
+      const zClose    = zPanel.querySelector('.zp-close');
+      const projId    = card.dataset.id;
+
+      function closeZotero() { wrap.classList.remove('zotero-open'); zStatus.textContent = ''; }
+      zClose.addEventListener('click', closeZotero);
+      zBtn.addEventListener('click', async e => {
+        e.stopPropagation();
+        if (wrap.classList.contains('zotero-open')) { closeZotero(); return; }
+        wrap.classList.remove('open'); // close add-doc panel if open
+        wrap.classList.add('zotero-open');
+        // Pre-fill from project config
+        zStatus.textContent = 'Lade …';
+        try {
+          const res = await fetch('/api/projects/' + encodeURIComponent(projId));
+          const data = res.ok ? await res.json() : {};
+          const zc = data.zotero || {};
+          if (zc.api_key_masked) zApiKey.placeholder = zc.api_key_masked;
+          if (zc.user_id)   zUserId.value   = zc.user_id;
+          if (zc.collection) zCollect.value  = zc.collection;
+          if (zc.doc_type)  zDocType.value  = zc.doc_type;
+          zStatus.textContent = zc.collection ? 'Konfiguriert — Werte ändern oder Speichern.' : '';
+        } catch (_) { zStatus.textContent = ''; }
+      });
+      zTest.addEventListener('click', async () => {
+        zStatus.textContent = 'Teste Verbindung …';
+        const params = new URLSearchParams({ api_key: zApiKey.value, user_id: zUserId.value, collection: zCollect.value });
+        try {
+          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/test?' + params);
+          const data = await res.json();
+          zStatus.textContent = data.ok ? '✓ ' + data.count + ' Artikel in Collection' : '✗ ' + data.error;
+          zStatus.style.color = data.ok ? '#059669' : '#dc2626';
+        } catch (e) { zStatus.textContent = '✗ ' + e.message; zStatus.style.color = '#dc2626'; }
+      });
+      zSave.addEventListener('click', async () => {
+        zStatus.textContent = 'Speichere …';
+        try {
+          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/config', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ api_key: zApiKey.value, user_id: zUserId.value,
+                                   collection: zCollect.value, doc_type: zDocType.value }),
+          });
+          const data = await res.json();
+          zStatus.textContent = data.ok ? '✓ Gespeichert' : '✗ ' + data.error;
+          zStatus.style.color = data.ok ? '#059669' : '#dc2626';
+          if (data.ok) loadProjectList(); // refresh card to show ● indicator
+        } catch (e) { zStatus.textContent = '✗ ' + e.message; zStatus.style.color = '#dc2626'; }
+      });
+
       function resetPanel() {
         selectedFile = null; runBtn.disabled = true;
         drop.textContent = 'Datei hierher ziehen oder klicken'; drop.classList.remove('has-file');
@@ -1251,7 +1354,7 @@ async function loadProjectList() {
       addBtn.addEventListener('click', e => {
         e.stopPropagation();
         if (wrap.classList.contains('open')) { wrap.classList.remove('open'); resetPanel(); }
-        else { wrap.classList.add('open'); }
+        else { closeZotero(); wrap.classList.add('open'); }
       });
       closeEl.addEventListener('click', () => { wrap.classList.remove('open'); resetPanel(); });
 
