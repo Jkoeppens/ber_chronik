@@ -205,15 +205,37 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
 #proj-list-section h3{font-size:12px;font-weight:600;color:var(--c-text-3);text-transform:uppercase;
                        letter-spacing:.05em;margin-bottom:10px}
 #proj-list{display:flex;flex-direction:column;gap:6px}
+.proj-card-wrap{display:flex;flex-direction:column}
 .proj-card{display:flex;align-items:center;gap:10px;padding:10px 14px;
            border:1px solid var(--c-border);border-radius:6px;cursor:pointer;
            background:var(--c-surface);transition:border-color .15s,background .15s;user-select:none}
+.proj-card-wrap.open .proj-card{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
 .proj-card:hover{border-color:var(--c-primary);background:var(--c-primary-bg)}
 .proj-card-title{font-size:13px;font-weight:600;color:var(--c-text);flex:1}
 .proj-card-meta{font-size:11px;color:var(--c-text-3)}
 .proj-card-open{font-size:11px;color:var(--c-primary);font-weight:600;flex-shrink:0}
+.proj-card-edit{font-size:11px;color:var(--c-text-3);font-weight:500;flex-shrink:0;text-decoration:none}
+.proj-card-edit:hover{color:var(--c-primary)}
 .proj-card-add{font-size:11px;font-weight:600;flex-shrink:0;padding:3px 8px;border:1px solid var(--c-primary);border-radius:4px;background:var(--c-primary-bg);color:var(--c-primary);cursor:pointer;line-height:1.4}
 .proj-card-add:hover{background:var(--c-primary);color:#fff}
+/* inline add-document panel */
+.add-doc-panel{border:1px solid var(--c-primary);border-top:none;border-radius:0 0 6px 6px;
+               padding:14px 14px 12px;background:var(--c-primary-bg);display:none;flex-direction:column;gap:10px}
+.proj-card-wrap.open .add-doc-panel{display:flex}
+.adp-row{display:flex;align-items:center;gap:8px}
+.adp-drop{border:2px dashed #c4b5fd;border-radius:6px;padding:10px 14px;text-align:center;cursor:pointer;
+          font-size:12px;color:var(--c-text-3);flex:1;transition:border-color .15s,background .15s}
+.adp-drop:hover,.adp-drop.dragover{border-color:var(--c-primary);background:#ede9fe}
+.adp-drop.has-file{border-color:var(--c-primary);color:var(--c-text);background:#ede9fe}
+.adp-select{font-size:11px;padding:4px 7px;border:1px solid var(--c-border);border-radius:4px;
+            background:var(--c-surface);color:var(--c-text);cursor:pointer}
+.adp-run{font-size:11px;font-weight:600;padding:5px 12px;border:none;border-radius:4px;
+         background:var(--c-primary);color:#fff;cursor:pointer;flex-shrink:0}
+.adp-run:disabled{opacity:.5;cursor:default}
+.adp-log{font-size:10px;font-family:monospace;background:var(--c-code-bg);border-radius:4px;
+         padding:8px 10px;max-height:120px;overflow-y:auto;white-space:pre-wrap;color:var(--c-text-2);margin:0}
+.adp-close{font-size:11px;color:var(--c-text-3);cursor:pointer;text-decoration:underline;align-self:flex-end}
+.adp-close:hover{color:var(--c-text)}
 </style>
 </head>
 <body>
@@ -454,7 +476,7 @@ loadProjectList();
   const proj = p.get('project');
   const doc  = p.get('document');
   const step = parseInt(p.get('step') || '1', 10);
-  if (!proj || !doc || step <= 1) return;
+  if (!proj || step <= 1) return;
   try {
     const [tokenRes, cfgRes] = await Promise.all([
       fetch('/api/projects/' + encodeURIComponent(proj) + '/token'),
@@ -465,7 +487,7 @@ loadProjectList();
     if (!tokenData.ok) return;
     const cfg = cfgRes.ok ? await cfgRes.json() : {};
     state.project       = proj;
-    state.document      = doc;
+    state.document      = doc || tokenData.doc_id || undefined;
     state.token         = tokenData.token;
     state.project_title = cfg.title || proj;
     state.doc_type      = cfg.doc_type || state.doc_type;
@@ -1176,17 +1198,114 @@ async function loadProjectList() {
       return;
     }
     listEl.innerHTML = projects.map(p => `
-      <div class="proj-card" data-id="${escHtml(p.id)}" data-title="${escHtml(p.title)}" data-doctype="${escHtml(p.doc_type||'')}">
-        <div class="proj-card-title">${escHtml(p.title)}</div>
-        <div class="proj-card-meta">${escHtml(p.doc_type||'—')}${p.entry_count ? ' · ' + p.entry_count + '\u00a0Einträge' : ''}</div>
-        <button class="proj-card-add" data-id="${escHtml(p.id)}" data-title="${escHtml(p.title)}">+ Dokument</button>
-        <span class="proj-card-open">öffnen →</span>
+      <div class="proj-card-wrap">
+        <div class="proj-card" data-id="${escHtml(p.id)}" data-title="${escHtml(p.title)}" data-doctype="${escHtml(p.doc_type||'')}">
+          <div class="proj-card-title">${escHtml(p.title)}</div>
+          <div class="proj-card-meta">${escHtml(p.doc_type||'—')}${p.entry_count ? ' · ' + p.entry_count + ' Einträge' : ''}</div>
+          ${p.doc_id ? `<a class="proj-card-edit" href="/ingest?project=${encodeURIComponent(p.id)}&document=${encodeURIComponent(p.doc_id)}&step=4">Bearbeiten</a>` : ''}
+          <button class="proj-card-add">+ Dokument</button>
+          <span class="proj-card-open">öffnen →</span>
+        </div>
+        <div class="add-doc-panel">
+          <div class="adp-row">
+            <div class="adp-drop">Datei hierher ziehen oder klicken</div>
+            <select class="adp-select">
+              <option value="buchnotizen">Buchnotizen</option>
+              <option value="presseartikel">Presseartikel</option>
+            </select>
+            <button class="adp-run" disabled>Verarbeiten</button>
+          </div>
+          <pre class="adp-log" style="display:none"></pre>
+          <span class="adp-close">Abbrechen</span>
+        </div>
       </div>`).join('');
-    listEl.querySelectorAll('.proj-card').forEach(card => {
-      card.querySelector('.proj-card-add').addEventListener('click', e => {
+    listEl.querySelectorAll('.proj-card-wrap').forEach(wrap => {
+      const card    = wrap.querySelector('.proj-card');
+      const addBtn  = wrap.querySelector('.proj-card-add');
+      const editLnk = wrap.querySelector('.proj-card-edit');
+      const panel   = wrap.querySelector('.add-doc-panel');
+      const drop    = panel.querySelector('.adp-drop');
+      const sel     = panel.querySelector('.adp-select');
+      const runBtn  = panel.querySelector('.adp-run');
+      const logEl   = panel.querySelector('.adp-log');
+      const closeEl = panel.querySelector('.adp-close');
+      let selectedFile = null;
+
+      if (editLnk) editLnk.addEventListener('click', e => e.stopPropagation());
+
+      function resetPanel() {
+        selectedFile = null; runBtn.disabled = true;
+        drop.textContent = 'Datei hierher ziehen oder klicken'; drop.classList.remove('has-file');
+        logEl.style.display = 'none'; logEl.textContent = '';
+        closeEl.textContent = 'Abbrechen'; closeEl.style.display = '';
+        addBtn.disabled = false;
+      }
+      addBtn.addEventListener('click', e => {
         e.stopPropagation();
-        addDocumentToProject(card.dataset.id, card.dataset.title);
+        if (wrap.classList.contains('open')) { wrap.classList.remove('open'); resetPanel(); }
+        else { wrap.classList.add('open'); }
       });
+      closeEl.addEventListener('click', () => { wrap.classList.remove('open'); resetPanel(); });
+
+      const fileInput = document.createElement('input'); fileInput.type = 'file'; fileInput.accept = '.txt,.md,.pdf,.docx';
+      drop.addEventListener('click', () => fileInput.click());
+      drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+      drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+      drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('dragover'); if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
+      fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+      function setFile(f) { selectedFile = f; drop.textContent = f.name; drop.classList.add('has-file'); runBtn.disabled = false; }
+
+      runBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        runBtn.disabled = true; addBtn.disabled = true; closeEl.style.display = 'none';
+        logEl.style.display = 'block'; logEl.textContent = 'Lade hoch …';
+        const projId = card.dataset.id;
+        try {
+          const fd = new FormData(); fd.append('files', selectedFile);
+          const upRes = await fetch('/ingest/upload', { method: 'POST', body: fd });
+          if (!upRes.ok) throw new Error('Upload fehlgeschlagen: ' + upRes.status);
+          const filename = (await upRes.json()).files[0].name;
+          logEl.textContent += '\n✓ Hochgeladen';
+
+          const tokenRes = await fetch('/api/projects/' + encodeURIComponent(projId) + '/token');
+          if (!tokenRes.ok) throw new Error('Token-Fehler ' + tokenRes.status);
+          const tokenData = await tokenRes.json();
+          if (!tokenData.ok) throw new Error(tokenData.error || 'Token ungültig');
+          const newDocId = crypto.randomUUID().slice(0, 8);
+          logEl.textContent += '\nAnalysiere …';
+
+          const anaRes = await fetch('/ingest/analyze', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename, doc_type: sel.value, project: projId, document: newDocId }),
+          });
+          if (!anaRes.ok) throw new Error('Analyse fehlgeschlagen: ' + anaRes.status);
+          logEl.textContent += '\n✓ Segmente erstellt\nPipeline läuft …';
+
+          const runRes = await fetch('/ingest/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Token': tokenData.token },
+            body: JSON.stringify({ project: projId, document: newDocId, filename }),
+          });
+          if (!runRes.ok || !runRes.body) throw new Error('Pipeline-Fehler: ' + runRes.status);
+          const reader = runRes.body.getReader(); const dec = new TextDecoder(); let buf2 = '';
+          while (true) {
+            const { done, value } = await reader.read(); if (done) break;
+            buf2 += dec.decode(value, { stream: true });
+            const lines = buf2.split('\n'); buf2 = lines.pop();
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue;
+              const msg = line.slice(6);
+              if (msg === '__done__') { logEl.textContent += '\n✓ Fertig!'; closeEl.textContent = 'Schließen'; closeEl.style.display = ''; addBtn.disabled = false; loadProjectList(); return; }
+              if (msg.startsWith('__error__')) { logEl.textContent += '\n✗ ' + msg.slice(9); closeEl.style.display = ''; addBtn.disabled = false; return; }
+              if (!msg.startsWith('__')) { logEl.textContent += '\n' + msg; logEl.scrollTop = logEl.scrollHeight; }
+            }
+          }
+        } catch (e) {
+          logEl.textContent += '\n✗ ' + e.message;
+          closeEl.style.display = ''; addBtn.disabled = false;
+        }
+      });
+
       card.addEventListener('click', () =>
         openExistingProject(card.dataset.id, card.dataset.title, card.dataset.doctype));
     });
@@ -1195,33 +1314,6 @@ async function loadProjectList() {
   }
 }
 
-async function addDocumentToProject(id, title) {
-  const listEl = document.getElementById('proj-list');
-  listEl.style.opacity = '0.5';
-  listEl.style.pointerEvents = 'none';
-  try {
-    const tokenRes = await fetch('/api/projects/' + encodeURIComponent(id) + '/token');
-    if (!tokenRes.ok) throw new Error('Server-Fehler ' + tokenRes.status);
-    const tokenData = await tokenRes.json();
-    if (!tokenData.ok) throw new Error(tokenData.error || 'Fehler');
-    state.project            = id;
-    state.project_title      = title;
-    state.token              = tokenData.token;
-    state.document           = crypto.randomUUID().slice(0, 8);
-    state.files              = [];
-    state.analysis           = null;
-    state.isExistingProject  = true;
-    document.getElementById('project-name-input').value = title;
-    document.getElementById('project-name-input').disabled = true;
-    maxReachedStep = 1;
-    gotoStep(2);
-  } catch (e) {
-    alert('Fehler: ' + e.message);
-  } finally {
-    listEl.style.opacity = '';
-    listEl.style.pointerEvents = '';
-  }
-}
 
 async function openExistingProject(id, title, docType) {
   const listEl = document.getElementById('proj-list');

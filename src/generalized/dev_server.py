@@ -849,6 +849,28 @@ async def get_entity_editor():
     return HTMLResponse(content=_render_template("entity_editor.html"))
 
 
+def _get_latest_doc_id(project_id: str) -> str | None:
+    """Neuestes Dokument mit segments.json im Projekt, nach ingested_at sortiert."""
+    doc_dir = PROJECTS_DIR / project_id / "documents"
+    if not doc_dir.exists():
+        return None
+    candidates = []
+    for d in doc_dir.iterdir():
+        if (d / "segments.json").exists():
+            ingested_at = ""
+            cfg_p = d / "config.json"
+            if cfg_p.exists():
+                try:
+                    ingested_at = json.loads(cfg_p.read_text(encoding="utf-8")).get("ingested_at", "")
+                except (json.JSONDecodeError, OSError):
+                    pass
+            candidates.append((ingested_at, d.name))
+    if not candidates:
+        return None
+    candidates.sort(reverse=True)
+    return candidates[0][1]
+
+
 @app.get("/api/projects")
 async def list_projects_endpoint():
     db_rows = await db_list_projects()
@@ -866,6 +888,7 @@ async def list_projects_endpoint():
             "title":       row["title"],
             "doc_type":    row["doc_type"],
             "entry_count": entry_count,
+            "doc_id":      _get_latest_doc_id(row["id"]),
         })
     return JSONResponse(result)
 
@@ -990,24 +1013,7 @@ async def get_project_token(project_id: str, request: Request):
     proj = await get_project(project_id)
     if not proj:
         return JSONResponse({"ok": False, "error": "Projekt nicht gefunden"}, status_code=404)
-    # Neuestes Dokument mit segments.json ermitteln (nach ingested_at, Fallback: alphabetisch letztes)
-    doc_id = None
-    doc_dir = PROJECTS_DIR / project_id / "documents"
-    if doc_dir.exists():
-        candidates = []
-        for d in doc_dir.iterdir():
-            if (d / "segments.json").exists():
-                ingested_at = ""
-                cfg_p = d / "config.json"
-                if cfg_p.exists():
-                    try:
-                        ingested_at = json.loads(cfg_p.read_text(encoding="utf-8")).get("ingested_at", "")
-                    except (json.JSONDecodeError, OSError):
-                        pass
-                candidates.append((ingested_at, d.name))
-        if candidates:
-            candidates.sort(reverse=True)
-            doc_id = candidates[0][1]
+    doc_id = _get_latest_doc_id(project_id)
     return JSONResponse({"ok": True, "id": proj["id"], "token": proj["token"],
                          "created_at": proj["created_at"], "doc_id": doc_id})
 

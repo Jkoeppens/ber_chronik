@@ -21,7 +21,7 @@
           <div id="project-list" style="padding:4px 0; max-height:200px; overflow-y:auto;"></div>
           <div id="project-actions" style="border-top:1px solid #e5e2dc; padding:4px 0;">
             <a id="pa-edit"       href="#" style="display:block;padding:7px 14px;font-size:12px;color:#374151;text-decoration:none;white-space:nowrap;">Daten bearbeiten →</a>
-            <a id="pa-add-source" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#374151;text-decoration:none;white-space:nowrap;">Quellen hinzufügen →</a>
+            <a id="pa-add-source" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#374151;text-decoration:none;white-space:nowrap;">Dokument hinzufügen →</a>
             <div id="pa-rename-wrap" style="padding:0 14px;">
               <a id="pa-rename-btn" href="#" style="display:block;padding:7px 0;font-size:12px;color:#374151;text-decoration:none;">Umbenennen</a>
               <form id="pa-rename-form" style="display:none;gap:4px;align-items:center;padding-bottom:6px;">
@@ -108,8 +108,8 @@
   const paDelete  = document.getElementById("pa-delete");
 
   if (currentProject) {
-    paEdit.href   = `${DEV_API}/editor?project=${currentProject}`;
-    paAddSrc.href = `${DEV_API}/ingest?project=${currentProject}&mode=add`;
+    paEdit.href   = `${DEV_API}/ingest?project=${currentProject}&step=4`;
+    paAddSrc.href = `${DEV_API}/ingest?project=${currentProject}`;
     actEl.style.display = "";
   } else {
     actEl.style.display = "none";
