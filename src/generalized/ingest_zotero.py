@@ -139,7 +139,7 @@ def _fetch_fulltext(zot: zotero.Zotero, item_key: str, title: str,
 # ── Segment-Bau ───────────────────────────────────────────────────────────────
 
 def _build_segment(idx: int, text: str, title: str, date: str | None,
-                   item_key: str, doc_type: str) -> dict:
+                   item_key: str, doc_type: str, item_type: str = "") -> dict:
     return {
         "segment_id": f"s{idx:04d}",
         "level":      3,
@@ -150,6 +150,7 @@ def _build_segment(idx: int, text: str, title: str, date: str | None,
         "doc_type":   doc_type,
         "date":       date,
         "zotero_key": item_key,
+        "item_type":  item_type,
     }
 
 
@@ -260,6 +261,7 @@ def main() -> None:
             date=date,
             item_key=key,
             doc_type=args.doc_type,
+            item_type=data.get("itemType", ""),
         )
         segments.append(seg)
         processed_keys.append(key)

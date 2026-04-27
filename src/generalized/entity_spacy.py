@@ -48,7 +48,13 @@ def extract_with_spacy(
     Gibt eine deduplizierte Entity-Liste im Standard-Format zurück.
     """
     nlp = _load_nlp()
-    content_segs = [s for s in segments if s.get("type") == "content"]
+    content_segs = [s for s in segments
+                    if s.get("type") == "content"
+                    and s.get("item_type") != "videoRecording"]
+    skipped = sum(1 for s in segments
+                  if s.get("type") == "content" and s.get("item_type") == "videoRecording")
+    if skipped:
+        print(f"  {skipped} videoRecording-Segment(e) übersprungen")
     print(f"spaCy NER: {len(content_segs)} Segmente …")
 
     raw_entities: list[dict] = []
