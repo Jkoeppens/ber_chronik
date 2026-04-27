@@ -806,10 +806,12 @@ projectNameEl.addEventListener('input', () => {
   updateStep1Next();
 });
 
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
-dropZone.addEventListener('click', () => fileInput.click());
+if (dropZone) {
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+  dropZone.addEventListener('click', () => fileInput.click());
+}
 fileInput.addEventListener('change', e => handleFiles(e.target.files));
 
 async function handleFiles(fileList) {
