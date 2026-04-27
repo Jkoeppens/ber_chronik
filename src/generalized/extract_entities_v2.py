@@ -42,7 +42,7 @@ from src.generalized.entity_llm import (
     _llm_task1_normalize,
 )
 
-from src.generalized.config import ROOT, PROJECTS_DIR, DEFAULTS_DIR
+from src.generalized.config import ROOT, PROJECTS_DIR, DEFAULTS_DIR, NER_BACKEND
 BATCH_SIZE      = 5           # Segmente pro Batch in Schritt 2
 CHECKPOINT_NAME = "_v2_checkpoint.json"
 
@@ -77,7 +77,7 @@ def _parse_args():
     return args, doc_dir
 
 
-def _load_seed_and_rejected(doc_dir: Path) -> tuple[list[dict], set[str]]:
+def _load_seed_and_rejected(doc_dir: Path, doc_type: str = "") -> tuple[list[dict], set[str]]:
     seed: list[dict] = []
     config_p = doc_dir.parent.parent / "config.json"
     if config_p.exists():
@@ -88,25 +88,16 @@ def _load_seed_and_rejected(doc_dir: Path) -> tuple[list[dict], set[str]]:
                 print(f"Seed: {len(seed)} bestätigte Entities aus config.json")
         except (json.JSONDecodeError, OSError):
             pass
-    if not seed:
-        # Fallback: Default-Entities für den Dokumenttyp laden
-        doc_cfg_p = doc_dir / "config.json"
-        doc_type  = ""
-        if doc_cfg_p.exists():
+    if not seed and doc_type:
+        default_p = DEFAULTS_DIR / f"entities_{doc_type}.json"
+        if default_p.exists():
             try:
-                doc_type = json.loads(doc_cfg_p.read_text(encoding="utf-8")).get("doc_type", "")
+                default_entities = json.loads(default_p.read_text(encoding="utf-8"))
+                if default_entities:
+                    seed = [dict(e, _source="seed") for e in default_entities]
+                    print(f"Seed: {len(seed)} Default-Entities für doc_type '{doc_type}'")
             except (json.JSONDecodeError, OSError):
                 pass
-        if doc_type:
-            default_p = DEFAULTS_DIR / f"entities_{doc_type}.json"
-            if default_p.exists():
-                try:
-                    default_entities = json.loads(default_p.read_text(encoding="utf-8"))
-                    if default_entities:
-                        seed = [dict(e, _source="seed") for e in default_entities]
-                        print(f"Seed: {len(seed)} Default-Entities für doc_type '{doc_type}'")
-                except (json.JSONDecodeError, OSError):
-                    pass
     if not seed:
         print("Kein Seed — Extraktion startet ohne Few-Shot-Beispiele")
 
@@ -134,14 +125,39 @@ def main() -> None:
         sys.exit(1)
 
     load_dotenv(ROOT / ".env")
-    provider = get_provider(task=TASK_EXTRACT)
 
+    # doc_type aus Dokument-Config lesen — bestimmt NER-Backend
+    doc_type = ""
+    doc_cfg_p = doc_dir / "config.json"
+    if doc_cfg_p.exists():
+        try:
+            doc_type = json.loads(doc_cfg_p.read_text(encoding="utf-8")).get("doc_type", "")
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    backend = NER_BACKEND.get(doc_type, "llm")
     segments  = json.loads(segments_path.read_text(encoding="utf-8"))
     n_content = sum(1 for s in segments if s.get("type") == "content")
-    print(f"Segmente: {len(segments)} gesamt, {n_content} content  |  Modus: {args.mode}")
+    print(f"Segmente: {len(segments)} gesamt, {n_content} content  |  "
+          f"Modus: {args.mode}  |  Backend: {backend} (doc_type='{doc_type}')")
 
-    seed, rejected_lc = _load_seed_and_rejected(doc_dir)
+    seed, rejected_lc = _load_seed_and_rejected(doc_dir, doc_type)
 
+    # ── spaCy-Backend ──────────────────────────────────────────────────────────
+    if backend == "spacy":
+        from src.generalized.entity_spacy import extract_with_spacy
+        provider = get_provider(task=TASK_EXTRACT)
+        merged   = extract_with_spacy(segments, rejected_lc, provider)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        print(f"\n→ {output_path}  ({len(merged)} Entities)")
+        _print_stats(merged)
+        return
+
+    # ── LLM-Backend (4-Stufen-Flow) ────────────────────────────────────────────
+    provider = get_provider(task=TASK_EXTRACT)
     cp: dict = {}
     if args.mode == "full" and checkpoint_path.exists():
         try:
