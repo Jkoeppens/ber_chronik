@@ -1,14 +1,16 @@
 """
 propose_taxonomy.py — Taxonomie-Vorschlag via LLM
 
-5 Batches à 10 Segmente → je ein LLM-Call → Zwischenlisten.
-Danach Code-Merge: Duplikate nach Name zusammenlegen, nach Häufigkeit
-sortieren, auf 6-8 kürzen. Kein zweiter LLM-Call für den Merge (D-E1).
+3-stufige Architektur:
+  1. Keyword-Extraktion: Segmente in Batches à 4 → Keyword-Listen
+     (kurze, stabile Calls; kein Context-Window-Problem)
+  2. Kategorie-Destillation: alle Keywords in einem LLM-Call → 6-8 Kategorien
+     (explizite semantische Deduplizierung durch LLM)
+  3. Schreiben: Ergebnis in config.json["taxonomy"] (D-P1)
 
-Anthropic: Batches parallel (max_concurrency=10).
-Ollama:    Batches sequenziell.
+Stufe 1 parallel (Anthropic) oder sequenziell (Ollama).
 
-LLM-Output-Format (Plaintext, kein JSON):
+LLM-Output-Format Stufe 2 (Plaintext, kein JSON):
 
   ## Kategoriename
   Beschreibung in einem Satz.
@@ -23,22 +25,33 @@ import asyncio
 import re
 import random
 import sys
-from collections import Counter
 import json
 from dotenv import load_dotenv
 
 from src.generalized.config import ROOT, PROJECTS_DIR
 from src.generalized.llm import get_provider, TASK_ANALYZE
 
-N_BATCHES  = 5
-BATCH_SIZE = 10
-MIN_LENGTH = 80
+MAX_SEGMENTS  = 80    # maximale Segmente aus dem Pool
+KW_BATCH_SIZE = 4     # Segmente pro Keyword-Batch (Stufe 1)
+MAX_SEG_CHARS = 1000  # Zeichen-Limit pro Segment
+MIN_LENGTH    = 80    # Mindesttextlänge für Aufnahme in Pool
 
-SYSTEM_PROMPT = "Du bist ein Forschungsassistent der Notizen und Dokumente analysiert."
+KW_SYSTEM = "Du bist ein Forschungsassistent der Texte analysiert."
 
-BATCH_TEMPLATE = """\
-Analysiere diese Notizen. Erkenne selbst um welches Thema und welchen historischen Kontext es geht.
-Schlage 4–6 Kategorien vor, die für eine systematische Klassifizierung dieses spezifischen Materials sinnvoll sind.
+KW_TEMPLATE = """\
+Nenne für jeden der folgenden Texte 2-3 Themen oder Konzepte als kurze Stichwörter auf Deutsch.
+Format: eine Zeile pro Text, Stichwörter kommasepariert. Keine Erklärungen, keine Nummerierung.
+
+{segments}"""
+
+CAT_SYSTEM = "Du bist ein Forschungsassistent der Notizen und Dokumente analysiert."
+
+CAT_TEMPLATE = """\
+Hier sind Stichwörter aus einem Dokument:
+
+{keywords}
+
+Fasse diese Stichwörter zu 6-8 übergeordneten Themenkategorien zusammen. Führe ähnliche Begriffe zusammen.
 
 Für jede Kategorie:
 
@@ -50,24 +63,14 @@ Regeln:
 - Namen in PascalCase, max. 2 Wörter
 - Genau 3 Keywords, kommasepariert
 - Ausschließlich auf Deutsch, keine englischen Begriffe
-- Nur die Kategorieblöcke ausgeben, kein Kommentar, kein JSON
-
-Notizen:
----
-{segments}"""
+- Nur die Kategorieblöcke ausgeben, kein Kommentar, kein JSON"""
 
 
 def clean_name(raw: str) -> str:
     """Entfernt Nummerierungspräfixe und Markdown-Sternchen aus Kategorienamen."""
-    name = re.sub(r'^\d+\.\s*', '', raw)   # "1. " am Anfang
-    name = re.sub(r'\*+', '', name)         # ** oder *
+    name = re.sub(r'^\d+\.\s*', '', raw)
+    name = re.sub(r'\*+', '', name)
     return name.strip()
-
-
-def format_segment(s: dict) -> str:
-    source = s.get("source") or "?"
-    page   = f", S. {s['page']}" if s.get("page") else ""
-    return f"[{source}{page}]\n{s['text']}"
 
 
 def _parse_plaintext_taxonomy(text: str) -> list[dict]:
@@ -95,53 +98,42 @@ def _parse_plaintext_taxonomy(text: str) -> list[dict]:
     return [c for c in results if c.get("name")]
 
 
-def _merge_taxonomy(partial_lists: list[list[dict]]) -> list[dict]:
-    """Code-Merge: Duplikate nach Name zusammenlegen, nach Häufigkeit sortieren, top 8."""
-    name_count: Counter = Counter()
-    first_seen: dict[str, dict] = {}
-
-    for cats in partial_lists:
-        seen_this_batch: set[str] = set()
-        for cat in cats:
-            key = (cat.get("name") or "").strip().lower()
-            if not key:
-                continue
-            if key not in first_seen:
-                first_seen[key] = dict(cat)
-            if key not in seen_this_batch:
-                name_count[key] += 1
-                seen_this_batch.add(key)
-
-    sorted_keys = sorted(first_seen, key=lambda k: -name_count[k])
-    result = [first_seen[k] for k in sorted_keys[:8]]
-
-    total = sum(name_count.values())
-    print(f"Merge: {len(first_seen)} eindeutige Kategorien aus {total} Batch-Einträgen "
-          f"→ {len(result)} übernommen", flush=True)
-    return result
+def _parse_keywords(text: str) -> list[str]:
+    """Parst kommaseparierte Keywords aus Stufe-1-Output (eine Zeile pro Segment)."""
+    keywords: list[str] = []
+    for line in text.splitlines():
+        line = re.sub(r'^[\d]+[.):\s]+', '', line.strip()).strip()
+        if not line:
+            continue
+        for kw in line.split(","):
+            kw = kw.strip().strip("–-•·").strip()
+            if kw and len(kw) > 1:
+                keywords.append(kw)
+    return keywords
 
 
-def _run_batch(provider, batch: list[dict], idx: int, total: int) -> list[dict]:
-    print(f"Batch {idx}/{total}…", flush=True)
-    segments_text = "\n\n".join(format_segment(s) for s in batch)
-    prompt = BATCH_TEMPLATE.format(segments=segments_text)
-    for attempt in range(2):
-        text = provider.complete(prompt, system=SYSTEM_PROMPT)
-        result = _parse_plaintext_taxonomy(text or "")
-        if len(result) >= 2:
-            print(f"  Batch {idx}: {len(result)} Kategorien", flush=True)
-            return result
-        if attempt == 0:
-            print(f"  Batch {idx}: nur {len(result)} Kategorie(n) — Retry…", flush=True)
-    print(f"  Batch {idx}: {len(result)} Kategorie(n) nach Retry — übernommen", flush=True)
-    return result
+# ── Stufe 1: Keyword-Extraktion ────────────────────────────────────────────────
+
+def _run_keyword_batch(provider, batch: list[dict], idx: int, total: int) -> list[str]:
+    print(f"  Keyword-Batch {idx}/{total}…", flush=True)
+    texts = []
+    for i, s in enumerate(batch, 1):
+        text = s.get("text", "")[:MAX_SEG_CHARS]
+        source = s.get("source") or "?"
+        texts.append(f"Text {i} [{source}]:\n{text}")
+    prompt = KW_TEMPLATE.format(segments="\n\n".join(texts))
+    result = provider.complete(prompt, system=KW_SYSTEM)
+    keywords = _parse_keywords(result or "")
+    print(f"    → {len(keywords)} Keywords", flush=True)
+    return keywords
 
 
-async def _run_batch_async(provider, batch: list[dict], idx: int, total: int,
-                           sem: asyncio.Semaphore) -> list[dict]:
+async def _run_keyword_batch_async(provider, batch, idx, total, sem):
     async with sem:
-        return await asyncio.to_thread(_run_batch, provider, batch, idx, total)
+        return await asyncio.to_thread(_run_keyword_batch, provider, batch, idx, total)
 
+
+# ── main ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Taxonomie-Vorschlag per LLM")
@@ -161,58 +153,82 @@ def main() -> None:
     provider = get_provider(task=TASK_ANALYZE)
 
     segments = json.loads(input_path.read_text(encoding="utf-8"))
-    pool = [s for s in segments if s.get("type") == "content" and len(s.get("text", "")) >= MIN_LENGTH]
+    pool = [s for s in segments
+            if s.get("type") == "content" and len(s.get("text", "")) >= MIN_LENGTH]
 
-    n_total = N_BATCHES * BATCH_SIZE
-    if len(pool) < n_total:
-        print(f"Warnung: nur {len(pool)} geeignete Segmente (< {n_total})", file=sys.stderr)
+    if not pool:
+        print("Keine geeigneten Segmente gefunden.", file=sys.stderr)
+        sys.exit(1)
 
-    sample  = random.sample(pool, min(n_total, len(pool)))
-    batches = [sample[i:i + BATCH_SIZE] for i in range(0, len(sample), BATCH_SIZE)]
-    batches = batches[:N_BATCHES]
+    sample  = random.sample(pool, min(MAX_SEGMENTS, len(pool)))
+    batches = [sample[i:i + KW_BATCH_SIZE] for i in range(0, len(sample), KW_BATCH_SIZE)]
 
-    print(f"Modell: {provider.model}  |  {len(batches)} Batches à {BATCH_SIZE} Segmente")
+    print(f"Modell: {provider.model}  |  "
+          f"Stufe 1: {len(batches)} Batches à {KW_BATCH_SIZE} Segmente ({len(sample)} gesamt)")
 
-    # ── Batch-Phase ────────────────────────────────────────────────────────────
+    # ── Stufe 1: Keyword-Extraktion (parallel / sequenziell) ──────────────────
     if provider.max_concurrency > 1:
         sem = asyncio.Semaphore(provider.max_concurrency)
 
-        async def run_all():
+        async def _run_all():
             tasks = [
-                _run_batch_async(provider, batch, i + 1, len(batches), sem)
-                for i, batch in enumerate(batches)
+                _run_keyword_batch_async(provider, b, i + 1, len(batches), sem)
+                for i, b in enumerate(batches)
             ]
             return await asyncio.gather(*tasks)
 
-        partial_lists = asyncio.run(run_all())
+        kw_lists = asyncio.run(_run_all())
     else:
-        partial_lists = [
-            _run_batch(provider, batch, i + 1, len(batches))
-            for i, batch in enumerate(batches)
+        kw_lists = [
+            _run_keyword_batch(provider, b, i + 1, len(batches))
+            for i, b in enumerate(batches)
         ]
 
-    partial_lists = [p for p in partial_lists if p]
-    if not partial_lists:
-        print("Keine gültigen Batch-Ergebnisse", file=sys.stderr)
+    all_keywords = [kw for kws in kw_lists for kw in kws]
+    if not all_keywords:
+        print("Stufe 1 ergab keine Keywords.", file=sys.stderr)
         sys.exit(1)
 
-    # ── Merge-Phase (Code, kein LLM) ──────────────────────────────────────────
-    taxonomy = _merge_taxonomy(partial_lists)
+    # Exakte Deduplizierung (case-insensitiv) vor Stufe 2
+    seen: set[str] = set()
+    unique_keywords: list[str] = []
+    for kw in all_keywords:
+        if kw.lower() not in seen:
+            seen.add(kw.lower())
+            unique_keywords.append(kw)
+
+    print(f"\nStufe 1: {len(all_keywords)} Keywords → {len(unique_keywords)} eindeutig")
+
+    # ── Stufe 2: Kategorie-Destillation (ein LLM-Call) ────────────────────────
+    print("Stufe 2: Kategorie-Destillation …", flush=True)
+    kw_text    = "\n".join(f"- {kw}" for kw in unique_keywords)
+    cat_prompt = CAT_TEMPLATE.format(keywords=kw_text)
+
+    taxonomy: list[dict] = []
+    for attempt in range(2):
+        cat_text = provider.complete(cat_prompt, system=CAT_SYSTEM)
+        taxonomy = _parse_plaintext_taxonomy(cat_text or "")
+        if len(taxonomy) >= 4:
+            break
+        if attempt == 0:
+            print(f"  Nur {len(taxonomy)} Kategorie(n) — Retry…", flush=True)
 
     if not taxonomy:
-        print("Merge ergab keine Kategorien", file=sys.stderr)
+        print("Stufe 2 ergab keine Kategorien.", file=sys.stderr)
         sys.exit(1)
 
-    # D-P1: direkt in config.json["taxonomy"] schreiben — kein taxonomy_proposal.json mehr
+    print(f"Stufe 2: {len(taxonomy)} Kategorien")
+
+    # ── Stufe 3: config.json schreiben (D-P1) ─────────────────────────────────
     config_path.parent.mkdir(parents=True, exist_ok=True)
     cfg = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
     cfg["taxonomy"] = taxonomy
     config_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"→ {config_path}  ({len(taxonomy)} Kategorien)\n")
+    print(f"\n→ {config_path}  ({len(taxonomy)} Kategorien)\n")
     for cat in taxonomy:
         kw = ", ".join(cat.get("keywords", []))
-        print(f"  {cat['name']:20s}  {cat.get('description','')[:60]}…")
+        print(f"  {cat['name']:20s}  {cat.get('description', '')[:60]}")
         print(f"  {'':20s}  Keywords: {kw}")
         print()
 
