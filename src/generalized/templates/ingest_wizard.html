@@ -507,7 +507,8 @@ function slugify(name) {
 function authHeaders(extra = {}) {
   const h = { 'Content-Type': 'application/json', ...extra };
   if (state.token) h['X-Project-Token'] = state.token;
-  if (_INVITE)     h['X-Invite-Token']   = _INVITE;
+  const inv = window._INVITE_LIVE || _INVITE;
+  if (inv)         h['X-Invite-Token']   = inv;
   return h;
 }
 // Query-String mit project, document und token für alle API-Calls
@@ -1389,10 +1390,51 @@ document.getElementById('tax-btn-propose').addEventListener('click', async () =>
 });
 
 // ── Bestehende Projekte ────────────────────────────────────────────────────────
+function _showInviteForm(listEl) {
+  listEl.innerHTML = `
+    <div style="padding:12px 0 4px">
+      <p style="font-size:12px;color:var(--c-text-2);margin-bottom:8px">Bitte Einladungscode eingeben:</p>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input id="invite-code-input" type="text" placeholder="Einladungscode"
+               style="flex:1;padding:6px 10px;border:1px solid var(--c-border);border-radius:5px;
+                      font-family:monospace;font-size:13px;background:var(--c-surface);color:var(--c-text)">
+        <button id="invite-code-btn"
+                style="padding:6px 12px;background:var(--c-primary);color:#fff;border:none;
+                       border-radius:5px;font-size:12px;cursor:pointer">Einloggen</button>
+      </div>
+      <p id="invite-code-err" style="display:none;font-size:11px;color:#dc2626;margin-top:6px">Ungültiger Code.</p>
+    </div>`;
+  const inp = listEl.querySelector('#invite-code-input');
+  const btn = listEl.querySelector('#invite-code-btn');
+  const err = listEl.querySelector('#invite-code-err');
+  async function tryInvite() {
+    const code = inp.value.trim(); if (!code) return;
+    btn.disabled = true; btn.textContent = '…'; err.style.display = 'none';
+    try {
+      const res = await fetch('/api/check_invite?invite=' + encodeURIComponent(code));
+      if (res.ok) {
+        document.cookie = `invite_token=${code}; path=/; SameSite=Lax; max-age=2592000`;
+        // refresh _INVITE so subsequent authHeaders() calls pick it up
+        window._INVITE_LIVE = code;
+        loadProjectList();
+      } else {
+        err.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Einloggen';
+      }
+    } catch(e) {
+      err.textContent = 'Server nicht erreichbar.'; err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Einloggen';
+    }
+  }
+  btn.addEventListener('click', tryInvite);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') tryInvite(); });
+}
+
 async function loadProjectList() {
   const listEl = document.getElementById('proj-list');
   try {
-    const res = await fetch('/api/projects');
+    const res = await fetch('/api/projects', { headers: authHeaders() });
+    if (res.status === 401) { _showInviteForm(listEl); return; }
     if (!res.ok) { listEl.innerHTML = ''; return; }
     const projects = await res.json();
     if (!projects.length) {
