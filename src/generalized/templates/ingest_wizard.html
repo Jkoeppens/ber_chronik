@@ -257,6 +257,23 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
 .zp-status{font-size:11px;color:var(--c-text-3);flex:1}
 .zp-close{font-size:11px;color:#059669;cursor:pointer;text-decoration:underline;align-self:flex-end}
 .zp-close:hover{color:#047857}
+.zp-sync-btn{background:#d1fae5;color:#059669}.zp-sync-btn:hover{background:#059669;color:#fff}
+.zp-details>summary{list-style:none;cursor:pointer;font-size:11px;color:var(--c-text-3);padding:2px 0}
+.zp-details>summary::-webkit-details-marker{display:none}
+/* ── Neues-Projekt-Karte ── */
+.new-proj-card{border:2px dashed var(--c-primary)!important;background:var(--c-primary-bg)!important}
+.new-proj-card:hover{background:#ede9fe!important}
+.proj-card-wrap.np-open .new-proj-card{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent!important}
+.new-proj-panel{border:2px solid var(--c-primary);border-top:none;border-radius:0 0 6px 6px;
+                padding:14px 14px 12px;background:var(--c-primary-bg);display:none;flex-direction:column;gap:10px}
+.proj-card-wrap.np-open .new-proj-panel{display:flex}
+.np-input{font-size:12px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;
+          width:100%;box-sizing:border-box;color:var(--c-text)}
+.np-tabs{display:flex;gap:6px}
+.np-tab{font-size:11px;padding:5px 12px;border:1px solid var(--c-border);border-radius:4px;
+        background:var(--c-surface);cursor:pointer;color:var(--c-text-3)}
+.np-tab.active{border-color:var(--c-primary);background:var(--c-primary-bg);color:var(--c-primary);font-weight:600}
+.np-sub{display:flex;flex-direction:column;gap:8px}
 </style>
 </head>
 <body>
@@ -269,28 +286,65 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
 
 <div id="steps">
 
-  <!-- Step 1: Upload -->
+  <!-- Step 1: Projekte -->
   <section id="step-1" class="step active">
-    <h2>Dateien hochladen</h2>
-    <p class="step-desc">DOCX, PDF oder TXT — auch mehrere Dateien gleichzeitig.</p>
-    <div style="margin-bottom:14px">
-      <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:5px">Projektname</label>
-      <input id="project-name-input" type="text" placeholder="z.B. Osmanisches Reich 1875–1923"
-        style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #d1d5db;border-radius:5px;font-size:13px;outline:none">
-      <p style="font-size:11px;color:#9ca3af;margin:4px 0 0">Ordnername wird automatisch erzeugt (z.B. <code id="project-slug-preview" style="color:#6d28d9"></code>)</p>
-    </div>
-    <div id="drop-zone">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
-      </svg>
-      <strong>Dateien hierher ziehen</strong>
-      <p>oder klicken um Dateien auszuwählen</p>
-    </div>
-    <input type="file" id="file-input" multiple accept=".docx,.pdf,.txt">
-    <div id="file-list"></div>
+    <!-- Hidden refs kept for JS backward-compat -->
+    <input id="project-name-input" type="text" style="display:none">
+    <code id="project-slug-preview" style="display:none"></code>
+    <input type="file" id="file-input" multiple accept=".docx,.pdf,.txt" style="display:none">
+    <div id="file-list" style="display:none"></div>
 
     <div id="proj-list-section">
-      <h3>Bestehendes Projekt öffnen</h3>
+      <h3>Projekte</h3>
+
+      <!-- "Neues Projekt +"-Karte (statisch, immer sichtbar) -->
+      <div class="proj-card-wrap" id="new-proj-wrap" style="margin-bottom:6px">
+        <div class="proj-card new-proj-card" id="new-proj-card" style="cursor:pointer">
+          <span class="proj-card-title" style="color:var(--c-primary)">+ Neues Projekt</span>
+        </div>
+        <div class="new-proj-panel">
+          <input class="np-input" id="np-name" type="text" placeholder="Projektname z.B. Osmanisches Reich 1875–1923">
+          <div class="np-tabs">
+            <button class="np-tab active" data-src="file">📄 Datei hochladen</button>
+            <button class="np-tab" data-src="zotero">🔗 Zotero</button>
+          </div>
+          <!-- Datei-Sub-Panel -->
+          <div class="np-sub" id="np-sub-file">
+            <div class="adp-row">
+              <div class="adp-drop" id="np-drop">Datei hierher ziehen oder klicken</div>
+              <select class="adp-select" id="np-doctype">
+                <option value="Forschungsnotizen">Forschungsnotizen</option>
+                <option value="Presseartikel">Presseartikel</option>
+                <option value="Transkripte">Transkripte</option>
+                <option value="Anderes">Anderes</option>
+              </select>
+              <button class="adp-run" id="np-file-go" disabled>Analysieren →</button>
+            </div>
+          </div>
+          <!-- Zotero-Sub-Panel -->
+          <div class="np-sub" id="np-sub-zotero" style="display:none">
+            <div class="zp-row">
+              <span class="zp-label">API-Key</span>
+              <input class="zp-input" id="np-zapi" type="password" placeholder="Zotero API-Key …" autocomplete="new-password">
+            </div>
+            <div class="zp-row">
+              <span class="zp-label">User-ID</span>
+              <input class="zp-input" id="np-zuserid" type="text" placeholder="123456" style="max-width:100px">
+              <span class="zp-label" style="min-width:auto">Collection</span>
+              <input class="zp-input" id="np-zcollect" type="text" placeholder="ABCDEF" style="max-width:100px">
+            </div>
+            <div class="zp-row">
+              <button class="zp-btn zp-test" id="np-ztest">Testen</button>
+              <button class="zp-btn zp-save" id="np-zimport">Importieren →</button>
+              <span class="zp-status" id="np-zstatus"></span>
+            </div>
+            <pre class="adp-log" id="np-zlog" style="display:none"></pre>
+          </div>
+          <span class="adp-close" id="np-close">Abbrechen</span>
+        </div>
+      </div>
+
+      <!-- Bestehende Projekte (dynamisch geladen) -->
       <div id="proj-list"><span style="font-size:11px;color:var(--c-text-3)">Lade…</span></div>
     </div>
   </section>
@@ -469,7 +523,7 @@ let currentStep = 1;
 let maxReachedStep = 1;
 let analysisRan = false;
 const TOTAL = 7;
-const TITLES = ['Dateien hochladen','Dokumenttyp','LLM-Analyse','Taxonomie','Zeitkonfiguration','Entities','Pipeline'];
+const TITLES = ['Projekte','Dokumenttyp','LLM-Analyse','Taxonomie','Zeitkonfiguration','Entities','Pipeline'];
 const EVENT_COLORS = ['#6d28d9','#2563eb','#16a34a','#d97706','#dc2626','#0891b2','#7c3aed','#b45309'];
 let evNextId = 0;
 let taxDirty = false;
@@ -489,6 +543,124 @@ function buildDots() {
   }
 }
 buildDots();
+
+// ── Neues-Projekt-Karte ────────────────────────────────────────────────────────
+(function () {
+  const wrap     = document.getElementById('new-proj-wrap');
+  const card     = document.getElementById('new-proj-card');
+  const npName   = document.getElementById('np-name');
+  const tabs     = wrap.querySelectorAll('.np-tab');
+  const subFile  = document.getElementById('np-sub-file');
+  const subZot   = document.getElementById('np-sub-zotero');
+  const npDrop   = document.getElementById('np-drop');
+  const npDtype  = document.getElementById('np-doctype');
+  const npFileGo = document.getElementById('np-file-go');
+  const npZApi   = document.getElementById('np-zapi');
+  const npZUser  = document.getElementById('np-zuserid');
+  const npZColl  = document.getElementById('np-zcollect');
+  const npZTest  = document.getElementById('np-ztest');
+  const npZImp   = document.getElementById('np-zimport');
+  const npZStat  = document.getElementById('np-zstatus');
+  const npZLog   = document.getElementById('np-zlog');
+  const npClose  = document.getElementById('np-close');
+  let curSrc = 'file'; let npFile = null;
+
+  card.addEventListener('click', () => { wrap.classList.toggle('np-open'); if (wrap.classList.contains('np-open')) npName.focus(); });
+  npClose.addEventListener('click', () => { wrap.classList.remove('np-open'); resetNp(); });
+
+  function resetNp() {
+    npName.value = ''; npFile = null;
+    npDrop.textContent = 'Datei hierher ziehen oder klicken'; npDrop.classList.remove('has-file');
+    npFileGo.disabled = true; npFileGo.textContent = 'Analysieren →';
+    npZApi.value = ''; npZUser.value = ''; npZColl.value = '';
+    npZStat.textContent = ''; npZLog.style.display = 'none'; npZLog.textContent = '';
+    npZImp.disabled = false;
+  }
+
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active');
+    curSrc = tab.dataset.src;
+    subFile.style.display = curSrc === 'file' ? '' : 'none';
+    subZot.style.display  = curSrc === 'zotero' ? '' : 'none';
+  }));
+
+  const fi = document.createElement('input'); fi.type = 'file'; fi.accept = '.txt,.md,.pdf,.docx';
+  npDrop.addEventListener('click', () => fi.click());
+  npDrop.addEventListener('dragover', e => { e.preventDefault(); npDrop.classList.add('dragover'); });
+  npDrop.addEventListener('dragleave', () => npDrop.classList.remove('dragover'));
+  npDrop.addEventListener('drop', e => { e.preventDefault(); npDrop.classList.remove('dragover'); if (e.dataTransfer.files[0]) setNpFile(e.dataTransfer.files[0]); });
+  fi.addEventListener('change', () => { if (fi.files[0]) setNpFile(fi.files[0]); });
+  function setNpFile(f) { npFile = f; npDrop.textContent = f.name; npDrop.classList.add('has-file'); npFileGo.disabled = !npName.value.trim(); }
+  npName.addEventListener('input', () => { if (curSrc === 'file') npFileGo.disabled = !(npFile && npName.value.trim()); });
+
+  npFileGo.addEventListener('click', async () => {
+    const name = npName.value.trim();
+    if (!name || !npFile) return;
+    npFileGo.disabled = true; npFileGo.textContent = 'Lade hoch …';
+    try {
+      const fd = new FormData(); fd.append('files', npFile);
+      const upRes = await fetch('/ingest/upload', { method: 'POST', body: fd });
+      if (!upRes.ok) throw new Error('Upload-Fehler ' + upRes.status);
+      const upData = await upRes.json();
+      state.project_title = name; state.doc_type = npDtype.value;
+      state.files = upData.files; state.isExistingProject = false;
+      state.analysis = null; state.project = null; state.document = null; state.token = null;
+      analysisRan = false;
+      document.getElementById('project-name-input').value = name;
+      wrap.classList.remove('np-open');
+      gotoStep(3);
+    } catch (e) { npFileGo.disabled = false; npFileGo.textContent = 'Analysieren →'; alert('Fehler: ' + e.message); }
+  });
+
+  npZTest.addEventListener('click', async () => {
+    npZStat.textContent = 'Teste …'; npZStat.style.color = '';
+    const params = new URLSearchParams({ api_key: npZApi.value, user_id: npZUser.value, collection: npZColl.value });
+    try {
+      const res = await fetch('/api/projects/_new/zotero/test?' + params);
+      const data = await res.json();
+      npZStat.textContent = data.ok ? '✓ ' + data.count + ' Artikel' : '✗ ' + data.error;
+      npZStat.style.color = data.ok ? '#059669' : '#dc2626';
+    } catch (e) { npZStat.textContent = '✗ ' + e.message; npZStat.style.color = '#dc2626'; }
+  });
+
+  npZImp.addEventListener('click', async () => {
+    const name = npName.value.trim();
+    if (!name) { npZStat.textContent = '✗ Projektname erforderlich'; npZStat.style.color = '#dc2626'; return; }
+    npZImp.disabled = true; npZLog.style.display = 'block'; npZLog.textContent = 'Erstelle Projekt …';
+    try {
+      const projRes = await fetch('/api/projects', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: name, doc_type: 'presseartikel' }),
+      });
+      const projData = await projRes.json();
+      if (!projData.ok) throw new Error(projData.error || 'Projekt konnte nicht erstellt werden');
+      const projId = projData.id;
+      await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/config', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: npZApi.value, user_id: npZUser.value, collection: npZColl.value, doc_type: 'presseartikel' }),
+      });
+      npZLog.textContent += '
+✓ Projekt erstellt
+Starte Zotero-Import …';
+      const syncRes = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/sync', { method: 'POST' });
+      if (!syncRes.ok || !syncRes.body) throw new Error('Sync-Fehler ' + syncRes.status);
+      const reader = syncRes.body.getReader(); const dec = new TextDecoder(); let buf = '';
+      while (true) {
+        const { done, value } = await reader.read(); if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n'); buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const msg = line.slice(6);
+          if (msg === '__done__') { npZLog.textContent += '\n✓ Import abgeschlossen!'; npClose.textContent = 'Schließen'; loadProjectList(); return; }
+          if (msg.startsWith('__error__')) { npZLog.textContent += '\n✗ ' + msg.slice(9); npZImp.disabled = false; return; }
+          if (!msg.startsWith('__')) { npZLog.textContent += '\n' + msg; npZLog.scrollTop = npZLog.scrollHeight; }
+        }
+      }
+    } catch (e) { npZLog.textContent += '\n✗ ' + e.message; npZImp.disabled = false; }
+  });
+})();
+
 loadProjectList().then(() => {
   const addTo = new URLSearchParams(location.search).get('add_to');
   if (!addTo) return;
@@ -559,7 +731,7 @@ function gotoStep(n) {
   document.body.classList.toggle('wide-step', WIDE_STEPS.has(n));
   updateProgress(n);
   btnBack.disabled = n === 1;
-  btnNext.style.display = n === TOTAL ? 'none' : '';
+  btnNext.style.display = (n === 1 || n === TOTAL) ? 'none' : '';
   currentStep = n;
   if (state.project && state.document) {
     const u = new URL(location.href);
@@ -593,7 +765,7 @@ btnNext.addEventListener('click', async () => {
 
 async function onEnterStep(n) {
   btnNext.disabled = false;
-  if (n === 1) { document.getElementById('project-name-input').disabled = false; state.isExistingProject = false; updateStep1Next(); }
+  if (n === 1) { state.isExistingProject = false; }
   if (n === 3) {
     if (state.analysis) {
       renderAnalysisResult(state.analysis);
@@ -658,6 +830,7 @@ async function handleFiles(fileList) {
 
 function renderFileList() {
   const el = document.getElementById('file-list');
+  if (!el) return;
   el.innerHTML = state.files.map(f => `
     <div class="file-item">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1249,26 +1422,34 @@ async function loadProjectList() {
           <span class="adp-close">Abbrechen</span>
         </div>
         <div class="zotero-panel">
-          <div class="zp-row">
-            <span class="zp-label">API-Key</span>
-            <input class="zp-input zp-apikey" type="password" placeholder="Zotero API-Key …" autocomplete="new-password">
+          <div class="zp-row zp-sync-row" style="display:none">
+            <button class="zp-btn zp-sync-btn">Aktualisieren ↻</button>
+            <span class="zp-status zp-sync-status"></span>
           </div>
-          <div class="zp-row">
-            <span class="zp-label">User-ID</span>
-            <input class="zp-input zp-userid" type="text" placeholder="123456" style="max-width:100px">
-            <span class="zp-label" style="min-width:auto">Collection</span>
-            <input class="zp-input zp-collection" type="text" placeholder="ABCDEF" style="max-width:100px">
-            <span class="zp-label" style="min-width:auto">Typ</span>
-            <select class="zp-select zp-doctype">
-              <option value="presseartikel">Presseartikel</option>
-              <option value="buchnotizen">Buchnotizen</option>
-            </select>
-          </div>
-          <div class="zp-row">
-            <button class="zp-btn zp-test">Testen</button>
-            <button class="zp-btn zp-save">Speichern</button>
-            <span class="zp-status"></span>
-          </div>
+          <pre class="adp-log zp-sync-log" style="display:none"></pre>
+          <details class="zp-details" open>
+            <summary class="zp-summary" style="display:none">Konfiguration bearbeiten ▾</summary>
+            <div class="zp-row" style="margin-top:6px">
+              <span class="zp-label">API-Key</span>
+              <input class="zp-input zp-apikey" type="password" placeholder="Zotero API-Key …" autocomplete="new-password">
+            </div>
+            <div class="zp-row">
+              <span class="zp-label">User-ID</span>
+              <input class="zp-input zp-userid" type="text" placeholder="123456" style="max-width:100px">
+              <span class="zp-label" style="min-width:auto">Collection</span>
+              <input class="zp-input zp-collection" type="text" placeholder="ABCDEF" style="max-width:100px">
+              <span class="zp-label" style="min-width:auto">Typ</span>
+              <select class="zp-select zp-doctype">
+                <option value="presseartikel">Presseartikel</option>
+                <option value="buchnotizen">Buchnotizen</option>
+              </select>
+            </div>
+            <div class="zp-row">
+              <button class="zp-btn zp-test">Testen</button>
+              <button class="zp-btn zp-save">Speichern</button>
+              <span class="zp-status zp-form-status"></span>
+            </div>
+          </details>
           <span class="zp-close">Schließen</span>
         </div>
       </div>`).join('');
@@ -1287,50 +1468,86 @@ async function loadProjectList() {
       if (editLnk) editLnk.addEventListener('click', e => e.stopPropagation());
 
       // ── Zotero-Panel ────────────────────────────────────────────────────────
-      const zBtn      = wrap.querySelector('.proj-card-zotero');
-      const zPanel    = wrap.querySelector('.zotero-panel');
-      const zApiKey   = zPanel.querySelector('.zp-apikey');
-      const zUserId   = zPanel.querySelector('.zp-userid');
-      const zCollect  = zPanel.querySelector('.zp-collection');
-      const zDocType  = zPanel.querySelector('.zp-doctype');
-      const zTest     = zPanel.querySelector('.zp-test');
-      const zSave     = zPanel.querySelector('.zp-save');
-      const zStatus   = zPanel.querySelector('.zp-status');
-      const zClose    = zPanel.querySelector('.zp-close');
-      const projId    = card.dataset.id;
+      const zBtn       = wrap.querySelector('.proj-card-zotero');
+      const zPanel     = wrap.querySelector('.zotero-panel');
+      const zApiKey    = zPanel.querySelector('.zp-apikey');
+      const zUserId    = zPanel.querySelector('.zp-userid');
+      const zCollect   = zPanel.querySelector('.zp-collection');
+      const zDocType   = zPanel.querySelector('.zp-doctype');
+      const zTest      = zPanel.querySelector('.zp-test');
+      const zSave      = zPanel.querySelector('.zp-save');
+      const zFormSt    = zPanel.querySelector('.zp-form-status');
+      const zSyncRow   = zPanel.querySelector('.zp-sync-row');
+      const zSyncBtn   = zPanel.querySelector('.zp-sync-btn');
+      const zSyncSt    = zPanel.querySelector('.zp-sync-status');
+      const zSyncLog   = zPanel.querySelector('.zp-sync-log');
+      const zSummary   = zPanel.querySelector('.zp-summary');
+      const zDetails   = zPanel.querySelector('.zp-details');
+      const zClose     = zPanel.querySelector('.zp-close');
+      const projId     = card.dataset.id;
 
-      function closeZotero() { wrap.classList.remove('zotero-open'); zStatus.textContent = ''; }
+      function closeZotero() { wrap.classList.remove('zotero-open'); zFormSt.textContent = ''; zSyncSt.textContent = ''; }
       zClose.addEventListener('click', closeZotero);
+
       zBtn.addEventListener('click', async e => {
         e.stopPropagation();
         if (wrap.classList.contains('zotero-open')) { closeZotero(); return; }
-        wrap.classList.remove('open'); // close add-doc panel if open
+        wrap.classList.remove('open');
         wrap.classList.add('zotero-open');
-        // Pre-fill from project config
-        zStatus.textContent = 'Lade …';
+        zFormSt.textContent = 'Lade …';
         try {
           const res = await fetch('/api/projects/' + encodeURIComponent(projId));
           const data = res.ok ? await res.json() : {};
           const zc = data.zotero || {};
           if (zc.api_key_masked) zApiKey.placeholder = zc.api_key_masked;
-          if (zc.user_id)   zUserId.value   = zc.user_id;
-          if (zc.collection) zCollect.value  = zc.collection;
-          if (zc.doc_type)  zDocType.value  = zc.doc_type;
-          zStatus.textContent = zc.collection ? 'Konfiguriert — Werte ändern oder Speichern.' : '';
-        } catch (_) { zStatus.textContent = ''; }
+          if (zc.user_id)    zUserId.value  = zc.user_id;
+          if (zc.collection) zCollect.value = zc.collection;
+          if (zc.doc_type)   zDocType.value = zc.doc_type;
+          if (zc.collection) {
+            zSyncRow.style.display = ''; zSummary.style.display = '';
+            zDetails.removeAttribute('open');
+            zFormSt.textContent = 'Konfiguriert';
+          } else {
+            zSyncRow.style.display = 'none'; zSummary.style.display = 'none';
+            zDetails.setAttribute('open', ''); zFormSt.textContent = '';
+          }
+        } catch (_) { zFormSt.textContent = ''; }
       });
+
+      zSyncBtn.addEventListener('click', async () => {
+        zSyncSt.textContent = 'Läuft …'; zSyncLog.style.display = 'block';
+        zSyncLog.textContent = ''; zSyncBtn.disabled = true;
+        try {
+          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/sync', { method: 'POST' });
+          if (!res.ok || !res.body) throw new Error('Fehler ' + res.status);
+          const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
+          while (true) {
+            const { done, value } = await reader.read(); if (done) break;
+            buf += dec.decode(value, { stream: true });
+            const lines = buf.split('\n'); buf = lines.pop();
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue;
+              const msg = line.slice(6);
+              if (msg === '__done__') { zSyncSt.textContent = '✓ Fertig'; zSyncBtn.disabled = false; loadProjectList(); return; }
+              if (msg.startsWith('__error__')) { zSyncLog.textContent += '\n✗ ' + msg.slice(9); zSyncBtn.disabled = false; return; }
+              if (!msg.startsWith('__')) { zSyncLog.textContent += (zSyncLog.textContent ? '\n' : '') + msg; zSyncLog.scrollTop = zSyncLog.scrollHeight; }
+            }
+          }
+        } catch (e) { zSyncSt.textContent = '✗ ' + e.message; zSyncBtn.disabled = false; }
+      });
+
       zTest.addEventListener('click', async () => {
-        zStatus.textContent = 'Teste Verbindung …';
+        zFormSt.textContent = 'Teste Verbindung …';
         const params = new URLSearchParams({ api_key: zApiKey.value, user_id: zUserId.value, collection: zCollect.value });
         try {
           const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/test?' + params);
           const data = await res.json();
-          zStatus.textContent = data.ok ? '✓ ' + data.count + ' Artikel in Collection' : '✗ ' + data.error;
-          zStatus.style.color = data.ok ? '#059669' : '#dc2626';
-        } catch (e) { zStatus.textContent = '✗ ' + e.message; zStatus.style.color = '#dc2626'; }
+          zFormSt.textContent = data.ok ? '✓ ' + data.count + ' Artikel' : '✗ ' + data.error;
+          zFormSt.style.color = data.ok ? '#059669' : '#dc2626';
+        } catch (e) { zFormSt.textContent = '✗ ' + e.message; zFormSt.style.color = '#dc2626'; }
       });
       zSave.addEventListener('click', async () => {
-        zStatus.textContent = 'Speichere …';
+        zFormSt.textContent = 'Speichere …';
         try {
           const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/config', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1338,10 +1555,10 @@ async function loadProjectList() {
                                    collection: zCollect.value, doc_type: zDocType.value }),
           });
           const data = await res.json();
-          zStatus.textContent = data.ok ? '✓ Gespeichert' : '✗ ' + data.error;
-          zStatus.style.color = data.ok ? '#059669' : '#dc2626';
-          if (data.ok) loadProjectList(); // refresh card to show ● indicator
-        } catch (e) { zStatus.textContent = '✗ ' + e.message; zStatus.style.color = '#dc2626'; }
+          zFormSt.textContent = data.ok ? '✓ Gespeichert' : '✗ ' + data.error;
+          zFormSt.style.color = data.ok ? '#059669' : '#dc2626';
+          if (data.ok) loadProjectList();
+        } catch (e) { zFormSt.textContent = '✗ ' + e.message; zFormSt.style.color = '#dc2626'; }
       });
 
       function resetPanel() {

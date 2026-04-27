@@ -872,6 +872,28 @@ def _get_latest_doc_id(project_id: str) -> str | None:
     return candidates[0][1]
 
 
+@app.post("/api/projects")
+async def create_project_endpoint(request: Request):
+    if err := _require_admin_key(request): return err
+    body = await request.json()
+    title = (body.get("title") or "").strip()
+    if not title:
+        return JSONResponse({"ok": False, "error": "title erforderlich"}, status_code=400)
+    doc_type   = body.get("doc_type", "buchnotizen")
+    project_id = _slugify(title)
+    proj_dir   = PROJECTS_DIR / project_id
+    proj_dir.mkdir(parents=True, exist_ok=True)
+    cfg_path = proj_dir / "config.json"
+    if not cfg_path.exists():
+        cfg_path.write_text(json.dumps({"title": title, "doc_type": doc_type},
+                                       ensure_ascii=False, indent=2), encoding="utf-8")
+    db_proj = await get_project(project_id)
+    if db_proj is None:
+        db_proj = await create_project(project_id, title=title, doc_type=doc_type)
+        db_proj = await get_project(project_id)
+    return JSONResponse({"ok": True, "id": project_id, "token": db_proj["token"]})
+
+
 @app.get("/api/projects")
 async def list_projects_endpoint():
     db_rows = await db_list_projects()
