@@ -33,6 +33,10 @@ Einzige gültige Quelle: `projects/{project}/config.json["entities"]`.
 Kein doc-level Fallback, kein stilles Ignorieren.
 Konsequenz: Entity-Editor speichert immer in config.json, nie in entities_seed.json.
 
+Kanonische Editor-Quelle ist `documents/{doc_id}/entities_proposal.json` —
+dort speichert der Entity-Editor (save/reject/extract). `config.json["entities"]`
+ist der Spiegel für Pipeline-Schritte und wird bei jedem Editor-Save synchronisiert.
+
 ### D-P5 — Schritt-Verträge sind explizit
 Jedes Skript prüft beim Start ob seine Input-Dateien existieren.
 Fehlt eine Input-Datei: Fehler mit klarem Text, kein Weiterlaufen.
@@ -43,6 +47,18 @@ bekannten Stelle aufgerufen. Nach jedem Feature-Block:
 grep aller Endpoints gegen ingest_wizard.html und 
 taxonomy_editor.html. Verwaiste Endpoints werden 
 entweder gefixt oder gelöscht.
+
+### D-P7 — Wizard-State-Persistenz
+`state.project`, `state.document` und `step` werden bei jedem Schritt-Wechsel
+in die URL geschrieben (`gotoStep`). Bei Reload liest `restoreFromUrl()` diese
+Parameter und springt direkt zum gespeicherten Schritt.
+
+Token ist nie in der URL — wird immer frisch von `GET /api/projects/{id}/token`
+geholt. Kein Token-Leak durch Browser-Historie.
+
+`taxData` ist die einzige Browser-Variable für Taxonomie-Daten. `state.taxonomy`
+existiert nicht — Taxonomie lebt ausschließlich in `taxData` (Browser) und
+`config.json["taxonomy"]` (Server).
 
 ## Entity-Extraktion
 

@@ -1,6 +1,6 @@
 # Wizard Flow — Referenz
 
-Stand: 2026-04-21 | Branch: fix/except-blocks
+Stand: 2026-04-27 | Branch: fix/except-blocks
 
 ---
 
@@ -35,13 +35,13 @@ Stand: 2026-04-21 | Branch: fix/except-blocks
 **Neues Projekt:**
 1. `POST /ingest/analyze` → `parse_document.py` + LLM-Analyse → JSON
 2. Response setzt: `state.project`, `state.document`, `state.analysis`, `state.time_config`
-3. Sofort danach: `POST /ingest/save_config` mit `title`, `doc_type`, `time_config`, `taxonomy: []` (nur für neue Projekte)
+3. Sofort danach: `POST /ingest/save_config` mit `title`, `doc_type`, `time_config`
    - Server schreibt `projects/{project}/config.json` (alle Felder) + `documents/{doc_id}/config.json` (doc_type, original_filename)
    - Server legt Projekt in DB an und gibt `token` zurück → `state.token`
 
 **Bestehendes Projekt (Restore via URL):**
 1. `GET /ingest/doc_status` — prüft ob `segments.json` vorhanden
-2. Wenn ja: Sprung zu Schritt 4 nach 2s (kein neuer Analyse-Lauf)
+2. Wenn ja: direkt weiter zu Schritt 4 (kein neuer Analyse-Lauf)
 3. Wenn nein: `runAnalysis()` wie oben
 
 **Dateien geschrieben:** `data/raw/{filename}` (Upload), `segments.json` (parse_document.py)
@@ -58,7 +58,7 @@ Stand: 2026-04-21 | Branch: fix/except-blocks
 **Aktionen:**
 - "+ Kategorie": `taxData.push(...)`, `markTaxDirty()`
 - "KI-Vorschlag": `POST /ingest/propose_taxonomy` (SSE) → `propose_taxonomy.py` → schreibt direkt in `config.json["taxonomy"]` → danach `initTaxonomy()` + `markTaxDirty()`
-- "Speichern": `POST /taxonomy/save` → schreibt `config.json["taxonomy"]` + setzt `state.taxonomy = taxData`, `taxDirty = false`
+- "Speichern": `POST /taxonomy/save` → schreibt `config.json["taxonomy"]` + setzt `taxDirty = false`
 - "Neu klassifizieren": `POST /ingest/run/step` mit `classify_segments.py` (SSE) → danach ggf. `export_preview.py`
 
 **Weiter-Button:** Ruft `saveTaxonomy()` (wenn `taxDirty`) dann `gotoStep(5)`.
@@ -110,6 +110,10 @@ Der iframe lädt `entity_editor.html` als eigenständige Seite mit eigenen Fetch
    `parse_document.py` → `detect_anchors.py` → `interpolate_anchors.py` →
    `classify_segments.py` → `match_entities.py` → `export_preview.py` →
    `extract_entities_v2.py` (optional) → `export_exploration.py`
+
+   **Pipeline-Skipping:** `parse_document.py` wird übersprungen wenn `segments.json`
+   bereits vorhanden ist. `detect_anchors.py` und `interpolate_anchors.py` werden
+   übersprungen wenn `anchors_interpolated.json` bereits vorhanden ist.
 3. Am Ende: SSE sendet `__link__:/viz/?project=...` → Viz-Link erscheint
 
 **Dateien geschrieben:** alle Pipeline-Outputs, final `exploration/data.json`

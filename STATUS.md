@@ -1,6 +1,6 @@
 # STATUS — Aktueller Stand des Projekts
 
-Stand: 2026-04-13 | Branch: wip/wizard-pipeline-fixes | D-P1–D-P5 umgesetzt + E2E-verifiziert
+Stand: 2026-04-27 | Branch: fix/except-blocks | D-P1–D-P7 umgesetzt + E2E-verifiziert
 
 ---
 
@@ -129,10 +129,10 @@ Führt D3-Force-Simulation offline durch und speichert Knotenpositionen als `net
 
 | | |
 |---|---|
-| **Input** | `viz/data.json`, `viz/entities_seed.csv` (hardcodiert auf BER-Pfade, nicht auf `data/projects/…`) |
-| **Output** | `viz/network_layout.json` |
+| **Input** | `data/projects/{project}/exploration/data.json`, `data/projects/{project}/exploration/entities_seed.csv` |
+| **Output** | `data/projects/{project}/exploration/network_layout.json` |
 | **LLM** | Nein |
-| **Auslöser** | Manuell: `npm run precompute-network` |
+| **Auslöser** | Automatisch am Ende von `export_exploration.py` (via `subprocess.run`) |
 
 ---
 
@@ -190,9 +190,9 @@ Wenn ein Akteur nicht in der aliasMap ist, wird der Typ via `Object.keys(NODE_CO
 
 Knoten die nicht in `network_layout.json` stehen, bekommen eine zufällige Position (80% der Canvas-Fläche). Bis April 2026 war der Fallback `(W/2, H/2)` — das führte zu einem Knotenhaufen im Zentrum der alle Playwright-Tests und die Viz brach.
 
-### network_layout.json — manuelle Regenerierung nötig
+### ~~network_layout.json — manuelle Regenerierung nötig~~ ✓ behoben
 
-Das Layout wird nicht automatisch aktualisiert wenn sich Akteure ändern. `npm run precompute-network` muss manuell laufen. Vergisst man es, landen neue Knoten im Zufalls-Fallback.
+Das Layout wird automatisch am Ende jedes `export_exploration.py`-Laufs neu berechnet. Neue Knoten landen nicht mehr im Zufalls-Fallback, solange die Pipeline vollständig durchläuft.
 
 ---
 
@@ -220,9 +220,9 @@ Einzige gültige Quelle: `config.json["taxonomy"]`. Fallback auf taxonomy_propos
 
 `/ingest/run/step` schaltet match_entities automatisch nach classify nach. Kein Mischzustand mehr möglich wenn classify über den Wizard läuft.
 
-### I4 — `precompute_network.js` liest BER-spezifische Pfade
+### ~~I4 — `precompute_network.js` liest BER-spezifische Pfade~~ ✓ behoben
 
-Liest hardcodiert `viz/data.json` und `viz/entities_seed.csv`. Für andere Projekte muss man die Datei manuell anpassen oder Dateien kopieren. Nicht generisch verwendbar.
+Liest jetzt `data/projects/{project}/exploration/data.json` und schreibt `network_layout.json` in denselben Ordner. Wird via `--project`-Argument aus `export_exploration.py` aufgerufen — generisch verwendbar.
 
 ### ~~I5 — entities in config.json vs. Dokumentebene: kein Merge~~ ✓ behoben (D-P4)
 
