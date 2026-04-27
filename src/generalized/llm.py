@@ -81,6 +81,7 @@ def _extract_json(text: str):
 
 class LLMProvider:
     max_concurrency: int = 1
+    max_chars_per_chunk: int = 8000
 
     def complete(self, prompt: str, system: str = None) -> str:
         raise NotImplementedError
@@ -93,6 +94,7 @@ class LLMProvider:
 class AnthropicProvider(LLMProvider):
     """Ruft die Anthropic Messages API auf (synchron)."""
     max_concurrency = 10
+    max_chars_per_chunk = 8000
 
     def __init__(self, model: str = "claude-haiku-4-5-20251001", api_key: str = None):
         import anthropic as _anthropic
@@ -117,6 +119,7 @@ class AnthropicProvider(LLMProvider):
 class OllamaProvider(LLMProvider):
     """Ruft ein lokales Ollama-Modell auf."""
     max_concurrency = 1
+    max_chars_per_chunk = 2000
 
     def __init__(self, model: str = "llama3.1:8b",
                  base_url: str = "http://localhost:11434"):
@@ -124,7 +127,10 @@ class OllamaProvider(LLMProvider):
         self.base_url = base_url.rstrip("/")
 
     def complete(self, prompt: str, system: str = None, json_mode: bool = False) -> str:
-        payload: dict = {"model": self.model, "prompt": prompt, "stream": False}
+        payload: dict = {
+            "model": self.model, "prompt": prompt, "stream": False,
+            "options": {"num_ctx": 8192},
+        }
         if system:
             payload["system"] = system
         if json_mode:

@@ -17,6 +17,7 @@ from src.generalized.entity_utils import (
     _normalize_entity,
     _build_few_shot_block,
     _save_checkpoint,
+    _merge,
 )
 
 SYSTEM_PROMPT   = "Du extrahierst Eigennamen aus historischen Texten."
@@ -27,26 +28,26 @@ SAVE_INTERVAL   = 10
 
 # D-E1: Plaintext-Listenformat — kein JSON
 _PLAINTEXT_FORMAT_EXAMPLE = """\
-Ausgabe — gruppiert nach Typ, erste Schreibweise = Normalform, Rest = Synonyme:
+Ausgabe-Format:
+- Gruppiert nach Typ: # Personen, # Organisationen, # Orte, # Konzepte
+- JEDE ENTITY AUF EINER EIGENEN ZEILE
+- Kommas trennen Schreibvarianten DESSELBEN Namens (nicht verschiedene Entities)
+- Erste Schreibweise = Normalform, Rest = Synonyme
 
+Beispiel:
 # Personen
-Mehmed Talat Pascha, Talat, Talat Pascha
-Ismail Enver, Enver Pascha
-Salim al-Bustani, Bustani
+Mustafa Kemal, Kemal Pascha, Atatürk
+Enver Pascha
 
 # Organisationen
 CUP, Komitee für Einheit und Fortschritt
-Al-Jinan
-Al-Muqtataf, Muqtataf
 
 # Orte
-Mount Lebanon, Lebanon
-Damaskus, Damascus, الشام
+Damaskus, Damascus
 
-# Konzepte
-Nahda, arabische Aufklärung
+(Leere Abschnitte weglassen. Nur die Aufzählung ausgeben, kein JSON, kein Kommentar.)
 
-(Leere Abschnitte weglassen. Nur die Aufzählung ausgeben, kein JSON, kein Kommentar.)"""
+=== BEISPIEL ENDE ==="""
 
 ITER1_PROMPT = """\
 {few_shot_block}Erkenne alle Eigennamen in diesem Text.
@@ -66,9 +67,10 @@ Regeln:
 - Synonyme = alle Schreibweisen aus DIESEM Text, kommasepariert
 
 {format_example}
-
-Text:
-{text}"""
+Jetzt extrahiere Entities aus folgendem Text:
+=== TEXT ===
+{text}
+=== ENDE ==="""
 
 NORMALIZE_PROMPT = """\
 {few_shot_block}Bereinige diese Entitäts-Kandidaten aus einem historischen Text.
@@ -82,9 +84,10 @@ Regeln:
 - Typ-Hinweis als Orientierung nutzen, aber korrigieren wenn falsch
 
 {format_example}
-
-Kandidaten:
-{kandidaten}"""
+Jetzt bereinige folgende Kandidaten:
+=== KANDIDATEN ===
+{kandidaten}
+=== ENDE ==="""
 
 EXTRACT_TEMPLATE = """\
 {few_shot_block}Extrahiere alle Eigennamen aus diesem historischen Text.
@@ -103,9 +106,28 @@ Regeln:
 - Nur eindeutige Eigennamen, keine generischen Begriffe
 
 {format_example}
+Jetzt extrahiere Entities aus folgendem Text:
+=== TEXT ===
+{text}
+=== ENDE ==="""
 
-Text:
-{text}"""
+
+def _chunk_text(text: str, max_chars: int) -> list[str]:
+    """Teilt Text in Chunks à max_chars Zeichen auf, Schnitt an Satzgrenzen wenn möglich."""
+    if len(text) <= max_chars:
+        return [text]
+    chunks = []
+    while len(text) > max_chars:
+        split_pos = text.rfind(". ", 0, max_chars)
+        if split_pos == -1:
+            split_pos = max_chars
+        else:
+            split_pos += 1  # Punkt behalten
+        chunks.append(text[:split_pos].strip())
+        text = text[split_pos:].lstrip()
+    if text:
+        chunks.append(text)
+    return chunks
 
 
 # D-E1: Parser für Plaintext-Listenformat
@@ -169,10 +191,21 @@ def _llm_sample_iteration(
     """Iteration 1: LLM extrahiert Eigennamen aus 50 zufälligen Segmenten."""
     content_segs = [s for s in segments if s.get("type") == "content"]
     sample       = random.sample(content_segs, min(SAMPLE_SEGS, len(content_segs)))
-    batches      = [sample[i:i + ITER1_BATCH] for i in range(0, len(sample), ITER1_BATCH)]
     few_shot     = _build_few_shot_block(seed)
 
-    print(f"Iteration 1: {len(sample)} Segmente in {len(batches)} Batches …")
+    max_chars = provider.max_chars_per_chunk
+    pseudo_segs: list[dict] = []
+    for seg in sample:
+        text = seg.get("text", "")
+        if len(text) <= max_chars:
+            pseudo_segs.append(seg)
+        else:
+            for chunk in _chunk_text(text, max_chars):
+                pseudo_segs.append({"type": "content", "text": chunk})
+
+    batches = [pseudo_segs[i:i + ITER1_BATCH] for i in range(0, len(pseudo_segs), ITER1_BATCH)]
+    print(f"Iteration 1: {len(sample)} Segmente → {len(pseudo_segs)} Chunks "
+          f"in {len(batches)} Batches …")
     results: list[dict] = []
 
     for idx, batch in enumerate(batches):
@@ -196,6 +229,7 @@ def _llm_sample_iteration(
         if checkpoint_path and (idx + 1) % SAVE_INTERVAL == 0:
             _save_checkpoint(checkpoint_path, {"iter1_entities": results})
 
+    results = _merge([results])
     print(f"  {len(results)} Entities aus Iteration 1")
     return results
 
@@ -280,13 +314,23 @@ def _llm_full_extract(
 ) -> list[dict]:
     """Schritt 2: Vollextraktion aller Segmente mit Few-Shot aus den ersten 10 Seed-Entities."""
     content_segs = [s for s in segments if s.get("type") == "content"]
-    batches      = [content_segs[i:i + batch_size]
-                    for i in range(0, len(content_segs), batch_size)]
     few_shot     = _build_few_shot_block(seed)   # begrenzt intern auf seed[:10]
     results      = list(accumulated) if accumulated else []
 
+    max_chars = provider.max_chars_per_chunk
+    pseudo_segs: list[dict] = []
+    for seg in content_segs:
+        text = seg.get("text", "")
+        if len(text) <= max_chars:
+            pseudo_segs.append(seg)
+        else:
+            for chunk in _chunk_text(text, max_chars):
+                pseudo_segs.append({"type": "content", "text": chunk})
+
+    batches = [pseudo_segs[i:i + batch_size]
+               for i in range(0, len(pseudo_segs), batch_size)]
     print(f"Schritt 2 (Vollextraktion): {len(content_segs)} Segmente "
-          f"in {len(batches)} Batches à {batch_size} …")
+          f"→ {len(pseudo_segs)} Chunks in {len(batches)} Batches à {batch_size} …")
     if resume_from:
         print(f"  Resume ab Batch {resume_from + 1}")
 
@@ -317,6 +361,7 @@ def _llm_full_extract(
                 "step2_entities": results,
             })
 
+    results = _merge([results])
     print(f"  {len(results)} Entities aus Vollextraktion")
     return results
 
