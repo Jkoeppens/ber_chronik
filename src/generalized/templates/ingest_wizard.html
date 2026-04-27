@@ -640,9 +640,7 @@ buildDots();
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ api_key: npZApi.value, user_id: npZUser.value, collection: npZColl.value, doc_type: 'presseartikel' }),
       });
-      npZLog.textContent += '
-✓ Projekt erstellt
-Starte Zotero-Import …';
+      npZLog.textContent += '\n✓ Projekt erstellt\nStarte Zotero-Import …';
       const syncRes = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/sync', { method: 'POST' });
       if (!syncRes.ok || !syncRes.body) throw new Error('Sync-Fehler ' + syncRes.status);
       const reader = syncRes.body.getReader(); const dec = new TextDecoder(); let buf = '';
