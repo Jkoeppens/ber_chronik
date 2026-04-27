@@ -384,6 +384,31 @@ Eingabe:
 
 Ausgabe:"""
 
+GROUP_PROMPT_EN = """\
+Here is a list of entity names from a text.
+Group entries that refer to the same person, place, or organization
+(spelling variants, short forms, transliterations).
+
+Output — one line per group:
+Canonical form first, further variants comma-separated after it.
+Entities with no variants: just the name, no commas.
+Only merge when certain. When in doubt: keep separate.
+No comments, no JSON, no trailing blank lines.
+
+Input:
+{entities_block}
+
+Output:"""
+
+
+def _is_mostly_ascii(entities: list[dict]) -> bool:
+    """True wenn mehr als die Hälfte der Normalformen ausschließlich ASCII-Zeichen enthält."""
+    names = [e.get("normalform", "") for e in entities if e.get("normalform")]
+    if not names:
+        return False
+    ascii_count = sum(1 for n in names if n.isascii())
+    return ascii_count > len(names) / 2
+
 
 def _llm_group(
     entities: list[dict],
@@ -401,6 +426,7 @@ def _llm_group(
             if alias:
                 lookup[alias.lower()] = ent
 
+    prompt_template = GROUP_PROMPT_EN if _is_mostly_ascii(entities) else GROUP_PROMPT
     batches = [entities[i:i + GROUP_BATCH] for i in range(0, len(entities), GROUP_BATCH)]
     print(f"Schritt 3 (Gruppieren): {len(entities)} Entities in "
           f"{len(batches)} Batch(es) à {GROUP_BATCH} …")
@@ -411,7 +437,7 @@ def _llm_group(
         entities_block = "\n".join(
             ent["normalform"] for ent in batch if ent.get("normalform")
         )
-        prompt = GROUP_PROMPT.format(entities_block=entities_block)
+        prompt = prompt_template.format(entities_block=entities_block)
         print(f"  Batch {idx + 1}/{len(batches)} …", flush=True)
 
         raw   = provider.complete(prompt, system=SYSTEM_PROMPT)
