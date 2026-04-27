@@ -295,6 +295,19 @@ def main() -> None:
     d_args = ["--project", args.project, "--document", doc_id]
     p_args = ["--project", args.project]
 
+    # Taxonomie prüfen — bei neuem Projekt leer → propose_taxonomy vorschalten
+    cfg_path = project_dir / "config.json"
+    cfg = {}
+    try:
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        pass
+    if not cfg.get("taxonomy"):
+        print("\nKeine Taxonomie in config.json — starte propose_taxonomy …")
+        if not _run("src/generalized/propose_taxonomy.py", d_args):
+            print("WARNING: propose_taxonomy fehlgeschlagen — classify kann scheitern",
+                  file=sys.stderr)
+
     for script in PIPELINE:
         if not _run(script, d_args):
             print("Pipeline abgebrochen.", file=sys.stderr)
