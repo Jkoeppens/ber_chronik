@@ -1,6 +1,6 @@
 # STATUS — Aktueller Stand des Projekts
 
-Stand: 2026-04-27 | Branch: fix/except-blocks | D-P1–D-P7 umgesetzt + E2E-verifiziert
+Stand: 2026-04-27 | Branch: fix/except-blocks | D-P1–D-P8 umgesetzt
 
 ---
 
@@ -29,6 +29,7 @@ Findet Jahreszahlen, Dekaden und benannte Ereignisse in Segmenten via Regex und 
 | **Output** | `documents/{doc_id}/anchors.json` |
 | **LLM** | Nein |
 | **Auslöser** | POST `/ingest/run` Schritt 2 |
+| **Presseartikel-Sonderfall** | Liest `seg["date"]`-Feld als Anker wenn kein Heading-Jahr vorhanden (D-P8) |
 
 ---
 
@@ -47,14 +48,15 @@ Füllt undatierte Segmente durch lineare Interpolation zwischen datierten Nachba
 
 ### 4. `propose_taxonomy.py` — Taxonomie vorschlagen
 
-Sampelt 50 Segmente in 5 Batches, lässt LLM je 4–6 Kategorien generieren, mergt zu 6–8 Endkategorien.
+3-stufige Architektur: Keyword-Extraktion (Stufe 1) → Destillation per LLM (Stufe 2) → Schreiben (Stufe 3).
+Bis zu 80 Segmente à max. 1000 Zeichen, Batches à 4 → Keywords → ein Destillations-Call → 6-8 Kategorien.
 
 | | |
 |---|---|
 | **Input** | `documents/{doc_id}/segments.json` |
-| **Output** | `documents/{doc_id}/taxonomy_proposal.json` |
-| **LLM** | Ja (Claude Sonnet, parallel für Anthropic, sequenziell für Ollama) |
-| **Auslöser** | Wizard Schritt 5 (Taxonomie-Button) → POST `/ingest/propose_taxonomy` |
+| **Output** | `projects/{project}/config.json["taxonomy"]` (direkt, kein taxonomy_proposal.json) |
+| **LLM** | Ja (Claude Sonnet, Stufe 1 parallel für Anthropic, Stufe 2 ein Call) |
+| **Auslöser** | Wizard Schritt 4 (KI-Vorschlag-Button) → POST `/ingest/propose_taxonomy`; automatisch in `ingest_zotero.py` wenn Taxonomie fehlt |
 
 ---
 
@@ -133,6 +135,25 @@ Führt D3-Force-Simulation offline durch und speichert Knotenpositionen als `net
 | **Output** | `data/projects/{project}/exploration/network_layout.json` |
 | **LLM** | Nein |
 | **Auslöser** | Automatisch am Ende von `export_exploration.py` (via `subprocess.run`) |
+
+---
+
+## Neue Features (seit 2026-04-27)
+
+### Version C — Projektorientierte Startseite
+`/ingest` zeigt direkt die Projektliste statt Upload-Box. Erste Karte = „Neues Projekt +" mit Inline-Dialog (Datei-Tab + Zotero-Tab). Bestehende Projektkarten haben Zotero-Button mit SSE-Sync und aufklappbarer Konfig-Sektion.
+
+### Inline Invite-Gate
+`loadProjectList()` sendet `X-Invite-Token`-Header. Bei 401 erscheint ein Inline-Formular für den Einladungscode — kein Redirect auf `invite_gate.html`. Nach erfolgreichem Login: Cookie setzen + `loadProjectList()` erneut.
+
+### Zotero-Ingest via UI
+Neues Zotero-Projekt: Inline-Dialog in Schritt 1 → `POST /api/projects` → Zotero-Config speichern → SSE-Sync. Bestehende Projekte: „Aktualisieren ↻"-Button in der Projektkarte. `ingest_zotero.py` erkennt automatisch fehlende Taxonomie und schaltet `propose_taxonomy.py` vor.
+
+### propose_taxonomy — 3-stufige Architektur
+Stufe 1: Keywords pro Segment (kurze stabile Calls, parallelisierbar). Stufe 2: ein Destillations-Call (semantische Deduplizierung durch LLM). Ersetzt Batch-Merge-Ansatz (5×10-Segmente → Häufigkeitszählung).
+
+### detect_anchors — date-Feld für Zotero-Segmente
+Im Presseartikel-Modus: wenn kein Heading-Jahr aktiv, wird `seg["date"]` als Anker gesetzt (`precision="exact"`). Zotero-Metadaten-Datum (YYYY oder YYYY-MM-DD) landet damit direkt in `anchors.json`.
 
 ---
 

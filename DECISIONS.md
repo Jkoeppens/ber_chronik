@@ -60,6 +60,37 @@ geholt. Kein Token-Leak durch Browser-Historie.
 existiert nicht — Taxonomie lebt ausschließlich in `taxData` (Browser) und
 `config.json["taxonomy"]` (Server).
 
+### D-P8 — Zotero-Segmente tragen Erscheinungsdatum als Metadatenfeld
+`ingest_zotero.py` schreibt das Erscheinungsdatum aus den Zotero-Metadaten
+in das Feld `"date"` jedes Segments (String, Format YYYY oder YYYY-MM-DD).
+
+`detect_anchors.py` liest dieses Feld im Presseartikel-Modus: wenn kein
+aktives Heading-Jahr vorhanden, wird `seg["date"]` direkt als Anker gesetzt
+(`precision="exact"`, `source="date"`). Kein Regex-Suchen im Fließtext.
+
+Gilt nur für `doc_type=presseartikel`. Forschungsnotizen-Modus unverändert.
+Konsequenz: Zotero-Artikel sind nach dem Ingest immer datiert, solange
+Zotero-Metadaten ein `issued`- oder `date`-Feld haben.
+
+### D-P9 — propose_taxonomy: 3-stufige Keyword→Destillation-Architektur
+Statt 5 Batches à 10 Segmente direkt Kategorien generieren (alter Ansatz:
+Häufigkeitszählung als Merge) gilt jetzt:
+
+**Stufe 1 — Keywords:** Bis zu 80 Segmente in Batches à 4, je ein kurzer
+LLM-Call: „2-3 Themen pro Text". Output: kommaseparierte Keyword-Listen.
+Parallel (Anthropic) oder sequenziell (Ollama).
+
+**Stufe 2 — Destillation:** Alle gesammelten Keywords in einem einzigen
+LLM-Call: „Fasse zu 6-8 Kategorien zusammen, führe Ähnliches zusammen."
+Output: ## Name / Beschreibung / Keywords-Format (identisch zu vorher).
+
+**Stufe 3 — Schreiben:** Unverändert: `config.json["taxonomy"]` (D-P1).
+
+Warum: Stufe-1-Calls sind kurz und stabil (kein Context-Window-Problem
+bei langen Artikeln). Semantische Deduplizierung durch LLM in Stufe 2
+ist robuster als Häufigkeitszählung — erkennt „Kosten" und „Finanzierung"
+als dieselbe Kategorie.
+
 ## Entity-Extraktion
 
 ### D-E1 — Plaintext-Format für alle geparsten LLM-Ausgaben

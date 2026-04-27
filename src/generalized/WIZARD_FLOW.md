@@ -1,21 +1,30 @@
 # Wizard Flow — Referenz
 
-Stand: 2026-04-27 | Branch: fix/except-blocks
+Stand: 2026-04-27 (aktualisiert) | Branch: fix/except-blocks
 
 ---
 
 ## Schritt-für-Schritt
 
-### Schritt 1 — Dateien hochladen
+### Schritt 1 — Projektstartseite (Version C)
 
-**Trigger:** Seitenload (frischer Start) oder Klick auf Schritt 1 in der Dot-Navigation.
+**Trigger:** Seitenload. Zeigt Projektliste statt Upload-Box.
 
 **Was passiert:**
-- Nutzer wählt Datei per Drag-&-Drop oder File-Input
-- `state.files`, `state.project_title` werden gesetzt
-- "Weiter" wird erst aktiv wenn `state.files.length > 0 && state.project_title`
+- `loadProjectList()` → `GET /api/projects` (mit `X-Invite-Token`-Header)
+  - Bei 401: Inline Invite-Code-Formular (kein Redirect auf invite_gate.html)
+  - Bei Erfolg: Projekt-Karten werden gerendert
+- Erste Karte immer: **„Neues Projekt +"** — öffnet inline Dialog
 
-**Kein API-Call in diesem Schritt.**
+**Dialog „Neues Projekt +" — Datei-Pfad:**
+- Projektname-Input + Datei-Drop + Dok-Typ
+- Klick „Analysieren →": Upload → setzt `state.project_title`, `state.doc_type`, `state.files` → `gotoStep(3)`
+- Schritt 2 wird übersprungen
+
+**Dialog „Neues Projekt +" — Zotero-Pfad:**
+→ Siehe Abschnitt [Zotero-Flow](#zotero-flow) unten.
+
+**Kein regulärer „Weiter"-Button auf Schritt 1** — Navigation erfolgt ausschließlich über die Karten-Buttons.
 
 ---
 
@@ -25,6 +34,7 @@ Stand: 2026-04-27 | Branch: fix/except-blocks
 - Nutzer wählt `doc_type` (Forschungsnotizen / Buchnotizen / Presseartikel)
 - Schreibt `state.doc_type`
 - Kein API-Call — reine UI
+- **Wird im Datei-Pfad von Schritt 1 übersprungen** (doc_type kommt aus dem Inline-Dialog)
 
 ---
 
@@ -226,3 +236,49 @@ Beim Laden liest `restoreFromUrl()` diese Parameter:
 3. `gotoStep(step)` → springt direkt zum gespeicherten Schritt
 
 **Token ist nie in der URL** — wird immer neu geholt.
+
+---
+
+## Zotero-Flow
+
+### Neues Zotero-Projekt anlegen (Schritt 1, Inline-Dialog)
+
+1. Nutzer klickt „Neues Projekt +" → Tab „Zotero" wählen
+2. Felder: Projektname, API-Key, User-ID, Collection-Key, Dok-Typ
+3. **Testen**: `GET /api/projects/_new/zotero/test?api_key=&user_id=&collection=`
+   → pyzotero-Test im Thread-Executor, gibt `{ok, count}` zurück
+4. **Importieren →**:
+   1. `POST /api/projects` → legt Projekt in DB + `config.json` an, gibt `token` zurück
+   2. `POST /api/projects/{id}/zotero/config` → speichert Credentials in `config.json["zotero"]`
+   3. `POST /api/projects/{id}/zotero/sync` (SSE) → `ingest_zotero.py` läuft durch
+5. SSE-Log wird inline angezeigt; bei `__done__`: „Schließen"-Button + `loadProjectList()`
+
+**Kein Wizard-Schritt wird durchlaufen** — der gesamte Ingest (Fetch → Segmente → Pipeline) läuft serverseitig in `ingest_zotero.py`.
+
+### Zotero-Sync für bestehendes Projekt (Projekt-Karte)
+
+- Karte hat Zotero-Button: wenn konfiguriert → zeigt „Aktualisieren ↻" + aufklappbare Konfig-Sektion
+- „Aktualisieren ↻": `POST /api/projects/{id}/zotero/sync` (SSE) → SSE-Log in Karte
+- Konfig bearbeiten: API-Key, User-ID, Collection, Dok-Typ → Testen + Speichern (`POST /api/projects/{id}/zotero/config`)
+
+### Was `ingest_zotero.py` intern tut
+
+```
+1. pyzotero: Items der Collection laden
+2. Checkpoint prüfen (zotero_checkpoint.json) — neue Items identifizieren
+3. Pro neuem Item: HTML-Snapshot → trafilatura-Volltext
+   Fallback: URL direkt fetchen → Fallback: Abstract
+4. segments.json schreiben (doc_id = neue UUID)
+5. Taxonomie prüfen: config.json["taxonomy"] leer?
+   → propose_taxonomy.py vorschalten (--project, --document)
+6. Pipeline: detect_anchors → interpolate_anchors →
+   classify_segments → match_entities
+7. export_exploration.py (aggregiert alle Dokumente des Projekts)
+8. Checkpoint aktualisieren
+```
+
+**Unterschied zu Datei-Upload-Flow:**
+- Kein Wizard-Schritt 2 (Dok-Typ kommt aus Zotero-Config)
+- Kein Schritt 3 (parse_document.py entfällt — Segmente werden direkt gebaut)
+- Kein Schritt 4–6 interaktiv — Taxonomie und Entities werden automatisch vorgeschlagen
+- Segmente haben `"date"`-Feld aus Zotero-Metadaten; `detect_anchors.py` liest es im Presseartikel-Modus direkt als Anker (D-P8)
