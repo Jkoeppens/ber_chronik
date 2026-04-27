@@ -150,10 +150,11 @@ def main() -> None:
     output_rows: list[dict] = []
 
     if doc_type == "presseartikel":
-        # ── Presseartikel-Modus: nur Heading-Jahre, kein Fließtext-Regex ────────
+        # ── Presseartikel-Modus: Heading-Jahre + date-Feld, kein Fließtext-Regex ─
         active_heading_year: int | None = None
         heading_count = 0
-        without_heading = 0
+        date_field_count = 0
+        without_date = 0
 
         for seg in segments:
             if seg.get("type") == "heading":
@@ -171,10 +172,27 @@ def main() -> None:
                 precision = "heading"
                 heading_count += 1
             else:
-                anchors = []
-                time_from = time_to = None
-                precision = None
-                without_heading += 1
+                # Kein Heading-Jahr — date-Feld aus Segment-Metadaten lesen
+                date_str = (seg.get("date") or "").strip()
+                year: int | None = None
+                if re.match(r"^\d{4}-\d{2}", date_str):   # YYYY-MM-DD oder YYYY-MM
+                    year = int(date_str[:4])
+                    precision = "exact"
+                elif re.match(r"^\d{4}$", date_str):       # nur YYYY
+                    year = int(date_str)
+                    precision = "exact"
+                else:
+                    precision = None
+
+                if year is not None:
+                    anchors = [{"type": "exact", "value": year,
+                                "span": date_str, "source": "date"}]
+                    time_from = time_to = year
+                    date_field_count += 1
+                else:
+                    anchors = []
+                    time_from = time_to = None
+                    without_date += 1
 
             output_rows.append({**seg, "anchors": anchors,
                                  "time_from": time_from, "time_to": time_to,
@@ -186,9 +204,13 @@ def main() -> None:
         total = len(output_rows)
         print(f"→ {output_path}  ({total} Segmente, doc_type=presseartikel)\n")
         print(f"Segmente (type=content):          {total}")
-        print(f"  mit Heading-Jahr:               {heading_count}"
-              f"  ({heading_count/total*100:.1f} %)" if total else "")
-        print(f"  ohne aktives Heading-Jahr:      {without_heading}")
+        if total:
+            print(f"  mit Heading-Jahr:               {heading_count}"
+                  f"  ({heading_count/total*100:.1f} %)")
+            print(f"  mit date-Feld:                  {date_field_count}"
+                  f"  ({date_field_count/total*100:.1f} %)")
+            print(f"  ohne Datum:                     {without_date}"
+                  f"  ({without_date/total*100:.1f} %)")
         return
 
     # ── Forschungsnotizen-Modus: Regex + Event-Liste + Heading-Vererbung ────────
