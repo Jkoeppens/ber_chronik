@@ -194,9 +194,13 @@ def main() -> None:
                     time_from = time_to = None
                     without_date += 1
 
-            output_rows.append({**seg, "anchors": anchors,
-                                 "time_from": time_from, "time_to": time_to,
-                                 "precision": precision})
+            row = {**seg, "anchors": anchors,
+                   "time_from": time_from, "time_to": time_to,
+                   "precision": precision}
+            # Konvertiere Zotero-"date"-Feld zu "date_raw" für export_exploration
+            if not row.get("date_raw") and row.get("date"):
+                row["date_raw"] = row["date"]
+            output_rows.append(row)
 
         output_path.write_text(
             json.dumps(output_rows, ensure_ascii=False, indent=2), encoding="utf-8"

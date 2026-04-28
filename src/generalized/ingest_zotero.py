@@ -310,8 +310,9 @@ def main() -> None:
     if not cfg.get("taxonomy"):
         print("\nKeine Taxonomie in config.json — starte propose_taxonomy …")
         if not _run("src/generalized/propose_taxonomy.py", d_args):
-            print("WARNING: propose_taxonomy fehlgeschlagen — classify kann scheitern",
+            print("Fehler: propose_taxonomy fehlgeschlagen — Pipeline abgebrochen.",
                   file=sys.stderr)
+            sys.exit(1)
 
     for script in PIPELINE:
         if not _run(script, d_args):

@@ -96,7 +96,7 @@ def build_entries(anchors: list[dict], cls_map: dict[str, dict]) -> list[dict]:
             "event_type":     cls.get("category"),
             "confidence":     _conf(cls.get("confidence")),
             "source_name":    _source_name(src),
-            "source_date":    _source_date(src),
+            "source_date":    _source_date(src) or date_raw,
             "url":            seg.get("url", ""),
             "is_quote":       bool(seg.get("is_quote", False)),
             "is_geicke":      bool(seg.get("is_geicke", False)),
