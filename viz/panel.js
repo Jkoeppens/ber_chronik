@@ -107,7 +107,7 @@ function renderParaCard(p, { id = null, anchor = null, highlightFn = highlightEn
     const short = highlightFn(raw.slice(0, PARA_COLLAPSE_CHARS)).replace(/\n/g, "<br>");
     const rest  = highlightFn(raw.slice(PARA_COLLAPSE_CHARS)).replace(/\n/g, "<br>");
     textHtml = `${short}<span class="para-rest" hidden>${rest}</span>`
-             + `<button class="para-expand" type="button">… weiterlesen ▾</button>`;
+             + `<span class="para-toggle" style="color:#999;font-size:0.85em;text-decoration:underline;cursor:pointer">… weiterlesen</span>`;
   } else {
     textHtml = highlightFn(raw).replace(/\n/g, "<br>");
   }
@@ -166,11 +166,17 @@ function selectEntity(normalform) {
 }
 
 document.getElementById("panel-content").addEventListener("click", e => {
-  // "… weiterlesen ▾" — Text aufklappen
-  const expand = e.target.closest(".para-expand");
-  if (expand) {
-    expand.previousElementSibling.removeAttribute("hidden");
-    expand.remove();
+  // "… weiterlesen" / "einklappen" — Text auf- und zuklappen
+  const toggle = e.target.closest(".para-toggle");
+  if (toggle) {
+    const rest = toggle.previousElementSibling; // .para-rest
+    if (rest.hidden) {
+      rest.hidden = false;
+      toggle.textContent = "einklappen";
+    } else {
+      rest.hidden = true;
+      toggle.textContent = "… weiterlesen";
+    }
     return;
   }
   // Source-ref anchor: scroll target into view inside the panel container
