@@ -265,20 +265,42 @@ Beim Laden liest `restoreFromUrl()` diese Parameter:
 
 ```
 1. pyzotero: Items der Collection laden
-2. Checkpoint prüfen (zotero_checkpoint.json) — neue Items identifizieren
+   Attachments und Notes auf oberster Ebene werden gefiltert
+2. Checkpoint prüfen (zotero_checkpoint.json) — neue Items identifizieren,
+   bereits verarbeitete Keys überspringen
 3. Pro neuem Item: HTML-Snapshot → trafilatura-Volltext
-   Fallback: URL direkt fetchen → Fallback: Abstract
+   Fallback 1: URL direkt fetchen
+   Fallback 2: Abstract (mit WARNING)
+   Kein Text → Item überspringen
 4. segments.json schreiben (doc_id = neue UUID)
+   Jedes Segment trägt:
+     "source"    → Titel des Artikels
+     "date"      → Erscheinungsdatum aus Zotero-Metadaten (issued/date-Feld)
+     "item_type" → Zotero-Typ, z.B. "newspaperArticle", "videoRecording"
+     "url"       → Artikel-URL aus Zotero-Metadaten
 5. Taxonomie prüfen: config.json["taxonomy"] leer?
    → propose_taxonomy.py vorschalten (--project, --document)
-6. Pipeline: detect_anchors → interpolate_anchors →
-   classify_segments → match_entities
+6. Pipeline:
+     detect_anchors.py      (liest "date"-Feld im Presseartikel-Modus, D-P8)
+     interpolate_anchors.py
+     classify_segments.py
+     match_entities.py
 7. export_exploration.py (aggregiert alle Dokumente des Projekts)
-8. Checkpoint aktualisieren
+   Jedes data.json-Entry enthält das url-Feld aus dem Segment (D-P10)
+8. Checkpoint aktualisieren (verarbeitete Keys speichern)
 ```
+
+**Entity-Extraktion läuft NICHT automatisch** — `extract_entities_v2.py` ist nicht
+in der Zotero-Pipeline. Entities werden bei Bedarf über den Entity-Editor (Wizard
+Schritt 6) oder manuell extrahiert:
+```
+python3 -m src.generalized.extract_entities_v2 --project … --document … --mode sample
+```
+Der NER-Backend-Switcher (D-E1) gilt: `doc_type=presseartikel` → spaCy-Backend,
+das `item_type=="videoRecording"`-Segmente automatisch überspringt (D-E3).
 
 **Unterschied zu Datei-Upload-Flow:**
 - Kein Wizard-Schritt 2 (Dok-Typ kommt aus Zotero-Config)
 - Kein Schritt 3 (parse_document.py entfällt — Segmente werden direkt gebaut)
-- Kein Schritt 4–6 interaktiv — Taxonomie und Entities werden automatisch vorgeschlagen
+- Kein Schritt 4–6 interaktiv — Taxonomie wird automatisch vorgeschlagen, Entities manuell
 - Segmente haben `"date"`-Feld aus Zotero-Metadaten; `detect_anchors.py` liest es im Presseartikel-Modus direkt als Anker (D-P8)

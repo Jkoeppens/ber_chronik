@@ -4,6 +4,20 @@ Designentscheidungen die nicht aus dem Code hervorgehen. Warum etwas so ist wie 
 
 ---
 
+## Meta-Prinzipien
+
+### Eine Quelle, kein Fallback
+Jedes persistierte Datum hat genau eine autoritative Quelle. Sekundäre Fallbacks
+erzeugen stille Inkonsistenzen und werden nicht toleriert.
+Instanzen: **D-P1** (Taxonomie-Quelle), **D-P4** (Entity-Quelle).
+
+### Pipeline-Verträge sind explizit
+Jeder Schritt deklariert was er braucht und was er schreibt. Implizite Konventionen
+— fehlende Dateien still ignorieren, Feldnamen raten — sind verboten.
+Instanzen: **D-P2** (normalize_category überall), **D-P3** (classified.json-Komposit), **D-P5** (Input-Prüfung).
+
+---
+
 ## Pipeline
 
 ### D-P1 — Kanonische Taxonomiequelle
@@ -91,6 +105,15 @@ bei langen Artikeln). Semantische Deduplizierung durch LLM in Stufe 2
 ist robuster als Häufigkeitszählung — erkennt „Kosten" und „Finanzierung"
 als dieselbe Kategorie.
 
+### D-P10 — url-Feld durch die gesamte Pipeline
+`ingest_zotero.py` schreibt das `url`-Feld (Artikel-URL aus Zotero-Metadaten)
+in jedes Segment. `export_exploration.py` (`build_entries`) propagiert es unverändert
+in den data.json-Eintrag. `panel.js` (`renderParaCard`) stellt `source_name` als
+`<a href>` dar wenn `p.url` gesetzt ist.
+
+Gilt nur für Zotero-Ingests. Segmente aus Datei-Upload haben kein url-Feld
+(`seg.get("url", "")` gibt leer zurück → kein Link).
+
 ## Entity-Extraktion
 
 ### D-E1 — Plaintext-Format für alle geparsten LLM-Ausgaben
@@ -128,9 +151,17 @@ Keywords: keyword1, keyword2, keyword3
 Parser: `##`-Zeile = Kategoriename; nächste nicht-leere Zeile = Beschreibung;
 `Keywords:`-Zeile = kommaseparierte Keywords.
 
-Merge-Schritt beim Taxonomie-Vorschlag per Code (nicht per LLM):
-5 Batch-Ergebnisse werden nach Häufigkeit sortiert und auf 6–8 Kategorien
-gekürzt. Kein zweiter LLM-Call.
+**NER-Backend-Switcher** (`extract_entities_v2.py`):
+```python
+backend = NER_BACKEND.get(doc_type, "llm")  # NER_BACKEND in config.py
+```
+- `presseartikel` → spaCy (`entity_spacy.py`): `en_core_web_trf` oder `en_core_web_sm` als Fallback
+- alle anderen → LLM-Pipeline (Schritt 1–4)
+
+Warum: Presseartikel sind englischsprachig und strukturiert — spaCy NER ist schneller
+und hat kein Kontextfenster-Problem. Lange Texte (z.B. Video-Transkripte) bleiben dem
+LLM-Pfad überlassen. Der Taxonomie-Vorschlag-Merge-Schritt (5 Batches → Häufigkeitszählung)
+ist durch D-P9 (3-stufige Keyword→Destillation) ersetzt worden.
 
 Warum kein JSON:
 - Kleine Modelle (llama3.2:3b, llama3.1:8b) brechen bei langen JSON-Arrays häufig
@@ -142,6 +173,32 @@ Warum kein JSON:
 
 Ausnahme: Dedup (`_llm_dedup`) bleibt JSON — binäre keep/merge-Entscheidungen
 sind als strukturierter Paarvergleich besser formulierbar.
+
+### D-E2 — max_chars_per_chunk und Ollama-Kontextfenster
+Lange Segmente (z.B. Video-Transkripte, 80k Zeichen) überfordern das Kontextfenster
+kleiner Modelle. Lösung: `max_chars_per_chunk` als Klassenattribut in `LLMProvider`:
+
+```python
+class LLMProvider:       max_chars_per_chunk = 8000
+class AnthropicProvider: max_chars_per_chunk = 8000
+class OllamaProvider:    max_chars_per_chunk = 2000   # kleines lokales Modell
+```
+
+`_chunk_text(text, max_chars)` teilt am letzten `. ` vor dem Limit. Jedes Segment
+das größer ist wird vor dem LLM-Call in Pseudo-Segmente gesplittet.
+
+`OllamaProvider.complete()` setzt außerdem `"options": {"num_ctx": 8192}` im Payload —
+ohne diesen Parameter verwendet Ollama standardmäßig 2048 Token, was auch bei kurzen
+Texten zu Abschneiden führen kann.
+
+### D-E3 — videoRecording-Segmente überspringen
+Der spaCy-Pfad (`entity_spacy.py`) filtert Segmente mit `item_type == "videoRecording"`:
+Video-Transkripte sind oft mehrstündig (>80k Zeichen), enthalten viel Fülltext und
+liefern schlechte NER-Ergebnisse. Das Feld `item_type` kommt aus Zotero-Metadaten
+(`data["itemType"]`) und wird von `ingest_zotero.py` in jedes Segment geschrieben.
+
+LLM-Pfad: keine spezielle Filterung — Chunking via `max_chars_per_chunk` fängt
+überlange Segmente ab (D-E2).
 
 ---
 
@@ -217,6 +274,16 @@ Im `panel-content`-Click-Handler (Entity-Span-Klick) wird `netFocusNode = name` 
 
 ### Drei Views immer im DOM
 `view-chat`, `view-timeline`, `view-entity` existieren alle gleichzeitig im DOM. Nur die aktive hat `display: block` (CSS `.panel-view.active`). Das verhindert Flackern beim Tab-Wechsel und erlaubt Back-Navigation ohne Re-Render.
+
+### Paragraphen-Einklapp-Mechanismus ab 800 Zeichen
+Karten mit mehr als `PARA_COLLAPSE_CHARS = 800` Zeichen zeigen nur die ersten 800 Zeichen.
+Der Rest liegt in `<span class="para-rest" hidden>`. Ein `<span class="para-toggle">`
+(grau, klein, inline) schaltet `hidden` um und wechselt seinen Text zwischen
+„… weiterlesen" und „einklappen".
+
+Bewusst kein `<button>` — Inline-Span passt besser in den Textfluss und vermeidet
+Button-Fokus-Styling. Der Click-Handler in `panel-content` fängt `.para-toggle`
+als erstes ab (vor Card-Klick und Entity-Klick).
 
 ### `hlSnapshot` im ViewStack
 Jeder View-Stack-Eintrag speichert eine Kopie von `hlState` zum Zeitpunkt des Navigierens. `goBack()` stellt diesen Snapshot wieder her — damit kehren Timeline-Dots und Netzwerk-Highlight zum Zustand vor der Entity-Navigation zurück.
