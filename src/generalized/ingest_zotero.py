@@ -184,8 +184,8 @@ def main() -> None:
     ap.add_argument("--api-key",    default=os.environ.get("ZOTERO_API_KEY"))
     ap.add_argument("--user-id",    default=os.environ.get("ZOTERO_USER_ID"))
     ap.add_argument("--collection", required=True)
-    ap.add_argument("--doc-type",   default="buchnotizen",
-                    help="Dokumenttyp für classify_segments (default: buchnotizen)")
+    ap.add_argument("--doc-type",   default="presseartikel",
+                    help="Dokumenttyp für classify_segments (default: presseartikel)")
     args = ap.parse_args()
 
     if not args.api_key:

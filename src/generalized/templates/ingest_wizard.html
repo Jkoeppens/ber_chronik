@@ -1480,11 +1480,6 @@ async function loadProjectList() {
               <input class="zp-input zp-userid" type="text" placeholder="123456" style="max-width:100px">
               <span class="zp-label" style="min-width:auto">Collection</span>
               <input class="zp-input zp-collection" type="text" placeholder="ABCDEF" style="max-width:100px">
-              <span class="zp-label" style="min-width:auto">Typ</span>
-              <select class="zp-select zp-doctype">
-                <option value="presseartikel">Presseartikel</option>
-                <option value="buchnotizen">Buchnotizen</option>
-              </select>
             </div>
             <div class="zp-row">
               <button class="zp-btn zp-test">Testen</button>
@@ -1515,7 +1510,6 @@ async function loadProjectList() {
       const zApiKey    = zPanel.querySelector('.zp-apikey');
       const zUserId    = zPanel.querySelector('.zp-userid');
       const zCollect   = zPanel.querySelector('.zp-collection');
-      const zDocType   = zPanel.querySelector('.zp-doctype');
       const zTest      = zPanel.querySelector('.zp-test');
       const zSave      = zPanel.querySelector('.zp-save');
       const zFormSt    = zPanel.querySelector('.zp-form-status');
@@ -1544,7 +1538,6 @@ async function loadProjectList() {
           if (zc.api_key_masked) zApiKey.placeholder = zc.api_key_masked;
           if (zc.user_id)    zUserId.value  = zc.user_id;
           if (zc.collection) zCollect.value = zc.collection;
-          if (zc.doc_type)   zDocType.value = zc.doc_type;
           if (zc.collection) {
             zSyncRow.style.display = ''; zSummary.style.display = '';
             zDetails.removeAttribute('open');
@@ -1594,7 +1587,7 @@ async function loadProjectList() {
           const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/config', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ api_key: zApiKey.value, user_id: zUserId.value,
-                                   collection: zCollect.value, doc_type: zDocType.value }),
+                                   collection: zCollect.value, doc_type: 'presseartikel' }),
           });
           const data = await res.json();
           zFormSt.textContent = data.ok ? '✓ Gespeichert' : '✗ ' + data.error;
