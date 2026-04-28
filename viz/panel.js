@@ -81,18 +81,43 @@ function formatDate(p) {
 // Renders a single paragraph card. `id` and `anchor` are mutually exclusive:
 //   id     → sets DOM id attribute (used for chat source cards, linked by AI answer text)
 //   anchor → sets data-anchor attribute (used for timeline/entity cards, supports highlight sync)
+const PARA_COLLAPSE_CHARS = 800;
+
 function renderParaCard(p, { id = null, anchor = null, highlightFn = highlightEntities } = {}) {
   const et    = p.event_type || "?";
   const color = COLOR[et] || "#999";
   const date  = formatDate(p);
-  const src   = [p.source_name, p.source_date].filter(Boolean).join(", ");
   const idAttr     = id     ? ` id="${escapeHtml(id)}"` : "";
   const anchorAttr = anchor ? ` data-anchor="${escapeHtml(anchor)}"` : "";
+
+  // (a) Überschrift: source_name als Link wenn url vorhanden, sonst plain text
+  let titleHtml = "";
+  if (p.source_name) {
+    const nameHtml = escapeHtml(p.source_name);
+    titleHtml = p.url
+      ? `<div class="para-title"><a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${nameHtml}</a></div>`
+      : `<div class="para-title">${nameHtml}</div>`;
+  }
+  const srcDate = p.source_date ? `<div class="para-source">${escapeHtml(p.source_date)}</div>` : "";
+
+  // (b+c) Text: \n → <br>, einklappen ab PARA_COLLAPSE_CHARS Zeichen
+  const raw = p.text || "";
+  let textHtml;
+  if (raw.length > PARA_COLLAPSE_CHARS) {
+    const short = highlightFn(raw.slice(0, PARA_COLLAPSE_CHARS)).replace(/\n/g, "<br>");
+    const rest  = highlightFn(raw.slice(PARA_COLLAPSE_CHARS)).replace(/\n/g, "<br>");
+    textHtml = `${short}<span class="para-rest" hidden>${rest}</span>`
+             + `<button class="para-expand" type="button">… weiterlesen ▾</button>`;
+  } else {
+    textHtml = highlightFn(raw).replace(/\n/g, "<br>");
+  }
+
   return `<div class="ep-para"${idAttr}${anchorAttr}>
+    ${titleHtml}
     <div class="para-date">${escapeHtml(date)}</div>
     <span class="para-label" style="background:${color}">${et}</span>
-    <div class="para-text">${highlightFn(p.text || "")}</div>
-    ${src ? `<div class="para-source">${escapeHtml(src)}</div>` : ""}
+    <div class="para-text">${textHtml}</div>
+    ${srcDate}
   </div>`;
 }
 
@@ -141,6 +166,13 @@ function selectEntity(normalform) {
 }
 
 document.getElementById("panel-content").addEventListener("click", e => {
+  // "… weiterlesen ▾" — Text aufklappen
+  const expand = e.target.closest(".para-expand");
+  if (expand) {
+    expand.previousElementSibling.removeAttribute("hidden");
+    expand.remove();
+    return;
+  }
   // Source-ref anchor: scroll target into view inside the panel container
   const ref = e.target.closest("a.src-ref");
   if (ref) {

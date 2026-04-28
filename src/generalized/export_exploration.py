@@ -97,6 +97,7 @@ def build_entries(anchors: list[dict], cls_map: dict[str, dict]) -> list[dict]:
             "confidence":     _conf(cls.get("confidence")),
             "source_name":    _source_name(src),
             "source_date":    _source_date(src),
+            "url":            seg.get("url", ""),
             "is_quote":       bool(seg.get("is_quote", False)),
             "is_geicke":      bool(seg.get("is_geicke", False)),
             "actors":         list(cls.get("actors") or []),
@@ -161,7 +162,7 @@ def build_meta(config: dict, taxonomy: list[dict], entities: list[dict], project
 
 REQUIRED_FIELDS = [
     "id", "doc_anchor", "year", "date_raw", "date_precision",
-    "text", "event_type", "confidence", "source_name", "source_date",
+    "text", "event_type", "confidence", "source_name", "source_date", "url",
     "is_quote", "is_geicke", "actors", "causal_theme",
 ]
 
