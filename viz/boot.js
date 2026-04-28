@@ -29,18 +29,40 @@ Promise.all([
   }
 
   // ── Timeline series ──
-  const entryYears = entries.map(e => e.year).filter(y => y != null);
-  const yMin  = (meta && meta.year_min) || (entryYears.length ? d3.min(entryYears) : 1989);
-  const yMax  = (meta && meta.year_max) || (entryYears.length ? d3.max(entryYears) : 2017);
-  const years  = d3.range(yMin, yMax + 1);
-  const byYear = d3.group(entries.filter(e => e.year), e => e.year);
+  const dateParsed = entries.filter(e => e.date_js).map(e => new Date(e.date_js));
+  let [dMin, dMax] = d3.extent(dateParsed);
+  if (!dMin) {
+    // Fallback wenn keine date_js-Werte vorhanden: aus year / meta / Hardcoded
+    const ys = entries.map(e => e.year).filter(y => y != null);
+    const y0 = (meta && meta.year_min) || (ys.length ? d3.min(ys) : 1989);
+    const y1 = (meta && meta.year_max) || (ys.length ? d3.max(ys) : 2017);
+    dMin = new Date(y0 + "-01-01");
+    dMax = new Date(y1 + "-12-31");
+  }
+
+  // Automatische Bin-Größe nach Zeitspanne
+  const MS_6M = 183 * 24 * 3600 * 1000;   // ~6 Monate
+  const MS_3Y = 3 * 365 * 24 * 3600 * 1000; // 3 Jahre
+  const spanMs = dMax - dMin;
+  let binInterval;
+  if      (spanMs < MS_6M) binInterval = d3.timeDay;
+  else if (spanMs < MS_3Y) binInterval = d3.timeMonth;
+  else                     binInterval = d3.timeYear;
+  window._binInterval = binInterval;
+
+  const rawBins = d3.bin()
+    .domain([dMin, dMax])
+    .value(e => new Date(e.date_js))
+    .thresholds(binInterval.every(1))(entries.filter(e => e.date_js));
+
+  const byBin = new Map(rawBins.map(bin => [bin.x0, bin]));
 
   const series = EVENT_TYPES.map(et => ({
     et,
-    values: years.map(year => {
-      const ents = (byYear.get(year) || []).filter(e => e.event_type === et);
+    values: rawBins.map(bin => {
+      const ents = bin.filter(e => e.event_type === et);
       return {
-        year,
+        year:      bin.x0,
         count:     ents.length,
         entries:   ents,
         anchorSet: new Set(ents.map(e => e.doc_anchor).filter(Boolean)),
@@ -48,8 +70,9 @@ Promise.all([
     }),
   }));
 
-  drawChart(series, years);
-  new ResizeObserver(() => drawChart(series, years)).observe(
+  const binDates = rawBins.map(b => b.x0);
+  drawChart(series, binDates);
+  new ResizeObserver(() => drawChart(series, binDates)).observe(
     document.getElementById("chart"));
 
   const legend = document.getElementById("legend");
@@ -59,7 +82,7 @@ Promise.all([
     item.innerHTML = `<div class="legend-swatch" style="background:${COLOR[et]}"></div>${et}`;
     item.addEventListener("click", () => {
       dimmedTypes.has(et) ? dimmedTypes.delete(et) : dimmedTypes.add(et);
-      drawChart(series, years);
+      drawChart(series, binDates);
       document.querySelectorAll(".legend-item").forEach((el, i) =>
         el.classList.toggle("dimmed", dimmedTypes.has(EVENT_TYPES[i])));
     });
