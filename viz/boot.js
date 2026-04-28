@@ -29,13 +29,16 @@ Promise.all([
   }
 
   // ── Timeline series ──
-  const dateParsed = entries.filter(e => e.date_js).map(e => new Date(e.date_js));
+  // date_js bevorzugt; Fallback auf year für ältere Exporte ohne date_js
+  const _entryDate = e => e.date_js ? new Date(e.date_js) :
+                          e.year != null ? new Date(e.year + "-01-01") : null;
+
+  const dateParsed = entries.map(_entryDate).filter(Boolean);
   let [dMin, dMax] = d3.extent(dateParsed);
   if (!dMin) {
-    // Fallback wenn keine date_js-Werte vorhanden: aus year / meta / Hardcoded
-    const ys = entries.map(e => e.year).filter(y => y != null);
-    const y0 = (meta && meta.year_min) || (ys.length ? d3.min(ys) : 1989);
-    const y1 = (meta && meta.year_max) || (ys.length ? d3.max(ys) : 2017);
+    // Fallback wenn weder date_js noch year: aus meta / Hardcoded
+    const y0 = (meta && meta.year_min) || 1989;
+    const y1 = (meta && meta.year_max) || 2017;
     dMin = new Date(y0 + "-01-01");
     dMax = new Date(y1 + "-12-31");
   }
@@ -52,8 +55,8 @@ Promise.all([
 
   const rawBins = d3.bin()
     .domain([dMin, dMax])
-    .value(e => new Date(e.date_js))
-    .thresholds(binInterval.every(1))(entries.filter(e => e.date_js));
+    .value(e => _entryDate(e))
+    .thresholds(binInterval.every(1))(entries.filter(e => _entryDate(e)));
 
   const byBin = new Map(rawBins.map(bin => [bin.x0, bin]));
 

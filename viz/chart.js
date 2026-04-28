@@ -3,21 +3,33 @@ let _chartG = null, _clipG = null, _xAxisG = null;
 let _x = null, _y = null, _h = 0, _w = 0;
 let _series = [], _area = null, _defs = null;
 
-// Returns [{start, end}] for runs of years with no gap > 1
-function getContiguousSegments(years) {
-  if (!years || years.length === 0) return [];
-  const sorted = [...years].sort((a, b) => a - b);
+// Returns [{start, end}] for runs of ms-timestamps within one bin-interval gap
+function getContiguousSegments(timestamps) {
+  if (!timestamps || timestamps.length === 0) return [];
+  const bi  = window._binInterval;
+  const gap = bi === d3.timeYear  ? 366 * 24 * 3600 * 1000 :
+              bi === d3.timeMonth ?  32 * 24 * 3600 * 1000 :
+                                      2 * 24 * 3600 * 1000;
+  const sorted = [...timestamps].sort((a, b) => a - b);
   const segs = [];
   let s = sorted[0], e = sorted[0];
   for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i] - sorted[i - 1] <= 1) { e = sorted[i]; }
+    if (sorted[i] - sorted[i - 1] <= gap) { e = sorted[i]; }
     else { segs.push({ start: s, end: e }); s = e = sorted[i]; }
   }
   segs.push({ start: s, end: e });
   return segs;
 }
 
-function drawChart(series, years) {
+function _fmtBinDate(d) {
+  if (!d) return "";
+  const bi = window._binInterval;
+  if (bi === d3.timeYear)  return d3.timeFormat("%Y")(d);
+  if (bi === d3.timeMonth) return d3.timeFormat("%b %Y")(d);
+  return d3.timeFormat("%d.%m.")(d);
+}
+
+function drawChart(series, binDates) {
   const svg    = d3.select("#chart");
   const margin = { top: 16, right: 90, bottom: 36, left: 38 };
   svg.selectAll("*").remove();
@@ -49,7 +61,8 @@ function drawChart(series, years) {
       .attr("width", w).attr("height", h + 20);
 
   const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-  const x = d3.scaleLinear().domain([years[0], years[years.length - 1]]).range([0, w]);
+  window._binDates = binDates;
+  const x = d3.scaleTime().domain([binDates[0], binDates[binDates.length - 1]]).range([0, w]);
   const y = d3.scaleLinear()
     .domain([0, d3.max(series, s => d3.max(s.values, v => v.count))]).nice()
     .range([h, 0]);
@@ -59,7 +72,7 @@ function drawChart(series, years) {
     .call(d3.axisLeft(y).ticks(5).tickSize(-w).tickFormat(""));
 
   const xAxisG = g.append("g").attr("class","axis").attr("transform",`translate(0,${h})`);
-  xAxisG.call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(15).tickSize(4));
+  xAxisG.call(d3.axisBottom(x).ticks(window._binInterval).tickFormat(d => _fmtBinDate(d)).tickSize(4));
 
   g.append("g").attr("class","axis")
     .call(d3.axisLeft(y).ticks(5).tickSize(4).tickPadding(6));
@@ -116,7 +129,7 @@ function drawChart(series, years) {
       .attr("fill", COLOR[s.et]).attr("stroke", "#fff").attr("stroke-width", 1.5)
       .on("mouseenter", (event, v) => {
         const c = COLOR[s.et] || "#999";
-        showTip(`<div class="tip-year">${v.year}</div><div class="tip-entry"><span class="tip-dot" style="background:${c}"></span><span>${s.et} · ${v.count}</span></div>`, event);
+        showTip(`<div class="tip-year">${_fmtBinDate(v.year)}</div><div class="tip-entry"><span class="tip-dot" style="background:${c}"></span><span>${s.et} · ${v.count}</span></div>`, event);
       })
       .on("mousemove", moveTip).on("mouseleave", hideTip)
       .on("click", (event, v) => {
@@ -127,7 +140,7 @@ function drawChart(series, years) {
         activeDot.classList.add("active");
         const sorted = [...v.entries].sort((a, b) =>
           (a.year || 0) - (b.year || 0) || (a.id || 0) - (b.id || 0));
-        showView("timeline", `${v.year} · ${s.et}`,
+        showView("timeline", `${_fmtBinDate(v.year)} · ${s.et}`,
           viewEl => { viewEl.innerHTML = renderParaList(sorted); });
         setHighlight("answer", v.anchorSet);
       });
@@ -190,7 +203,7 @@ function drawChart(series, years) {
       _x = xNew;
 
       // X axis
-      xAxisG.call(d3.axisBottom(xNew).tickFormat(d3.format("d")).ticks(15).tickSize(4));
+      xAxisG.call(d3.axisBottom(xNew).ticks(window._binInterval).tickFormat(d => _fmtBinDate(d)).tickSize(4));
 
       // Updated generators
       const lineNew = d3.line().x(v => xNew(v.year)).y(v => y(v.count)).curve(d3.curveMonotoneX);
@@ -202,14 +215,15 @@ function drawChart(series, years) {
       clipG.selectAll(".dot").attr("cx", v => xNew(v.year));
       clipG.selectAll(".hl-area").attr("d", areaNew);
 
-      // Reposition hl-clip rects (year range stored as data attributes)
+      // Reposition hl-clip rects (timestamp range stored as data attributes)
+      const _hlStep = (window._binDates && window._binDates.length > 1)
+        ? xNew(window._binDates[1]) - xNew(window._binDates[0]) : 4;
       defs.selectAll(".hl-clip rect").each(function() {
-        const s   = +this.getAttribute("data-start");
-        const e   = +this.getAttribute("data-end");
-        const stp = xNew(s + 1) - xNew(s);
+        const ds = new Date(+this.getAttribute("data-start"));
+        const de = new Date(+this.getAttribute("data-end"));
         d3.select(this)
-          .attr("x",     xNew(s) - stp / 2)
-          .attr("width", xNew(e) - xNew(s) + stp);
+          .attr("x",     xNew(ds) - _hlStep / 2)
+          .attr("width", xNew(de) - xNew(ds) + _hlStep);
       });
 
       // Reposition labels
@@ -256,13 +270,17 @@ function _applyChartEntityHighlight() {
 
   const byType = {};
   relevantEntries.forEach(e => {
-    if (!e.year || !e.event_type) return;
+    if (!e.event_type) return;
+    const ts = e.date_js ? new Date(e.date_js).getTime() :
+               e.year    ? new Date(e.year + "-01-01").getTime() : null;
+    if (ts == null) return;
     if (!byType[e.event_type]) byType[e.event_type] = new Set();
-    byType[e.event_type].add(e.year);
+    byType[e.event_type].add(ts);
   });
 
   const relevantTypes = new Set(Object.keys(byType));
-  const step = _x(1990) - _x(1989);
+  const step = (window._binDates && window._binDates.length > 1)
+    ? _x(window._binDates[1]) - _x(window._binDates[0]) : 4;
 
   _chartG.selectAll(".line-path")
     .style("opacity",      function() { return relevantTypes.has(this.id.replace("line-", "")) ? 0.15 : 0.2; })
@@ -294,20 +312,21 @@ function _applyChartEntityHighlight() {
       const etSafe  = et.replace(/\s/g, '-');
       const clipId  = `hl-clip-${etSafe}-${start}-${end}`;
       const gradId  = `hl-grad-${etSafe}-${start}-${end}`;
+      const dStart  = new Date(start);
+      const dEnd    = new Date(end);
 
-      // Store year range as data attributes so the zoom handler can reposition
       _defs.append("clipPath")
         .attr("class", "hl-clip")
         .attr("id", clipId)
         .append("rect")
           .attr("data-start", start)
           .attr("data-end",   end)
-          .attr("x",      _x(start) - step / 2)
+          .attr("x",      _x(dStart) - step / 2)
           .attr("y",      -10)
-          .attr("width",  _x(end) - _x(start) + step)
+          .attr("width",  _x(dEnd) - _x(dStart) + step)
           .attr("height", _h + 20);
 
-      const peakCount = d3.max(s.values.filter(v => v.year >= start && v.year <= end), v => v.count) || 0;
+      const peakCount = d3.max(s.values.filter(v => v.year && v.year.getTime() >= start && v.year.getTime() <= end), v => v.count) || 0;
       const gradY1 = _y(peakCount);
       const grad = _defs.append("linearGradient")
         .attr("class", "hl-grad")
