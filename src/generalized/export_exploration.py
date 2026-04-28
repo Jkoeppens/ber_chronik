@@ -22,6 +22,7 @@ Mapping precision → date_precision:
 import argparse
 import csv
 import json
+import re
 import subprocess
 import sys
 from collections import Counter
@@ -32,6 +33,10 @@ from pathlib import Path
 from src.generalized.classify_segments import normalize_category
 from src.generalized.config import ROOT, PROJECTS_DIR
 from src.generalized.generate_entity_summaries import build_summaries as _build_summaries
+
+# ── date_js-Hilfsmuster ────────────────────────────────────────────────────────
+_DATE_FULL_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_DATE_YEAR_RE = re.compile(r"^\d{4}$")
 
 # ── Farbpaletten ───────────────────────────────────────────────────────────────
 CAT_PALETTE = [
@@ -86,11 +91,22 @@ def build_entries(anchors: list[dict], cls_map: dict[str, dict]) -> list[dict]:
         date_raw  = seg.get("date_raw") or (str(tf) if tf is not None else None)
         src       = seg.get("source")
 
+        # date_js: ISO-8601 Tag-String für präzises Timeline-Positioning
+        if date_raw and _DATE_FULL_RE.match(date_raw):
+            date_js = date_raw
+        elif date_raw and _DATE_YEAR_RE.match(date_raw):
+            date_js = date_raw + "-01-01"
+        elif tf is not None:
+            date_js = str(tf) + "-01-01"
+        else:
+            date_js = None
+
         entries.append({
             "id":             i,
             "doc_anchor":     sid,
             "year":           tf,
             "date_raw":       date_raw,
+            "date_js":        date_js,
             "date_precision": PREC_MAP.get(prec, "none"),
             "text":           seg.get("text", ""),
             "event_type":     cls.get("category"),
@@ -161,7 +177,7 @@ def build_meta(config: dict, taxonomy: list[dict], entities: list[dict], project
 # ── Validierung + Statistik ────────────────────────────────────────────────────
 
 REQUIRED_FIELDS = [
-    "id", "doc_anchor", "year", "date_raw", "date_precision",
+    "id", "doc_anchor", "year", "date_raw", "date_js", "date_precision",
     "text", "event_type", "confidence", "source_name", "source_date", "url",
     "is_quote", "is_geicke", "actors", "causal_theme",
 ]
