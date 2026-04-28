@@ -368,6 +368,11 @@ def _llm_full_extract(
 
 GROUP_BATCH  = 30
 
+_GROUP_SKIP_PREFIXES = (
+    "hier ist", "here is", "here's", "die folgende",
+    "the following", "below", "output:",
+)
+
 GROUP_PROMPT = """\
 Hier ist eine Liste von Entity-Namen aus einem historischen Text.
 Fasse zusammen, welche Einträge dieselbe Person, denselben Ort oder dieselbe Organisation bezeichnen
@@ -441,8 +446,16 @@ def _llm_group(
         print(f"  Batch {idx + 1}/{len(batches)} …", flush=True)
 
         raw   = provider.complete(prompt, system=SYSTEM_PROMPT)
-        lines = [ln.strip() for ln in raw.splitlines()
-                 if ln.strip() and not ln.strip().startswith("#")]
+        lines = []
+        for _ln in raw.splitlines():
+            _l = _ln.strip()
+            if not _l or _l.startswith("#"):
+                continue
+            if _l.endswith(":") or _l.lower().startswith(_GROUP_SKIP_PREFIXES):
+                continue
+            if len(_l) > 60:
+                continue
+            lines.append(_l)
 
         if not lines:
             print(f"  Batch {idx + 1}: Gruppen-LLM lieferte 0 Zeilen "
