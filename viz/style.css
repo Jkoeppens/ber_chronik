@@ -414,6 +414,8 @@ a.src-ref:hover { color: #111; border-bottom-color: #555; }
 }
 .para-text   { font-size: 0.85rem; line-height: 1.6; color: #222; }
 .para-source { margin-top: 10px; font-size: 0.72rem; color: #888; }
+.para-title a { color: inherit; text-decoration: none; font-weight: bold; }
+.para-title a:hover { text-decoration: underline; }
 
 /* Entity highlights */
 .entity {
