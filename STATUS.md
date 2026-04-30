@@ -249,9 +249,9 @@ Liest jetzt `data/projects/{project}/exploration/data.json` und schreibt `networ
 
 Entity-Editor speichert in `config.json["entities"]`. match_entities und export_exploration lesen ausschließlich von dort. Doc-level Fallback entfernt.
 
-### I6 — 7 deprecated Funktionen noch in entity_llm.py
+### ~~I6 — 7 deprecated Funktionen noch in entity_llm.py~~ ✓ behoben
 
-`_llm_task2_validate_aliases`, `_llm_task3_clarify_types`, `_llm_extract_uncovered`, `_select_uncovered_stratified` und drei weitere sind als `# DEPRECATED` markiert aber nicht entfernt, zusammen mit den zugehörigen Prompt-Strings.
+`_llm_task2_validate_aliases`, `_llm_task3_clarify_types`, `_llm_extract_uncovered`, `_select_uncovered_stratified` und weitere wurden entfernt. `entity_llm.py` enthält heute nur noch 8 aktiv genutzte Funktionen, alle importiert von `extract_entities_v2.py`.
 
 ### I7 — `actors` wird nach Override nicht aktualisiert
 
@@ -261,9 +261,9 @@ Wenn ein Segment via overrides.json manuell datiert wird, läuft match_entities.
 
 Sonderbehandlung liegt in parse_document.py (Parser-Modus), detect_anchors.py (kein Fließtext-Regex) und interpolate_anchors.py (Interpolation übersprungen). Kein zentraler Ort, der beschreibt was presseartikel-Dokumente anders machen.
 
-### I9 — Link-Schwelle unterschiedlich in precompute vs. boot
+### ~~I9 — Link-Schwelle unterschiedlich in precompute vs. boot~~ ✓ behoben
 
-`precompute_network.js` filtert Links mit `count >= 2`. `boot.js` lässt alle Links durch (`threshold = 1`). Das Layout wird für einen anderen Graphen vorberechnet als den, der in der Viz erscheint.
+Beide Dateien nutzen `LINK_MIN_COUNT = 2` mit gegenseitigem Kommentar-Verweis. Layout und Viz filtern identisch.
 
 ### I10 — Playwright-Tests testen nur BER-Projekt
 

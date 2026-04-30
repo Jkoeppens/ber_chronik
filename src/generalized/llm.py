@@ -121,10 +121,11 @@ class OllamaProvider(LLMProvider):
     max_concurrency = 1
     max_chars_per_chunk = 2000
 
-    def __init__(self, model: str = "llama3.1:8b",
-                 base_url: str = "http://localhost:11434"):
+    def __init__(self, model: str = "llama3.1:8b", base_url: str | None = None):
         self.model    = model
-        self.base_url = base_url.rstrip("/")
+        self.base_url = (
+            base_url or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+        ).rstrip("/")
 
     def complete(self, prompt: str, system: str = None, json_mode: bool = False) -> str:
         payload: dict = {
