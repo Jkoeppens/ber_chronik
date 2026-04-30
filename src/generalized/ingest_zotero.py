@@ -319,6 +319,46 @@ def main() -> None:
             print("Pipeline abgebrochen.", file=sys.stderr)
             sys.exit(1)
 
+    # ── 5b. Entity-Extraktion (nur wenn config["entities"] leer) ─────────────
+    # config neu lesen — propose_taxonomy kann taxonomy geschrieben haben
+    cfg = {}
+    try:
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        pass
+
+    if not cfg.get("entities"):
+        print("\nKeine Entities in config.json — starte extract_entities_v2 (sample) …")
+        extract_ok = _run(
+            "src/generalized/extract_entities_v2.py",
+            d_args + ["--mode", "sample"],
+        )
+        proposal_path = project_dir / "documents" / doc_id / "entities_proposal.json"
+        if extract_ok and proposal_path.exists():
+            try:
+                entities = json.loads(proposal_path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                entities = []
+            if entities:
+                cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+                cfg["entities"] = entities
+                cfg_path.write_text(
+                    json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+                print(f"  {len(entities)} Entities → config.json gespiegelt")
+                if not _run("src/generalized/match_entities.py", d_args):
+                    print("WARNING: match_entities (2. Lauf) fehlgeschlagen",
+                          file=sys.stderr)
+            else:
+                print("  Keine Entities in entities_proposal.json — übersprungen",
+                      file=sys.stderr)
+        else:
+            print("  extract_entities_v2 fehlgeschlagen oder kein Proposal — übersprungen",
+                  file=sys.stderr)
+    else:
+        print(f"\n{len(cfg['entities'])} Entities bereits in config.json — "
+              "Entity-Extraktion übersprungen")
+
     if not _run("src/generalized/export_exploration.py", p_args):
         print("WARNING: export_exploration fehlgeschlagen (nicht fatal)", file=sys.stderr)
 
