@@ -53,10 +53,11 @@ Promise.all([
   else                     binInterval = d3.timeYear;
   window._binInterval = binInterval;
 
+  const binThresholds = binInterval.range(dMin, dMax);
   const rawBins = d3.bin()
     .domain([dMin, dMax])
     .value(e => _entryDate(e))
-    .thresholds(binInterval.every(1))(entries.filter(e => _entryDate(e)));
+    .thresholds(binThresholds)(entries.filter(e => _entryDate(e)));
 
   const byBin = new Map(rawBins.map(bin => [bin.x0, bin]));
 
