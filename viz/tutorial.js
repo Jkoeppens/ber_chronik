@@ -281,7 +281,8 @@ document.getElementById("tutorial-btn").onclick = tutorialStart;
 
 // ── Auto-start on first visit ─────────────────────────────────────────────────
 
-if (!localStorage.getItem("tutorial_seen")) {
+if (!localStorage.getItem("tutorial_seen") &&
+    new URLSearchParams(location.search).get("project") === "ber") {
   window.addEventListener("load", () => setTimeout(tutorialStart, 600));
 }
 

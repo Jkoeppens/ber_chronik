@@ -37,7 +37,9 @@ from src.generalized.llm import get_provider, TASK_ANALYZE
 import shutil
 
 from src.generalized.db import (
-    init_db, create_project, get_project, list_projects as db_list_projects,
+    init_db, create_project, get_project,
+    list_projects as db_list_projects,
+    list_all_projects as db_list_all_projects,
     update_project, delete_project, token_valid,
 )
 from src.generalized.utils import render_template as _render_template
@@ -870,16 +872,21 @@ async def create_project_endpoint(request: Request):
     if not cfg_path.exists():
         cfg_path.write_text(json.dumps({"title": title, "doc_type": doc_type},
                                        ensure_ascii=False, indent=2), encoding="utf-8")
+    invite_tok = _get_invite(request)
     db_proj = await get_project(project_id)
     if db_proj is None:
-        db_proj = await create_project(project_id, title=title, doc_type=doc_type)
+        db_proj = await create_project(
+            project_id, title=title, doc_type=doc_type,
+            owner_token=invite_tok or None,
+        )
         db_proj = await get_project(project_id)
     return JSONResponse({"ok": True, "id": project_id, "token": db_proj["token"]})
 
 
 @app.get("/api/projects")
-async def list_projects_endpoint():
-    db_rows = await db_list_projects()
+async def list_projects_endpoint(request: Request):
+    invite_tok = _get_invite(request)
+    db_rows = await db_list_projects(invite_token=invite_tok or None)
     result  = []
     for row in db_rows:
         entry_count = 0

@@ -39,6 +39,15 @@ async def init_db() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(_DDL)
+        # Idempotente Migration: neue Spalten hinzufügen falls noch nicht vorhanden
+        for stmt in (
+            "ALTER TABLE projects ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE projects ADD COLUMN owner_token TEXT",
+        ):
+            try:
+                await db.execute(stmt)
+            except Exception:
+                pass
         await db.commit()
 
 
@@ -57,15 +66,17 @@ async def create_project(
     title: str = "",
     doc_type: str = "",
     status: str = "active",
+    owner_token: str | None = None,
 ) -> dict:
     """Legt ein neues Projekt an und gibt es zurück. Wirft bei Duplikat keinen Fehler."""
     created_at = _now_iso()
     token      = _fresh_token()
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(
-            """INSERT OR IGNORE INTO projects (id, title, doc_type, created_at, status, token)
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (project_id, title, doc_type, created_at, status, token),
+            """INSERT OR IGNORE INTO projects
+               (id, title, doc_type, created_at, status, token, owner_token)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (project_id, title, doc_type, created_at, status, token, owner_token),
         )
         await db.commit()
         # Return actual row (may differ if already existed)
@@ -81,7 +92,29 @@ async def get_project(project_id: str) -> dict | None:
     return _row_to_dict(row) if row else None
 
 
-async def list_projects() -> list[dict]:
+async def list_projects(invite_token: str | None = None) -> list[dict]:
+    """Gibt sichtbare Projekte zurück.
+
+    Ohne invite_token: nur öffentliche (is_public=1).
+    Mit invite_token: öffentliche + Projekte, die diesem Token gehören.
+    """
+    async with aiosqlite.connect(DB_PATH) as db:
+        if invite_token:
+            async with db.execute(
+                "SELECT * FROM projects WHERE is_public=1 OR owner_token=? ORDER BY created_at",
+                (invite_token,),
+            ) as cur:
+                rows = await cur.fetchall()
+        else:
+            async with db.execute(
+                "SELECT * FROM projects WHERE is_public=1 ORDER BY created_at",
+            ) as cur:
+                rows = await cur.fetchall()
+    return [_row_to_dict(r) for r in rows]
+
+
+async def list_all_projects() -> list[dict]:
+    """Gibt alle Projekte zurück (nur intern/admin)."""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("SELECT * FROM projects ORDER BY created_at") as cur:
             rows = await cur.fetchall()
@@ -116,12 +149,14 @@ async def delete_project(project_id: str) -> None:
 
 def _row_to_dict(row) -> dict:
     return {
-        "id":         row[0],
-        "title":      row[1],
-        "doc_type":   row[2],
-        "created_at": row[3],
-        "status":     row[4],
-        "token":      row[5],
+        "id":          row[0],
+        "title":       row[1],
+        "doc_type":    row[2],
+        "created_at":  row[3],
+        "status":      row[4],
+        "token":       row[5],
+        "is_public":   row[6] if len(row) > 6 else 0,
+        "owner_token": row[7] if len(row) > 7 else None,
     }
 
 
