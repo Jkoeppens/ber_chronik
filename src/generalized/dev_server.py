@@ -709,19 +709,14 @@ async def get_entities_data(request: Request):
     if not project or not doc_id:
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
-    doc_dir      = get_doc_dir(project, doc_id)
-    proposal_path = doc_dir / "entities_proposal.json"
-    if proposal_path.exists():
-        data = json.loads(proposal_path.read_text(encoding="utf-8"))
-        return JSONResponse([dict(**{k: v for k, v in e.items() if not k.startswith("_")},
-                                  _status="confirmed") for e in data])
-    # Kein frischer Extraction-Run: config.json["entities"] als Fallback
     config_p = get_project_dir(project) / "config.json"
     if config_p.exists():
-        cfg_entities = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
-        if cfg_entities:
-            return JSONResponse([dict(**{k: v for k, v in e.items() if not k.startswith("_")},
-                                      _status="confirmed") for e in cfg_entities])
+        try:
+            cfg_entities = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
+        except (json.JSONDecodeError, OSError):
+            cfg_entities = []
+        return JSONResponse([dict(**{k: v for k, v in e.items() if not k.startswith("_")},
+                                  _status="confirmed") for e in cfg_entities])
     return JSONResponse([])
 
 
@@ -737,13 +732,7 @@ async def save_entities(request: Request):
         return JSONResponse({"ok": False, "error": "Body muss ein JSON-Array sein"}, status_code=400)
     # Strip internal fields (_status, _source, etc.) before writing
     clean = [{k: v for k, v in e.items() if not k.startswith("_")} for e in body]
-    # Kanonische Quelle: entities_proposal.json (doc-level)
-    doc_dir = get_doc_dir(project, doc_id)
-    doc_dir.mkdir(parents=True, exist_ok=True)
-    (doc_dir / "entities_proposal.json").write_text(
-        json.dumps(clean, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    # Spiegel in config.json["entities"] für Pipeline-Schritte (classify, match_entities)
+    # Einzige Quelle: config.json["entities"] (D-P4)
     project_dir = get_project_dir(project)
     project_dir.mkdir(parents=True, exist_ok=True)
     config_p = project_dir / "config.json"
@@ -777,12 +766,6 @@ async def reject_entity(request: Request):
     if norm_lc and not any((e.get("normalform") or "").lower() == norm_lc for e in rejected):
         rejected.append({"normalform": body["normalform"], "aliases": body.get("aliases") or []})
         rejected_path.write_text(json.dumps(rejected, ensure_ascii=False, indent=2), encoding="utf-8")
-    # Remove from entities_proposal.json immediately so editor reflects change
-    proposal_path = doc_dir / "entities_proposal.json"
-    if proposal_path.exists():
-        proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
-        proposal = [e for e in proposal if (e.get("normalform") or "").lower() != norm_lc]
-        proposal_path.write_text(json.dumps(proposal, ensure_ascii=False, indent=2), encoding="utf-8")
     return JSONResponse({"ok": True})
 
 

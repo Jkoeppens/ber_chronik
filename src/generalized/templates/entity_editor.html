@@ -110,7 +110,6 @@ mark:hover{filter:brightness(0.88)}
   <span class="app-status" id="status">Lade…</span>
   <button class="btn btn-outline" id="btn-sample" style="margin-left:auto">Stichprobe (schnell)</button>
   <button class="btn btn-outline" id="btn-full">Vollständig (gründlich)</button>
-  <button class="btn btn-primary" id="btn-save">Speichern</button>
 </div>
 <div id="log" class="log-box"></div>
 
@@ -157,7 +156,30 @@ mark:hover{filter:brightness(0.88)}
 const TYPES       = ['Person','Organisation','Ort','Konzept'];
 const TYPE_COLORS = {Person:'#2563eb', Ort:'#16a34a', Organisation:'#d97706', Konzept:'#7c3aed'};
 
-let entities = [], segments = [], dirty = false;
+let entities = [], segments = [];
+let _persistTimer = null;
+async function _persist(immediate = false) {
+  if (_persistTimer) { clearTimeout(_persistTimer); _persistTimer = null; }
+  const doSave = async () => {
+    const clean = entities.map(e => {
+      const c = Object.assign({}, e);
+      Object.keys(c).forEach(k => { if (k.startsWith('_')) delete c[k]; });
+      return c;
+    });
+    try {
+      const res = await fetch('/ingest/entities/save' + _tq(), {
+        method: 'POST', headers: _th(), body: JSON.stringify(clean)
+      });
+      const data = await res.json();
+      if (data.ok) {
+        document.getElementById('status').textContent =
+          entities.length + ' Entities · ' + segments.length + ' Segmente · gespeichert ✓';
+      }
+    } catch (_) {}
+  };
+  if (immediate) doSave();
+  else _persistTimer = setTimeout(doSave, 800);
+}
 let _selText = '', _entPopupIdx = -1;
 
 (function(){const inv=new URLSearchParams(location.search).get('invite');if(inv){document.cookie=`invite_token=${inv}; path=/; SameSite=Lax; max-age=2592000`;const u=new URL(location.href);u.searchParams.delete('invite');history.replaceState({},'',u.toString());}})();
@@ -299,9 +321,8 @@ function renderEntityTab() {
 }
 
 function buildCard(e, idx) {
-  const isNew = e._status === 'new';
   const div = document.createElement('div');
-  div.className = 'entity-card' + (isNew ? ' is-new' : '');
+  div.className = 'entity-card';
   div.dataset.idx = idx;
   const aliasChips = (e.aliases || []).map((a, ai) =>
     `<span class="alias-chip">${esc(a)}<button data-ai="${ai}" title="Löschen">×</button></span>`
@@ -313,7 +334,6 @@ function buildCard(e, idx) {
         <input class="ec-input ec-norm" value="${esc(e.normalform || e.text || '')}" placeholder="Normalform">
         <select class="ec-select ec-typ">${TYPES.map(t =>
           `<option${t===e.typ?' selected':''}>${t}</option>`).join('')}</select>
-        ${isNew ? '<span class="new-badge">NEU</span>' : ''}
       </div>
       <div class="ec-row">
         <span class="ec-label">Aliases</span>
@@ -325,19 +345,19 @@ function buildCard(e, idx) {
         </div>
       </div>
     </div>
-    ${isNew ? '<button class="btn-reject" title="Ablehnen – Entity wird bei künftigen Läufen ignoriert">✗</button>' : ''}
+    <button class="btn-reject" title="Ablehnen – Entity wird bei künftigen Läufen ignoriert">✗</button>
     <button class="btn-delete" title="Entity löschen">✕</button>`;
 
   div.querySelector('.ec-norm').addEventListener('input', function() {
-    entities[idx].normalform = this.value; dirty = true;
+    entities[idx].normalform = this.value; _persist();
   });
   div.querySelector('.ec-typ').addEventListener('change', function() {
-    entities[idx].typ = this.value; dirty = true; renderEntityTab();
+    entities[idx].typ = this.value; renderEntityTab(); _persist(true);
   });
   div.querySelectorAll('.alias-chip button').forEach(btn => {
     btn.addEventListener('click', () => {
       entities[idx].aliases.splice(parseInt(btn.dataset.ai), 1);
-      dirty = true; renderEntityTab();
+      renderEntityTab(); _persist(true);
     });
   });
   const addInput = div.querySelector('.alias-new-input');
@@ -345,30 +365,28 @@ function buildCard(e, idx) {
   const doAdd = () => {
     const v = addInput.value.trim(); if (!v) return;
     if (!entities[idx].aliases) entities[idx].aliases = [];
-    entities[idx].aliases.push(v); dirty = true; addInput.value = ''; renderEntityTab();
+    entities[idx].aliases.push(v); addInput.value = ''; renderEntityTab(); _persist(true);
   };
   addBtn.addEventListener('click', doAdd);
   addInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doAdd(); }});
-  if (isNew) {
-    div.querySelector('.btn-reject').addEventListener('click', async () => {
-      const ent = entities[idx];
-      await fetch('/ingest/entities/reject', {
-        method: 'POST', headers: _th(),
-        body: JSON.stringify({ normalform: ent.normalform, aliases: ent.aliases || [], project: _proj || undefined, document: _doc || undefined })
-      });
-      entities.splice(idx, 1);
-      updateStatus(); renderEntityTab();
+  div.querySelector('.btn-reject').addEventListener('click', async () => {
+    const ent = entities[idx];
+    await fetch('/ingest/entities/reject', {
+      method: 'POST', headers: _th(),
+      body: JSON.stringify({ normalform: ent.normalform, aliases: ent.aliases || [], project: _proj || undefined, document: _doc || undefined })
     });
-  }
+    entities.splice(idx, 1);
+    updateStatus(); renderEntityTab(); _persist(true);
+  });
   div.querySelector('.btn-delete').addEventListener('click', () => {
-    entities.splice(idx, 1); dirty = true; renderEntityTab();
+    entities.splice(idx, 1); renderEntityTab(); _persist(true);
   });
   return div;
 }
 
 document.getElementById('btn-add-entity').addEventListener('click', () => {
   entities.push({ normalform: '', typ: 'Konzept', aliases: [] });
-  dirty = true; renderEntityTab();
+  renderEntityTab(); _persist(true);
   document.getElementById('entity-sections').lastElementChild?.scrollIntoView({ behavior: 'smooth' });
 });
 
@@ -511,7 +529,7 @@ selBtns.addEventListener('click', function(e) {
   );
   if (!already) {
     entities.push({ normalform: norm, typ, aliases: [norm] });
-    dirty = true; updateStatus(); renderEntityTab();
+    updateStatus(); renderEntityTab(); _persist(true);
   }
   hideSelPopup();
   window.getSelection()?.removeAllRanges();
@@ -538,7 +556,7 @@ document.getElementById('seg-list').addEventListener('click', function(e) {
 document.getElementById('ent-popup-remove').addEventListener('click', function() {
   if (_entPopupIdx >= 0 && _entPopupIdx < entities.length) {
     entities.splice(_entPopupIdx, 1);
-    dirty = true; updateStatus(); renderEntityTab();
+    updateStatus(); renderEntityTab(); _persist(true);
     setTimeout(() => renderSegmentTab(), 0);
   }
   hideEntPopup();
@@ -551,32 +569,7 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('#sel-popup') && !e.target.closest('.seg-text')) hideSelPopup();
 });
 
-// ── Save ──────────────────────────────────────────────────────────────────────
-document.getElementById('btn-save').addEventListener('click', async () => {
-  const btn = document.getElementById('btn-save');
-  btn.disabled = true; btn.textContent = 'Speichert…';
-  // Strip internal fields before sending to server
-  const clean = entities.map(e => {
-    const c = Object.assign({}, e);
-    Object.keys(c).forEach(k => { if (k.startsWith('_')) delete c[k]; });
-    return c;
-  });
-  const res  = await fetch('/ingest/entities/save' + _tq(), {
-    method: 'POST', headers: _th(), body: JSON.stringify(clean)
-  });
-  const data = await res.json();
-  if (data.ok) {
-    dirty = false;
-    // Mark all as confirmed after save (seed now contains them)
-    entities.forEach(e => { e._status = 'confirmed'; });
-    document.getElementById('status').textContent = data.count + ' Entities gespeichert ✓';
-    btn.textContent = 'Gespeichert ✓';
-    renderEntityTab();
-    setTimeout(() => { btn.disabled = false; btn.textContent = 'Speichern'; }, 1500);
-  } else {
-    btn.disabled = false; btn.textContent = 'Speichern';
-  }
-});
+// (Auto-Save via _persist() — kein expliziter Speichern-Button)
 
 // ── SSE helper + extraction buttons ───────────────────────────────────────────
 async function _runSse(endpoint, btnEl, body = null) {

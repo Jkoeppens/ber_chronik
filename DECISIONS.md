@@ -45,11 +45,12 @@ Kein Mischzustand (neue Kategorien + alte actors) ist erlaubt.
 ### D-P4 — Entities haben eine einzige Quelle
 Einzige gültige Quelle: `projects/{project}/config.json["entities"]`.
 Kein doc-level Fallback, kein stilles Ignorieren.
-Konsequenz: Entity-Editor speichert immer in config.json, nie in entities_seed.json.
 
-Kanonische Editor-Quelle ist `documents/{doc_id}/entities_proposal.json` —
-dort speichert der Entity-Editor (save/reject/extract). `config.json["entities"]`
-ist der Spiegel für Pipeline-Schritte und wird bei jedem Editor-Save synchronisiert.
+`documents/{doc_id}/entities_proposal.json` ist temporärer Extraktor-Output —
+wird von `extract_entities_v2.py` geschrieben und sofort nach `config.json["entities"]`
+gespiegelt. Der Entity-Editor liest und schreibt ausschließlich `config.json["entities"]`.
+Jede Aktion im Editor (Bearbeiten, Ablehnen, Löschen, Hinzufügen) löst sofort ein
+automatisches `POST /ingest/entities/save` aus — kein expliziter Speichern-Button.
 
 ### D-P5 — Schritt-Verträge sind explizit
 Jedes Skript prüft beim Start ob seine Input-Dateien existieren.

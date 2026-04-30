@@ -19,7 +19,7 @@ Modi:
 
 Resume: nur im full-Modus über _v2_checkpoint.json, jeder Schritt einzeln.
 
-Output: entities_proposal.json
+Output: entities_proposal.json (temporär), config.json["entities"] (kanonisch)
 """
 
 import argparse
@@ -75,6 +75,20 @@ def _parse_args():
     args    = ap.parse_args()
     doc_dir = PROJECTS_DIR / args.project / "documents" / args.document
     return args, doc_dir
+
+
+def _mirror_to_config(doc_dir: Path, entities: list[dict]) -> None:
+    """Spiegelt entities sofort nach config.json["entities"] (D-P4)."""
+    config_p = doc_dir.parent.parent / "config.json"
+    if not config_p.exists():
+        return
+    try:
+        cfg = json.loads(config_p.read_text(encoding="utf-8"))
+        cfg["entities"] = entities
+        config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"→ config.json[\"entities\"]  ({len(entities)} gespiegelt)")
+    except (json.JSONDecodeError, OSError) as exc:
+        print(f"WARNING: config.json-Spiegel fehlgeschlagen: {exc}", file=sys.stderr)
 
 
 def _load_seed_and_rejected(doc_dir: Path, doc_type: str = "") -> tuple[list[dict], set[str]]:
@@ -154,6 +168,7 @@ def main() -> None:
         )
         print(f"\n→ {output_path}  ({len(merged)} Entities)")
         _print_stats(merged)
+        _mirror_to_config(doc_dir, merged)
         return
 
     # ── LLM-Backend (4-Stufen-Flow) ────────────────────────────────────────────
@@ -237,6 +252,7 @@ def main() -> None:
     )
     print(f"\n→ {output_path}  ({len(merged)} Entities)")
     _print_stats(merged)
+    _mirror_to_config(doc_dir, merged)
 
 
 if __name__ == "__main__":
