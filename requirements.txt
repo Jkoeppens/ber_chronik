@@ -1,10 +1,6 @@
 python-docx==1.1.2
 fastapi>=0.110,<1.0
 uvicorn[standard]>=0.29,<1.0
-pandas==2.2.2
-pyyaml==6.0.2
-python-dateutil==2.9.0.post0
-regex==2024.11.6
 tqdm==4.66.5
 spacy>=3.8,<3.9
 anthropic>=0.40,<1.0
@@ -14,3 +10,4 @@ python-multipart>=0.0.9,<1.0
 pyzotero>=1.5,<2.0
 trafilatura>=1.8,<3.0
 lxml-html-clean>=0.1,<1.0
+requests>=2.31,<3.0
