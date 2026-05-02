@@ -276,3 +276,47 @@ Beide Dateien nutzen `LINK_MIN_COUNT = 2` mit gegenseitigem Kommentar-Verweis. L
 ### I12 — `export_preview.py` D-P1-Fallback auf taxonomy_proposal.json ✓ behoben
 
 Fehlte `config.json["taxonomy"]`, fiel `export_preview.py` auf die per-doc `taxonomy_proposal.json` zurück — statt mit Fehler abzubrechen. Behoben: Fallback entfernt, expliziter Fehler wenn Taxonomie fehlt (analog `classify_segments.py` und `export_exploration.py`).
+
+---
+
+## Audit-Befunde (2026-04-30)
+
+### Kritisch (Deployment-Blocker)
+
+- **`POST /ingest/analyze` — Path Traversal** (`dev_server.py:381`)
+  Kein `_require_token`-Check. `project` wird nur slugifiziert wenn `project_name` im Body vorhanden — bei direktem `project`-Feld keine Sanitierung. `doc_id` ebenfalls unvalidiert. `get_doc_dir(project, doc_id)` baut Pfad direkt aus User-Input; `mkdir(parents=True)` + Datei-Schreiboperationen folgen. Angreifer mit Invite-Token kann Dateien außerhalb von `PROJECTS_DIR` anlegen.
+
+### Mittel
+
+- **`doc_id` unvalidiert in mehreren Endpoints** (`dev_server.py:241, 791, 821`)
+  `POST /overrides`, `POST /ingest/classified/update`, `GET /ingest/segments/data`: `_require_token` prüft `project` gegen DB (impliziter Traversal-Schutz), aber `doc_id` wird nicht validiert. Valides `project` + `doc_id = "../../other_project/documents/main"` ermöglicht Lese-/Schreibzugriff auf fremde Dokumente.
+
+- **`entity_spacy.py:83` — alle spaCy-Fehler geschluckt**
+  `except Exception as exc: print(...); continue` pro Segment. Wenn spaCy für alle Segmente versagt, gibt `extract_with_spacy()` eine leere Entity-Liste zurück ohne `sys.exit`. `ingest_zotero.py:210` macht dagegen `sys.exit(1)` — inkonsistentes Fehlerverhalten im selben Pipeline-Pfad.
+
+- **`CAT_PALETTE` zweifach mit verschiedenen Farben definiert**
+  `export_preview.py:31` → `["#0891b2", "#d97706", "#16a34a", ...]`
+  `export_exploration.py:42` → `["#3b82f6", "#f59e0b", "#10b981", ...]`
+  Gleiche Kategorie trägt in `preview.html` und Viz-Explorer unterschiedliche Farben.
+
+- **`db.list_all_projects()` und `db.update_status()` — dead code**
+  `db.py:116`: importiert als `db_list_all_projects` in `dev_server.py:42`, aber in keinem Endpoint aufgerufen.
+  `db.py:137`: `update_status()` nur definiert, nirgends aufgerufen.
+
+### Niedrig
+
+- **`"date"` vs `"date_raw"` — Feldnamen inkonsistent**
+  `ingest_zotero.py:152` schreibt `"date"` in Segmente. `export_exploration.py:91` liest `seg.get("date_raw")` — gibt für Zotero-Segmente immer `None` zurück; Fallback `str(tf)` verliert Tag-Genauigkeit.
+
+- **`is_geicke` BER-Feld im generalisierten Code**
+  `export_exploration.py:118, 182`: `"is_geicke"` in `build_entries()` und `REQUIRED_FIELDS`. Alle Nicht-BER-Projekte emittieren `"is_geicke": false` in `data.json`.
+
+- **Config-Lesen ohne Helper** — 12 Stellen
+  `json.loads(path.read_text(encoding="utf-8"))` ohne gemeinsamen Wrapper:
+  `dev_server.py:274, 330, 350, 717, 744` — `extract_entities_v2.py:86, 99` — `export_preview.py:498, 517` — `export_exploration.py:249` — `propose_taxonomy.py:224` — `parse_document.py:210`
+
+- **`classify_segments.py:100` — silent fallback zu `category: None`**
+  Nach 2 fehlgeschlagenen LLM-Parses: `return {**segment, "category": None, "confidence": "low"}` ohne Warning oder Zähler im Output.
+
+- **`entity_utils.py:9` — `VALID_TYPES` als `set` statt `frozenset`**
+  Mutable, wird nie modifiziert — kein Laufzeitproblem, aber falsches Signal.
