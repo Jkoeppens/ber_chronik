@@ -22,6 +22,8 @@ GLINER_LABELS: list[str] = [
     "politische Bewegung",
     "religiöse Institution",
     "Zeitung oder Publikation",
+    "politische Bewegung oder Ideologie",
+    "religiöse Strömung oder Konzept",
 ]
 
 # ── NER-Backend-Routing ───────────────────────────────────────────────────────

@@ -28,12 +28,14 @@ from src.generalized.entity_llm import _llm_group, _llm_task1_normalize
 
 # Label-Mapping: verfeinerte GLiNER-Labels → VALID_TYPES
 _LABEL_TO_TYPE: dict[str, str] = {
-    "Person":                   "Person",
-    "Organisation":             "Organisation",
-    "geographischer Ort":       "Ort",
-    "politische Bewegung":      "Organisation",
-    "religiöse Institution":    "Organisation",
-    "Zeitung oder Publikation": "Organisation",
+    "Person":                             "Person",
+    "Organisation":                       "Organisation",
+    "geographischer Ort":                 "Ort",
+    "politische Bewegung":                "Organisation",
+    "religiöse Institution":              "Organisation",
+    "Zeitung oder Publikation":           "Organisation",
+    "politische Bewegung oder Ideologie": "Konzept",
+    "religiöse Strömung oder Konzept":    "Konzept",
 }
 
 # Modell-Cache: einmal laden, für alle Aufrufe wiederverwenden
@@ -77,17 +79,38 @@ def _chunk(text: str, max_chars: int = GLINER_MAX_CHARS) -> list[str]:
     return [c for c in chunks if c]
 
 
+def _build_alias_map(seed: list[dict]) -> dict[str, str]:
+    """Baut eine lowercase-Alias → Normalform-Map aus dem Seed.
+
+    Wird genutzt um GLiNER-Kurzformen (z.B. "Enver") auf den vollständigen
+    Seed-Namen ("Ismail Enver") zu normalisieren bevor _merge() läuft.
+    """
+    alias_map: dict[str, str] = {}
+    for e in seed:
+        full = e.get("normalform") or ""
+        if not full:
+            continue
+        alias_map[full.lower()] = full
+        for a in e.get("aliases", []):
+            if a:
+                alias_map[a.lower()] = full
+    return alias_map
+
+
 def extract_with_gliner(
     segments: list[dict],
     rejected_lc: set[str],
     provider,
+    seed: list[dict] = (),
 ) -> list[dict]:
     """Extrahiert Entities aus Segmenten via GLiNER NER.
 
     provider wird für _llm_group (Phase 4) und _llm_task1_normalize (Phase 5)
+    genutzt. seed wird für Alias→Vollname-Normalisierung und _llm_task1_normalize
     genutzt. Gibt eine deduplizierte Entity-Liste im Standard-Format zurück.
     """
-    model = _load_gliner(GLINER_MODEL)
+    model     = _load_gliner(GLINER_MODEL)
+    alias_map = _build_alias_map(seed)
 
     def _skip(s: dict) -> bool:
         if s.get("item_type") == "videoRecording":
@@ -135,6 +158,15 @@ def extract_with_gliner(
                 norm = ent["text"].strip()
                 if not norm:
                     continue
+                # Lowercase-Filter: reine Kleinbuchstaben unter 5 Zeichen
+                # filtert "al", "st", "n't", aber nicht "al fatat" oder "aleppo"
+                if norm == norm.lower() and len(norm) < 5:
+                    continue
+                # Seed-Normalisierung: Kurzform → Vollname aus Seed
+                # "Enver" → "Ismail Enver" wenn Seed alias_map["enver"] existiert
+                full = alias_map.get(norm.lower())
+                if full and full != norm:
+                    norm = full
                 n = _normalize_entity(
                     {"normalform": norm, "typ": typ, "aliases": [],
                      "score": round(ent["score"], 3)},
@@ -145,7 +177,7 @@ def extract_with_gliner(
 
     print(f"  {len(raw_entities)} Roh-Entities aus GLiNER")
 
-    # Phase 3: Programmatische Dedup
+    # Phase 3: Programmatische Dedup (Seed-normalisierte Vollnamen werden hier zusammengeführt)
     deduped = _merge([raw_entities])
     print(f"  {len(deduped)} nach _merge()")
 
@@ -155,7 +187,7 @@ def extract_with_gliner(
 
     # Phase 5: Normalformen bereinigen + Typen validieren
     normalized = _llm_task1_normalize(
-        grouped, provider, seed=[], checkpoint_path=None, rejected_lc=rejected_lc
+        grouped, provider, seed=list(seed), checkpoint_path=None, rejected_lc=rejected_lc
     )
     print(f"  {len(normalized)} nach _llm_task1_normalize()")
     return normalized
