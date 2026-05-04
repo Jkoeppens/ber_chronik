@@ -274,6 +274,157 @@ def run_hybrid(
     return before_group, after_group, gliner_time, group_time
 
 
+# ── Compare-Modus: LLM vs. GLiNER Direktvergleich ───────────────────────────
+
+def _entity_in_texts(entity: dict, segments: list[dict]) -> bool:
+    """Prüft ob Normalform oder ein Alias im Segment-Text vorkommt."""
+    names: set[str] = {(entity.get("normalform") or "").strip().lower()}
+    for a in entity.get("aliases", []):
+        if a:
+            names.add(a.strip().lower())
+    names.discard("")
+    all_text = " ".join(s.get("text", "").lower() for s in segments)
+    return any(n in all_text for n in names)
+
+
+def _why_gliner_missed(entity: dict, segments: list[dict]) -> str:
+    norm = entity.get("normalform") or ""
+    if not _entity_in_texts(entity, segments):
+        return "LLM-Halluzination (nicht im Text)"
+    if norm == norm.lower() and len(norm) < 5:
+        return "Lowercase-Filter (< 5 Zeichen)"
+    if len(norm) < 4:
+        return "zu kurz"
+    if norm == norm.lower():
+        return "komplett lowercase — evtl. unter Threshold"
+    return "unter GLiNER-Threshold oder anderes Label"
+
+
+def _noise_estimate(entities: list[dict]) -> dict:
+    endings = ("ung", "heit", "keit", "isch")
+    n_lc    = sum(1 for e in entities
+                  if (e.get("normalform") or "") == (e.get("normalform") or "").lower())
+    n_short = sum(1 for e in entities if len(e.get("normalform") or "") < 4)
+    n_verb  = sum(1 for e in entities
+                  if any((e.get("normalform") or "").lower().endswith(sfx) for sfx in endings))
+    return {"lowercase": n_lc, "kurz": n_short, "verbal": n_verb}
+
+
+def run_compare(
+    sample: list[dict],
+    seed: list[dict],
+    rejected_lc: set[str],
+) -> None:
+    """Direktvergleich LLM vs. GLiNER-Produktionspipeline auf denselben Segmenten."""
+    from src.generalized.entity_gliner import extract_with_gliner
+    from src.generalized.llm import get_provider, TASK_EXTRACT
+
+    load_dotenv(ROOT / ".env")
+    try:
+        provider = get_provider(task=TASK_EXTRACT)
+    except Exception as exc:
+        print(f"  FEHLER: Provider konnte nicht geladen werden: {exc}", file=sys.stderr)
+        return
+
+    print("\n[LLM-Pipeline (Sample + Group + Normalize)]")
+    llm_ents, llm_time = run_llm(sample, seed, rejected_lc)
+
+    print("\n[GLiNER-Produktionspipeline (θ=0.7 + Embedding-Clustering + selekt. LLM)]")
+    t0          = time.perf_counter()
+    gliner_ents = extract_with_gliner(sample, rejected_lc, provider, seed=seed)
+    gliner_time = time.perf_counter() - t0
+
+    _print_compare_report(llm_ents, llm_time, gliner_ents, gliner_time, sample)
+
+
+def _print_compare_report(
+    llm_ents:    list[dict],
+    llm_time:    float,
+    gliner_ents: list[dict],
+    gliner_time: float,
+    sample:      list[dict],
+) -> None:
+    W = 70
+    llm_map    = {(e.get("normalform") or "").lower(): e for e in llm_ents}
+    gliner_map = {(e.get("normalform") or "").lower(): e for e in gliner_ents}
+
+    both        = [(k, llm_map[k], gliner_map[k]) for k in llm_map if k in gliner_map]
+    only_llm    = [e for k, e in llm_map.items()    if k not in gliner_map]
+    only_gliner = [e for k, e in gliner_map.items() if k not in llm_map]
+
+    print(f"\n{'═' * W}")
+    print(f"  Direktvergleich: LLM vs. GLiNER (Produktionspipeline)")
+    print(f"{'═' * W}")
+    print(f"  LLM     : {len(llm_ents):3d} Entities   {llm_time:.1f}s")
+    print(f"  GLiNER  : {len(gliner_ents):3d} Entities   {gliner_time:.1f}s")
+    print(f"  Beide   : {len(both):3d}  |  Nur LLM: {len(only_llm):3d}  |  Nur GLiNER: {len(only_gliner):3d}")
+
+    # ── 1. Gemeinsam ─────────────────────────────────────────────────────────
+    print(f"\n{'─' * W}")
+    print(f"  1. Gemeinsam gefunden ({len(both)})")
+    print(f"{'─' * W}")
+    if both:
+        n_conflict = sum(1 for _, le, ge in both if le.get("typ") != ge.get("typ"))
+        print(f"  {'Entity':<38} {'Typ LLM':<14} {'Typ GLiNER'}")
+        print(f"  {'-'*38} {'-'*14} {'-'*12}")
+        for k, le, ge in sorted(both, key=lambda x: x[0]):
+            name     = (le.get("normalform") or k)[:37]
+            flag     = " ⚠" if le.get("typ") != ge.get("typ") else ""
+            print(f"  {name:<38} {le.get('typ',''):<14} {ge.get('typ','')}{flag}")
+        if n_conflict:
+            print(f"\n  Typ-Konflikte: {n_conflict}")
+
+    # ── 2. Nur LLM ───────────────────────────────────────────────────────────
+    print(f"\n{'─' * W}")
+    print(f"  2. Nur LLM gefunden ({len(only_llm)})")
+    print(f"{'─' * W}")
+    if only_llm:
+        print(f"  {'Entity':<38} {'Typ':<14} Warum GLiNER fehlte")
+        print(f"  {'-'*38} {'-'*14} {'-'*32}")
+        for e in sorted(only_llm, key=lambda x: (x.get("normalform") or "").lower()):
+            name   = (e.get("normalform") or "")[:37]
+            reason = _why_gliner_missed(e, sample)
+            print(f"  {name:<38} {e.get('typ',''):<14} {reason}")
+
+    # ── 3. Nur GLiNER, sortiert nach Score ───────────────────────────────────
+    print(f"\n{'─' * W}")
+    print(f"  3. Nur GLiNER gefunden ({len(only_gliner)}) — sortiert nach Score ↓")
+    print(f"{'─' * W}")
+    if only_gliner:
+        print(f"  {'Entity':<38} {'Typ':<14} Score")
+        print(f"  {'-'*38} {'-'*14} {'-'*5}")
+        for e in sorted(only_gliner, key=lambda x: (x.get("score") or 0.0), reverse=True):
+            name = (e.get("normalform") or "")[:37]
+            print(f"  {name:<38} {e.get('typ',''):<14} {_fmt_score(e.get('score'))}")
+
+    # ── 4. Rauschen-Schätzung GLiNER-only ────────────────────────────────────
+    print(f"\n{'─' * W}")
+    print(f"  4. Rauschen-Schätzung GLiNER-only ({len(only_gliner)} Entities)")
+    print(f"{'─' * W}")
+    if only_gliner:
+        noise = _noise_estimate(only_gliner)
+        total = len(only_gliner)
+        pct   = lambda n: f"{n}/{total} ({100 * n // total}%)"
+        print(f"  Komplett lowercase           : {pct(noise['lowercase'])}")
+        print(f"  Kürzer als 4 Zeichen         : {pct(noise['kurz'])}")
+        print(f"  Endet auf -ung/-heit/-keit/-isch : {pct(noise['verbal'])}")
+    else:
+        print(f"  (keine GLiNER-only Entities)")
+
+    # ── 5. Laufzeit ──────────────────────────────────────────────────────────
+    print(f"\n{'─' * W}")
+    print(f"  5. Laufzeit")
+    print(f"{'─' * W}")
+    print(f"  LLM-Pipeline    : {llm_time:>6.1f}s   (API: Sample + Group + Normalize)")
+    print(f"  GLiNER-Pipeline : {gliner_time:>6.1f}s   (lokal + selekt. LLM für Konzepte)")
+    if llm_time > 0 and gliner_time > 0:
+        if llm_time >= gliner_time:
+            print(f"  → GLiNER {llm_time / gliner_time:.1f}× schneller")
+        else:
+            print(f"  → LLM {gliner_time / llm_time:.1f}× schneller")
+    print()
+
+
 # ── Ausgabe ───────────────────────────────────────────────────────────────────
 
 def _fmt_score(score) -> str:
@@ -440,6 +591,8 @@ def main() -> None:
     ap.add_argument("--threshold", type=float, default=0.5,
                     help="GLiNER Confidence-Schwelle für System B (default: 0.5)")
     ap.add_argument("--seed",      type=int,   default=42,    help="Random-Seed (default: 42)")
+    ap.add_argument("--mode", choices=["full", "compare"], default="full",
+                    help="'full': alle 3 Systeme (default) | 'compare': LLM vs GLiNER direkt")
     args = ap.parse_args()
 
     doc_dir  = PROJECTS_DIR / args.project / "documents" / args.document
@@ -462,13 +615,20 @@ def main() -> None:
     seed, rejected_lc = _load_seed_and_rejected(doc_dir)
 
     print()
-    print("NER-Benchmark: LLM-Pipeline vs. GLiNER vs. Hybrid")
-    print(f"  Projekt         : {args.project}/{args.document}")
-    print(f"  Segmente        : {len(sample)} von {len(content)} content-Segmenten")
+    print(f"NER-Benchmark  [{args.mode}]")
+    print(f"  Projekt  : {args.project}/{args.document}")
+    print(f"  Segmente : {len(sample)} von {len(content)} content-Segmenten")
+    print(f"  Seed     : {args.seed}")
+
+    # ── Modus: compare (LLM vs. GLiNER Direktvergleich) ──────────────────────
+    if args.mode == "compare":
+        run_compare(sample, seed, rejected_lc)
+        return
+
+    # ── Modus: full (Systeme A + B + C) ──────────────────────────────────────
     print(f"  Threshold B     : {args.threshold}  (System B)")
     print(f"  Threshold C     : {HYBRID_THRESHOLD}  (System C, fest)")
     print(f"  Hybrid-Labels   : {', '.join(HYBRID_LABELS)}")
-    print(f"  Seed            : {args.seed}")
 
     # ── System A ──
     print(f"\n[System A: LLM-Pipeline (Schritte 1 + 3 + 4)]")

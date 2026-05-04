@@ -142,6 +142,7 @@ def _merge(groups: list[list[dict]]) -> list[dict]:
                     "typ":        ent.get("typ", "Konzept"),
                     "aliases":    list(ent.get("aliases", [])),
                     "_source":    ent.get("_source", "?"),
+                    "score":      ent.get("score"),
                 })
             else:
                 cur_prio = SOURCE_PRIORITY.get(match.get("_source", ""), 99)
@@ -149,6 +150,8 @@ def _merge(groups: list[list[dict]]) -> list[dict]:
                 if new_prio < cur_prio:
                     match["normalform"] = ent.get("normalform", match["normalform"])
                     match["_source"]    = ent.get("_source",    match["_source"])
+                if (ent.get("score") or 0) > (match.get("score") or 0):
+                    match["score"] = ent.get("score")
                 existing_lc = {a.lower() for a in match["aliases"]}
                 for a in ent.get("aliases", []):
                     if a and a.lower() not in existing_lc:
