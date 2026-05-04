@@ -94,7 +94,7 @@ mark:hover{filter:brightness(0.88)}
             background:var(--c-surface);color:var(--c-primary);font-size:11px;cursor:pointer;
             flex-shrink:0;transition:color .15s,border-color .15s;margin-right:2px}
 .btn-reject:hover{color:var(--c-danger);border-color:var(--c-danger-border);background:#fef2f2}
-/* ── Duplicate warning ── */
+/* ── Duplicate warning (Levenshtein-basiert) ── */
 .dupe-badge{display:inline-flex;align-items:center;gap:3px;margin:4px 4px 0 0;
             padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;cursor:pointer;
             background:#fffbeb;color:#92400e;border:1px solid #fcd34d;
@@ -102,6 +102,25 @@ mark:hover{filter:brightness(0.88)}
 .dupe-badge:hover{background:#fef3c7}
 @keyframes dupe-flash{0%,100%{outline:none}25%,75%{outline:3px solid #f59e0b}}
 .dupe-highlight{animation:dupe-flash .6s ease 3}
+/* ── Embedding-Duplikat-Tab ── */
+#tab-dupes{padding:20px 24px;overflow-y:auto;gap:16px;display:none;flex-direction:column}
+.dup-loading{color:var(--c-text-3);font-size:13px;padding:8px 0}
+.dup-empty{color:var(--c-text-3);font-size:13px}
+.dup-pair{display:flex;align-items:center;gap:10px;padding:10px 12px;flex-wrap:wrap}
+.dup-name{font-size:13px;font-weight:500;flex:1;min-width:120px}
+.dup-typ{font-size:10px;color:var(--c-text-3);background:var(--c-code-bg);
+         padding:1px 6px;border-radius:10px;border:1px solid var(--c-code-border)}
+.dup-sim{font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;
+         border:1px solid #fcd34d;border-radius:10px;padding:2px 8px;white-space:nowrap}
+.dup-sep{color:var(--c-text-3);font-size:12px}
+.btn-merge{padding:4px 10px;border:1px solid var(--c-primary-ring);border-radius:4px;
+           background:var(--c-surface);color:var(--c-primary);font-size:11px;
+           cursor:pointer;white-space:nowrap}
+.btn-merge:hover{background:var(--c-primary-tint)}
+.btn-dup-ignore{padding:4px 8px;border:1px solid var(--c-code-border);border-radius:4px;
+                background:var(--c-surface);color:var(--c-text-4);font-size:11px;
+                cursor:pointer}
+.btn-dup-ignore:hover{color:var(--c-danger);border-color:var(--c-danger-border)}
 </style>
 </head>
 <body>
@@ -116,6 +135,7 @@ mark:hover{filter:brightness(0.88)}
 <nav class="tab-nav">
   <button class="tab-btn active" id="tab-btn-entities">Entity-Liste</button>
   <button class="tab-btn"        id="tab-btn-segments">Segment-Annotator</button>
+  <button class="tab-btn"        id="tab-btn-dupes">Duplikate</button>
 </nav>
 
 <!-- Tab 1: Entity-Liste -->
@@ -138,6 +158,12 @@ mark:hover{filter:brightness(0.88)}
     <span id="seg-count"></span>
   </div>
   <div id="seg-list"></div>
+</div>
+
+<!-- Tab 3: Duplikat-Kandidaten -->
+<div id="tab-dupes" class="tab-pane">
+  <div class="dup-loading" id="dup-loading">Berechne Embedding-Ähnlichkeit…</div>
+  <div id="dup-list"></div>
 </div>
 
 <!-- Selection popup (new entity from text selection) -->
@@ -220,13 +246,111 @@ function updateStatus() {
 // ── Tab switching ─────────────────────────────────────────────────────────────
 document.getElementById('tab-btn-entities').addEventListener('click', () => switchTab('entities'));
 document.getElementById('tab-btn-segments').addEventListener('click', () => switchTab('segments'));
+document.getElementById('tab-btn-dupes').addEventListener('click',    () => switchTab('dupes'));
 
 function switchTab(id) {
   document.getElementById('tab-entities').style.display = id === 'entities' ? 'flex' : 'none';
   document.getElementById('tab-segments').style.display = id === 'segments' ? 'flex' : 'none';
+  document.getElementById('tab-dupes').style.display    = id === 'dupes'    ? 'flex' : 'none';
   document.getElementById('tab-btn-entities').classList.toggle('active', id === 'entities');
   document.getElementById('tab-btn-segments').classList.toggle('active', id === 'segments');
+  document.getElementById('tab-btn-dupes').classList.toggle('active',    id === 'dupes');
   if (id === 'segments') renderSegmentTab();
+  if (id === 'dupes' && !_dupesLoaded) loadNearDupes();
+}
+
+// ── Embedding-Duplikat-Tab ────────────────────────────────────────────────────
+let _dupesLoaded = false;
+let _dupePairs   = [];
+
+async function loadNearDupes() {
+  const loading = document.getElementById('dup-loading');
+  const list    = document.getElementById('dup-list');
+  loading.style.display = 'block';
+  list.innerHTML = '';
+  try {
+    const res  = await fetch('/ingest/entities/near-duplicates' + _tq());
+    const data = await res.json();
+    if (!Array.isArray(data)) {
+      loading.textContent = data.error || 'Fehler beim Laden';
+      return;
+    }
+    _dupePairs   = data;
+    _dupesLoaded = true;
+    loading.style.display = 'none';
+    _updateDupesTab();
+    // Update tab label with count
+    document.getElementById('tab-btn-dupes').textContent =
+      'Duplikate' + (data.length ? ' (' + data.length + ')' : '');
+  } catch(err) {
+    loading.textContent = 'Fehler: ' + err.message;
+  }
+}
+
+function _updateDupesTab() {
+  const list = document.getElementById('dup-list');
+  list.innerHTML = '';
+  if (!_dupePairs.length) {
+    list.innerHTML = '<div class="dup-empty">Keine Duplikat-Kandidaten in Bereich 0.80–0.91 gefunden.</div>';
+    return;
+  }
+  _dupePairs.forEach((pair, pi) => {
+    const card = document.createElement('div');
+    card.className = 'entity-card dup-pair';
+    const simPct = Math.round(pair.sim * 100);
+    card.innerHTML = `
+      <div class="dup-name">
+        <strong>${esc(pair.norm_i)}</strong>
+        <span class="dup-typ">${esc(pair.typ_i)}</span>
+      </div>
+      <span class="dup-sep">≈</span>
+      <span class="dup-sim">${simPct}% ähnlich</span>
+      <span class="dup-sep">≈</span>
+      <div class="dup-name">
+        <strong>${esc(pair.norm_j)}</strong>
+        <span class="dup-typ">${esc(pair.typ_j)}</span>
+      </div>
+      <button class="btn-merge" data-pi="${pi}">zusammenführen →</button>
+      <button class="btn-dup-ignore" data-pi="${pi}" title="Ignorieren">✗</button>`;
+    card.querySelector('.btn-merge').addEventListener('click', () => {
+      mergeEntities(pair.i, pair.j, pi);
+    });
+    card.querySelector('.btn-dup-ignore').addEventListener('click', () => {
+      _dupePairs.splice(pi, 1);
+      _updateDupesTab();
+      document.getElementById('tab-btn-dupes').textContent =
+        'Duplikate' + (_dupePairs.length ? ' (' + _dupePairs.length + ')' : '');
+    });
+    list.appendChild(card);
+  });
+}
+
+function mergeEntities(i, j, pairIdx) {
+  if (i >= entities.length || j >= entities.length) return;
+  const base   = entities[i];
+  const merged = entities[j];
+  // Move normalform and aliases of j into i's aliases
+  const existingLc = new Set([base.normalform, ...(base.aliases || [])].map(s => (s||'').toLowerCase()));
+  if (!existingLc.has((merged.normalform || '').toLowerCase())) {
+    base.aliases = (base.aliases || []);
+    base.aliases.push(merged.normalform);
+  }
+  for (const a of (merged.aliases || [])) {
+    if (a && !existingLc.has(a.toLowerCase())) {
+      base.aliases.push(a);
+      existingLc.add(a.toLowerCase());
+    }
+  }
+  // Remove j — indices above j shift down, invalidate remaining pairs
+  entities.splice(j, 1);
+  _dupePairs = [];
+  _dupesLoaded = false;
+  document.getElementById('tab-btn-dupes').textContent = 'Duplikate';
+  document.getElementById('dup-loading').style.display = 'none';
+  document.getElementById('dup-list').innerHTML =
+    '<div class="dup-empty">Neu laden um aktualisierte Kandidaten zu berechnen.</div>';
+  renderEntityTab();
+  _persist(true);
 }
 
 // ── Duplikat-Erkennung ────────────────────────────────────────────────────────

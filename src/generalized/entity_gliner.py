@@ -10,9 +10,8 @@ Pipeline:
   Phase 2: _normalize_entity() + Seed-Normalisierung + Lowercase-Filter
   Phase 3: _merge() — programmatische Dedup
   Phase 4: Embedding-Clustering (θ=EMB_THRESHOLD) — Sprachvarianten zusammenführen
-  Phase 5: _llm_task1_normalize() — nur lowercase Konzept-Entities ans LLM
 
-Schnittstelle identisch zu entity_spacy.extract_with_spacy().
+Kein LLM im GLiNER-Pfad. Schnittstelle identisch zu entity_spacy.extract_with_spacy().
 """
 
 import sys
@@ -26,7 +25,6 @@ from src.generalized.config import (
     GLINER_THRESHOLD,
 )
 from src.generalized.entity_utils import _merge, _normalize_entity
-from src.generalized.entity_llm import _llm_task1_normalize
 
 # Threshold für Embedding-Clustering (Cosine-Similarity)
 # 0.92 trifft sicher Duplikate + Sprachvarianten, vermeidet semantisch
@@ -188,13 +186,11 @@ def _embedding_cluster(entities: list[dict], threshold: float) -> list[dict]:
 def extract_with_gliner(
     segments: list[dict],
     rejected_lc: set[str],
-    provider,
     seed: list[dict] = (),
 ) -> list[dict]:
     """Extrahiert Entities aus Segmenten via GLiNER NER.
 
-    provider wird für _llm_task1_normalize (Phase 5, selektiv) genutzt.
-    seed wird für Alias→Vollname-Normalisierung und _llm_task1_normalize genutzt.
+    seed wird für Alias→Vollname-Normalisierung genutzt.
     Gibt eine deduplizierte Entity-Liste im Standard-Format zurück.
     """
     t_total = time.perf_counter()
@@ -281,31 +277,6 @@ def extract_with_gliner(
     t_emb = time.perf_counter() - t4
     print(f"  {len(clustered)} nach Embedding-Clustering θ={EMB_THRESHOLD}  [{t_emb:.1f}s]")
 
-    # ── Phase 5: Selektive LLM-Normalisierung (nur lowercase Konzepte) ───────
-    to_normalize = [
-        e for e in clustered
-        if e.get("typ") == "Konzept"
-        and (e.get("normalform") or "A")[0].islower()
-    ]
-    keep_as_is = [
-        e for e in clustered
-        if not (e.get("typ") == "Konzept" and (e.get("normalform") or "A")[0].islower())
-    ]
-
-    if to_normalize:
-        t5 = time.perf_counter()
-        print(f"  _llm_task1_normalize: {len(to_normalize)} lowercase Konzepte …")
-        normalized_konzepte = _llm_task1_normalize(
-            to_normalize, provider, seed=list(seed),
-            checkpoint_path=None, rejected_lc=rejected_lc,
-        )
-        t_llm = time.perf_counter() - t5
-        print(f"  {len(normalized_konzepte)} nach _llm_task1_normalize  [{t_llm:.1f}s]")
-        final = keep_as_is + normalized_konzepte
-    else:
-        print(f"  _llm_task1_normalize: keine lowercase Konzepte — übersprungen")
-        final = clustered
-
     t_total_elapsed = time.perf_counter() - t_total
-    print(f"  Gesamt: {len(final)} Entities  [{t_total_elapsed:.1f}s]")
-    return final
+    print(f"  Gesamt: {len(clustered)} Entities  [{t_total_elapsed:.1f}s]")
+    return clustered

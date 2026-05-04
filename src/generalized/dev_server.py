@@ -751,6 +751,49 @@ async def save_entities(request: Request):
 
 
 
+@app.get("/ingest/entities/near-duplicates")
+async def get_near_duplicates(request: Request):
+    project = request.query_params.get("project")
+    doc_id  = request.query_params.get("document")
+    if not project or not doc_id:
+        return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
+    if err := await _require_token(request, project): return err
+    config_p = get_project_dir(project) / "config.json"
+    if not config_p.exists():
+        return JSONResponse([])
+    try:
+        entities = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
+    except (json.JSONDecodeError, OSError):
+        return JSONResponse([])
+    if len(entities) < 2:
+        return JSONResponse([])
+    try:
+        from src.generalized.entity_gliner import _load_emb_model
+        import numpy as np
+        model = _load_emb_model("paraphrase-multilingual-MiniLM-L12-v2")
+        texts = [e.get("normalform", "") for e in entities]
+        embs  = model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
+        embs  = np.array(embs, dtype=np.float32)
+        sim   = embs @ embs.T
+        LOW, HIGH = 0.80, 0.91
+        pairs = []
+        for i in range(len(entities)):
+            for j in range(i + 1, len(entities)):
+                s = float(sim[i, j])
+                if LOW <= s <= HIGH:
+                    pairs.append({
+                        "i": i, "j": j, "sim": round(s, 3),
+                        "norm_i": entities[i].get("normalform", ""),
+                        "typ_i":  entities[i].get("typ", ""),
+                        "norm_j": entities[j].get("normalform", ""),
+                        "typ_j":  entities[j].get("typ", ""),
+                    })
+        pairs.sort(key=lambda p: -p["sim"])
+        return JSONResponse(pairs)
+    except ImportError:
+        return JSONResponse({"error": "sentence-transformers nicht installiert"}, status_code=503)
+
+
 @app.post("/ingest/entities/reject")
 async def reject_entity(request: Request):
     body = await request.json()

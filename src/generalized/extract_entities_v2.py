@@ -160,8 +160,7 @@ def main() -> None:
     # ── GLiNER-Backend (Standard, D-E4) ───────────────────────────────────────
     if backend == "gliner":
         from src.generalized.entity_gliner import extract_with_gliner
-        provider = get_provider(task=TASK_EXTRACT)
-        merged   = extract_with_gliner(segments, rejected_lc, provider, seed=seed)
+        merged = extract_with_gliner(segments, rejected_lc, seed=seed)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
             json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8"

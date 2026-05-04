@@ -317,21 +317,15 @@ def run_compare(
 ) -> None:
     """Direktvergleich LLM vs. GLiNER-Produktionspipeline auf denselben Segmenten."""
     from src.generalized.entity_gliner import extract_with_gliner
-    from src.generalized.llm import get_provider, TASK_EXTRACT
 
     load_dotenv(ROOT / ".env")
-    try:
-        provider = get_provider(task=TASK_EXTRACT)
-    except Exception as exc:
-        print(f"  FEHLER: Provider konnte nicht geladen werden: {exc}", file=sys.stderr)
-        return
 
     print("\n[LLM-Pipeline (Sample + Group + Normalize)]")
     llm_ents, llm_time = run_llm(sample, seed, rejected_lc)
 
-    print("\n[GLiNER-Produktionspipeline (θ=0.7 + Embedding-Clustering + selekt. LLM)]")
+    print("\n[GLiNER-Produktionspipeline (θ=0.7 + Embedding-Clustering)]")
     t0          = time.perf_counter()
-    gliner_ents = extract_with_gliner(sample, rejected_lc, provider, seed=seed)
+    gliner_ents = extract_with_gliner(sample, rejected_lc, seed=seed)
     gliner_time = time.perf_counter() - t0
 
     _print_compare_report(llm_ents, llm_time, gliner_ents, gliner_time, sample)
