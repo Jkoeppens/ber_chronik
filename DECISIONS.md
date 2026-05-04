@@ -192,6 +192,28 @@ das größer ist wird vor dem LLM-Call in Pseudo-Segmente gesplittet.
 ohne diesen Parameter verwendet Ollama standardmäßig 2048 Token, was auch bei kurzen
 Texten zu Abschneiden führen kann.
 
+### D-E4 — GLiNER als Standard-NER-Backend
+`entity_gliner.py` ersetzt `entity_spacy.py` und die LLM-Extraktionsstufen 1+2.
+`NER_BACKEND` routet alle doc_types auf `"gliner"`.
+
+**Warum:**
+- 4× schneller als LLM-Vollpipeline (2s Extraktion lokal statt 75s API)
+- Multilingual — funktioniert für Deutsch, Türkisch, Arabisch, Englisch ohne Modellwechsel
+- Vergleichbare Qualität zur LLM-Pipeline auf Sample-Ebene (Benchmark 2026-05-04)
+- Score-Felder auf allen Entities (LLM hatte immer `score=null`)
+
+**Was bleibt LLM:**
+- `_llm_group()` (Stage 3): semantische Dedup + Alias-Zusammenführung — kein statistisches Modell kann das ersetzen
+- `_llm_task1_normalize()` (Stage 4): Normalform-Bereinigung, Groß-/Kleinschreibung, Typ-Validierung
+
+**Archiviert (nicht gelöscht):**
+- `_llm_sample_iteration()` / `_llm_full_extract()` in entity_llm.py: nur noch benchmark_ner.py
+- `entity_spacy.py`: explizit über `backend="spacy"` weiterhin nutzbar
+
+**Offene Frage:** Benchmark hat nur `mode=sample` verglichen (Stage 1+3+4 vs. GLiNER+3+4).
+Stage 2 (Full-Extract über alle Segmente mit Few-Shot) wurde noch nicht gegen GLiNER
+auf großen Dokumenten verglichen.
+
 ### D-E3 — videoRecording-Segmente überspringen
 Der spaCy-Pfad (`entity_spacy.py`) filtert Segmente mit `item_type == "videoRecording"`:
 Video-Transkripte sind oft mehrstündig (>80k Zeichen), enthalten viel Fülltext und

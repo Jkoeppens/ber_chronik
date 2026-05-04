@@ -149,7 +149,7 @@ def main() -> None:
         except (json.JSONDecodeError, OSError):
             pass
 
-    backend = NER_BACKEND.get(doc_type, "llm")
+    backend = NER_BACKEND.get(doc_type.lower(), "gliner")
     segments  = json.loads(segments_path.read_text(encoding="utf-8"))
     n_content = sum(1 for s in segments if s.get("type") == "content")
     print(f"Segmente: {len(segments)} gesamt, {n_content} content  |  "
@@ -157,7 +157,21 @@ def main() -> None:
 
     seed, rejected_lc = _load_seed_and_rejected(doc_dir, doc_type)
 
-    # ── spaCy-Backend ──────────────────────────────────────────────────────────
+    # ── GLiNER-Backend (Standard, D-E4) ───────────────────────────────────────
+    if backend == "gliner":
+        from src.generalized.entity_gliner import extract_with_gliner
+        provider = get_provider(task=TASK_EXTRACT)
+        merged   = extract_with_gliner(segments, rejected_lc, provider)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        print(f"\n→ {output_path}  ({len(merged)} Entities)")
+        _print_stats(merged)
+        _mirror_to_config(doc_dir, merged)
+        return
+
+    # ── spaCy-Backend (Legacy) ─────────────────────────────────────────────────
     if backend == "spacy":
         from src.generalized.entity_spacy import extract_with_spacy
         provider = get_provider(task=TASK_EXTRACT)

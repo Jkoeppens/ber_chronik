@@ -181,6 +181,8 @@ def _format_candidate_for_task1(cand: dict) -> str:
     return name
 
 
+# ARCHIVIERT — nur noch benchmark_ner.py
+# Produktiv ersetzt durch entity_gliner.py (Phase 1 = GLiNER-Erkennung).
 def _llm_sample_iteration(
     segments: list[dict],
     provider,
@@ -302,6 +304,8 @@ def _llm_task1_normalize(
     return accumulated
 
 
+# ARCHIVIERT — nur noch benchmark_ner.py
+# Produktiv ersetzt durch entity_gliner.py (Phase 1 = GLiNER-Erkennung).
 def _llm_full_extract(
     segments: list[dict],
     provider,

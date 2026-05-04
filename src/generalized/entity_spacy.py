@@ -1,6 +1,10 @@
 """
 entity_spacy.py — NER-Extraktion via spaCy für englischsprachige Segmente.
 
+LEGACY — ersetzt durch entity_gliner.py (D-E4).
+NER_BACKEND["presseartikel"] war früher "spacy", ist jetzt "gliner".
+Datei bleibt erhalten für Vergleich und expliziten Fallback (backend="spacy").
+
 Lädt en_core_web_trf wenn vorhanden, sonst en_core_web_sm als Fallback.
 Typ-Mapping: PERSON→Person, ORG→Organisation, GPE/LOC/FAC→Ort, sonst→Konzept.
 Am Ende: _merge() (programmatische Dedup) + _llm_group() (Schreibvarianten, Stufe 3).
