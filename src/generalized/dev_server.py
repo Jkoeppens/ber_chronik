@@ -776,19 +776,26 @@ async def get_near_duplicates(request: Request):
         embs  = np.array(embs, dtype=np.float32)
         sim   = embs @ embs.T
         LOW, HIGH = 0.80, 0.91
-        pairs = []
+        all_pairs = []
         for i in range(len(entities)):
             for j in range(i + 1, len(entities)):
                 s = float(sim[i, j])
                 if LOW <= s <= HIGH:
-                    pairs.append({
+                    all_pairs.append({
                         "i": i, "j": j, "sim": round(s, 3),
                         "norm_i": entities[i].get("normalform", ""),
                         "typ_i":  entities[i].get("typ", ""),
                         "norm_j": entities[j].get("normalform", ""),
                         "typ_j":  entities[j].get("typ", ""),
                     })
-        pairs.sort(key=lambda p: -p["sim"])
+        # Greedy: jede Entity erscheint in maximal einem Paar (höchste Similarity gewinnt)
+        used: set[int] = set()
+        pairs = []
+        for p in sorted(all_pairs, key=lambda x: -x["sim"]):
+            if p["i"] not in used and p["j"] not in used:
+                pairs.append(p)
+                used.add(p["i"])
+                used.add(p["j"])
         return JSONResponse(pairs)
     except ImportError:
         return JSONResponse({"error": "sentence-transformers nicht installiert"}, status_code=503)
