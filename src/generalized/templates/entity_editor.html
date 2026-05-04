@@ -420,27 +420,19 @@ function renderEntityTab() {
     const grid = sec.querySelector('.entity-grid');
     items.forEach(({ e, i }) => grid.appendChild(buildCard(e, i)));
   });
-  // Duplikat-Badges nachträglich injizieren
+  // Duplikat-Badges nachträglich injizieren — ein Badge pro Entity mit Anzahl
   const dupes = _computeDuplicates();
   dupes.forEach((hits, idx) => {
     const card = document.querySelector(`.entity-card[data-idx="${idx}"]`);
     if (!card) return;
-    hits.forEach(({otherIdx, reason}) => {
-      const otherNorm = esc(entities[otherIdx]?.normalform || '');
-      const badge = document.createElement('button');
-      badge.className = 'dupe-badge';
-      badge.title = reason;
-      badge.textContent = '⚠ Duplikat?';
-      badge.dataset.target = otherIdx;
-      badge.addEventListener('click', () => {
-        const target = document.querySelector(`.entity-card[data-idx="${otherIdx}"]`);
-        if (!target) return;
-        target.scrollIntoView({behavior: 'smooth', block: 'center'});
-        target.classList.add('dupe-highlight');
-        setTimeout(() => target.classList.remove('dupe-highlight'), 1800);
-      });
-      card.querySelector('.ec-body').appendChild(badge);
-    });
+    const label  = hits.length === 1 ? '⚠ Duplikat?' : `⚠ Duplikat (${hits.length})`;
+    const titles = hits.map(({reason}) => reason).join('\n');
+    const badge  = document.createElement('button');
+    badge.className   = 'dupe-badge';
+    badge.title       = titles;
+    badge.textContent = label;
+    badge.addEventListener('click', () => switchTab('dupes'));
+    card.querySelector('.ec-body').appendChild(badge);
   });
 }
 
