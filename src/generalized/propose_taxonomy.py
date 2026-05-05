@@ -71,22 +71,22 @@ Regeln:
 
 # ── KMeans-Pfad: Pro-Cluster-Prompt ───────────────────────────────────────────
 
-CLUSTER_SYSTEM = "Du bist ein Forschungsassistent der Texte analysiert."
+CLUSTER_SYSTEM = "Du analysierst Forschungsnotizen zur osmanischen Geschichte."
 
 CLUSTER_TEMPLATE = """\
-Lies diese Texte. Was ist ihr gemeinsames Thema?
-Antworte im Format:
+Lies diese 5 Texte und gib eine Kategorie an.
 
-## Kategoriename
-Beschreibung in einem Satz.
+Format (exakt so, keine Abweichungen):
+## [Kurzer Kategoriename, 2-4 Wörter]
+[Ein Satz der die Kategorie beschreibt, nicht die Texte]
 Keywords: keyword1, keyword2, keyword3
 
-Regeln:
-- Name in PascalCase, max. 2 Wörter
-- Genau 3 Keywords, kommasepariert
-- Auf Deutsch
-- Nur den Kategorieblock ausgeben, kein Kommentar
+Beispiel:
+## Arabischer Nationalismus
+Politische Bewegung für arabische Unabhängigkeit vom Osmanischen Reich.
+Keywords: arabismus, nationalismus, unabhängigkeit
 
+Texte:
 {texts}"""
 
 
