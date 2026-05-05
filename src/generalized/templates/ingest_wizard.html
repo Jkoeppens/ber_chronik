@@ -394,7 +394,8 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
     <p class="step-desc">Kategorien für die Klassifizierung bearbeiten.</p>
     <div id="tax-controls">
       <button class="btn" id="tax-btn-add">+ Kategorie</button>
-      <button class="btn btn-outline" id="tax-btn-propose">KI-Vorschlag generieren</button>
+      <button class="btn btn-outline" id="tax-btn-propose-kmeans">Schnell (KMeans)</button>
+      <button class="btn btn-outline" id="tax-btn-propose-llm">Ausführlich (LLM)</button>
       <button class="btn btn-success" id="tax-btn-save" disabled>Speichern</button>
       <button class="btn btn-outline" id="tax-btn-classify">Neu klassifizieren</button>
       <span id="tax-status">Lade…</span>
@@ -1365,13 +1366,22 @@ document.getElementById('tax-btn-classify').addEventListener('click', async () =
   btn.disabled = false; btn.textContent = 'Neu klassifizieren';
 });
 
-document.getElementById('tax-btn-propose').addEventListener('click', async () => {
-  const btn    = document.getElementById('tax-btn-propose');
-  const logEl  = document.getElementById('tax-log');
-  btn.disabled = true; btn.textContent = 'Läuft…';
+async function _runProposeTaxonomy(method) {
+  const btnKmeans  = document.getElementById('tax-btn-propose-kmeans');
+  const btnLlm     = document.getElementById('tax-btn-propose-llm');
+  const btn        = method === 'kmeans' ? btnKmeans : btnLlm;
+  const origText   = btn.textContent;
+  const logEl      = document.getElementById('tax-log');
+
+  btnKmeans.disabled = true; btnLlm.disabled = true;
+  btn.textContent = 'Läuft…';
   logEl.className = ''; logEl.textContent = ''; logEl.style.display = 'block';
 
-  const res    = await fetch('/ingest/propose_taxonomy' + _aq(), { method: 'POST', headers: authHeaders() });
+  const aq  = _aq();
+  const sep = aq ? '&' : '?';
+  const url = '/ingest/propose_taxonomy' + aq + sep + 'method=' + method;
+
+  const res    = await fetch(url, { method: 'POST', headers: authHeaders() });
   const reader = res.body.getReader(), decoder = new TextDecoder(); let buf = '';
   while (true) {
     const { done, value } = await reader.read(); if (done) break;
@@ -1380,14 +1390,26 @@ document.getElementById('tax-btn-propose').addEventListener('click', async () =>
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
       const msg = line.slice(6);
-      if (msg === '__done__') { await initTaxonomy(); markTaxDirty(); btn.disabled = false; btn.textContent = 'KI-Vorschlag generieren'; return; }
-      if (msg.startsWith('__error__')) { logEl.className = 'error'; logEl.textContent += '\\n' + msg.slice(9); btn.disabled = false; btn.textContent = 'KI-Vorschlag generieren'; return; }
-      logEl.textContent += (logEl.textContent ? '\\n' : '') + msg; logEl.scrollTop = logEl.scrollHeight;
+      if (msg === '__done__') {
+        await initTaxonomy(); markTaxDirty();
+        btnKmeans.disabled = false; btnLlm.disabled = false;
+        btn.textContent = origText; return;
+      }
+      if (msg.startsWith('__error__')) {
+        logEl.className = 'error'; logEl.textContent += '\n' + msg.slice(9);
+        btnKmeans.disabled = false; btnLlm.disabled = false;
+        btn.textContent = origText; return;
+      }
+      logEl.textContent += (logEl.textContent ? '\n' : '') + msg; logEl.scrollTop = logEl.scrollHeight;
     }
   }
-  // Stream ended without __done__ — reload taxonomy anyway
-  await initTaxonomy(); btn.disabled = false; btn.textContent = 'KI-Vorschlag generieren';
-});
+  await initTaxonomy();
+  btnKmeans.disabled = false; btnLlm.disabled = false;
+  btn.textContent = origText;
+}
+
+document.getElementById('tax-btn-propose-kmeans').addEventListener('click', () => _runProposeTaxonomy('kmeans'));
+document.getElementById('tax-btn-propose-llm').addEventListener('click',    () => _runProposeTaxonomy('llm'));
 
 // ── Bestehende Projekte ────────────────────────────────────────────────────────
 function _showInviteForm(listEl) {

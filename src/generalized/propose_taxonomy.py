@@ -1,16 +1,20 @@
 """
-propose_taxonomy.py — Taxonomie-Vorschlag via LLM
+propose_taxonomy.py — Taxonomie-Vorschlag via LLM oder KMeans+LLM
 
-3-stufige Architektur:
-  1. Keyword-Extraktion: Segmente in Batches à 4 → Keyword-Listen
-     (kurze, stabile Calls; kein Context-Window-Problem)
-  2. Kategorie-Destillation: alle Keywords in einem LLM-Call → 6-8 Kategorien
-     (explizite semantische Deduplizierung durch LLM)
-  3. Schreiben: Ergebnis in config.json["taxonomy"] (D-P1)
+Zwei Methoden (--method):
 
-Stufe 1 parallel (Anthropic) oder sequenziell (Ollama).
+  llm    (Standard) — 3-stufige LLM-Architektur:
+           1. Keyword-Extraktion: Segmente in Batches à 4
+           2. Kategorie-Destillation: ein LLM-Call über alle Keywords
+           3. Schreiben nach config.json["taxonomy"]
 
-LLM-Output-Format Stufe 2 (Plaintext, kein JSON):
+  kmeans — Embedding-Clustering + pro-Cluster-LLM:
+           1. Alle content-Segmente embedden (paraphrase-multilingual-MiniLM-L12-v2)
+           2. KMeans mit n_clusters (default 7)
+           3. Pro Cluster: Top-5 nächste Segmente → ein LLM-Call zur Benennung
+           4. Schreiben nach config.json["taxonomy"]
+
+LLM-Output-Format (beide Methoden):
 
   ## Kategoriename
   Beschreibung in einem Satz.
@@ -65,6 +69,26 @@ Regeln:
 - Ausschließlich auf Deutsch, keine englischen Begriffe
 - Nur die Kategorieblöcke ausgeben, kein Kommentar, kein JSON"""
 
+# ── KMeans-Pfad: Pro-Cluster-Prompt ───────────────────────────────────────────
+
+CLUSTER_SYSTEM = "Du bist ein Forschungsassistent der Texte analysiert."
+
+CLUSTER_TEMPLATE = """\
+Lies diese Texte. Was ist ihr gemeinsames Thema?
+Antworte im Format:
+
+## Kategoriename
+Beschreibung in einem Satz.
+Keywords: keyword1, keyword2, keyword3
+
+Regeln:
+- Name in PascalCase, max. 2 Wörter
+- Genau 3 Keywords, kommasepariert
+- Auf Deutsch
+- Nur den Kategorieblock ausgeben, kein Kommentar
+
+{texts}"""
+
 
 def clean_name(raw: str) -> str:
     """Entfernt Nummerierungspräfixe und Markdown-Sternchen aus Kategorienamen."""
@@ -112,6 +136,56 @@ def _parse_keywords(text: str) -> list[str]:
     return keywords
 
 
+# ── KMeans-Pfad ───────────────────────────────────────────────────────────────
+
+def _label_cluster(provider, texts: list[str], idx: int, total: int) -> dict | None:
+    """Benennt einen Cluster via LLM anhand seiner Top-Segmente."""
+    print(f"  Cluster {idx}/{total}: {len(texts)} Segmente → LLM…", flush=True)
+    numbered = "\n\n".join(f"Text {i+1}:\n{t}" for i, t in enumerate(texts))
+    raw = provider.complete(CLUSTER_TEMPLATE.format(texts=numbered), system=CLUSTER_SYSTEM)
+    cats = _parse_plaintext_taxonomy(raw or "")
+    if cats:
+        print(f"    → {cats[0]['name']}", flush=True)
+        return cats[0]
+    print(f"    → kein Ergebnis (LLM-Ausgabe nicht parsebar)", flush=True)
+    return None
+
+
+def _run_kmeans(pool: list[dict], provider, n_clusters: int) -> list[dict]:
+    import numpy as np
+    from sentence_transformers import SentenceTransformer
+    from sklearn.cluster import KMeans
+    from sklearn.preprocessing import normalize
+
+    texts = [s.get("text", "")[:MAX_SEG_CHARS] for s in pool]
+    print(f"KMeans: {len(texts)} Segmente, {n_clusters} Cluster", flush=True)
+
+    print("  Lade Embedding-Modell…", flush=True)
+    emb_model  = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+    embeddings = emb_model.encode(texts, show_progress_bar=False)
+    emb_norm   = normalize(embeddings)
+    print(f"  Embeddings: {emb_norm.shape}", flush=True)
+
+    print("  KMeans…", flush=True)
+    km     = KMeans(n_clusters=n_clusters, random_state=42, n_init="auto")
+    labels = km.fit_predict(emb_norm)
+
+    taxonomy: list[dict] = []
+    for cid in range(n_clusters):
+        indices = [i for i, lb in enumerate(labels) if lb == cid]
+        if not indices:
+            continue
+        cluster_embs = emb_norm[np.array(indices)]
+        centroid     = cluster_embs.mean(axis=0)
+        dists        = np.linalg.norm(cluster_embs - centroid, axis=1)
+        top5         = [indices[j] for j in dists.argsort()[:5]]
+        cat = _label_cluster(provider, [texts[i] for i in top5], cid + 1, n_clusters)
+        if cat:
+            taxonomy.append(cat)
+
+    return taxonomy
+
+
 # ── Stufe 1: Keyword-Extraktion ────────────────────────────────────────────────
 
 def _run_keyword_batch(provider, batch: list[dict], idx: int, total: int) -> list[str]:
@@ -136,9 +210,13 @@ async def _run_keyword_batch_async(provider, batch, idx, total, sem):
 # ── main ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Taxonomie-Vorschlag per LLM")
-    ap.add_argument("--project",  required=True)
-    ap.add_argument("--document", required=True)
+    ap = argparse.ArgumentParser(description="Taxonomie-Vorschlag per LLM oder KMeans+LLM")
+    ap.add_argument("--project",    required=True)
+    ap.add_argument("--document",   required=True)
+    ap.add_argument("--method",     choices=["llm", "kmeans"], default="llm",
+                    help="llm = bestehender 3-Stufen-Pfad (Standard); kmeans = Embedding-Clustering + pro-Cluster-LLM")
+    ap.add_argument("--n-clusters", type=int, default=7,
+                    help="Anzahl Cluster für --method kmeans (Standard: 7)")
     args = ap.parse_args()
 
     doc_dir     = PROJECTS_DIR / args.project / "documents" / args.document
@@ -160,66 +238,76 @@ def main() -> None:
         print("Keine geeigneten Segmente gefunden.", file=sys.stderr)
         sys.exit(1)
 
-    sample  = random.sample(pool, min(MAX_SEGMENTS, len(pool)))
-    batches = [sample[i:i + KW_BATCH_SIZE] for i in range(0, len(sample), KW_BATCH_SIZE)]
+    # ── KMeans-Pfad ───────────────────────────────────────────────────────────
+    if args.method == "kmeans":
+        print(f"Methode: KMeans  |  Modell: {provider.model}  |  Cluster: {args.n_clusters}")
+        taxonomy = _run_kmeans(pool, provider, args.n_clusters)
+        if not taxonomy:
+            print("KMeans ergab keine Kategorien.", file=sys.stderr)
+            sys.exit(1)
 
-    print(f"Modell: {provider.model}  |  "
-          f"Stufe 1: {len(batches)} Batches à {KW_BATCH_SIZE} Segmente ({len(sample)} gesamt)")
+    # ── LLM-Pfad (unverändert) ────────────────────────────────────────────────
+    else:
+        sample  = random.sample(pool, min(MAX_SEGMENTS, len(pool)))
+        batches = [sample[i:i + KW_BATCH_SIZE] for i in range(0, len(sample), KW_BATCH_SIZE)]
 
-    # ── Stufe 1: Keyword-Extraktion (parallel / sequenziell) ──────────────────
-    if provider.max_concurrency > 1:
-        sem = asyncio.Semaphore(provider.max_concurrency)
+        print(f"Modell: {provider.model}  |  "
+              f"Stufe 1: {len(batches)} Batches à {KW_BATCH_SIZE} Segmente ({len(sample)} gesamt)")
 
-        async def _run_all():
-            tasks = [
-                _run_keyword_batch_async(provider, b, i + 1, len(batches), sem)
+        # ── Stufe 1: Keyword-Extraktion (parallel / sequenziell) ──────────────
+        if provider.max_concurrency > 1:
+            sem = asyncio.Semaphore(provider.max_concurrency)
+
+            async def _run_all():
+                tasks = [
+                    _run_keyword_batch_async(provider, b, i + 1, len(batches), sem)
+                    for i, b in enumerate(batches)
+                ]
+                return await asyncio.gather(*tasks)
+
+            kw_lists = asyncio.run(_run_all())
+        else:
+            kw_lists = [
+                _run_keyword_batch(provider, b, i + 1, len(batches))
                 for i, b in enumerate(batches)
             ]
-            return await asyncio.gather(*tasks)
 
-        kw_lists = asyncio.run(_run_all())
-    else:
-        kw_lists = [
-            _run_keyword_batch(provider, b, i + 1, len(batches))
-            for i, b in enumerate(batches)
-        ]
+        all_keywords = [kw for kws in kw_lists for kw in kws]
+        if not all_keywords:
+            print("Stufe 1 ergab keine Keywords.", file=sys.stderr)
+            sys.exit(1)
 
-    all_keywords = [kw for kws in kw_lists for kw in kws]
-    if not all_keywords:
-        print("Stufe 1 ergab keine Keywords.", file=sys.stderr)
-        sys.exit(1)
+        # Exakte Deduplizierung (case-insensitiv) vor Stufe 2
+        seen: set[str] = set()
+        unique_keywords: list[str] = []
+        for kw in all_keywords:
+            if kw.lower() not in seen:
+                seen.add(kw.lower())
+                unique_keywords.append(kw)
 
-    # Exakte Deduplizierung (case-insensitiv) vor Stufe 2
-    seen: set[str] = set()
-    unique_keywords: list[str] = []
-    for kw in all_keywords:
-        if kw.lower() not in seen:
-            seen.add(kw.lower())
-            unique_keywords.append(kw)
+        print(f"\nStufe 1: {len(all_keywords)} Keywords → {len(unique_keywords)} eindeutig")
 
-    print(f"\nStufe 1: {len(all_keywords)} Keywords → {len(unique_keywords)} eindeutig")
+        # ── Stufe 2: Kategorie-Destillation (ein LLM-Call) ────────────────────
+        print("Stufe 2: Kategorie-Destillation …", flush=True)
+        kw_text    = "\n".join(f"- {kw}" for kw in unique_keywords)
+        cat_prompt = CAT_TEMPLATE.format(keywords=kw_text)
 
-    # ── Stufe 2: Kategorie-Destillation (ein LLM-Call) ────────────────────────
-    print("Stufe 2: Kategorie-Destillation …", flush=True)
-    kw_text    = "\n".join(f"- {kw}" for kw in unique_keywords)
-    cat_prompt = CAT_TEMPLATE.format(keywords=kw_text)
+        taxonomy: list[dict] = []
+        for attempt in range(2):
+            cat_text = provider.complete(cat_prompt, system=CAT_SYSTEM)
+            taxonomy = _parse_plaintext_taxonomy(cat_text or "")
+            if len(taxonomy) >= 4:
+                break
+            if attempt == 0:
+                print(f"  Nur {len(taxonomy)} Kategorie(n) — Retry…", flush=True)
 
-    taxonomy: list[dict] = []
-    for attempt in range(2):
-        cat_text = provider.complete(cat_prompt, system=CAT_SYSTEM)
-        taxonomy = _parse_plaintext_taxonomy(cat_text or "")
-        if len(taxonomy) >= 4:
-            break
-        if attempt == 0:
-            print(f"  Nur {len(taxonomy)} Kategorie(n) — Retry…", flush=True)
+        if not taxonomy:
+            print("Stufe 2 ergab keine Kategorien.", file=sys.stderr)
+            sys.exit(1)
 
-    if not taxonomy:
-        print("Stufe 2 ergab keine Kategorien.", file=sys.stderr)
-        sys.exit(1)
+        print(f"Stufe 2: {len(taxonomy)} Kategorien")
 
-    print(f"Stufe 2: {len(taxonomy)} Kategorien")
-
-    # ── Stufe 3: config.json schreiben (D-P1) ─────────────────────────────────
+    # ── config.json schreiben (D-P1) — beide Pfade ───────────────────────────
     config_path.parent.mkdir(parents=True, exist_ok=True)
     cfg = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
     cfg["taxonomy"] = taxonomy

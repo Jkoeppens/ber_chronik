@@ -483,13 +483,19 @@ async def ingest_analyze(request: Request):
 
 @app.post("/ingest/propose_taxonomy")
 async def ingest_propose_taxonomy(request: Request):
-    project = request.query_params.get("project")
-    doc_id  = request.query_params.get("document")
+    project    = request.query_params.get("project")
+    doc_id     = request.query_params.get("document")
+    method     = request.query_params.get("method", "llm")
+    n_clusters = request.query_params.get("n_clusters", "7")
     if not project or not doc_id:
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
+    if method not in ("llm", "kmeans"):
+        return JSONResponse({"error": "method muss 'llm' oder 'kmeans' sein"}, status_code=400)
     if err := await _require_token(request, project): return err
     async def gen():
-        args = ["--project", project, "--document", doc_id]
+        args = ["--project", project, "--document", doc_id, "--method", method]
+        if method == "kmeans":
+            args += ["--n-clusters", n_clusters]
         async for chunk in run_script_sse(PROPOSE_SCRIPT, args):
             if chunk == "data: __ok__\n\n":
                 break
