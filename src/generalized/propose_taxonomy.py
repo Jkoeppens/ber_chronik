@@ -69,25 +69,23 @@ Regeln:
 - Ausschließlich auf Deutsch, keine englischen Begriffe
 - Nur die Kategorieblöcke ausgeben, kein Kommentar, kein JSON"""
 
-# ── KMeans-Pfad: Pro-Cluster-Prompt ───────────────────────────────────────────
+# ── KMeans-Pfad: Alle-Cluster-Prompt ─────────────────────────────────────────
+
+KMEANS_SEG_CHARS = 500   # kürzer als LLM-Pfad; Prompt fasst alle Cluster
 
 CLUSTER_SYSTEM = "Du analysierst Forschungsnotizen zur osmanischen Geschichte."
 
-CLUSTER_TEMPLATE = """\
-Lies diese 5 Texte und gib eine Kategorie an.
+ALL_CLUSTERS_HEADER = """\
+Hier sind {n} Gruppen von Texten. Benenne jede Gruppe mit einer distincten \
+Kategorie die sie von den anderen abgrenzt.
 
-Format (exakt so, keine Abweichungen):
-## [Kurzer Kategoriename, 2-4 Wörter]
-[Ein Satz der die Kategorie beschreibt, nicht die Texte]
+{groups}
+Antworte für jede Gruppe:
+## Gruppe 1: [Kurzer Name, 2-4 Wörter]
+[Ein Satz der diese Gruppe von den anderen abgrenzt]
 Keywords: keyword1, keyword2, keyword3
 
-Beispiel:
-## Arabischer Nationalismus
-Politische Bewegung für arabische Unabhängigkeit vom Osmanischen Reich.
-Keywords: arabismus, nationalismus, unabhängigkeit
-
-Texte:
-{texts}"""
+## Gruppe 2: ..."""
 
 
 def clean_name(raw: str) -> str:
@@ -138,17 +136,27 @@ def _parse_keywords(text: str) -> list[str]:
 
 # ── KMeans-Pfad ───────────────────────────────────────────────────────────────
 
-def _label_cluster(provider, texts: list[str], idx: int, total: int) -> dict | None:
-    """Benennt einen Cluster via LLM anhand seiner Top-Segmente."""
-    print(f"  Cluster {idx}/{total}: {len(texts)} Segmente → LLM…", flush=True)
-    numbered = "\n\n".join(f"Text {i+1}:\n{t}" for i, t in enumerate(texts))
-    raw = provider.complete(CLUSTER_TEMPLATE.format(texts=numbered), system=CLUSTER_SYSTEM)
-    cats = _parse_plaintext_taxonomy(raw or "")
-    if cats:
-        print(f"    → {cats[0]['name']}", flush=True)
-        return cats[0]
-    print(f"    → kein Ergebnis (LLM-Ausgabe nicht parsebar)", flush=True)
-    return None
+def _label_all_clusters(provider, cluster_texts: list[list[str]]) -> list[dict]:
+    """Benennt alle Cluster in einem einzigen LLM-Call."""
+    n = len(cluster_texts)
+    groups = []
+    for i, texts in enumerate(cluster_texts, 1):
+        body = "\n\n".join(f"Text {j+1}:\n{t}" for j, t in enumerate(texts))
+        groups.append(f"=== Gruppe {i} ===\n{body}")
+    prompt = ALL_CLUSTERS_HEADER.format(n=n, groups="\n\n".join(groups) + "\n\n")
+
+    print(f"  {n} Cluster → ein LLM-Call…", flush=True)
+    raw  = provider.complete(prompt, system=CLUSTER_SYSTEM) or ""
+    cats = _parse_plaintext_taxonomy(raw)
+
+    # Strip "Gruppe N: " prefix that the LLM echoes back in the name
+    for cat in cats:
+        cat["name"] = re.sub(r"^Gruppe\s+\d+:\s*", "", cat["name"]).strip()
+
+    print(f"  → {len(cats)}/{n} Kategorien geparst", flush=True)
+    for cat in cats:
+        print(f"    {cat['name']}", flush=True)
+    return cats
 
 
 def _run_kmeans(pool: list[dict], provider, n_clusters: int) -> list[dict]:
@@ -157,7 +165,7 @@ def _run_kmeans(pool: list[dict], provider, n_clusters: int) -> list[dict]:
     from sklearn.cluster import KMeans
     from sklearn.preprocessing import normalize
 
-    texts = [s.get("text", "")[:MAX_SEG_CHARS] for s in pool]
+    texts = [s.get("text", "")[:KMEANS_SEG_CHARS] for s in pool]
     print(f"KMeans: {len(texts)} Segmente, {n_clusters} Cluster", flush=True)
 
     print("  Lade Embedding-Modell…", flush=True)
@@ -170,19 +178,22 @@ def _run_kmeans(pool: list[dict], provider, n_clusters: int) -> list[dict]:
     km     = KMeans(n_clusters=n_clusters, random_state=42, n_init="auto")
     labels = km.fit_predict(emb_norm)
 
-    taxonomy: list[dict] = []
+    # Top-5 Segmente pro Cluster (nächste zum Centroid)
+    cluster_texts: list[list[str]] = []
     for cid in range(n_clusters):
-        indices = [i for i, lb in enumerate(labels) if lb == cid]
+        indices      = [i for i, lb in enumerate(labels) if lb == cid]
         if not indices:
+            cluster_texts.append([])
             continue
         cluster_embs = emb_norm[np.array(indices)]
         centroid     = cluster_embs.mean(axis=0)
         dists        = np.linalg.norm(cluster_embs - centroid, axis=1)
         top5         = [indices[j] for j in dists.argsort()[:5]]
-        cat = _label_cluster(provider, [texts[i] for i in top5], cid + 1, n_clusters)
-        if cat:
-            taxonomy.append(cat)
+        cluster_texts.append([texts[i] for i in top5])
 
+    # Leere Cluster rausfiltern, aber Index merken für Zuordnung
+    non_empty = [(cid, ct) for cid, ct in enumerate(cluster_texts) if ct]
+    taxonomy  = _label_all_clusters(provider, [ct for _, ct in non_empty])
     return taxonomy
 
 
