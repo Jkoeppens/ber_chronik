@@ -15,6 +15,7 @@ function pairKey(a, b) {
   return [sid, tid].sort().join("\x00");
 }
 
+let _lastVisibleIds = new Set();  // updated by drawNetwork; read by applyNetworkState
 // Fetch precomputed layout eagerly so it's ready before first tab-open
 let _networkLayout = null;
 fetch(`${DATA_BASE}network_layout.json`).then(r => r.json()).then(l => { _networkLayout = l; }).catch(() => {});
@@ -224,7 +225,7 @@ function drawNetwork(nodes, links) {
     .alpha(0).stop();
 
   // Track visible set across calls so recomputeGraph can detect new/removed nodes
-  let _lastVisibleIds = new Set(connectedNodes.map(d => d.id));
+  _lastVisibleIds = new Set(connectedNodes.map(d => d.id));
   let _tempPinned     = [];  // nodes temporarily fixed during a transition
 
   // ── Parallel edge offsets ────────────────────────────────────────────────────
