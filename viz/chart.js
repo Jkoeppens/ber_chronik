@@ -123,7 +123,7 @@ function drawChart(series, binDates) {
     clipG.selectAll(null)
       .data(s.values.filter(v => v.count > 0))
       .join("circle")
-      .attr("class", `dot dot-${s.et.replace(/\s/g, '-')}` + (dimmedTypes.has(s.et) ? " dimmed" : ""))
+      .attr("class", `dot dot-${s.et.replace(/[^a-zA-Z0-9-_]/g, '_')}` + (dimmedTypes.has(s.et) ? " dimmed" : ""))
       .attr("cx", v => x(v.year)).attr("cy", v => y(v.count))
       .attr("r", 4)
       .attr("fill", COLOR[s.et]).attr("stroke", "#fff").attr("stroke-width", 1.5)
@@ -297,7 +297,7 @@ function _applyChartEntityHighlight() {
   if (focusEntity) {
     _chartG.selectAll(".dot").style("opacity", 0.2).style("fill", "#cccccc");
     relevantTypes.forEach(et => {
-      _chartG.selectAll(`.dot-${et.replace(/\s/g, '-')}`).style("opacity", null).style("fill", null);
+      _chartG.selectAll(`.dot-${et.replace(/[^a-zA-Z0-9-_]/g, '_')}`).style("opacity", null).style("fill", null);
     });
   } else {
     _chartG.selectAll(".dot").style("opacity", null).style("fill", null);

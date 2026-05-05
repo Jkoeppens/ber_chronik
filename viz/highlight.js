@@ -86,29 +86,8 @@ function highlightEntities(text) {
   return highlightWithKeywords(text, []);
 }
 
-// ── Highlight state ───────────────────────────────────────────────────────────
-let selectedEntity   = null;
-let netNodeSelection = null;
-let netNeighbors     = null;   // Map<id, Set<id>> built in drawNetwork
-let actorsByAnchor   = new Map();  // doc_anchor → Set<actor_name>; filled in boot
-
-const DIM = 0.35;  // opacity for "rest" nodes when something is highlighted
-
-// Three explicit modes, driven by a single central setter (setHighlight):
-//
-//   "none"   – all dots at rest; no dimming
-//   "answer" – dots whose anchor is in `anchors` are highlighted, rest dimmed;
-//              used for KI answers, entity selections, and edge-pair clicks
-//   "single" – one dot (active) is extra-prominent (large, gold stroke);
-//              other source dots are normal-highlighted; rest dimmed;
-//              used when the user clicks a single paragraph card or src-ref
-//
-// `focusEntity` (optional) further highlights one actor across all views:
-//   timeline: dots for that entity's articles get gold stroke
-//   network:  the entity node gets enlarged + gold stroke
-//   panel:    the entity's name spans in paragraph text use .entity-focus class
-let chartDotSelection = null;  // D3 selection of all .dot circles; refreshed after each drawChart
-let hlState = { mode: "none", anchors: null, active: null, focusEntity: null };
+// (selectedEntity, netNodeSelection, netNeighbors, actorsByAnchor, DIM,
+//  chartDotSelection, hlState, setHighlight — defined in highlight-state.js)
 
 function setHighlight(mode, anchors = null, active = null, focusEntity = null) {
   hlState = { mode, anchors, active, focusEntity };
