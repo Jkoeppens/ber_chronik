@@ -85,10 +85,13 @@ Jede Gruppe muss sich klar von den anderen unterscheiden.
 
 Antworte für jede Gruppe im Format (kein weiterer Text):
 
-## Gruppe 1: [2-4 Wörter Titel]
+## Gruppe 1
+[2-4 Wörter Titel]
 [2-3 Sätze Beschreibung die die Keywords einschließt]
 
-## Gruppe 2: ...
+## Gruppe 2
+[Titel]
+[Beschreibung]
 """
 
 # ── Datenladen ────────────────────────────────────────────────────────────────
@@ -266,18 +269,31 @@ def _build_prompt(
     )
 
 
-def _parse_llm_response(raw: str, n_clusters: int = N_CLUSTERS) -> list[tuple[str, str]]:
-    """Parst '## Gruppe N: Titel\\nBeschreibung' → [(title, body), ...]."""
-    results = [("", f"Gruppe {i+1}") for i in range(n_clusters)]
-    pattern = re.compile(r"^##\s*Gruppe\s+(\d+)\s*[:\-–—]?\s*(.+?)$", re.MULTILINE)
-    matches = list(pattern.finditer(raw))
-    for k, m in enumerate(matches):
-        idx   = int(m.group(1)) - 1
-        title = m.group(2).strip()
-        end   = matches[k + 1].start() if k + 1 < len(matches) else len(raw)
-        body  = raw[m.end():end].strip().replace("\n", " ")
-        if 0 <= idx < n_clusters:
+def _parse_llm_response(
+    raw: str, n_clusters: int = N_CLUSTERS
+) -> list[tuple[str, str] | None]:
+    """Parst '## Gruppe N\\nTitel\\nBeschreibung' → [(title, body), ...] oder None.
+
+    Fehlende Gruppen → None (vorheriges Label wird in _run_tfidf_anchor beibehalten).
+    Robust gegen Leerzeilen zwischen Titel und Text sowie Trailing Whitespace.
+    """
+    results: list[tuple[str, str] | None] = [None] * n_clusters
+    # Split on '## Gruppe N' header lines (number only, no title on same line)
+    parts = re.split(r"^##\s*Gruppe\s+(\d+)\s*$", raw, flags=re.MULTILINE)
+    # parts = [preamble, "1", "block1", "2", "block2", ...]
+    i = 1
+    while i + 1 < len(parts):
+        try:
+            idx = int(parts[i]) - 1
+        except ValueError:
+            i += 2
+            continue
+        lines = [ln.strip() for ln in parts[i + 1].splitlines() if ln.strip()]
+        if lines and 0 <= idx < n_clusters:
+            title = lines[0]
+            body  = " ".join(lines[1:])
             results[idx] = (title, body)
+        i += 2
     return results
 
 
@@ -392,19 +408,38 @@ def _run_tfidf_anchor(
         total_in  += in_tok
         total_out += out_tok
 
-        new_summaries  = [f"{t}. {b}" if b else t for t, b in parsed]
-        all_new_embs   = _embed_texts(bge, new_summaries)
+        # Build summaries; None entries keep old summary as placeholder (not embedded)
+        new_summaries = [
+            (f"{t}. {b}" if b else t) if entry is not None else summaries[cid]
+            for cid, entry in enumerate(parsed)
+        ]
 
         already_frozen = set(frozen)   # snapshot before this iteration's updates
+
+        # Embed only active clusters with a valid LLM response
+        embed_cids = [cid for cid in range(n_clusters)
+                      if cid not in already_frozen and parsed[cid] is not None]
+        if embed_cids:
+            _emb_results = _embed_texts(bge, [new_summaries[cid] for cid in embed_cids])
+            emb_map: dict[int, np.ndarray] = dict(zip(embed_cids, _emb_results))
+        else:
+            emb_map = {}
+
         newly_frozen: list[int] = []
         stab_info: list[dict]  = []
 
         for cid in range(n_clusters):
             if cid in already_frozen:
-                stab_info.append({"cid": cid, "sim": None, "delta": None, "new_freeze": False})
+                stab_info.append({"cid": cid, "sim": None, "delta": None,
+                                  "new_freeze": False, "skipped": False})
+                continue
+            if cid not in emb_map:
+                # LLM returned no label for this cluster — keep previous, no sim update
+                stab_info.append({"cid": cid, "sim": None, "delta": None,
+                                  "new_freeze": False, "skipped": True})
                 continue
 
-            new_emb = all_new_embs[cid]
+            new_emb = emb_map[cid]
             sim     = float(label_embs[cid] @ new_emb)
             sim_history[cid].append(sim)
             delta: float | None = (
@@ -414,7 +449,7 @@ def _run_tfidf_anchor(
 
             # Apply LLM output (last computed label becomes the frozen label if freeze fires)
             label_embs[cid] = new_emb
-            prev_descs[cid] = parsed[cid][1] if parsed[cid][1] else parsed[cid][0]
+            prev_descs[cid] = parsed[cid][1] if parsed[cid][1] else parsed[cid][0]  # type: ignore[index]
             summaries[cid]  = new_summaries[cid]
 
             new_freeze = (delta is not None and delta < early_stop_delta)
@@ -422,7 +457,8 @@ def _run_tfidf_anchor(
                 frozen.add(cid)
                 newly_frozen.append(cid)
 
-            stab_info.append({"cid": cid, "sim": sim, "delta": delta, "new_freeze": new_freeze})
+            stab_info.append({"cid": cid, "sim": sim, "delta": delta,
+                              "new_freeze": new_freeze, "skipped": False})
 
         new_labels = (seg_embs @ label_embs.T).argmax(axis=1)
         changed    = int((new_labels != labels).sum())
@@ -452,7 +488,8 @@ def _run_tfidf_anchor(
         for info in stab_info:
             cid = info["cid"]
             if info["sim"] is None:
-                print(f"  C{cid+1}: ❄  (bereits eingefroren)", flush=True)
+                label = "fehlend — übersprungen" if info.get("skipped") else "❄  (bereits eingefroren)"
+                print(f"  C{cid+1}: {label}", flush=True)
             else:
                 sim_str   = f"sim={info['sim']:.4f}"
                 delta_str = (f"  Δ={info['delta']:+.4f}" if info["delta"] is not None
@@ -460,15 +497,24 @@ def _run_tfidf_anchor(
                 freeze_str = "  → ❄ EINGEFROREN" if info["new_freeze"] else ""
                 print(f"  C{cid+1}: {sim_str}{delta_str}{freeze_str}", flush=True)
 
-        for cid, (title, body) in enumerate(parsed):
+        for cid in range(n_clusters):
+            entry = parsed[cid]
+            if entry is not None:
+                title, body = entry
+            else:
+                title = summaries[cid]   # fall back to previous label
+                body  = ""
             if cid in already_frozen:
                 tag = "  [❄]"
+            elif cid not in emb_map:
+                tag = "  [fehlend — altes Label beibehalten]"
             elif cid in newly_frozen:
                 tag = "  [❄ jetzt eingefroren]"
             else:
                 tag = ""
             print(f"\nC{cid+1}: {title}{tag}", flush=True)
-            print(f'  "{body}"', flush=True)
+            if body:
+                print(f'  "{body}"', flush=True)
 
         logs.append({
             "km_iter":      km_iter,
