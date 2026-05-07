@@ -58,6 +58,8 @@ _ANTHROPIC_PRICES = {
     "claude-opus-4-7":           (15.00, 75.00),
 }
 
+EARLY_STOP_DELTA = 0.01   # Cluster einfrieren wenn sim-Verbesserung < 1%
+
 _SYSTEM = (
     "Du analysierst Gruppen von Texten über den Berliner Flughafen BER. "
     "Schreibe präzise, kontrastierende Beschreibungen — kein allgemeines Intro, keine Floskeln."
@@ -315,18 +317,19 @@ def _run_tfidf_anchor(
     n_iter: int = N_ITER,
     m: int = N_SEGMENTS_PER_CLUSTER,
     km_interval: int = KM_INTERVAL,
+    early_stop_delta: float = EARLY_STOP_DELTA,
 ) -> dict:
-    """S6-tfidf-anchor — rolling context + TF-IDF-Keywords pro Iteration.
+    """S6-tfidf-anchor — rolling context + TF-IDF-Keywords + per-Cluster Early Stopping.
 
-    Ablauf:
-    1. Initiale KMeans-Cluster
-    2. Pro LLM-Runde (alle km_interval Schritte):
-       a. Segmente neu zuordnen
-       b. TF-IDF-Keywords aus aktueller Cluster-Zusammensetzung berechnen
-       c. Kontrastiver LLM-Call mit Keywords + vorheriger Beschreibung + neuen Segmenten
-       d. Label-Embeddings aus LLM-Output → nächste Reassignment-Runde
-    Rolling context (vorherige Beschreibungen) erzeugt Trägheit trotz sich
-    ändernder Keywords — der Test ist ob Keywords driften und Labels stabil bleiben.
+    Pro Iteration:
+      1. Segmente neu zuordnen
+      2. TF-IDF-Keywords aus aktueller Cluster-Zusammensetzung berechnen
+      3. Kontrastiver LLM-Call (alle Cluster, auch eingefrorene, für Kontrast)
+      4. Pro Cluster: sim(neu, alt) berechnen; delta = sim_neu - sim_vorherig
+         → wenn delta < early_stop_delta: Cluster einfrieren (letztes Label beibehalten)
+      5. Wenn alle Cluster eingefroren: Early Stopping
+
+    N_ITER bleibt als harter Sicherheitsstopp.
     """
     from sklearn.cluster import KMeans
 
@@ -337,12 +340,13 @@ def _run_tfidf_anchor(
     labels     = KMeans(n_clusters=n_clusters, random_state=42, n_init="auto").fit_predict(seg_embs)
     label_embs = _compute_centroids(seg_embs, labels)
 
-    prev_descs: list[str | None]        = [None] * n_clusters
-    summaries: list[str]                = [f"Cluster {i+1}" for i in range(n_clusters)]
-    prev_label_embs: np.ndarray | None  = None
-    prev_kw_map: dict[int, list[str]] | None = None
-    prev_llm_iter: int | None           = None
-    kw_map: dict[int, list[str]]        = {}
+    prev_descs: list[str | None]              = [None] * n_clusters
+    summaries: list[str]                      = [f"Cluster {i+1}" for i in range(n_clusters)]
+    prev_kw_map: dict[int, list[str]] | None  = None
+    prev_llm_iter: int | None                 = None
+    kw_map: dict[int, list[str]]              = {}
+    frozen: set[int]                          = set()
+    sim_history: dict[int, list[float]]       = {cid: [] for cid in range(n_clusters)}
     llm_calls = 0
     total_in  = 0
     total_out = 0
@@ -355,7 +359,6 @@ def _run_tfidf_anchor(
             labels = (seg_embs @ label_embs.T).argmax(axis=1)
             continue
 
-        # Keywords aus aktueller Cluster-Zusammensetzung
         kw_map = _compute_tfidf_keywords(texts, labels, n_clusters=n_clusters)
 
         prompt = _build_prompt(
@@ -370,20 +373,36 @@ def _run_tfidf_anchor(
         total_out += out_tok
 
         new_summaries  = [f"{t}. {b}" if b else t for t, b in parsed]
-        new_label_embs = _embed_texts(bge, new_summaries)
+        all_new_embs   = _embed_texts(bge, new_summaries)
 
-        if prev_label_embs is not None:
-            stabs           = np.array([float(prev_label_embs[i] @ new_label_embs[i])
-                                        for i in range(n_clusters)])
-            label_stability: float | None = float(stabs.mean())
-        else:
-            stabs           = np.ones(n_clusters)
-            label_stability = None
+        already_frozen = set(frozen)   # snapshot before this iteration's updates
+        newly_frozen: list[int] = []
+        stab_info: list[dict]  = []
 
-        prev_label_embs = new_label_embs
-        label_embs      = new_label_embs
-        prev_descs      = [b if b else t for t, b in parsed]
-        summaries       = new_summaries
+        for cid in range(n_clusters):
+            if cid in already_frozen:
+                stab_info.append({"cid": cid, "sim": None, "delta": None, "new_freeze": False})
+                continue
+
+            new_emb = all_new_embs[cid]
+            sim     = float(label_embs[cid] @ new_emb)
+            sim_history[cid].append(sim)
+            delta: float | None = (
+                sim_history[cid][-1] - sim_history[cid][-2]
+                if len(sim_history[cid]) >= 2 else None
+            )
+
+            # Apply LLM output (last computed label becomes the frozen label if freeze fires)
+            label_embs[cid] = new_emb
+            prev_descs[cid] = parsed[cid][1] if parsed[cid][1] else parsed[cid][0]
+            summaries[cid]  = new_summaries[cid]
+
+            new_freeze = (delta is not None and delta < early_stop_delta)
+            if new_freeze:
+                frozen.add(cid)
+                newly_frozen.append(cid)
+
+            stab_info.append({"cid": cid, "sim": sim, "delta": delta, "new_freeze": new_freeze})
 
         new_labels = (seg_embs @ label_embs.T).argmax(axis=1)
         changed    = int((new_labels != labels).sum())
@@ -391,42 +410,63 @@ def _run_tfidf_anchor(
         labels     = new_labels
 
         dist_str = "  ".join(f"C{i+1}={int((labels==i).sum())}" for i in range(n_clusters))
+        n_frozen  = len(frozen)
+        n_active  = n_clusters - n_frozen
 
+        # ── Ausgabe ───────────────────────────────────────────────────────────
         W = 72
         print(f"\n{'═'*W}", flush=True)
-        print(f"  ═══ {km_iter // km_interval}/{n_iter} | Iter {km_iter} ═══", flush=True)
-        stab_str = f"  Stab. Ø={label_stability:.4f}  |  " if label_stability is not None else "  "
-        print(f"  Wechsel={change_pct*100:.1f}%  |{stab_str}{dist_str}", flush=True)
+        print(f"  ═══ {km_iter // km_interval}/{n_iter} | Iter {km_iter}  "
+              f"│  Aktiv: {n_active}/{n_clusters}  Eingefroren: {n_frozen}/{n_clusters} ═══",
+              flush=True)
+        print(f"  Wechsel={change_pct*100:.1f}%  │  {dist_str}", flush=True)
         print(f"{'═'*W}", flush=True)
 
-        # Keywords mit Diff zur Voriteraion
         print(f"\n  Keywords (Iter {km_iter}):", flush=True)
         for cid in range(n_clusters):
             kws      = kw_map.get(cid, [])
             diff_str = _keyword_diff(prev_kw_map.get(cid, []), kws) if prev_kw_map else ""
             print(f"  C{cid+1}: {', '.join(kws)}{diff_str}", flush=True)
 
-        # LLM-Labels mit Ähnlichkeits-Tag
+        print(f"\n  Label-Stabilität:", flush=True)
+        for info in stab_info:
+            cid = info["cid"]
+            if info["sim"] is None:
+                print(f"  C{cid+1}: ❄  (bereits eingefroren)", flush=True)
+            else:
+                sim_str   = f"sim={info['sim']:.4f}"
+                delta_str = (f"  Δ={info['delta']:+.4f}" if info["delta"] is not None
+                             else "  (erste Messung)")
+                freeze_str = "  → ❄ EINGEFROREN" if info["new_freeze"] else ""
+                print(f"  C{cid+1}: {sim_str}{delta_str}{freeze_str}", flush=True)
+
         for cid, (title, body) in enumerate(parsed):
-            sim_tag = (
-                f"  [Sim={stabs[cid]:.4f}]"
-                if prev_llm_iter is not None and label_stability is not None
-                else ""
-            )
-            print(f"\nC{cid+1}: {title}{sim_tag}", flush=True)
+            if cid in already_frozen:
+                tag = "  [❄]"
+            elif cid in newly_frozen:
+                tag = "  [❄ jetzt eingefroren]"
+            else:
+                tag = ""
+            print(f"\nC{cid+1}: {title}{tag}", flush=True)
             print(f'  "{body}"', flush=True)
 
         logs.append({
-            "km_iter":         km_iter,
-            "summaries":       new_summaries[:],
-            "parsed":          parsed[:],
-            "kw_map":          {k: v[:] for k, v in kw_map.items()},
-            "label_stability": label_stability,
-            "stabs_per_cid":   stabs.tolist(),
-            "change_pct":      change_pct,
+            "km_iter":      km_iter,
+            "summaries":    summaries[:],
+            "parsed":       parsed[:],
+            "kw_map":       {k: v[:] for k, v in kw_map.items()},
+            "stab_info":    stab_info,
+            "newly_frozen": newly_frozen[:],
+            "n_frozen":     n_frozen,
+            "change_pct":   change_pct,
         })
         prev_kw_map   = kw_map
         prev_llm_iter = km_iter
+
+        if len(frozen) == n_clusters:
+            print(f"\n  Alle {n_clusters} Cluster eingefroren — Early Stopping nach Iter {km_iter}.",
+                  flush=True)
+            break
 
     model       = provider.model
     p_in, p_out = _ANTHROPIC_PRICES.get(model, (3.00, 15.00))
@@ -434,18 +474,19 @@ def _run_tfidf_anchor(
 
     centroids = _compute_centroids(seg_embs, labels)
     return {
-        "labels":          labels,
-        "label_embs":      label_embs,
-        "centroids":       centroids,
-        "summaries":       summaries,
-        "kw_map":          kw_map,
-        "iteration_logs":  logs,
-        "llm_calls":       llm_calls,
-        "in_tokens":       total_in,
-        "out_tokens":      total_out,
-        "cost_usd":        cost_usd,
-        "elapsed":         time.perf_counter() - t0,
-        "model":           model,
+        "labels":         labels,
+        "label_embs":     label_embs,
+        "centroids":      centroids,
+        "summaries":      summaries,
+        "kw_map":         kw_map,
+        "frozen":         sorted(frozen),
+        "iteration_logs": logs,
+        "llm_calls":      llm_calls,
+        "in_tokens":      total_in,
+        "out_tokens":     total_out,
+        "cost_usd":       cost_usd,
+        "elapsed":        time.perf_counter() - t0,
+        "model":          model,
     }
 
 
@@ -535,13 +576,29 @@ def _print_final_table(result: dict) -> None:
             print(f"    {body}")
         print(f"    TF-IDF: {kws}\n")
 
+    frozen_list = result.get("frozen", [])
     print(f"  {'─'*80}")
+    if frozen_list:
+        print(f"  Eingefrorene Cluster: {', '.join(f'C{c+1}' for c in frozen_list)}")
     print(f"  Label-Stabilität per Iteration:")
     for log in result.get("iteration_logs", []):
-        stab = log["label_stability"]
-        stab_str = f"{stab:.4f}" if stab is not None else "    —"
-        print(f"    Iter {log['km_iter']:2d}: Stab={stab_str}  "
-              f"Wechsel={log['change_pct']*100:.1f}%")
+        active_sims = [
+            info["sim"] for info in log.get("stab_info", [])
+            if info["sim"] is not None
+        ]
+        avg_str = f"{sum(active_sims)/len(active_sims):.4f}" if active_sims else "    —"
+        nf      = log.get("n_frozen", 0)
+        nf_str  = f"  Eingefroren={nf}/{n}" if nf > 0 else ""
+        print(f"    Iter {log['km_iter']:2d}: Stab.Ø={avg_str}  "
+              f"Wechsel={log['change_pct']*100:.1f}%{nf_str}")
+        for info in log.get("stab_info", []):
+            cid = info["cid"]
+            if info["sim"] is None:
+                print(f"      C{cid+1}: ❄")
+            else:
+                d_str = f"  Δ={info['delta']:+.4f}" if info["delta"] is not None else "  (erste Messung)"
+                f_str = "  → ❄" if info["new_freeze"] else ""
+                print(f"      C{cid+1}: sim={info['sim']:.4f}{d_str}{f_str}")
 
 
 # ── Einstiegspunkt ────────────────────────────────────────────────────────────
