@@ -48,6 +48,13 @@ _STOPWORDS = {
     "beim", "am", "zum", "zur", "januar", "februar", "märz", "april",
     "mai", "juni", "juli", "august", "september", "oktober", "november", "dezember",
 }
+# Englische Stoppwörter (sklearn)
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS as _EN_SW
+_STOPWORDS = _STOPWORDS | set(_EN_SW) | {
+    "osm", "arab", "the", "and", "was", "were",
+    "with", "that", "this", "from", "have", "not",
+    "al", "ibn", "abu", "bin",
+}
 
 _ANTHROPIC_PRICES = {
     "claude-haiku-4-5-20251001":  (0.80,  4.00),
