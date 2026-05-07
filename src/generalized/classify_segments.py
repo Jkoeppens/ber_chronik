@@ -131,11 +131,52 @@ def print_stats(results: list[dict], taxonomy: list[dict]) -> None:
         print(f"  {label:8s}  {n:4d}  ({n/total*100:.1f} %)")
 
 
+def _classify_bge(
+    doc_dir,
+    taxonomy: list[dict],
+    content_segments: list[dict],
+    output_path,
+) -> None:
+    """Klassifiziert Segmente per BGE-M3 cosine similarity — kein LLM-Call."""
+    import numpy as np
+    import src.generalized.test_tfidf_anchor_taxonomy as _bge
+
+    cache_path = doc_dir / "bge_embeddings.npy"
+    texts      = [s.get("text", "")[:_bge.SEG_CHARS] for s in content_segments]
+
+    print(f"BGE: {len(content_segments)} Segmente", flush=True)
+    bge      = _bge._load_bge()
+    seg_embs = _bge._compute_segment_embeddings(bge, texts, cache_path)
+
+    tax_texts = [
+        f"{c['name']}. {c.get('description', '')}. {' '.join(c.get('keywords', []))}"
+        for c in taxonomy
+    ]
+    print(f"BGE: {len(tax_texts)} Taxonomie-Kategorien embedden…", flush=True)
+    tax_embs    = _bge._embed_texts(bge, tax_texts)
+    valid_names = [c["name"] for c in taxonomy]
+
+    results = []
+    for i, seg in enumerate(content_segments):
+        sims       = seg_embs[i] @ tax_embs.T
+        best_idx   = int(sims.argmax())
+        best_sim   = float(sims[best_idx])
+        confidence = "high" if best_sim > 0.5 else ("medium" if best_sim > 0.35 else "low")
+        results.append({**seg, "category": valid_names[best_idx], "confidence": confidence})
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"\n→ {output_path}  ({len(results)} Segmente)")
+    print_stats(results, taxonomy)
+
+
 async def main_async() -> None:
-    ap = argparse.ArgumentParser(description="Segmente per LLM klassifizieren")
+    ap = argparse.ArgumentParser(description="Segmente per LLM oder BGE klassifizieren")
     ap.add_argument("--project",  required=True, help="Projektname (z.B. ber, damaskus)")
     ap.add_argument("--document", required=True, help="Dokument-ID (z.B. main)")
-    ap.add_argument("--force", action="store_true", help="Cache ignorieren, alle Segmente neu klassifizieren")
+    ap.add_argument("--force",  action="store_true", help="Cache ignorieren, alle Segmente neu klassifizieren")
+    ap.add_argument("--method", choices=["llm", "bge"], default="llm",
+                    help="llm = LLM-Klassifikation (Standard); bge = BGE-M3 cosine similarity")
     args = ap.parse_args()
 
     project_dir   = PROJECTS_DIR / args.project
@@ -144,7 +185,6 @@ async def main_async() -> None:
     OUTPUT_PATH   = doc_dir / "classified.json"
 
     load_dotenv(ROOT / ".env")
-    provider = get_provider(task=TASK_CLASSIFY)
 
     if not SEGMENTS_PATH.exists():
         print(f"Nicht gefunden: {SEGMENTS_PATH}", file=sys.stderr)
@@ -174,6 +214,14 @@ async def main_async() -> None:
         sys.exit(1)
 
     content_segments = [s for s in segments if s.get("type") == "content"]
+
+    # ── BGE-Pfad ──────────────────────────────────────────────────────────────
+    if args.method == "bge":
+        _classify_bge(doc_dir, taxonomy, content_segments, OUTPUT_PATH)
+        return
+
+    # ── LLM-Pfad ─────────────────────────────────────────────────────────────
+    provider         = get_provider(task=TASK_CLASSIFY)
     categories_block = build_categories_block(taxonomy)
     valid_names      = [cat["name"] for cat in taxonomy]
 

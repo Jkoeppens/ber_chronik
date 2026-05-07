@@ -361,6 +361,7 @@ def _run_tfidf_anchor(
     m: int = N_SEGMENTS_PER_CLUSTER,
     km_interval: int = KM_INTERVAL,
     early_stop_delta: float = EARLY_STOP_DELTA,
+    previous_taxonomy: list[dict] | None = None,
 ) -> dict:
     """S6-tfidf-anchor — rolling context + TF-IDF-Keywords + per-Cluster Early Stopping.
 
@@ -373,6 +374,7 @@ def _run_tfidf_anchor(
       5. Wenn alle Cluster eingefroren: Early Stopping
 
     N_ITER bleibt als harter Sicherheitsstopp.
+    previous_taxonomy: bestehende Kategorien als Warm-Start für Rolling Context.
     """
     from sklearn.cluster import KMeans
 
@@ -383,8 +385,21 @@ def _run_tfidf_anchor(
     labels     = KMeans(n_clusters=n_clusters, random_state=42, n_init="auto").fit_predict(seg_embs)
     label_embs = _compute_centroids(seg_embs, labels)
 
-    prev_descs: list[str | None]              = [None] * n_clusters
-    summaries: list[str]                      = [f"Cluster {i+1}" for i in range(n_clusters)]
+    if previous_taxonomy:
+        _pt = previous_taxonomy[:n_clusters]
+        prev_descs: list[str | None] = [c.get("description") or None for c in _pt]
+        summaries: list[str] = [
+            f"{c.get('name', '')}. {c.get('description', '')}"
+            if c.get("description") else c.get("name", f"Cluster {i+1}")
+            for i, c in enumerate(_pt)
+        ]
+        while len(prev_descs) < n_clusters:
+            prev_descs.append(None)
+        while len(summaries) < n_clusters:
+            summaries.append(f"Cluster {len(summaries)+1}")
+    else:
+        prev_descs: list[str | None] = [None] * n_clusters
+        summaries: list[str]         = [f"Cluster {i+1}" for i in range(n_clusters)]
     prev_kw_map: dict[int, list[str]] | None  = None
     prev_llm_iter: int | None                 = None
     kw_map: dict[int, list[str]]              = {}

@@ -106,6 +106,28 @@ bei langen Artikeln). Semantische Deduplizierung durch LLM in Stufe 2
 ist robuster als Häufigkeitszählung — erkennt „Kosten" und „Finanzierung"
 als dieselbe Kategorie.
 
+### D-T1 — BGE-M3 + TF-IDF-Anchor als primäres Taxonomie- und Klassifikations-Backend
+BGE-M3 (BAAI/bge-m3) ersetzt MiniLM und LLM-Klassifikation als Standard-Embedding-Modell.
+Benchmarkergebnis 2026-05-06: Ø Delta +0.1403, Synergieeffekt TF-IDF + Rolling Context +0.0254.
+
+**Taxonomie-Vorschlag** (`propose_taxonomy.py --method bge`):
+Iteratives k-means-Clustering + TF-IDF-Keywords pro Iteration + Rolling-Context-LLM-Labels (Claude Haiku).
+Warm-Start: wenn `config.json["taxonomy"]` bereits Einträge hat, starten `prev_descs` und `summaries`
+aus der bestehenden Taxonomie (kein Kaltstart, schnellere Konvergenz).
+Output: `config.json["taxonomy"]` (D-P1), Format `{"name", "description", "keywords"}`.
+
+**Klassifikation** (`classify_segments.py --method bge`):
+Cosine-Similarity zwischen Segment-Embedding und Taxonomie-Kategorie-Embedding.
+Konfidenz: sim > 0.5 → high, > 0.35 → medium, sonst → low.
+Output: `classified.json` identisch zu LLM-Pfad — nachgelagerte Schritte sind pfadagnostisch.
+
+**Cache**: `data/projects/{project}/documents/{doc_id}/bge_embeddings.npy` — projekt-lokal,
+persistent über Reboots, git-ignoriert via `.gitignore`. Shape-Check verhindert stale cache.
+
+**Wizard Schritt 4**: Ein Button statt zwei — Label dynamisch je nach Zustand:
+- Leer: "Themen vorschlagen" → `POST /ingest/propose_taxonomy?method=bge`
+- Vorhanden: "Taxonomie verfeinern ↻" → gleicher Endpoint mit Warm-Start
+
 ### D-P10 — url-Feld durch die gesamte Pipeline
 `ingest_zotero.py` schreibt das `url`-Feld (Artikel-URL aus Zotero-Metadaten)
 in jedes Segment. `export_exploration.py` (`build_entries`) propagiert es unverändert

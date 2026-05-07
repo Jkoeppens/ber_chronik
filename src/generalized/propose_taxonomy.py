@@ -224,8 +224,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Taxonomie-Vorschlag per LLM oder KMeans+LLM")
     ap.add_argument("--project",    required=True)
     ap.add_argument("--document",   required=True)
-    ap.add_argument("--method",     choices=["llm", "kmeans"], default="llm",
-                    help="llm = bestehender 3-Stufen-Pfad (Standard); kmeans = Embedding-Clustering + pro-Cluster-LLM")
+    ap.add_argument("--method",     choices=["llm", "kmeans", "bge"], default="llm",
+                    help="llm = bestehender 3-Stufen-Pfad (Standard); kmeans = Embedding-Clustering + LLM; bge = BGE-M3 + TF-IDF-Anchor")
     ap.add_argument("--n-clusters", type=int, default=7,
                     help="Anzahl Cluster für --method kmeans (Standard: 7)")
     args = ap.parse_args()
@@ -249,8 +249,53 @@ def main() -> None:
         print("Keine geeigneten Segmente gefunden.", file=sys.stderr)
         sys.exit(1)
 
+    # ── BGE-Pfad ──────────────────────────────────────────────────────────────
+    if args.method == "bge":
+        import src.generalized.test_tfidf_anchor_taxonomy as _bge
+
+        cache_path = doc_dir / "bge_embeddings.npy"
+        texts, _   = _bge.load_segments(input_path)
+
+        cfg_existing = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
+        prev_tax     = cfg_existing.get("taxonomy") or None
+
+        print(f"Methode: BGE  |  Modell: {_bge.MODEL_ANTHROPIC}  |  Cluster: {args.n_clusters}", flush=True)
+        if prev_tax:
+            print(f"Warm-Start: {len(prev_tax)} bestehende Kategorien als Rolling-Context", flush=True)
+
+        bge      = _bge._load_bge()
+        seg_embs = _bge._compute_segment_embeddings(bge, texts, cache_path)
+        seg_embs = _bge._neighbor_aggregate(seg_embs, texts)
+
+        result = _bge._run_tfidf_anchor(
+            bge, seg_embs, texts,
+            n_clusters=args.n_clusters,
+            previous_taxonomy=prev_tax,
+        )
+        result = _bge._eval(result, seg_embs)
+
+        kw_map      = result["kw_map"]
+        logs        = result.get("iteration_logs", [])
+        last_parsed = logs[-1].get("parsed", []) if logs else []
+
+        taxonomy = []
+        for cid in range(args.n_clusters):
+            if cid < len(last_parsed) and last_parsed[cid] is not None:
+                title, body = last_parsed[cid]
+            else:
+                s = result["summaries"][cid]
+                title, body = (s.split(". ", 1) if ". " in s else (s, ""))
+            taxonomy.append({
+                "name":        title,
+                "description": body,
+                "keywords":    kw_map.get(cid, [])[:5],
+            })
+
+        print(f"\nBGE: {len(taxonomy)} Kategorien  |  Ø Delta {result['avg_delta']:+.4f}  "
+              f"|  ${result['cost_usd']:.4f}", flush=True)
+
     # ── KMeans-Pfad ───────────────────────────────────────────────────────────
-    if args.method == "kmeans":
+    elif args.method == "kmeans":
         print(f"Methode: KMeans  |  Modell: {provider.model}  |  Cluster: {args.n_clusters}")
         taxonomy = _run_kmeans(pool, provider, args.n_clusters)
         if not taxonomy:

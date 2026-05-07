@@ -489,12 +489,12 @@ async def ingest_propose_taxonomy(request: Request):
     n_clusters = request.query_params.get("n_clusters", "7")
     if not project or not doc_id:
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
-    if method not in ("llm", "kmeans"):
-        return JSONResponse({"error": "method muss 'llm' oder 'kmeans' sein"}, status_code=400)
+    if method not in ("llm", "kmeans", "bge"):
+        return JSONResponse({"error": "method muss 'llm', 'kmeans' oder 'bge' sein"}, status_code=400)
     if err := await _require_token(request, project): return err
     async def gen():
         args = ["--project", project, "--document", doc_id, "--method", method]
-        if method == "kmeans":
+        if method in ("kmeans", "bge"):
             args += ["--n-clusters", n_clusters]
         async for chunk in run_script_sse(PROPOSE_SCRIPT, args):
             if chunk == "data: __ok__\n\n":
@@ -641,11 +641,12 @@ async def ingest_run_step(request: Request):
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
 
+    method        = body.get("method", "llm")
     input_file    = RAW_DIR / filename if filename else None
     parse_args    = ["--project", project, "--document", doc_id] + ([str(input_file)] if input_file else [])
     d_args        = ["--project", project, "--document", doc_id]
     p_args        = ["--project", project]
-    classify_args = d_args + (["--force"] if force else [])
+    classify_args = d_args + (["--force"] if force else []) + (["--method", method] if method != "llm" else [])
 
     _STEP_MAP = {
         "parse_document.py":       (PARSE_SCRIPT,              parse_args),
