@@ -140,7 +140,11 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
 /* ── Step 5: Taxonomy (embedded) ── */
 #tax-controls{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
 #tax-status{font-size:11px;color:var(--c-text-3);margin-left:auto}
-#tax-log{max-height:80px;margin-bottom:10px}
+#tax-log{display:none;max-height:200px;overflow-y:auto;font-size:0.8em;
+         font-family:ui-monospace,monospace;white-space:pre-wrap;
+         background:var(--c-code-bg);border-radius:4px;padding:8px 10px;
+         margin-bottom:12px;color:var(--c-text-2)}
+#tax-log.error{color:#f87171}
 #tax-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 .tax-cat{background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;
          padding:12px;display:flex;flex-direction:column;gap:8px}
@@ -405,9 +409,6 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
     </div>
     <div id="tax-log"></div>
     <div id="tax-grid"></div>
-    <div id="tax-classify-section" style="display:none;margin-top:16px">
-      <div id="tax-classify-log" class="log-box" style="display:block;max-height:160px"></div>
-    </div>
   </section>
 
   <!-- Step 5: Time config -->
@@ -959,13 +960,11 @@ async function hasTaxonomy() {
 
 // ── Step 4: Taxonomy → classify ────────────────────────────────────────────────
 async function runClassifyAfterTaxonomy() {
-  const section = document.getElementById('tax-classify-section');
-  const logEl   = document.getElementById('tax-classify-log');
-  section.style.display = 'block';
-  logEl.textContent = '⟳ Neu klassifizieren…';
+  const logEl = document.getElementById('tax-log');
+  logEl.className = ''; logEl.textContent = '⟳ Klassifizieren…'; logEl.style.display = 'block';
   if (!await hasTaxonomy()) {
-    logEl.innerHTML = '<span style="color:#f87171">✗ Keine Taxonomie gespeichert — bitte zuerst Taxonomie-Vorschlag generieren und speichern.</span>';
-    logEl.scrollTop = logEl.scrollHeight;
+    logEl.className = 'error';
+    logEl.textContent = '✗ Keine Taxonomie gespeichert — bitte zuerst Taxonomie-Vorschlag generieren und speichern.';
     return;
   }
   let buf = '';
@@ -1287,6 +1286,8 @@ async function initTaxonomy() {
   if (_pb) _pb.textContent = taxData.length ? 'Taxonomie verfeinern ↻' : 'Themen vorschlagen';
   const _cw = document.getElementById('tax-clusters-wrap');
   if (_cw) _cw.style.display = taxData.length ? 'none' : 'inline-flex';
+  const _tl = document.getElementById('tax-log');
+  if (_tl && !_tl.textContent.trim()) _tl.style.display = 'none';
 }
 
 function renderTaxGrid() {
