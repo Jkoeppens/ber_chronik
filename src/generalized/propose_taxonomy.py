@@ -259,9 +259,12 @@ def main() -> None:
         cfg_existing = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
         prev_tax     = cfg_existing.get("taxonomy") or None
 
-        print(f"Methode: BGE  |  Modell: {_bge.MODEL_ANTHROPIC}  |  Cluster: {args.n_clusters}", flush=True)
+        # n_clusters: aus bestehender Taxonomie ableiten oder CLI-Default
+        n_clusters = len(prev_tax) if prev_tax else args.n_clusters
+
         if prev_tax:
-            print(f"Warm-Start: {len(prev_tax)} bestehende Kategorien als Rolling-Context", flush=True)
+            print(f"Warm-Start: {len(prev_tax)} bestehende Kategorien → n_clusters={n_clusters}", flush=True)
+        print(f"Methode: BGE  |  Modell: {_bge.MODEL_ANTHROPIC}  |  Cluster: {n_clusters}", flush=True)
 
         bge      = _bge._load_bge()
         seg_embs = _bge._compute_segment_embeddings(bge, texts, cache_path)
@@ -269,7 +272,7 @@ def main() -> None:
 
         result = _bge._run_tfidf_anchor(
             bge, seg_embs, texts,
-            n_clusters=args.n_clusters,
+            n_clusters=n_clusters,
             previous_taxonomy=prev_tax,
         )
         result = _bge._eval(result, seg_embs)
@@ -279,7 +282,7 @@ def main() -> None:
         last_parsed = logs[-1].get("parsed", []) if logs else []
 
         taxonomy = []
-        for cid in range(args.n_clusters):
+        for cid in range(n_clusters):
             if cid < len(last_parsed) and last_parsed[cid] is not None:
                 title, body = last_parsed[cid]
             else:
@@ -291,8 +294,8 @@ def main() -> None:
                 "keywords":    kw_map.get(cid, [])[:5],
             })
 
-        print(f"\nBGE: {len(taxonomy)} Kategorien  |  Ø Delta {result['avg_delta']:+.4f}  "
-              f"|  ${result['cost_usd']:.4f}", flush=True)
+        print(f"\nBGE: {n_clusters} Cluster → {len(taxonomy)} Kategorien  "
+              f"|  Ø Delta {result['avg_delta']:+.4f}  |  ${result['cost_usd']:.4f}", flush=True)
 
     # ── KMeans-Pfad ───────────────────────────────────────────────────────────
     elif args.method == "kmeans":

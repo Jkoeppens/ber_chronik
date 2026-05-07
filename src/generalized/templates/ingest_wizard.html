@@ -395,6 +395,10 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
     <div id="tax-controls">
       <button class="btn" id="tax-btn-add">+ Kategorie</button>
       <button class="btn btn-outline" id="tax-btn-propose">Themen vorschlagen</button>
+      <span id="tax-clusters-wrap" style="display:none;align-items:center;gap:4px;font-size:13px;color:var(--c-text-2)">
+        Themen: <input type="number" id="tax-n-clusters" min="3" max="20" value="7"
+          style="width:48px;padding:2px 4px;border:1px solid var(--c-border-ui);border-radius:4px;font-size:13px">
+      </span>
       <button class="btn btn-success" id="tax-btn-save" disabled>Speichern</button>
       <button class="btn btn-outline" id="tax-btn-classify">Klassifizieren</button>
       <span id="tax-status">Lade…</span>
@@ -1281,6 +1285,8 @@ async function initTaxonomy() {
   document.getElementById('tax-btn-save').disabled = true;
   const _pb = document.getElementById('tax-btn-propose');
   if (_pb) _pb.textContent = taxData.length ? 'Taxonomie verfeinern ↻' : 'Themen vorschlagen';
+  const _cw = document.getElementById('tax-clusters-wrap');
+  if (_cw) _cw.style.display = taxData.length ? 'none' : 'inline-flex';
 }
 
 function renderTaxGrid() {
@@ -1375,9 +1381,12 @@ async function _runProposeTaxonomy(method) {
   btn.disabled = true; btn.textContent = 'Läuft…';
   logEl.className = ''; logEl.textContent = ''; logEl.style.display = 'block';
 
-  const aq  = _aq();
-  const sep = aq ? '&' : '?';
-  const url = '/ingest/propose_taxonomy' + aq + sep + 'method=' + method;
+  const aq      = _aq();
+  const sep     = aq ? '&' : '?';
+  const nInput  = document.getElementById('tax-n-clusters');
+  const nParam  = (!taxData.length && nInput && nInput.value !== '7')
+                    ? '&n_clusters=' + encodeURIComponent(nInput.value) : '';
+  const url = '/ingest/propose_taxonomy' + aq + sep + 'method=' + method + nParam;
 
   const res    = await fetch(url, { method: 'POST', headers: authHeaders() });
   const reader = res.body.getReader(), decoder = new TextDecoder(); let buf = '';
