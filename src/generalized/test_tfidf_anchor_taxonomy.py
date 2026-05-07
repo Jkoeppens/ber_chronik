@@ -1,12 +1,11 @@
 """
 test_tfidf_anchor_taxonomy.py — S6-tfidf-anchor standalone
 
-TF-IDF-Keywords werden einmalig aus initialen KMeans-Labels berechnet und
-bleiben als Anker konstant. Pro Iteration: kontrastiver Anthropic-Call mit
-Keywords + vorheriger Beschreibung + k-means++-Sampling.
+TF-IDF-Keywords pro Iteration + rolling context + per-Cluster Early Stopping.
+Provider konfigurierbar: Anthropic (mit Token-Tracking) oder Ollama (lokal).
 
-Ergebnis (Benchmark 2026-05-06):
-  Ø Delta +0.1403  |  IntraSim 0.5067  |  Stab 0.91  |  $0.0356 (4 Calls, Haiku)
+Ergebnis (Benchmark 2026-05-06, Anthropic Haiku):
+  Ø Delta +0.1403  |  IntraSim 0.5067  |  Stab 0.91  |  $0.0356 (4 Calls)
   Synergieeffekt: TF-IDF + rolling context superadditiv (+0.0254 über Summe beider allein)
 """
 
@@ -30,8 +29,9 @@ CACHE_PATH      = Path("/tmp/ber_bge_embeddings.npy")
 N_CLUSTERS               = 7
 N_ITER                   = 4       # LLM-Calls (alle km_interval k-means-Schritte)
 N_SEGMENTS_PER_CLUSTER   = 10      # k-means++ sample size pro Cluster
-PROVIDER                 = "anthropic"   # "anthropic" oder "ollama"
-MODEL                    = "claude-haiku-4-5-20251001"
+PROVIDER                 = "anthropic"          # "anthropic" oder "ollama"
+MODEL_ANTHROPIC          = "claude-haiku-4-5-20251001"
+MODEL_OLLAMA             = "llama3.2:3b"
 
 KM_INTERVAL     = 5     # k-means-Schritte zwischen LLM-Calls
 MIN_LENGTH      = 30
@@ -53,10 +53,14 @@ _STOPWORDS = {
 }
 
 _ANTHROPIC_PRICES = {
-    "claude-haiku-4-5-20251001": (0.80, 4.00),
-    "claude-sonnet-4-6":         (3.00, 15.00),
-    "claude-opus-4-7":           (15.00, 75.00),
+    "claude-haiku-4-5-20251001":  (0.80,  4.00),
+    "claude-sonnet-4-20250514":   (3.00,  15.00),
+    "claude-sonnet-4-6":          (3.00,  15.00),
+    "claude-opus-4-7":            (15.00, 75.00),
 }
+
+_OLLAMA_BASE_URL    = "http://localhost:11434"
+_anthropic_client   = None   # lazy-initialisiert beim ersten LLM-Call
 
 EARLY_STOP_DELTA = 0.01   # Cluster einfrieren wenn sim-Verbesserung < 1%
 
@@ -277,23 +281,40 @@ def _parse_llm_response(raw: str, n_clusters: int = N_CLUSTERS) -> list[tuple[st
     return results
 
 
-def _anthropic_call(
-    provider,
-    prompt: str,
-    system: str,
-    max_tokens: int = 2048,
-) -> tuple[str, int, int]:
-    """Temperature=0 Anthropic-Call. Gibt (text, input_tokens, output_tokens) zurück."""
-    kwargs: dict = dict(
-        model=provider.model,
-        max_tokens=max_tokens,
-        temperature=0,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    if system:
-        kwargs["system"] = system
-    msg = provider._client.messages.create(**kwargs)
-    return msg.content[0].text.strip(), msg.usage.input_tokens, msg.usage.output_tokens
+def _llm_call(prompt: str, system: str = _SYSTEM) -> tuple[str, int, int]:
+    """Unified LLM-Call — dispatcht nach PROVIDER-Konfiguration.
+
+    Gibt (text, input_tokens, output_tokens) zurück.
+    Ollama: (text, 0, 0) — kein Token-Tracking.
+    """
+    global _anthropic_client
+    if PROVIDER == "anthropic":
+        if _anthropic_client is None:
+            import anthropic
+            _anthropic_client = anthropic.Anthropic()
+        kwargs: dict = dict(
+            model=MODEL_ANTHROPIC,
+            max_tokens=2048,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        if system:
+            kwargs["system"] = system
+        msg = _anthropic_client.messages.create(**kwargs)
+        return msg.content[0].text.strip(), msg.usage.input_tokens, msg.usage.output_tokens
+    elif PROVIDER == "ollama":
+        import requests as _req
+        payload: dict = {
+            "model": MODEL_OLLAMA, "prompt": prompt, "stream": False,
+            "options": {"num_ctx": 8192, "temperature": 0},
+        }
+        if system:
+            payload["system"] = system
+        r = _req.post(f"{_OLLAMA_BASE_URL}/api/generate", json=payload, timeout=300)
+        r.raise_for_status()
+        return r.json().get("response", "").strip(), 0, 0
+    else:
+        raise ValueError(f"Unbekannter PROVIDER: {PROVIDER!r}  (erwartet: 'anthropic' oder 'ollama')")
 
 
 # ── Hauptalgorithmus ──────────────────────────────────────────────────────────
@@ -309,7 +330,6 @@ def _keyword_diff(prev: list[str], curr: list[str]) -> str:
 
 
 def _run_tfidf_anchor(
-    provider,
     bge,
     seg_embs: np.ndarray,
     texts: list[str],
@@ -366,7 +386,7 @@ def _run_tfidf_anchor(
             prev_descs, prev_llm_iter, rng,
             n_clusters=n_clusters, m=m,
         )
-        raw, in_tok, out_tok = _anthropic_call(provider, prompt, _SYSTEM)
+        raw, in_tok, out_tok = _llm_call(prompt)
         parsed = _parse_llm_response(raw, n_clusters)
         llm_calls += 1
         total_in  += in_tok
@@ -468,9 +488,13 @@ def _run_tfidf_anchor(
                   flush=True)
             break
 
-    model       = provider.model
-    p_in, p_out = _ANTHROPIC_PRICES.get(model, (3.00, 15.00))
-    cost_usd    = total_in * p_in / 1_000_000 + total_out * p_out / 1_000_000
+    if PROVIDER == "anthropic":
+        model       = MODEL_ANTHROPIC
+        p_in, p_out = _ANTHROPIC_PRICES.get(model, (3.00, 15.00))
+        cost_usd    = total_in * p_in / 1_000_000 + total_out * p_out / 1_000_000
+    else:
+        model    = MODEL_OLLAMA
+        cost_usd = 0.0
 
     centroids = _compute_centroids(seg_embs, labels)
     return {
@@ -610,20 +634,14 @@ def main() -> None:
     texts, seg_ids = load_segments()
     print(f"  {len(texts)} Segmente geladen", flush=True)
 
+    model_str = MODEL_ANTHROPIC if PROVIDER == "anthropic" else MODEL_OLLAMA
+    print(f"  Provider: {PROVIDER}  ({model_str})", flush=True)
+
     bge      = _load_bge()
     seg_embs = _compute_segment_embeddings(bge, texts)
     seg_embs = _neighbor_aggregate(seg_embs, texts)
 
-    if PROVIDER == "anthropic":
-        from src.generalized.llm import AnthropicProvider
-        provider = AnthropicProvider(model=MODEL)
-        print(f"  Provider: Anthropic ({provider.model})", flush=True)
-    else:
-        from src.generalized.llm import get_provider, TASK_ANALYZE
-        provider = get_provider(TASK_ANALYZE)
-        print(f"  Provider: Ollama ({provider.model})", flush=True)
-
-    result = _run_tfidf_anchor(provider, bge, seg_embs, texts)
+    result = _run_tfidf_anchor(bge, seg_embs, texts)
     result = _eval(result, seg_embs)
     _print_final_table(result)
 
