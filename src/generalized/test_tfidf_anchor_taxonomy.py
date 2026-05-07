@@ -23,9 +23,6 @@ load_dotenv()
 
 # ── Konfiguration ──────────────────────────────────────────────────────────────
 
-SEGMENTS_PATH   = Path("data/projects/ber/documents/main/segments.json")
-CACHE_PATH      = Path("/tmp/ber_bge_embeddings.npy")
-
 N_CLUSTERS               = 7
 N_ITER                   = 4       # LLM-Calls (alle km_interval k-means-Schritte)
 N_SEGMENTS_PER_CLUSTER   = 10      # k-means++ sample size pro Cluster
@@ -48,7 +45,7 @@ _STOPWORDS = {
     "er", "sie", "wir", "ihre", "ihrer", "ihren", "ihrem", "ihres",
     "sein", "seiner", "seinem", "seinen", "seine", "eines", "einem", "einen",
     "werden", "haben", "noch", "mehr", "nur", "schon", "sehr", "hier", "da",
-    "beim", "am", "zum", "zur", "tsp", "januar", "februar", "märz", "april",
+    "beim", "am", "zum", "zur", "januar", "februar", "märz", "april",
     "mai", "juni", "juli", "august", "september", "oktober", "november", "dezember",
 }
 
@@ -65,12 +62,12 @@ _anthropic_client   = None   # lazy-initialisiert beim ersten LLM-Call
 EARLY_STOP_DELTA = 0.01   # Cluster einfrieren wenn sim-Verbesserung < 1%
 
 _SYSTEM = (
-    "Du analysierst Gruppen von Texten über den Berliner Flughafen BER. "
+    "Du analysierst Gruppen von Texten. "
     "Schreibe präzise, kontrastierende Beschreibungen — kein allgemeines Intro, keine Floskeln."
 )
 
 _PROMPT_TEMPLATE = """\
-Du analysierst {n} Gruppen von Texten über den Berliner Flughafen BER.
+Du analysierst {n} Gruppen von Texten.
 
 Für jede Gruppe sind folgende Keywords konstant charakteristisch \
 (diese sollen in deiner Beschreibung vorkommen):
@@ -96,8 +93,8 @@ Antworte für jede Gruppe im Format (kein weiterer Text):
 
 # ── Datenladen ────────────────────────────────────────────────────────────────
 
-def load_segments() -> tuple[list[str], list[str]]:
-    segs    = json.loads(SEGMENTS_PATH.read_text(encoding="utf-8"))
+def load_segments(segments_path: Path) -> tuple[list[str], list[str]]:
+    segs    = json.loads(segments_path.read_text(encoding="utf-8"))
     content = [s for s in segs
                if s.get("type") == "content" and len(s.get("text", "")) >= MIN_LENGTH]
     content.sort(key=lambda s: s.get("segment_id", ""))
@@ -112,9 +109,9 @@ def _load_bge():
     return BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
 
 
-def _compute_segment_embeddings(bge, texts: list[str]) -> np.ndarray:
-    if CACHE_PATH.exists():
-        cached = np.load(CACHE_PATH)
+def _compute_segment_embeddings(bge, texts: list[str], cache_path: Path) -> np.ndarray:
+    if cache_path.exists():
+        cached = np.load(cache_path)
         if cached.shape[0] == len(texts):
             print(f"  Embeddings aus Cache ({cached.shape})", flush=True)
             return cached
@@ -125,7 +122,7 @@ def _compute_segment_embeddings(bge, texts: list[str]) -> np.ndarray:
     embs  = np.array(raw, dtype=np.float32)
     norms = np.linalg.norm(embs, axis=1, keepdims=True)
     embs /= np.maximum(norms, 1e-9)
-    np.save(CACHE_PATH, embs)
+    np.save(cache_path, embs)
     print(f"  Embeddings: {embs.shape}  [{time.perf_counter()-t0:.1f}s]")
     return embs
 
@@ -409,10 +406,13 @@ def _run_tfidf_anchor(
         total_out += out_tok
 
         # Build summaries; None entries keep old summary as placeholder (not embedded)
-        new_summaries = [
-            (f"{t}. {b}" if b else t) if entry is not None else summaries[cid]
-            for cid, entry in enumerate(parsed)
-        ]
+        new_summaries = []
+        for cid, entry in enumerate(parsed):
+            if entry is None:
+                new_summaries.append(summaries[cid])
+            else:
+                _t, _b = entry
+                new_summaries.append(f"{_t}. {_b}" if _b else _t)
 
         already_frozen = set(frozen)   # snapshot before this iteration's updates
 
@@ -638,7 +638,7 @@ def _print_final_table(result: dict) -> None:
         logs = result.get("iteration_logs", [])
         if logs:
             parsed = logs[-1].get("parsed", [])
-            if i < len(parsed):
+            if i < len(parsed) and parsed[i] is not None:
                 title, body = parsed[i]
         kws = ", ".join(kw_map.get(i, []))
         print(f"  C{i+1}: {title or body[:50]}  ({int((labels==i).sum())} Seg.)")
@@ -674,17 +674,35 @@ def _print_final_table(result: dict) -> None:
 # ── Einstiegspunkt ────────────────────────────────────────────────────────────
 
 def main() -> None:
+    import argparse
+    import sys
+    from src.generalized.config import PROJECTS_DIR
+
+    ap = argparse.ArgumentParser(description="TF-IDF-Anchor Taxonomie-Clustering")
+    ap.add_argument("--project",  required=True, help="Projektname  (z.B. ber)")
+    ap.add_argument("--document", required=True, help="Dokument-ID  (z.B. main)")
+    args = ap.parse_args()
+
+    doc_dir       = PROJECTS_DIR / args.project / "documents" / args.document
+    segments_path = doc_dir / "segments.json"
+    cache_path    = Path(f"/tmp/{args.project}_{args.document}_bge_embeddings.npy")
+
+    if not segments_path.exists():
+        print(f"Fehler: segments.json nicht gefunden: {segments_path}", file=sys.stderr)
+        sys.exit(1)
+
     t_total = time.perf_counter()
 
+    print(f"  Projekt: {args.project}  Dokument: {args.document}", flush=True)
     print("  Lade Segmente…", flush=True)
-    texts, seg_ids = load_segments()
+    texts, seg_ids = load_segments(segments_path)
     print(f"  {len(texts)} Segmente geladen", flush=True)
 
     model_str = MODEL_ANTHROPIC if PROVIDER == "anthropic" else MODEL_OLLAMA
     print(f"  Provider: {PROVIDER}  ({model_str})", flush=True)
 
     bge      = _load_bge()
-    seg_embs = _compute_segment_embeddings(bge, texts)
+    seg_embs = _compute_segment_embeddings(bge, texts, cache_path)
     seg_embs = _neighbor_aggregate(seg_embs, texts)
 
     result = _run_tfidf_anchor(bge, seg_embs, texts)
