@@ -115,6 +115,9 @@ def _compute_segment_embeddings(bge, texts: list[str], cache_path: Path) -> np.n
         if cached.shape[0] == len(texts):
             print(f"  Embeddings aus Cache ({cached.shape})", flush=True)
             return cached
+        print(f"  Cache: neu berechnen (shape mismatch: {cached.shape[0]} != {len(texts)})", flush=True)
+    else:
+        print(f"  Cache: neu berechnen (fehlt: {cache_path})", flush=True)
     t0  = time.perf_counter()
     raw = bge.encode(texts, batch_size=32, max_length=512,
                      return_dense=True, return_sparse=False,
@@ -229,10 +232,14 @@ def _build_prompt(
     m: int = N_SEGMENTS_PER_CLUSTER,
 ) -> str:
     """Baut den kombinierten Prompt für einen Iterations-Call."""
-    keyword_section = "\n".join(
-        f"Gruppe {cid+1} Keywords: {', '.join(keyword_map.get(cid, []))}"
-        for cid in range(n_clusters)
-    )
+    keyword_section_lines = []
+    for cid in range(n_clusters):
+        kws = keyword_map.get(cid, [])
+        if not kws:
+            import sys as _sys
+            print(f"WARNING: Cluster {cid} hat keine Keywords", file=_sys.stderr)
+        keyword_section_lines.append(f"Gruppe {cid+1} Keywords: {', '.join(kws)}")
+    keyword_section = "\n".join(keyword_section_lines)
 
     if any(d is not None for d in prev_descriptions):
         prev_lines = "\n".join(
@@ -325,7 +332,10 @@ def _llm_call(prompt: str, system: str = _SYSTEM) -> tuple[str, int, int]:
             payload["system"] = system
         r = _req.post(f"{_OLLAMA_BASE_URL}/api/generate", json=payload, timeout=300)
         r.raise_for_status()
-        return r.json().get("response", "").strip(), 0, 0
+        data = r.json()
+        if "response" not in data:
+            raise ValueError(f"Ollama: kein response-Feld: {data}")
+        return data["response"].strip(), 0, 0
     else:
         raise ValueError(f"Unbekannter PROVIDER: {PROVIDER!r}  (erwartet: 'anthropic' oder 'ollama')")
 
@@ -675,8 +685,17 @@ def _print_final_table(result: dict) -> None:
 
 def main() -> None:
     import argparse
+    import os
     import sys
     from src.generalized.config import PROJECTS_DIR
+
+    try:
+        from FlagEmbedding import BGEM3FlagModel as _  # noqa: F401
+    except ImportError:
+        sys.exit("FEHLER: FlagEmbedding nicht installiert — pip install FlagEmbedding --break-system-packages")
+
+    if PROVIDER == "anthropic" and not os.environ.get("ANTHROPIC_API_KEY"):
+        sys.exit("FEHLER: ANTHROPIC_API_KEY nicht gesetzt")
 
     ap = argparse.ArgumentParser(description="TF-IDF-Anchor Taxonomie-Clustering")
     ap.add_argument("--project",  required=True, help="Projektname  (z.B. ber)")
