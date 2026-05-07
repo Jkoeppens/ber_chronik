@@ -164,7 +164,7 @@ def _compute_tfidf_keywords(
     n_clusters: int = N_CLUSTERS,
     top_k: int = TOP_K_KW,
 ) -> dict[int, list[str]]:
-    """TF-IDF-Keywords pro Cluster. Einmalig berechnet, danach als fester Anker genutzt."""
+    """TF-IDF-Keywords pro Cluster aus aktueller Segment-Zusammensetzung."""
     from sklearn.feature_extraction.text import TfidfVectorizer
     vec = TfidfVectorizer(
         max_features=8000, min_df=2, sublinear_tf=True,
@@ -296,6 +296,16 @@ def _anthropic_call(
 
 # ── Hauptalgorithmus ──────────────────────────────────────────────────────────
 
+def _keyword_diff(prev: list[str], curr: list[str]) -> str:
+    """'+new −gone' diff-String zwischen zwei Keyword-Listen."""
+    prev_set = set(prev)
+    curr_set = set(curr)
+    added   = [f"+{w}" for w in curr if w not in prev_set]
+    removed = [f"−{w}" for w in prev if w not in curr_set]
+    parts   = added + removed
+    return ("  [" + "  ".join(parts) + "]") if parts else ""
+
+
 def _run_tfidf_anchor(
     provider,
     bge,
@@ -306,14 +316,17 @@ def _run_tfidf_anchor(
     m: int = N_SEGMENTS_PER_CLUSTER,
     km_interval: int = KM_INTERVAL,
 ) -> dict:
-    """S6-tfidf-anchor — rolling context + feste TF-IDF-Keyword-Anker.
+    """S6-tfidf-anchor — rolling context + TF-IDF-Keywords pro Iteration.
 
     Ablauf:
     1. Initiale KMeans-Cluster
-    2. TF-IDF-Keywords einmalig berechnen (bleiben konstant)
-    3. Alle km_interval k-means-Schritte: kontrastiver LLM-Call
-       - Keywords (konstant) + vorherige Beschreibung (rolling) + neue Segmente
-    4. Label-Embeddings aus LLM-Output → nächste Reassignment-Runde
+    2. Pro LLM-Runde (alle km_interval Schritte):
+       a. Segmente neu zuordnen
+       b. TF-IDF-Keywords aus aktueller Cluster-Zusammensetzung berechnen
+       c. Kontrastiver LLM-Call mit Keywords + vorheriger Beschreibung + neuen Segmenten
+       d. Label-Embeddings aus LLM-Output → nächste Reassignment-Runde
+    Rolling context (vorherige Beschreibungen) erzeugt Trägheit trotz sich
+    ändernder Keywords — der Test ist ob Keywords driften und Labels stabil bleiben.
     """
     from sklearn.cluster import KMeans
 
@@ -321,14 +334,15 @@ def _run_tfidf_anchor(
     n_segs = len(texts)
     rng    = np.random.default_rng(42)
 
-    labels    = KMeans(n_clusters=n_clusters, random_state=42, n_init="auto").fit_predict(seg_embs)
-    kw_map    = _compute_tfidf_keywords(texts, labels, n_clusters=n_clusters)
+    labels     = KMeans(n_clusters=n_clusters, random_state=42, n_init="auto").fit_predict(seg_embs)
     label_embs = _compute_centroids(seg_embs, labels)
 
     prev_descs: list[str | None]        = [None] * n_clusters
     summaries: list[str]                = [f"Cluster {i+1}" for i in range(n_clusters)]
     prev_label_embs: np.ndarray | None  = None
+    prev_kw_map: dict[int, list[str]] | None = None
     prev_llm_iter: int | None           = None
+    kw_map: dict[int, list[str]]        = {}
     llm_calls = 0
     total_in  = 0
     total_out = 0
@@ -340,6 +354,9 @@ def _run_tfidf_anchor(
         if km_iter % km_interval != 0:
             labels = (seg_embs @ label_embs.T).argmax(axis=1)
             continue
+
+        # Keywords aus aktueller Cluster-Zusammensetzung
+        kw_map = _compute_tfidf_keywords(texts, labels, n_clusters=n_clusters)
 
         prompt = _build_prompt(
             texts, seg_embs, labels, kw_map,
@@ -382,6 +399,14 @@ def _run_tfidf_anchor(
         print(f"  Wechsel={change_pct*100:.1f}%  |{stab_str}{dist_str}", flush=True)
         print(f"{'═'*W}", flush=True)
 
+        # Keywords mit Diff zur Voriteraion
+        print(f"\n  Keywords (Iter {km_iter}):", flush=True)
+        for cid in range(n_clusters):
+            kws      = kw_map.get(cid, [])
+            diff_str = _keyword_diff(prev_kw_map.get(cid, []), kws) if prev_kw_map else ""
+            print(f"  C{cid+1}: {', '.join(kws)}{diff_str}", flush=True)
+
+        # LLM-Labels mit Ähnlichkeits-Tag
         for cid, (title, body) in enumerate(parsed):
             sim_tag = (
                 f"  [Sim={stabs[cid]:.4f}]"
@@ -395,10 +420,12 @@ def _run_tfidf_anchor(
             "km_iter":         km_iter,
             "summaries":       new_summaries[:],
             "parsed":          parsed[:],
+            "kw_map":          {k: v[:] for k, v in kw_map.items()},
             "label_stability": label_stability,
             "stabs_per_cid":   stabs.tolist(),
             "change_pct":      change_pct,
         })
+        prev_kw_map   = kw_map
         prev_llm_iter = km_iter
 
     model       = provider.model
