@@ -84,7 +84,12 @@ Für jede Gruppe sind folgende Keywords konstant charakteristisch \
 Neue Beispieltexte:
 {segment_section}
 
-Verfeinere die Beschreibungen unter Einbeziehung der Keywords und Beispieltexte. \
+Schreibe neue Beschreibungen unter Einbeziehung der Keywords und Beispieltexte. \
+Die neue Beschreibung soll nicht wiederholen was die vorherige schon sagt. \
+Frage stattdessen: Was hält diese Texte zusammen? \
+Welches übergeordnete Prinzip, welche strukturelle Gemeinsamkeit erklärt warum \
+diese Segmente in einer Gruppe landen — \
+nicht was sie beschreiben, sondern wie sie funktionieren. \
 Jede Gruppe muss sich klar von den anderen unterscheiden.
 
 Antworte für jede Gruppe im Format (kein weiterer Text):
@@ -255,7 +260,7 @@ def _build_prompt(
             for cid in range(n_clusters)
         )
         prev_section = (
-            f"\nVorherige Beschreibungen (Iteration {prev_iter}):\n{prev_lines}\n"
+            f"\nVorherige Beschreibung (Iteration {prev_iter}):\n{prev_lines}\n"
         )
     else:
         prev_section = ""
