@@ -75,17 +75,20 @@ geholt. Kein Token-Leak durch Browser-Historie.
 existiert nicht — Taxonomie lebt ausschließlich in `taxData` (Browser) und
 `config.json["taxonomy"]` (Server).
 
-### D-P8 — Zotero-Segmente tragen Erscheinungsdatum als Metadatenfeld
-`ingest_zotero.py` schreibt das Erscheinungsdatum aus den Zotero-Metadaten
-in das Feld `"date"` jedes Segments (String, Format YYYY oder YYYY-MM-DD).
+### D-P8 — Ingest-Segmente tragen Erscheinungsdatum als Metadatenfeld
+`ingest_obsidian.py` schreibt das Erscheinungsdatum aus dem Frontmatter-Feld
+`published` (Fallback: `created`) in das Feld `"date"` jedes Segments
+(String, Format YYYY-MM-DD oder YYYY).
 
 `detect_anchors.py` liest dieses Feld im Presseartikel-Modus: wenn kein
 aktives Heading-Jahr vorhanden, wird `seg["date"]` direkt als Anker gesetzt
 (`precision="exact"`, `source="date"`). Kein Regex-Suchen im Fließtext.
+`date_raw` wird in `anchors.json` aus `date` kopiert → `export_exploration.py`
+baut daraus `date_js` (volle Tag-Präzision wenn YYYY-MM-DD).
 
 Gilt nur für `doc_type=presseartikel`. Forschungsnotizen-Modus unverändert.
-Konsequenz: Zotero-Artikel sind nach dem Ingest immer datiert, solange
-Zotero-Metadaten ein `issued`- oder `date`-Feld haben.
+Konsequenz: Obsidian-Artikel mit `published`-Frontmatter sind nach dem Ingest
+präzise auf den Tag datiert.
 
 ### D-P9 — propose_taxonomy: 3-stufige Keyword→Destillation-Architektur
 Statt 5 Batches à 10 Segmente direkt Kategorien generieren (alter Ansatz:
@@ -129,13 +132,39 @@ persistent über Reboots, git-ignoriert via `.gitignore`. Shape-Check verhindert
 - Vorhanden: "Taxonomie verfeinern ↻" → gleicher Endpoint mit Warm-Start
 
 ### D-P10 — url-Feld durch die gesamte Pipeline
-`ingest_zotero.py` schreibt das `url`-Feld (Artikel-URL aus Zotero-Metadaten)
-in jedes Segment. `export_exploration.py` (`build_entries`) propagiert es unverändert
-in den data.json-Eintrag. `panel.js` (`renderParaCard`) stellt `source_name` als
-`<a href>` dar wenn `p.url` gesetzt ist.
+`ingest_obsidian.py` schreibt das `url`-Feld (Artikel-URL aus dem Frontmatter-Feld
+`source`) in jedes Segment. `export_exploration.py` (`build_entries`) propagiert
+es unverändert in den data.json-Eintrag. `panel.js` (`renderParaCard`) stellt
+`source_name` als `<a href>` dar wenn `p.url` gesetzt ist.
 
-Gilt nur für Zotero-Ingests. Segmente aus Datei-Upload haben kein url-Feld
+Gilt für Obsidian-Ingests wenn `source` im Frontmatter gesetzt ist.
+Segmente aus Datei-Upload haben kein url-Feld
 (`seg.get("url", "")` gibt leer zurück → kein Link).
+
+### D-I1 — Obsidian/Dropbox Ingest ersetzt Zotero
+`ingest_obsidian.py` ersetzt `ingest_zotero.py` als primären externen Ingest-Pfad.
+Quellformat: Obsidian Web Clipper `.md`-Dateien mit YAML-Frontmatter.
+Transport: Dropbox OAuth2 (offline, refresh_token) oder lokaler Vault-Pfad (Tests).
+
+**Frontmatter-Mapping:**
+- `title` → `source` (Artikel-Titel)
+- `source` → `url` (ist die URL, nicht die Zeitung)
+- `author` → `author` (Obsidian `[[Link]]`-Format wird bereinigt)
+- `published` → `date` (Präzision YYYY-MM-DD; detect_anchors liest es, D-P8)
+- `created` → `date` (Fallback wenn `published` fehlt)
+- `description` → `abstract`
+
+**OAuth2:** `DROPBOX_APP_KEY`, `DROPBOX_APP_SECRET`, `DROPBOX_REDIRECT_URL` in `.env`.
+Redirect-URL via Umgebungsvariable für einfachen Hosting-Wechsel.
+Tokens werden in `config.json["obsidian"]["tokens"]` gespeichert.
+
+**Wizard:** Obsidian-Tab im „Neues Projekt +"-Dialog (ersetzt Zotero-Tab).
+Obsidian-Panel in Projektkarten (ersetzt Zotero-Panel).
+Endpoints: `/api/obsidian/oauth/start`, `/api/obsidian/oauth/callback`,
+`/api/projects/{id}/obsidian/config`, `/api/projects/{id}/obsidian/test`,
+`/api/projects/{id}/obsidian/sync`.
+
+**Lokaler Modus:** `--source local --vault /pfad` für Tests ohne Dropbox-Auth.
 
 ## Entity-Extraktion
 

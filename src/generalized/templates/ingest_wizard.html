@@ -240,15 +240,15 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
          padding:8px 10px;max-height:120px;overflow-y:auto;white-space:pre-wrap;color:var(--c-text-2);margin:0}
 .adp-close{font-size:11px;color:var(--c-text-3);cursor:pointer;text-decoration:underline;align-self:flex-end}
 .adp-close:hover{color:var(--c-text)}
-/* Zotero-Konfigurations-Panel */
-.proj-card-zotero{font-size:11px;font-weight:500;flex-shrink:0;padding:3px 8px;border:1px solid #d1fae5;
-                  border-radius:4px;background:#f0fdf4;color:#059669;cursor:pointer;line-height:1.4}
-.proj-card-zotero.configured{background:#d1fae5}
-.proj-card-zotero:hover{background:#059669;color:#fff;border-color:#059669}
-.proj-card-wrap.zotero-open .proj-card{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
-.zotero-panel{border:1px solid #059669;border-top:none;border-radius:0 0 6px 6px;
-              padding:14px 14px 12px;background:#f0fdf4;display:none;flex-direction:column;gap:8px}
-.proj-card-wrap.zotero-open .zotero-panel{display:flex}
+/* Obsidian/Dropbox-Konfigurations-Panel */
+.proj-card-obsidian{font-size:11px;font-weight:500;flex-shrink:0;padding:3px 8px;border:1px solid #e0e7ff;
+                    border-radius:4px;background:#eef2ff;color:#4f46e5;cursor:pointer;line-height:1.4}
+.proj-card-obsidian.configured{background:#c7d2fe}
+.proj-card-obsidian:hover{background:#4f46e5;color:#fff;border-color:#4f46e5}
+.proj-card-wrap.obsidian-open .proj-card{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+.obsidian-panel{border:1px solid #4f46e5;border-top:none;border-radius:0 0 6px 6px;
+                padding:14px 14px 12px;background:#eef2ff;display:none;flex-direction:column;gap:8px}
+.proj-card-wrap.obsidian-open .obsidian-panel{display:flex}
 .zp-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .zp-label{font-size:11px;color:var(--c-text-3);white-space:nowrap;min-width:60px}
 .zp-input{font-size:11px;padding:4px 7px;border:1px solid var(--c-border);border-radius:4px;
@@ -310,7 +310,7 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
           <input class="np-input" id="np-name" type="text" placeholder="Projektname z.B. Osmanisches Reich 1875–1923">
           <div class="np-tabs">
             <button class="np-tab active" data-src="file">📄 Datei hochladen</button>
-            <button class="np-tab" data-src="zotero">🔗 Zotero</button>
+            <button class="np-tab" data-src="obsidian">📓 Obsidian</button>
           </div>
           <!-- Datei-Sub-Panel -->
           <div class="np-sub" id="np-sub-file">
@@ -325,24 +325,26 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
               <button class="adp-run" id="np-file-go" disabled>Analysieren →</button>
             </div>
           </div>
-          <!-- Zotero-Sub-Panel -->
-          <div class="np-sub" id="np-sub-zotero" style="display:none">
+          <!-- Obsidian/Dropbox-Sub-Panel -->
+          <div class="np-sub" id="np-sub-obsidian" style="display:none">
             <div class="zp-row">
-              <span class="zp-label">API-Key</span>
-              <input class="zp-input" id="np-zapi" type="password" placeholder="Zotero API-Key …" autocomplete="new-password">
+              <button class="zp-btn zp-test" id="np-obs-connect" style="background:#4f46e5;color:#fff">Mit Dropbox verbinden</button>
+              <span class="zp-status" id="np-obs-connect-status"></span>
             </div>
             <div class="zp-row">
-              <span class="zp-label">User-ID</span>
-              <input class="zp-input" id="np-zuserid" type="text" placeholder="123456" style="max-width:100px">
-              <span class="zp-label" style="min-width:auto">Collection</span>
-              <input class="zp-input" id="np-zcollect" type="text" placeholder="ABCDEF" style="max-width:100px">
+              <span class="zp-label">Ordner</span>
+              <input class="zp-input" id="np-obs-folder" type="text" placeholder="/Obsidian/BER-Clips">
+              <select class="zp-select" id="np-obs-doctype">
+                <option value="presseartikel">Presseartikel</option>
+                <option value="buchnotizen">Buchnotizen</option>
+              </select>
             </div>
             <div class="zp-row">
-              <button class="zp-btn zp-test" id="np-ztest">Testen</button>
-              <button class="zp-btn zp-save" id="np-zimport">Importieren →</button>
-              <span class="zp-status" id="np-zstatus"></span>
+              <button class="zp-btn zp-test" id="np-obs-test">Testen</button>
+              <button class="zp-btn zp-save" id="np-obs-import">Importieren →</button>
+              <span class="zp-status" id="np-obs-status"></span>
             </div>
-            <pre class="adp-log" id="np-zlog" style="display:none"></pre>
+            <pre class="adp-log" id="np-obs-log" style="display:none"></pre>
           </div>
           <span class="adp-close" id="np-close">Abbrechen</span>
         </div>
@@ -557,19 +559,20 @@ buildDots();
   const npName   = document.getElementById('np-name');
   const tabs     = wrap.querySelectorAll('.np-tab');
   const subFile  = document.getElementById('np-sub-file');
-  const subZot   = document.getElementById('np-sub-zotero');
+  const subObs   = document.getElementById('np-sub-obsidian');
   const npDrop   = document.getElementById('np-drop');
   const npDtype  = document.getElementById('np-doctype');
   const npFileGo = document.getElementById('np-file-go');
-  const npZApi   = document.getElementById('np-zapi');
-  const npZUser  = document.getElementById('np-zuserid');
-  const npZColl  = document.getElementById('np-zcollect');
-  const npZTest  = document.getElementById('np-ztest');
-  const npZImp   = document.getElementById('np-zimport');
-  const npZStat  = document.getElementById('np-zstatus');
-  const npZLog   = document.getElementById('np-zlog');
+  const npObsConnect = document.getElementById('np-obs-connect');
+  const npObsConnSt  = document.getElementById('np-obs-connect-status');
+  const npObsFolder  = document.getElementById('np-obs-folder');
+  const npObsDtype   = document.getElementById('np-obs-doctype');
+  const npObsTest    = document.getElementById('np-obs-test');
+  const npObsImp     = document.getElementById('np-obs-import');
+  const npObsStat    = document.getElementById('np-obs-status');
+  const npObsLog     = document.getElementById('np-obs-log');
   const npClose  = document.getElementById('np-close');
-  let curSrc = 'file'; let npFile = null;
+  let curSrc = 'file'; let npFile = null; let npObsProjId = null;
 
   card.addEventListener('click', () => { wrap.classList.toggle('np-open'); if (wrap.classList.contains('np-open')) npName.focus(); });
   npClose.addEventListener('click', () => { wrap.classList.remove('np-open'); resetNp(); });
@@ -578,16 +581,17 @@ buildDots();
     npName.value = ''; npFile = null;
     npDrop.textContent = 'Datei hierher ziehen oder klicken'; npDrop.classList.remove('has-file');
     npFileGo.disabled = true; npFileGo.textContent = 'Analysieren →';
-    npZApi.value = ''; npZUser.value = ''; npZColl.value = '';
-    npZStat.textContent = ''; npZLog.style.display = 'none'; npZLog.textContent = '';
-    npZImp.disabled = false;
+    npObsFolder.value = ''; npObsStat.textContent = '';
+    npObsLog.style.display = 'none'; npObsLog.textContent = '';
+    npObsImp.disabled = false; npObsProjId = null;
+    npObsConnSt.textContent = '';
   }
 
   tabs.forEach(tab => tab.addEventListener('click', () => {
     tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active');
     curSrc = tab.dataset.src;
     subFile.style.display = curSrc === 'file' ? '' : 'none';
-    subZot.style.display  = curSrc === 'zotero' ? '' : 'none';
+    subObs.style.display  = curSrc === 'obsidian' ? '' : 'none';
   }));
 
   const fi = document.createElement('input'); fi.type = 'file'; fi.accept = '.txt,.md,.pdf,.docx';
@@ -618,35 +622,56 @@ buildDots();
     } catch (e) { npFileGo.disabled = false; npFileGo.textContent = 'Analysieren →'; alert('Fehler: ' + e.message); }
   });
 
-  npZTest.addEventListener('click', async () => {
-    npZStat.textContent = 'Teste …'; npZStat.style.color = '';
-    const params = new URLSearchParams({ api_key: npZApi.value, user_id: npZUser.value, collection: npZColl.value });
-    try {
-      const res = await fetch('/api/projects/_new/zotero/test?' + params);
-      const data = await res.json();
-      npZStat.textContent = data.ok ? '✓ ' + data.count + ' Artikel' : '✗ ' + data.error;
-      npZStat.style.color = data.ok ? '#059669' : '#dc2626';
-    } catch (e) { npZStat.textContent = '✗ ' + e.message; npZStat.style.color = '#dc2626'; }
-  });
-
-  npZImp.addEventListener('click', async () => {
+  npObsConnect.addEventListener('click', async () => {
     const name = npName.value.trim();
-    if (!name) { npZStat.textContent = '✗ Projektname erforderlich'; npZStat.style.color = '#dc2626'; return; }
-    npZImp.disabled = true; npZLog.style.display = 'block'; npZLog.textContent = 'Erstelle Projekt …';
-    try {
+    if (!name) { npObsConnSt.textContent = '✗ Projektname erforderlich'; npObsConnSt.style.color = '#dc2626'; return; }
+    // Projekt anlegen wenn noch nicht vorhanden
+    if (!npObsProjId) {
       const projRes = await fetch('/api/projects', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: name, doc_type: 'presseartikel' }),
+        body: JSON.stringify({ title: name, doc_type: npObsDtype.value }),
       });
       const projData = await projRes.json();
-      if (!projData.ok) throw new Error(projData.error || 'Projekt konnte nicht erstellt werden');
-      const projId = projData.id;
-      await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/config', {
+      if (!projData.ok) { npObsConnSt.textContent = '✗ ' + projData.error; npObsConnSt.style.color = '#dc2626'; return; }
+      npObsProjId = projData.id;
+    }
+    npObsConnSt.textContent = 'Öffne Dropbox-Auth …'; npObsConnSt.style.color = '';
+    try {
+      const res = await fetch('/api/obsidian/oauth/start?project_id=' + encodeURIComponent(npObsProjId));
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      window.open(data.auth_url, '_blank');
+      npObsConnSt.textContent = '✓ Auth-Tab geöffnet — nach Verbindung hier fortfahren';
+      npObsConnSt.style.color = '#4f46e5';
+    } catch (e) { npObsConnSt.textContent = '✗ ' + e.message; npObsConnSt.style.color = '#dc2626'; }
+  });
+
+  npObsTest.addEventListener('click', async () => {
+    if (!npObsProjId) { npObsStat.textContent = '✗ Erst verbinden'; npObsStat.style.color = '#dc2626'; return; }
+    // Ordner speichern
+    await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: npObsDtype.value }),
+    });
+    npObsStat.textContent = 'Teste …'; npObsStat.style.color = '';
+    try {
+      const res = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/test');
+      const data = await res.json();
+      npObsStat.textContent = data.ok ? '✓ ' + data.count + ' Dateien' : '✗ ' + data.error;
+      npObsStat.style.color = data.ok ? '#4f46e5' : '#dc2626';
+    } catch (e) { npObsStat.textContent = '✗ ' + e.message; npObsStat.style.color = '#dc2626'; }
+  });
+
+  npObsImp.addEventListener('click', async () => {
+    if (!npObsProjId) { npObsStat.textContent = '✗ Erst verbinden'; npObsStat.style.color = '#dc2626'; return; }
+    npObsImp.disabled = true; npObsLog.style.display = 'block';
+    npObsLog.textContent = 'Starte Obsidian-Import …';
+    try {
+      await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api_key: npZApi.value, user_id: npZUser.value, collection: npZColl.value, doc_type: 'presseartikel' }),
+        body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: npObsDtype.value }),
       });
-      npZLog.textContent += '\n✓ Projekt erstellt\nStarte Zotero-Import …';
-      const syncRes = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/sync', { method: 'POST' });
+      const syncRes = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/sync', { method: 'POST' });
       if (!syncRes.ok || !syncRes.body) throw new Error('Sync-Fehler ' + syncRes.status);
       const reader = syncRes.body.getReader(); const dec = new TextDecoder(); let buf = '';
       while (true) {
@@ -656,12 +681,12 @@ buildDots();
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
           const msg = line.slice(6);
-          if (msg === '__done__') { npZLog.textContent += '\n✓ Import abgeschlossen!'; npClose.textContent = 'Schließen'; loadProjectList(); return; }
-          if (msg.startsWith('__error__')) { npZLog.textContent += '\n✗ ' + msg.slice(9); npZImp.disabled = false; return; }
-          if (!msg.startsWith('__')) { npZLog.textContent += '\n' + msg; npZLog.scrollTop = npZLog.scrollHeight; }
+          if (msg === '__done__') { npObsLog.textContent += '\n✓ Import abgeschlossen!'; npClose.textContent = 'Schließen'; loadProjectList(); return; }
+          if (msg.startsWith('__error__')) { npObsLog.textContent += '\n✗ ' + msg.slice(9); npObsImp.disabled = false; return; }
+          if (!msg.startsWith('__')) { npObsLog.textContent += '\n' + msg; npObsLog.scrollTop = npObsLog.scrollHeight; }
         }
       }
-    } catch (e) { npZLog.textContent += '\n✗ ' + e.message; npZImp.disabled = false; }
+    } catch (e) { npObsLog.textContent += '\n✗ ' + e.message; npObsImp.disabled = false; }
   });
 })();
 
@@ -1473,7 +1498,7 @@ async function loadProjectList() {
           <div class="proj-card-title">${escHtml(p.title)}</div>
           <div class="proj-card-meta">${escHtml(p.doc_type||'—')}${p.entry_count ? ' · ' + p.entry_count + ' Einträge' : ''}</div>
           ${p.doc_id ? `<a class="proj-card-edit" href="/ingest?project=${encodeURIComponent(p.id)}&document=${encodeURIComponent(p.doc_id)}&step=4">Bearbeiten</a>` : ''}
-          <button class="proj-card-zotero${p.zotero ? ' configured' : ''}">Zotero${p.zotero ? ' ●' : ''}</button>
+          <button class="proj-card-obsidian${p.obsidian ? ' configured' : ''}">Obsidian${p.obsidian?.connected ? ' ●' : ''}</button>
           <button class="proj-card-add">+ Dokument</button>
           <span class="proj-card-open">öffnen →</span>
         </div>
@@ -1489,7 +1514,7 @@ async function loadProjectList() {
           <pre class="adp-log" style="display:none"></pre>
           <span class="adp-close">Abbrechen</span>
         </div>
-        <div class="zotero-panel">
+        <div class="obsidian-panel">
           <div class="zp-row zp-sync-row" style="display:none">
             <button class="zp-btn zp-sync-btn">Aktualisieren ↻</button>
             <span class="zp-status zp-sync-status"></span>
@@ -1498,14 +1523,16 @@ async function loadProjectList() {
           <details class="zp-details" open>
             <summary class="zp-summary" style="display:none">Konfiguration bearbeiten ▾</summary>
             <div class="zp-row" style="margin-top:6px">
-              <span class="zp-label">API-Key</span>
-              <input class="zp-input zp-apikey" type="password" placeholder="Zotero API-Key …" autocomplete="new-password">
+              <button class="zp-btn zp-connect-btn" style="background:#4f46e5;color:#fff">Mit Dropbox verbinden</button>
+              <span class="zp-status zp-connect-status"></span>
             </div>
             <div class="zp-row">
-              <span class="zp-label">User-ID</span>
-              <input class="zp-input zp-userid" type="text" placeholder="123456" style="max-width:100px">
-              <span class="zp-label" style="min-width:auto">Collection</span>
-              <input class="zp-input zp-collection" type="text" placeholder="ABCDEF" style="max-width:100px">
+              <span class="zp-label">Ordner</span>
+              <input class="zp-input zp-folder" type="text" placeholder="/Obsidian/BER-Clips">
+              <select class="zp-select zp-doctype">
+                <option value="presseartikel">Presseartikel</option>
+                <option value="buchnotizen">Buchnotizen</option>
+              </select>
             </div>
             <div class="zp-row">
               <button class="zp-btn zp-test">Testen</button>
@@ -1530,12 +1557,13 @@ async function loadProjectList() {
 
       if (editLnk) editLnk.addEventListener('click', e => e.stopPropagation());
 
-      // ── Zotero-Panel ────────────────────────────────────────────────────────
-      const zBtn       = wrap.querySelector('.proj-card-zotero');
-      const zPanel     = wrap.querySelector('.zotero-panel');
-      const zApiKey    = zPanel.querySelector('.zp-apikey');
-      const zUserId    = zPanel.querySelector('.zp-userid');
-      const zCollect   = zPanel.querySelector('.zp-collection');
+      // ── Obsidian-Panel ──────────────────────────────────────────────────────
+      const zBtn       = wrap.querySelector('.proj-card-obsidian');
+      const zPanel     = wrap.querySelector('.obsidian-panel');
+      const zFolder    = zPanel.querySelector('.zp-folder');
+      const zDoctype   = zPanel.querySelector('.zp-doctype');
+      const zConnBtn   = zPanel.querySelector('.zp-connect-btn');
+      const zConnSt    = zPanel.querySelector('.zp-connect-status');
       const zTest      = zPanel.querySelector('.zp-test');
       const zSave      = zPanel.querySelector('.zp-save');
       const zFormSt    = zPanel.querySelector('.zp-form-status');
@@ -1548,26 +1576,26 @@ async function loadProjectList() {
       const zClose     = zPanel.querySelector('.zp-close');
       const projId     = card.dataset.id;
 
-      function closeZotero() { wrap.classList.remove('zotero-open'); zFormSt.textContent = ''; zSyncSt.textContent = ''; }
-      zClose.addEventListener('click', closeZotero);
+      function closeObsidian() { wrap.classList.remove('obsidian-open'); zFormSt.textContent = ''; zSyncSt.textContent = ''; }
+      zClose.addEventListener('click', closeObsidian);
 
       zBtn.addEventListener('click', async e => {
         e.stopPropagation();
-        if (wrap.classList.contains('zotero-open')) { closeZotero(); return; }
+        if (wrap.classList.contains('obsidian-open')) { closeObsidian(); return; }
         wrap.classList.remove('open');
-        wrap.classList.add('zotero-open');
+        wrap.classList.add('obsidian-open');
         zFormSt.textContent = 'Lade …';
         try {
           const res = await fetch('/api/projects/' + encodeURIComponent(projId));
           const data = res.ok ? await res.json() : {};
-          const zc = data.zotero || {};
-          if (zc.api_key_masked) zApiKey.placeholder = zc.api_key_masked;
-          if (zc.user_id)    zUserId.value  = zc.user_id;
-          if (zc.collection) zCollect.value = zc.collection;
-          if (zc.collection) {
+          const oc = data.obsidian || {};
+          if (oc.dropbox_folder) zFolder.value = oc.dropbox_folder;
+          if (oc.doc_type) zDoctype.value = oc.doc_type;
+          if (oc.dropbox_folder) {
             zSyncRow.style.display = ''; zSummary.style.display = '';
             zDetails.removeAttribute('open');
-            zFormSt.textContent = 'Konfiguriert';
+            zFormSt.textContent = oc.connected ? 'Verbunden ●' : 'Ordner konfiguriert';
+            zFormSt.style.color = oc.connected ? '#4f46e5' : '';
           } else {
             zSyncRow.style.display = 'none'; zSummary.style.display = 'none';
             zDetails.setAttribute('open', ''); zFormSt.textContent = '';
@@ -1575,11 +1603,22 @@ async function loadProjectList() {
         } catch (_) { zFormSt.textContent = ''; }
       });
 
+      zConnBtn.addEventListener('click', async () => {
+        zConnSt.textContent = 'Öffne Auth …'; zConnSt.style.color = '';
+        try {
+          const res = await fetch('/api/obsidian/oauth/start?project_id=' + encodeURIComponent(projId));
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error);
+          window.open(data.auth_url, '_blank');
+          zConnSt.textContent = '✓ Auth-Tab geöffnet'; zConnSt.style.color = '#4f46e5';
+        } catch (e) { zConnSt.textContent = '✗ ' + e.message; zConnSt.style.color = '#dc2626'; }
+      });
+
       zSyncBtn.addEventListener('click', async () => {
         zSyncSt.textContent = 'Läuft …'; zSyncLog.style.display = 'block';
         zSyncLog.textContent = ''; zSyncBtn.disabled = true;
         try {
-          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/sync', { method: 'POST' });
+          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/obsidian/sync', { method: 'POST' });
           if (!res.ok || !res.body) throw new Error('Fehler ' + res.status);
           const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
           while (true) {
@@ -1598,26 +1637,24 @@ async function loadProjectList() {
       });
 
       zTest.addEventListener('click', async () => {
-        zFormSt.textContent = 'Teste Verbindung …';
-        const params = new URLSearchParams({ api_key: zApiKey.value, user_id: zUserId.value, collection: zCollect.value });
+        zFormSt.textContent = 'Teste Verbindung …'; zFormSt.style.color = '';
         try {
-          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/test?' + params);
+          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/obsidian/test');
           const data = await res.json();
-          zFormSt.textContent = data.ok ? '✓ ' + data.count + ' Artikel' : '✗ ' + data.error;
-          zFormSt.style.color = data.ok ? '#059669' : '#dc2626';
+          zFormSt.textContent = data.ok ? '✓ ' + data.count + ' Dateien' : '✗ ' + data.error;
+          zFormSt.style.color = data.ok ? '#4f46e5' : '#dc2626';
         } catch (e) { zFormSt.textContent = '✗ ' + e.message; zFormSt.style.color = '#dc2626'; }
       });
       zSave.addEventListener('click', async () => {
-        zFormSt.textContent = 'Speichere …';
+        zFormSt.textContent = 'Speichere …'; zFormSt.style.color = '';
         try {
-          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/zotero/config', {
+          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/obsidian/config', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ api_key: zApiKey.value, user_id: zUserId.value,
-                                   collection: zCollect.value, doc_type: 'presseartikel' }),
+            body: JSON.stringify({ dropbox_folder: zFolder.value, doc_type: zDoctype.value }),
           });
           const data = await res.json();
           zFormSt.textContent = data.ok ? '✓ Gespeichert' : '✗ ' + data.error;
-          zFormSt.style.color = data.ok ? '#059669' : '#dc2626';
+          zFormSt.style.color = data.ok ? '#4f46e5' : '#dc2626';
           if (data.ok) loadProjectList();
         } catch (e) { zFormSt.textContent = '✗ ' + e.message; zFormSt.style.color = '#dc2626'; }
       });
@@ -1632,7 +1669,7 @@ async function loadProjectList() {
       addBtn.addEventListener('click', e => {
         e.stopPropagation();
         if (wrap.classList.contains('open')) { wrap.classList.remove('open'); resetPanel(); }
-        else { closeZotero(); wrap.classList.add('open'); }
+        else { closeObsidian(); wrap.classList.add('open'); }
       });
       closeEl.addEventListener('click', () => { wrap.classList.remove('open'); resetPanel(); });
 

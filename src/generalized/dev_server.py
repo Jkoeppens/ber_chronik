@@ -64,7 +64,7 @@ EXPORT_EXPLORATION_SCRIPT  = ROOT / "src" / "generalized" / "export_exploration.
 PROPOSE_SCRIPT             = ROOT / "src" / "generalized" / "propose_taxonomy.py"
 EXTRACT_ENTITIES_SCRIPT    = ROOT / "src" / "generalized" / "extract_entities_v2.py"
 MATCH_ENTITIES_SCRIPT      = ROOT / "src" / "generalized" / "match_entities.py"
-INGEST_ZOTERO_SCRIPT       = ROOT / "src" / "generalized" / "ingest_zotero.py"
+INGEST_OBSIDIAN_SCRIPT     = ROOT / "src" / "generalized" / "ingest_obsidian.py"
 
 app = FastAPI(title="Generalized Dev Server")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -977,16 +977,13 @@ async def get_project_endpoint(project_id: str):
             cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             pass
-    zc = cfg.get("zotero") or {}
-    zotero_info = None
-    if zc.get("collection"):
-        raw_key = zc.get("api_key", "")
-        masked  = (raw_key[:4] + "…" + raw_key[-4:]) if len(raw_key) > 8 else ("●" * len(raw_key))
-        zotero_info = {
-            "user_id":    zc.get("user_id", ""),
-            "collection": zc.get("collection", ""),
-            "doc_type":   zc.get("doc_type", "presseartikel"),
-            "api_key_masked": masked,
+    oc = cfg.get("obsidian") or {}
+    obsidian_info = None
+    if oc.get("dropbox_folder"):
+        obsidian_info = {
+            "dropbox_folder": oc.get("dropbox_folder", ""),
+            "doc_type":       oc.get("doc_type", "presseartikel"),
+            "connected":      bool(oc.get("tokens", {}).get("refresh_token")),
         }
     return JSONResponse({
         "ok":       True,
@@ -997,7 +994,7 @@ async def get_project_endpoint(project_id: str):
         "year_max": cfg.get("year_max"),
         "events":   cfg.get("events") or [],
         "taxonomy": cfg.get("taxonomy") or [],
-        "zotero":   zotero_info,
+        "obsidian": obsidian_info,
     })
 
 
@@ -1102,67 +1099,128 @@ async def get_project_token(project_id: str, request: Request):
                          "created_at": proj["created_at"], "doc_id": doc_id})
 
 
-@app.post("/api/projects/{project_id}/zotero/config")
-async def save_zotero_config(project_id: str, request: Request):
+# ── Obsidian / Dropbox OAuth2 + Ingest ───────────────────────────────────────
+
+# In-memory-Store: csrf_token → {project_id, session}
+_obsidian_oauth_states: dict[str, dict] = {}
+_CSRF_SESSION_KEY = "dropbox_csrf"
+
+
+def _dropbox_env_ok() -> bool:
+    import src.generalized.ingest_obsidian as _obs
+    return bool(_obs.DROPBOX_APP_KEY and _obs.DROPBOX_APP_SECRET)
+
+
+@app.get("/api/obsidian/oauth/start")
+async def obsidian_oauth_start(project_id: str, request: Request):
+    if err := _require_admin_key(request): return err
+    if not _dropbox_env_ok():
+        return JSONResponse({"ok": False, "error": "DROPBOX_APP_KEY / DROPBOX_APP_SECRET fehlen in .env"}, status_code=500)
+    import src.generalized.ingest_obsidian as _obs
+    from dropbox.oauth import DropboxOAuth2Flow
+    session: dict = {}
+    flow = DropboxOAuth2Flow(
+        consumer_key=_obs.DROPBOX_APP_KEY,
+        consumer_secret=_obs.DROPBOX_APP_SECRET,
+        redirect_uri=_obs.DROPBOX_REDIRECT_URL,
+        session=session,
+        csrf_token_session_key=_CSRF_SESSION_KEY,
+        token_access_type="offline",
+    )
+    auth_url = flow.start()
+    csrf = session[_CSRF_SESSION_KEY]
+    _obsidian_oauth_states[csrf] = {"project_id": project_id, "session": session}
+    return JSONResponse({"ok": True, "auth_url": auth_url})
+
+
+@app.get("/api/obsidian/oauth/callback")
+async def obsidian_oauth_callback(code: str = "", state: str = ""):
+    if not state or state not in _obsidian_oauth_states:
+        return JSONResponse({"ok": False, "error": "Ungültiger OAuth-State"}, status_code=400)
+    entry = _obsidian_oauth_states.pop(state)
+    project_id = entry["project_id"]
+    import src.generalized.ingest_obsidian as _obs
+    from dropbox.oauth import DropboxOAuth2Flow
+    flow = DropboxOAuth2Flow(
+        consumer_key=_obs.DROPBOX_APP_KEY,
+        consumer_secret=_obs.DROPBOX_APP_SECRET,
+        redirect_uri=_obs.DROPBOX_REDIRECT_URL,
+        session=entry["session"],
+        csrf_token_session_key=_CSRF_SESSION_KEY,
+        token_access_type="offline",
+    )
+    try:
+        result = flow.finish({"code": code, "state": state})
+    except Exception as exc:
+        return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+    cfg_path = PROJECTS_DIR / project_id / "config.json"
+    cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
+    oc = cfg.get("obsidian") or {}
+    oc["tokens"] = {
+        "access_token":  result.access_token,
+        "refresh_token": result.refresh_token,
+    }
+    cfg["obsidian"] = oc
+    cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(f"/ingest?project={project_id}&step=2")
+
+
+@app.post("/api/projects/{project_id}/obsidian/config")
+async def save_obsidian_config(project_id: str, request: Request):
     if err := _require_admin_key(request): return err
     body = await request.json()
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
-    existing = cfg.get("zotero") or {}
-    api_key = body.get("api_key", "").strip()
-    if not api_key:
-        api_key = existing.get("api_key", "")
-    cfg["zotero"] = {
-        "api_key":    api_key,
-        "user_id":    body.get("user_id", "").strip(),
-        "collection": body.get("collection", "").strip(),
-        "doc_type":   body.get("doc_type", "presseartikel"),
-    }
+    oc = cfg.get("obsidian") or {}
+    oc["dropbox_folder"] = body.get("dropbox_folder", "").strip()
+    oc["doc_type"]       = body.get("doc_type", "presseartikel")
+    cfg["obsidian"] = oc
     cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     return JSONResponse({"ok": True})
 
 
-@app.get("/api/projects/{project_id}/zotero/test")
-async def test_zotero_config(project_id: str, request: Request,
-                              api_key: str = "", user_id: str = "", collection: str = ""):
+@app.get("/api/projects/{project_id}/obsidian/test")
+async def test_obsidian_config(project_id: str, request: Request):
     if err := _require_admin_key(request): return err
-    if not api_key or not user_id or not collection:
-        return JSONResponse({"ok": False, "error": "api_key, user_id und collection erforderlich"}, status_code=400)
+    cfg_path = PROJECTS_DIR / project_id / "config.json"
+    if not cfg_path.exists():
+        return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
+    cfg  = json.loads(cfg_path.read_text(encoding="utf-8"))
+    oc   = cfg.get("obsidian") or {}
+    tokens = oc.get("tokens") or {}
+    folder = oc.get("dropbox_folder", "")
+    if not tokens.get("refresh_token"):
+        return JSONResponse({"ok": False, "error": "Dropbox nicht verbunden — OAuth erforderlich"}, status_code=400)
+    if not folder:
+        return JSONResponse({"ok": False, "error": "dropbox_folder nicht konfiguriert"}, status_code=400)
     import asyncio
     def _check():
         try:
-            from pyzotero import zotero as pyz
-            zot = pyz.Zotero(user_id, "user", api_key)
-            items = zot.everything(zot.collection_items(collection))
-            items = [it for it in items if it.get("data", {}).get("itemType") not in ("attachment", "note")]
-            return {"ok": True, "count": len(items)}
+            import src.generalized.ingest_obsidian as _obs
+            dbx = _obs._get_client(tokens)
+            entries = _obs._list_md_files(dbx, folder)
+            return {"ok": True, "count": len(entries)}
         except Exception as exc:
             return {"ok": False, "error": str(exc)}
     result = await asyncio.get_event_loop().run_in_executor(None, _check)
     return JSONResponse(result)
 
 
-@app.post("/api/projects/{project_id}/zotero/sync")
-async def zotero_sync(project_id: str, request: Request):
+@app.post("/api/projects/{project_id}/obsidian/sync")
+async def obsidian_sync(project_id: str, request: Request):
     if err := _require_admin_key(request): return err
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     if not cfg_path.exists():
         return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
     cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
-    zc  = cfg.get("zotero") or {}
-    api_key    = zc.get("api_key") or os.environ.get("ZOTERO_API_KEY", "")
-    user_id    = zc.get("user_id") or os.environ.get("ZOTERO_USER_ID", "")
-    collection = zc.get("collection", "")
-    doc_type   = zc.get("doc_type", "presseartikel")
-    if not api_key or not user_id or not collection:
-        return JSONResponse({"ok": False, "error": "Zotero nicht konfiguriert (api_key, user_id, collection)"}, status_code=400)
-    args = ["--project", project_id,
-            "--api-key", api_key,
-            "--user-id", str(user_id),
-            "--collection", collection,
-            "--doc-type", doc_type]
+    oc  = cfg.get("obsidian") or {}
+    if not oc.get("tokens", {}).get("refresh_token"):
+        return JSONResponse({"ok": False, "error": "Dropbox nicht verbunden"}, status_code=400)
+    args = ["--project", project_id, "--source", "dropbox",
+            "--doc-type", oc.get("doc_type", "presseartikel")]
     async def gen():
-        async for chunk in run_script_sse(INGEST_ZOTERO_SCRIPT, args):
+        async for chunk in run_script_sse(INGEST_OBSIDIAN_SCRIPT, args):
             if chunk == "data: __ok__\n\n":
                 break
             yield chunk
