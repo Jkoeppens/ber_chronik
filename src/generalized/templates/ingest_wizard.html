@@ -1949,8 +1949,19 @@ async function openExistingProject(id, title, docType) {
       year_max: cfg.year_max ?? 1920,
       events:   (cfg.events || []).map((e, i) => ({ ...e, id: evNextId++, color: EVENT_COLORS[i % EVENT_COLORS.length] })),
     };
-    maxReachedStep = 7;
-    gotoStep(6);
+    if (cfg.obsidian?.dropbox_folder && !tokenData.doc_id) {
+      state.obsidian_source   = 'dropbox';
+      state.isExistingProject = true;
+      state.doc_type          = cfg.doc_type || 'presseartikel';
+      maxReachedStep = 2;
+      gotoStep(2);
+    } else if (tokenData.doc_id) {
+      maxReachedStep = 7;
+      gotoStep(6);
+    } else {
+      maxReachedStep = 2;
+      gotoStep(2);
+    }
   } catch (e) {
     alert('Fehler beim Öffnen: ' + e.message);
   } finally {
