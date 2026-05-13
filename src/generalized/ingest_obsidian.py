@@ -159,33 +159,61 @@ def _extract_date(meta: dict) -> str | None:
 
 # ── Segment-Bau ───────────────────────────────────────────────────────────────
 
-_PARA_SPLIT = re.compile(r"\n{2,}")
+def _build_segments(start_idx: int, meta: dict, body: str,
+                    doc_type: str, file_path: str) -> list[dict]:
+    """Baut alle Segmente für eine .md-Datei.
 
+    Gibt zuerst ein Heading-Segment (type="heading") zurück, dann pro Absatz
+    ein content-Segment. detect_anchors liest das date-Feld des Headings als
+    Anker; interpolate_anchors erbt diesen Anker auf die content-Segmente.
+    """
+    title = str(meta.get("title") or Path(file_path).stem)
+    date  = _extract_date(meta)
+    url   = str(meta.get("source") or "")
+    author = _clean_obsidian_links(meta.get("author") or "")
+    abstract = str(meta.get("description") or "")
 
-def _split_paragraphs(text: str, max_chars: int = 2000) -> list[str]:
-    """Kurze Texte → ein Segment. Lange Texte → Absatz-Split."""
-    if len(text) <= max_chars:
-        return [text.strip()] if text.strip() else []
-    paras = [p.strip() for p in _PARA_SPLIT.split(text) if p.strip()]
-    return paras or [text.strip()]
-
-
-def _build_segment(idx: int, text: str, meta: dict, doc_type: str,
-                   file_path: str) -> dict:
-    return {
-        "segment_id": f"s{idx:04d}",
-        "level":      3,
-        "type":       "content",
-        "source":     str(meta.get("title") or Path(file_path).stem),
-        "text":       text,
-        "page":       None,
-        "doc_type":   doc_type,
-        "date":       _extract_date(meta),
-        "url":        str(meta.get("source") or ""),   # "source" ist die URL
-        "author":     _clean_obsidian_links(meta.get("author") or ""),
-        "abstract":   str(meta.get("description") or ""),
+    common = {
+        "source":       title,
+        "page":         None,
+        "doc_type":     doc_type,
+        "ingest_source": "obsidian",
+        "url":          url,
+        "author":       author,
+        "abstract":     abstract,
         "obsidian_path": file_path,
     }
+
+    segs: list[dict] = []
+    idx = start_idx
+
+    # Heading-Segment: Anker für detect_anchors / interpolate_anchors
+    segs.append({
+        "segment_id": f"s{idx:04d}",
+        "level":      2,
+        "type":       "heading",
+        "text":       title,
+        "date":       date,
+        **common,
+    })
+    idx += 1
+
+    paras = [p.strip() for p in body.split("\n\n") if p.strip()]
+    if not paras:
+        paras = [body.strip()] if body.strip() else []
+
+    for para in paras:
+        segs.append({
+            "segment_id": f"s{idx:04d}",
+            "level":      3,
+            "type":       "content",
+            "text":       para,
+            "date":       date,
+            **common,
+        })
+        idx += 1
+
+    return segs
 
 
 # ── Pipeline-Ausführung ───────────────────────────────────────────────────────
@@ -301,19 +329,18 @@ def main() -> None:
             print(f"  WARNING: {key} hat keinen Textinhalt — übersprungen", file=sys.stderr)
             continue
 
-        paras = _split_paragraphs(body)
-        for para in paras:
-            seg = _build_segment(
-                idx=len(segments) + 1,
-                text=para,
-                meta=meta,
-                doc_type=args.doc_type,
-                file_path=key,
-            )
-            segments.append(seg)
+        new_segs = _build_segments(
+            start_idx=len(segments) + 1,
+            meta=meta,
+            body=body,
+            doc_type=args.doc_type,
+            file_path=key,
+        )
+        segments.extend(new_segs)
 
+        n_content = sum(1 for s in new_segs if s["type"] == "content")
         processed_keys.append(key)
-        print(f"  → {len(paras)} Segment(e)  ({len(body)} Zeichen)")
+        print(f"  → 1 Heading + {n_content} Absatz-Segment(e)  ({len(body)} Zeichen)")
 
     if not segments:
         print("\nKeine verwertbaren Segmente — Abbruch.")

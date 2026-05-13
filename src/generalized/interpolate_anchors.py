@@ -235,13 +235,16 @@ def main() -> None:
     else:
         doc_type = next((s.get("doc_type") for s in segments_raw if s.get("doc_type")), "buchnotizen")
     if doc_type == "presseartikel":
-        # Presseartikel haben bereits ihr Jahr aus der Heading-Erkennung – keine Interpolation
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            json.dumps(segments_raw, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-        print(f"→ {output_path}  (presseartikel – Interpolation übersprungen, {len(segments_raw)} Segmente)")
-        return
+        # Obsidian-Artikel: content-Segs sind undatiert, Interpolation erbt vom Heading-Anker
+        # DOCX/Zotero-Artikel: Segs bereits datiert in detect_anchors – Bypass
+        first_seg = segments_raw[0] if segments_raw else {}
+        if first_seg.get("ingest_source") != "obsidian":
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(
+                json.dumps(segments_raw, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            print(f"→ {output_path}  (presseartikel/DOCX – Interpolation übersprungen, {len(segments_raw)} Segmente)")
+            return
 
     override_list: list[dict] = []
     if overrides_path.exists():

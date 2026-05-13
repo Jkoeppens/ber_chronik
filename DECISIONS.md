@@ -166,6 +166,29 @@ Endpoints: `/api/obsidian/oauth/start`, `/api/obsidian/oauth/callback`,
 
 **Lokaler Modus:** `--source local --vault /pfad` für Tests ohne Dropbox-Auth.
 
+### D-I2 — Ingest-Architektur: Quelle × Material-Typ
+
+Zwei unabhängige Dimensionen bestimmen das Pipeline-Verhalten:
+
+**Quelle:**
+- A: DOCX-Upload → `parse_document.py`
+- B: Obsidian/Dropbox → `ingest_obsidian.py`
+
+**Material-Typ und Pipeline-Verhalten:**
+
+| | presseartikel/DOCX (Geicke-Stil) | presseartikel/Obsidian (Web-Artikel) | buchnotizen/forschungsnotizen |
+|---|---|---|---|
+| Segment-Bau | `parse_presseartikel()`: flach, Jahres-Headings | `_build_segments()`: Heading-Seg + Absatz-Split auf `\n\n` | `parse()`: Werk-Hierarchie level 1/2/3 |
+| Datierung | Heading-Jahr aus Dokument-Struktur | `published`/`created` Frontmatter → `date`-Feld im Heading-Segment | Fließtext-Regex (exact/decade/event) |
+| detect_anchors | Heading-Jahr → content-Segs direkt datiert | Heading-Segment mit `date`-Feld → Anker-Row in Output; content-Segs undatiert | Regex + Event-Liste + Heading-Vererbung |
+| interpolate | Bypass (kein Fließtext-Regex nötig) | Läuft — content-Segs erben Heading-Datum via Rule 4 | Volle 5-Regel-Interpolation |
+| Marker | — | `ingest_source="obsidian"` in jedem Segment | — |
+
+**Konsequenzen:**
+- `detect_anchors.py` presseartikel-Branch: `type:"heading"` mit `date`-Feld (Obsidian-Stil) → Anker-Row schreiben, `active_heading_year` nicht für content-Segs nutzen
+- `interpolate_anchors.py` presseartikel-Bypass: nur wenn `ingest_source != "obsidian"` (erstes Segment als Probe)
+- DOCX presseartikel-Verhalten unverändert
+
 ## Entity-Extraktion
 
 ### D-E1 — Plaintext-Format für alle geparsten LLM-Ausgaben

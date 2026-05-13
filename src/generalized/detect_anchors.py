@@ -150,19 +150,54 @@ def main() -> None:
     output_rows: list[dict] = []
 
     if doc_type == "presseartikel":
-        # ── Presseartikel-Modus: Heading-Jahre + date-Feld, kein Fließtext-Regex ─
+        # ── Presseartikel-Modus: kein Fließtext-Regex ─────────────────────────
+        # Zwei Sub-Pfade je nach Quelle:
+        #   DOCX (Geicke-Stil): Jahres-Heading im Text ("1989") → active_heading_year
+        #                       content-Segs erben das Jahr direkt hier
+        #   Obsidian: Heading-Segment mit date-Feld → Anker-Row in Output
+        #             content-Segs bleiben undatiert → Interpolation erbt
         active_heading_year: int | None = None
         heading_count = 0
         date_field_count = 0
+        obsidian_heading_count = 0
         without_date = 0
 
         for seg in segments:
             if seg.get("type") == "heading":
                 m = _YEAR_ONLY.match(seg.get("text", ""))
-                active_heading_year = int(m.group(1)) if m else None
+                if m:
+                    # DOCX-Stil: reine Jahreszahl im Text
+                    active_heading_year = int(m.group(1))
+                    # kein Output-Row für DOCX-Headings
+                else:
+                    # Obsidian-Stil: Artikel-Titel als Heading, Datum im date-Feld
+                    date_str = (seg.get("date") or "").strip()
+                    year: int | None = None
+                    if re.match(r"^\d{4}", date_str):
+                        year = int(date_str[:4])
+                    if year is not None:
+                        row = {**seg,
+                               "anchors": [{"type": "exact", "value": year,
+                                            "span": date_str, "source": "date"}],
+                               "time_from": year, "time_to": year,
+                               "precision": "exact"}
+                        if not row.get("date_raw"):
+                            row["date_raw"] = date_str
+                        output_rows.append(row)
+                        obsidian_heading_count += 1
+                    # active_heading_year nicht setzen — content-Segs via Interpolation
                 continue
 
             if seg.get("type") != "content":
+                continue
+
+            if seg.get("ingest_source") == "obsidian":
+                # Obsidian content: undatiert lassen, Interpolation erbt vom Heading-Anker
+                row = {**seg, "anchors": [], "time_from": None, "time_to": None,
+                       "precision": None}
+                if not row.get("date_raw") and row.get("date"):
+                    row["date_raw"] = row["date"]
+                output_rows.append(row)
                 continue
 
             if active_heading_year is not None:
@@ -172,9 +207,9 @@ def main() -> None:
                 precision = "heading"
                 heading_count += 1
             else:
-                # Kein Heading-Jahr — date-Feld aus Segment-Metadaten lesen
+                # Kein Heading-Jahr — date-Feld aus Segment-Metadaten lesen (Zotero)
                 date_str = (seg.get("date") or "").strip()
-                year: int | None = None
+                year = None
                 if re.match(r"^\d{4}-\d{2}", date_str):   # YYYY-MM-DD oder YYYY-MM
                     year = int(date_str[:4])
                     precision = "exact"
@@ -197,7 +232,6 @@ def main() -> None:
             row = {**seg, "anchors": anchors,
                    "time_from": time_from, "time_to": time_to,
                    "precision": precision}
-            # Konvertiere Zotero-"date"-Feld zu "date_raw" für export_exploration
             if not row.get("date_raw") and row.get("date"):
                 row["date_raw"] = row["date"]
             output_rows.append(row)
@@ -206,15 +240,19 @@ def main() -> None:
             json.dumps(output_rows, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         total = len(output_rows)
+        n_content = sum(1 for r in output_rows if r.get("type") == "content")
         print(f"→ {output_path}  ({total} Segmente, doc_type=presseartikel)\n")
-        print(f"Segmente (type=content):          {total}")
-        if total:
-            print(f"  mit Heading-Jahr:               {heading_count}"
-                  f"  ({heading_count/total*100:.1f} %)")
-            print(f"  mit date-Feld:                  {date_field_count}"
-                  f"  ({date_field_count/total*100:.1f} %)")
+        print(f"Segmente gesamt:                  {total}")
+        if obsidian_heading_count:
+            print(f"  Obsidian-Headings (mit Datum):  {obsidian_heading_count}")
+            print(f"  Obsidian-content (undatiert):   {n_content}")
+        if n_content:
+            print(f"  mit DOCX-Heading-Jahr:          {heading_count}"
+                  f"  ({heading_count/n_content*100:.1f} %)")
+            print(f"  mit date-Feld (Zotero):         {date_field_count}"
+                  f"  ({date_field_count/n_content*100:.1f} %)")
             print(f"  ohne Datum:                     {without_date}"
-                  f"  ({without_date/total*100:.1f} %)")
+                  f"  ({without_date/n_content*100:.1f} %)")
         return
 
     # ── Forschungsnotizen-Modus: Regex + Event-Liste + Heading-Vererbung ────────
