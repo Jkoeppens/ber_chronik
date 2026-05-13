@@ -335,17 +335,12 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
               <span class="zp-label">Ordner</span>
               <input class="zp-input" id="np-obs-folder" type="text" placeholder="/Obsidian/BER-Clips">
               <small style="color:var(--c-text-3);font-size:10px;width:100%;margin-top:2px">Pfad in Dropbox — z.B. /Clips oder /Obsidian/BER</small>
-              <select class="zp-select" id="np-obs-doctype">
-                <option value="presseartikel">Presseartikel</option>
-                <option value="buchnotizen">Buchnotizen</option>
-              </select>
             </div>
             <div class="zp-row">
               <button class="zp-btn zp-test" id="np-obs-test">Testen</button>
-              <button class="zp-btn zp-save" id="np-obs-import">Importieren →</button>
+              <button class="zp-btn" id="np-obs-go" style="background:#4f46e5;color:#fff" disabled>Weiter →</button>
               <span class="zp-status" id="np-obs-status"></span>
             </div>
-            <pre class="adp-log" id="np-obs-log" style="display:none"></pre>
           </div>
           <span class="adp-close" id="np-close">Abbrechen</span>
         </div>
@@ -380,15 +375,16 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
     </div>
   </section>
 
-  <!-- Step 3: Analyse -->
+  <!-- Step 3: Analyse / Obsidian-Sync -->
   <section id="step-3" class="step">
-    <h2>LLM-Analyse</h2>
-    <p class="step-desc">Claude analysiert automatisch Zeitraum, Ereignisse und Dokumentstruktur.</p>
+    <h2 id="step3-title">LLM-Analyse</h2>
+    <p class="step-desc" id="step3-desc">Claude analysiert automatisch Zeitraum, Ereignisse und Dokumentstruktur.</p>
     <div id="analysis-spinner">
       <div class="spinner-ring"></div>
       <span id="analysis-status">Dokument wird geparst…</span>
     </div>
     <div id="analysis-error"></div>
+    <pre id="obs-sync-log" class="log-box" style="display:none;max-height:220px;overflow:auto;margin-bottom:12px"></pre>
     <div id="analysis-result">
       <div class="a-grid" id="a-grid"></div>
       <div class="a-events" id="a-events"></div>
@@ -503,6 +499,7 @@ const state = {
   project: null,
   project_title: '',
   isExistingProject: false,
+  obsidian_source: null,   // 'dropbox' wenn Obsidian-Flow aktiv
 };
 
 function slugify(name) {
@@ -567,11 +564,9 @@ buildDots();
   const npObsConnect = document.getElementById('np-obs-connect');
   const npObsConnSt  = document.getElementById('np-obs-connect-status');
   const npObsFolder  = document.getElementById('np-obs-folder');
-  const npObsDtype   = document.getElementById('np-obs-doctype');
   const npObsTest    = document.getElementById('np-obs-test');
-  const npObsImp     = document.getElementById('np-obs-import');
+  const npObsGo      = document.getElementById('np-obs-go');
   const npObsStat    = document.getElementById('np-obs-status');
-  const npObsLog     = document.getElementById('np-obs-log');
   const npClose  = document.getElementById('np-close');
   let curSrc = 'file'; let npFile = null; let npObsProjId = null;
 
@@ -583,8 +578,7 @@ buildDots();
     npDrop.textContent = 'Datei hierher ziehen oder klicken'; npDrop.classList.remove('has-file');
     npFileGo.disabled = true; npFileGo.textContent = 'Analysieren →';
     npObsFolder.value = ''; npObsStat.textContent = '';
-    npObsLog.style.display = 'none'; npObsLog.textContent = '';
-    npObsImp.disabled = false; npObsProjId = null;
+    npObsGo.disabled = true; npObsProjId = null;
     npObsConnSt.textContent = 'Noch nicht verbunden'; npObsConnSt.style.color = '#6b7280';
   }
 
@@ -602,7 +596,10 @@ buildDots();
   npDrop.addEventListener('drop', e => { e.preventDefault(); npDrop.classList.remove('dragover'); if (e.dataTransfer.files[0]) setNpFile(e.dataTransfer.files[0]); });
   fi.addEventListener('change', () => { if (fi.files[0]) setNpFile(fi.files[0]); });
   function setNpFile(f) { npFile = f; npDrop.textContent = f.name; npDrop.classList.add('has-file'); npFileGo.disabled = !npName.value.trim(); }
-  npName.addEventListener('input', () => { if (curSrc === 'file') npFileGo.disabled = !(npFile && npName.value.trim()); });
+  npName.addEventListener('input', () => {
+    if (curSrc === 'file') npFileGo.disabled = !(npFile && npName.value.trim());
+    if (curSrc === 'obsidian') npObsGo.disabled = !npName.value.trim();
+  });
 
   npFileGo.addEventListener('click', async () => {
     const name = npName.value.trim();
@@ -646,6 +643,7 @@ buildDots();
       window.open(data.auth_url, '_blank');
       npObsConnSt.textContent = '✓ Auth-Tab geöffnet — nach Verbindung hier fortfahren';
       npObsConnSt.style.color = '#4f46e5';
+      npObsGo.disabled = !npName.value.trim();
     } catch (e) { npObsConnSt.textContent = '✗ ' + e.message; npObsConnSt.style.color = '#dc2626'; }
   });
 
@@ -665,52 +663,29 @@ buildDots();
     } catch (e) { npObsStat.textContent = '✗ ' + e.message; npObsStat.style.color = '#dc2626'; }
   });
 
-  npObsImp.addEventListener('click', async () => {
+  npObsGo.addEventListener('click', async () => {
+    const name = npName.value.trim();
+    if (!name) { npObsStat.textContent = '✗ Projektname erforderlich'; npObsStat.style.color = '#dc2626'; return; }
     if (!npObsProjId) {
-      const name = npName.value.trim();
-      if (!name) { npObsStat.textContent = '✗ Projektname erforderlich'; npObsStat.style.color = '#dc2626'; return; }
       const projRes = await fetch('/api/projects', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: name, doc_type: npObsDtype.value }),
+        body: JSON.stringify({ title: name, doc_type: 'presseartikel' }),
       });
       const projData = await projRes.json();
       if (!projData.ok) { npObsStat.textContent = '✗ ' + projData.error; npObsStat.style.color = '#dc2626'; return; }
       npObsProjId = projData.id;
     }
-    npObsImp.disabled = true; npObsLog.style.display = 'block';
-    npObsLog.textContent = 'Starte Obsidian-Import …';
-    try {
-      await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: npObsDtype.value }),
-      });
-      const syncRes = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/sync', { method: 'POST' });
-      if (!syncRes.ok || !syncRes.body) throw new Error('Sync-Fehler ' + syncRes.status);
-      const reader = syncRes.body.getReader(); const dec = new TextDecoder(); let buf = '';
-      while (true) {
-        const { done, value } = await reader.read(); if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split('\n'); buf = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const msg = line.slice(6);
-          if (msg === '__done__') {
-              npObsLog.textContent += '\n✓ Import abgeschlossen!';
-              state.project       = npObsProjId;
-              state.project_title = npName.value.trim();
-              state.doc_type      = npObsDtype.value;
-              state.isExistingProject = true;
-              await loadProjectDocuments();
-              maxReachedStep = 7;
-              wrap.classList.remove('np-open');
-              gotoStep(4);
-              return;
-            }
-          if (msg.startsWith('__error__')) { npObsLog.textContent += '\n✗ ' + msg.slice(9); npObsImp.disabled = false; return; }
-          if (!msg.startsWith('__')) { npObsLog.textContent += '\n' + msg; npObsLog.scrollTop = npObsLog.scrollHeight; }
-        }
-      }
-    } catch (e) { npObsLog.textContent += '\n✗ ' + e.message; npObsImp.disabled = false; }
+    // Ordner-Pfad speichern (doc_type folgt in Schritt 2)
+    await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: 'presseartikel' }),
+    });
+    state.project         = npObsProjId;
+    state.project_title   = name;
+    state.obsidian_source = 'dropbox';
+    state.isExistingProject = false;
+    wrap.classList.remove('np-open');
+    gotoStep(2);
   });
 
   // Auto-restore nach OAuth-Redirect: ?project=...&step=2
@@ -731,7 +706,7 @@ buildDots();
             npObsConnSt.textContent = '✓ Dropbox verbunden'; npObsConnSt.style.color = '#4f46e5';
             if (cfg.title)                   npName.value      = cfg.title;
             if (cfg.obsidian.dropbox_folder) npObsFolder.value = cfg.obsidian.dropbox_folder;
-            if (cfg.obsidian.doc_type)       npObsDtype.value  = cfg.obsidian.doc_type;
+            npObsGo.disabled = false;
           } else {
             npObsConnSt.textContent = 'Noch nicht verbunden'; npObsConnSt.style.color = '#6b7280';
           }
@@ -764,12 +739,13 @@ loadProjectList().then(() => {
     const tokenData = await tokenRes.json();
     if (!tokenData.ok) return;
     const cfg = cfgRes.ok ? await cfgRes.json() : {};
-    state.project       = proj;
-    state.document      = doc || tokenData.doc_id || undefined;
-    state.token         = tokenData.token;
-    state.project_title = cfg.title || proj;
-    state.doc_type      = cfg.doc_type || state.doc_type;
+    state.project         = proj;
+    state.document        = doc || tokenData.doc_id || undefined;
+    state.token           = tokenData.token;
+    state.project_title   = cfg.title || proj;
+    state.doc_type        = cfg.doc_type || state.doc_type;
     state.isExistingProject = true;
+    if (cfg.obsidian?.connected) state.obsidian_source = 'dropbox';
     state.time_config   = {
       year_min: cfg.year_min ?? 1800,
       year_max: cfg.year_max ?? 1920,
@@ -829,12 +805,12 @@ btnBack.addEventListener('click', () => {
 });
 btnNext.addEventListener('click', async () => {
   if (currentStep === 2) {
-    const obsOpen = document.getElementById('new-proj-wrap')?.classList.contains('np-open')
-                 && document.getElementById('np-sub-obsidian')?.style.display !== 'none';
-    if (obsOpen && !state.document) {
-      const st = document.getElementById('np-obs-status');
-      st.textContent = 'Bitte zuerst Obsidian synchronisieren'; st.style.color = '#dc2626';
-      return;
+    if (state.obsidian_source === 'dropbox' && state.project) {
+      // doc_type-Auswahl in obsidian/config persistieren vor dem Sync
+      await fetch('/api/projects/' + encodeURIComponent(state.project) + '/obsidian/config', {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ doc_type: state.doc_type }),
+      });
     }
     gotoStep(3);
     return;
@@ -858,6 +834,14 @@ async function onEnterStep(n) {
   btnNext.disabled = false;
   if (n === 1) { state.isExistingProject = false; }
   if (n === 3) {
+    if (state.obsidian_source === 'dropbox') {
+      document.getElementById('step3-title').textContent = 'Obsidian-Import';
+      document.getElementById('step3-desc').textContent  = 'Dateien werden aus Dropbox geladen und verarbeitet.';
+      document.getElementById('analysis-result').style.display = 'none';
+      btnNext.disabled = true;
+      runObsidianSync();
+      return;
+    }
     if (state.analysis) {
       renderAnalysisResult(state.analysis);
     } else if (state.project && state.document && state.token) {
@@ -1016,6 +1000,60 @@ async function runAnalysis() {
     spinner.style.display = 'none';
     errEl.textContent = '✗ Fehler: ' + err.message;
     errEl.style.display = 'block';
+  }
+}
+
+async function runObsidianSync() {
+  const spinner  = document.getElementById('analysis-spinner');
+  const statusEl = document.getElementById('analysis-status');
+  const errEl    = document.getElementById('analysis-error');
+  const logEl    = document.getElementById('obs-sync-log');
+
+  spinner.style.display = 'flex'; statusEl.textContent = 'Verbinde mit Dropbox …';
+  logEl.style.display   = 'none'; logEl.textContent = '';
+  errEl.style.display   = 'none';
+
+  // Token holen falls noch nicht vorhanden
+  if (!state.token && state.project) {
+    const td = await fetch('/api/projects/' + encodeURIComponent(state.project) + '/token');
+    if (td.ok) { const d = await td.json(); if (d.ok) state.token = d.token; }
+  }
+
+  try {
+    const syncRes = await fetch(
+      '/api/projects/' + encodeURIComponent(state.project) + '/obsidian/sync',
+      { method: 'POST', headers: authHeaders() }
+    );
+    if (!syncRes.ok || !syncRes.body) throw new Error('Sync-Fehler ' + syncRes.status);
+
+    spinner.style.display = 'none';
+    logEl.style.display   = 'block';
+
+    const reader = syncRes.body.getReader(); const dec = new TextDecoder(); let buf = '';
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const msg = line.slice(6);
+        if (msg === '__done__') {
+          logEl.textContent += '\n✓ Import abgeschlossen!';
+          await loadProjectDocuments();
+          gotoStep(4);
+          return;
+        }
+        if (msg.startsWith('__error__')) {
+          errEl.textContent = '✗ ' + msg.slice(9); errEl.style.display = 'block';
+          btnNext.disabled = false; return;
+        }
+        if (!msg.startsWith('__')) { logEl.textContent += (logEl.textContent ? '\n' : '') + msg; logEl.scrollTop = logEl.scrollHeight; }
+      }
+    }
+  } catch (err) {
+    spinner.style.display = 'none';
+    errEl.textContent = '✗ Fehler: ' + err.message; errEl.style.display = 'block';
+    btnNext.disabled = false;
   }
 }
 
