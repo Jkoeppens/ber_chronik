@@ -637,7 +637,7 @@ buildDots();
     }
     npObsConnSt.textContent = 'Öffne Dropbox-Auth …'; npObsConnSt.style.color = '';
     try {
-      const res = await fetch('/api/obsidian/oauth/start?project_id=' + encodeURIComponent(npObsProjId));
+      const res = await fetch('/api/obsidian/oauth/start' + _aq() + '&project_id=' + encodeURIComponent(npObsProjId));
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
       window.open(data.auth_url, '_blank');
@@ -1663,7 +1663,7 @@ async function loadProjectList() {
       zConnBtn.addEventListener('click', async () => {
         zConnSt.textContent = 'Öffne Auth …'; zConnSt.style.color = '';
         try {
-          const res = await fetch('/api/obsidian/oauth/start?project_id=' + encodeURIComponent(projId));
+          const res = await fetch('/api/obsidian/oauth/start' + _aq() + '&project_id=' + encodeURIComponent(projId));
           const data = await res.json();
           if (!data.ok) throw new Error(data.error);
           window.open(data.auth_url, '_blank');
