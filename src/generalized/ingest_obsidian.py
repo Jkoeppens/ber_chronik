@@ -256,6 +256,8 @@ def main() -> None:
         if not folder_path:
             print("Fehler: dropbox_folder nicht konfiguriert", file=sys.stderr)
             sys.exit(1)
+        if not folder_path.startswith("/"):
+            folder_path = "/" + folder_path
 
         print(f"Verbinde mit Dropbox (Ordner={folder_path}) …")
         dbx = _get_client(tokens)
