@@ -1204,6 +1204,8 @@ async def test_obsidian_config(project_id: str, request: Request):
     cfg  = json.loads(cfg_path.read_text(encoding="utf-8"))
     oc   = cfg.get("obsidian") or {}
     folder = oc.get("dropbox_folder", "")
+    if folder and not folder.startswith("/"):
+        folder = "/" + folder
     if not _dropbox_connected():
         return JSONResponse({"ok": False, "error": "Dropbox nicht verbunden — OAuth erforderlich"}, status_code=400)
     if not folder:
@@ -1218,7 +1220,11 @@ async def test_obsidian_config(project_id: str, request: Request):
             return {"ok": True, "count": len(entries)}
         except Exception as exc:
             return {"ok": False, "error": str(exc)}
-    result = await asyncio.get_event_loop().run_in_executor(None, _check)
+    loop = asyncio.get_event_loop()
+    try:
+        result = await asyncio.wait_for(loop.run_in_executor(None, _check), timeout=10.0)
+    except asyncio.TimeoutError:
+        return JSONResponse({"ok": False, "error": "Dropbox-Timeout"}, status_code=504)
     return JSONResponse(result)
 
 
