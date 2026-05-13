@@ -689,10 +689,17 @@ buildDots();
       if (tokenData.ok) state.token = tokenData.token;
     }
     // Ordner-Pfad speichern (doc_type folgt in Schritt 2)
-    await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
+    const cfgRes = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
       method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: 'presseartikel' }),
     });
+    const cfgData = await cfgRes.json();
+    if (!cfgData.ok) {
+      npObsStat.textContent = '✗ ' + (cfgData.error || 'Config-Fehler');
+      npObsStat.style.color = '#dc2626';
+      npObsGo.disabled = false;
+      return;
+    }
     state.project         = npObsProjId;
     state.project_title   = name;
     state.obsidian_source = 'dropbox';
@@ -1756,8 +1763,11 @@ async function loadProjectList() {
       zSave.addEventListener('click', async () => {
         zFormSt.textContent = 'Speichere …'; zFormSt.style.color = '';
         try {
+          const tokRes = await fetch('/api/projects/' + encodeURIComponent(projId) + '/token' + _aq());
+          const tokData = await tokRes.json();
+          const projToken = tokData.token || '';
           const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/obsidian/config', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Project-Token': projToken },
             body: JSON.stringify({ dropbox_folder: zFolder.value, doc_type: zDoctype.value }),
           });
           const data = await res.json();
