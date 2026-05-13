@@ -637,7 +637,9 @@ buildDots();
     }
     npObsConnSt.textContent = 'Öffne Dropbox-Auth …'; npObsConnSt.style.color = '';
     try {
-      const res = await fetch('/api/obsidian/oauth/start' + _aq() + '&project_id=' + encodeURIComponent(npObsProjId));
+      const _oauthP = new URLSearchParams({ project_id: npObsProjId });
+      const _inv = window._INVITE_LIVE || _INVITE; if (_inv) _oauthP.set('invite', _inv);
+      const res = await fetch('/api/obsidian/oauth/start?' + _oauthP.toString());
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
       window.open(data.auth_url, '_blank');
@@ -1663,7 +1665,9 @@ async function loadProjectList() {
       zConnBtn.addEventListener('click', async () => {
         zConnSt.textContent = 'Öffne Auth …'; zConnSt.style.color = '';
         try {
-          const res = await fetch('/api/obsidian/oauth/start' + _aq() + '&project_id=' + encodeURIComponent(projId));
+          const _oauthP2 = new URLSearchParams({ project_id: projId });
+          const _inv2 = window._INVITE_LIVE || _INVITE; if (_inv2) _oauthP2.set('invite', _inv2);
+          const res = await fetch('/api/obsidian/oauth/start?' + _oauthP2.toString());
           const data = await res.json();
           if (!data.ok) throw new Error(data.error);
           window.open(data.auth_url, '_blank');
