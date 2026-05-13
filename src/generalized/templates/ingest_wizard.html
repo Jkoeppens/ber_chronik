@@ -525,6 +525,11 @@ function _aq() {
   const s = p.toString();
   return s ? '?' + s : '';
 }
+async function _getProjectToken(projId) {
+  const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/token' + _aq());
+  const data = await res.json();
+  return data.token || '';
+}
 let currentStep = 1;
 let maxReachedStep = 1;
 let analysisRan = false;
@@ -658,17 +663,25 @@ buildDots();
 
   npObsTest.addEventListener('click', async () => {
     if (!npObsConnected) { npObsStat.textContent = '✗ Erst verbinden'; npObsStat.style.color = '#dc2626'; return; }
-    // Ordner speichern
-    await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: 'presseartikel' }),
-    });
     npObsStat.textContent = 'Teste …'; npObsStat.style.color = '';
     try {
-      const res = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/test');
-      const data = await res.json();
-      npObsStat.textContent = data.ok ? '✓ ' + data.count + ' Dateien' : '✗ ' + data.error;
-      npObsStat.style.color = data.ok ? '#4f46e5' : '#dc2626';
+      // Ordner speichern wenn Projekt bereits existiert
+      if (npObsProjId) {
+        const tok = await _getProjectToken(npObsProjId);
+        await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Project-Token': tok },
+          body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: 'presseartikel' }),
+        });
+        const testRes = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/test', {
+          headers: { 'X-Project-Token': tok },
+        });
+        const data = await testRes.json();
+        npObsStat.textContent = data.ok ? '✓ ' + data.count + ' Dateien' : '✗ ' + data.error;
+        npObsStat.style.color = data.ok ? '#4f46e5' : '#dc2626';
+      } else {
+        npObsStat.textContent = '✗ Erst Projekt anlegen (Weiter klicken)';
+        npObsStat.style.color = '#dc2626';
+      }
     } catch (e) { npObsStat.textContent = '✗ ' + e.message; npObsStat.style.color = '#dc2626'; }
   });
 
@@ -1733,7 +1746,10 @@ async function loadProjectList() {
         zSyncSt.textContent = 'Läuft …'; zSyncLog.style.display = 'block';
         zSyncLog.textContent = ''; zSyncBtn.disabled = true;
         try {
-          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/obsidian/sync', { method: 'POST' });
+          const syncTok = await _getProjectToken(projId);
+          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/obsidian/sync', {
+            method: 'POST', headers: { 'X-Project-Token': syncTok },
+          });
           if (!res.ok || !res.body) throw new Error('Fehler ' + res.status);
           const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
           while (true) {
@@ -1754,7 +1770,10 @@ async function loadProjectList() {
       zTest.addEventListener('click', async () => {
         zFormSt.textContent = 'Teste Verbindung …'; zFormSt.style.color = '';
         try {
-          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/obsidian/test');
+          const testTok = await _getProjectToken(projId);
+          const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/obsidian/test', {
+            headers: { 'X-Project-Token': testTok },
+          });
           const data = await res.json();
           zFormSt.textContent = data.ok ? '✓ ' + data.count + ' Dateien' : '✗ ' + data.error;
           zFormSt.style.color = data.ok ? '#4f46e5' : '#dc2626';

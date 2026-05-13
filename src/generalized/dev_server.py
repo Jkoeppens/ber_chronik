@@ -1196,7 +1196,7 @@ async def save_obsidian_config(project_id: str, request: Request):
 
 @app.get("/api/projects/{project_id}/obsidian/test")
 async def test_obsidian_config(project_id: str, request: Request):
-    if err := _require_admin_key(request): return err
+    if err := await _require_token(request, project_id): return err
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     if not cfg_path.exists():
         return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
@@ -1223,7 +1223,7 @@ async def test_obsidian_config(project_id: str, request: Request):
 
 @app.post("/api/projects/{project_id}/obsidian/sync")
 async def obsidian_sync(project_id: str, request: Request):
-    if err := _require_admin_key(request): return err
+    if err := await _require_token(request, project_id): return err
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     if not cfg_path.exists():
         return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
