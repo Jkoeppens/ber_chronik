@@ -41,8 +41,9 @@ from pathlib import Path
 
 import yaml
 from dotenv import load_dotenv
-
 from src.generalized.config import ROOT, PROJECTS_DIR, DATA_ROOT
+
+load_dotenv(ROOT / ".env")
 
 DROPBOX_TOKENS_PATH = DATA_ROOT / "dropbox_tokens.json"
 
