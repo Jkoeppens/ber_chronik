@@ -1113,7 +1113,6 @@ def _dropbox_env_ok() -> bool:
 
 @app.get("/api/obsidian/oauth/start")
 async def obsidian_oauth_start(project_id: str, request: Request):
-    if err := _require_admin_key(request): return err
     if not _dropbox_env_ok():
         return JSONResponse({"ok": False, "error": "DROPBOX_APP_KEY / DROPBOX_APP_SECRET fehlen in .env"}, status_code=500)
     import src.generalized.ingest_obsidian as _obs
