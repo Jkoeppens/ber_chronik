@@ -1182,7 +1182,7 @@ async def obsidian_oauth_callback(code: str = "", state: str = ""):
 
 @app.post("/api/projects/{project_id}/obsidian/config")
 async def save_obsidian_config(project_id: str, request: Request):
-    if err := _require_admin_key(request): return err
+    if err := await _require_token(request, project_id): return err
     body = await request.json()
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}

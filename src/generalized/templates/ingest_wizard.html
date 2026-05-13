@@ -657,7 +657,7 @@ buildDots();
   });
 
   npObsTest.addEventListener('click', async () => {
-    if (!npObsProjId) { npObsStat.textContent = '✗ Erst verbinden'; npObsStat.style.color = '#dc2626'; return; }
+    if (!npObsConnected) { npObsStat.textContent = '✗ Erst verbinden'; npObsStat.style.color = '#dc2626'; return; }
     // Ordner speichern
     await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -683,10 +683,14 @@ buildDots();
       const projData = await projRes.json();
       if (!projData.ok) { npObsStat.textContent = '✗ ' + projData.error; npObsStat.style.color = '#dc2626'; return; }
       npObsProjId = projData.id;
+      // Token holen damit authHeaders() für den config-Call funktioniert
+      const tokenRes = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/token');
+      const tokenData = await tokenRes.json();
+      if (tokenData.ok) state.token = tokenData.token;
     }
     // Ordner-Pfad speichern (doc_type folgt in Schritt 2)
     await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: 'presseartikel' }),
     });
     state.project         = npObsProjId;
