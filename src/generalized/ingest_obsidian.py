@@ -42,7 +42,9 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
-from src.generalized.config import ROOT, PROJECTS_DIR
+from src.generalized.config import ROOT, PROJECTS_DIR, DATA_ROOT
+
+DROPBOX_TOKENS_PATH = DATA_ROOT / "dropbox_tokens.json"
 
 CHECKPOINT_NAME = "obsidian_checkpoint.json"
 
@@ -245,11 +247,14 @@ def main() -> None:
             sys.exit(1)
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         oc = cfg.get("obsidian") or {}
-        tokens = oc.get("tokens") or {}
         folder_path = oc.get("dropbox_folder", "")
         doc_type_cfg = oc.get("doc_type", args.doc_type)
         args.doc_type = doc_type_cfg
 
+        if not DROPBOX_TOKENS_PATH.exists():
+            print("Fehler: Dropbox nicht verbunden — zuerst OAuth durchführen", file=sys.stderr)
+            sys.exit(1)
+        tokens = json.loads(DROPBOX_TOKENS_PATH.read_text(encoding="utf-8"))
         if not tokens.get("refresh_token"):
             print("Fehler: Dropbox nicht verbunden — zuerst OAuth durchführen", file=sys.stderr)
             sys.exit(1)

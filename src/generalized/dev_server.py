@@ -51,8 +51,9 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from src.generalized.config import ROOT, DATA_ROOT
-PROJECTS_DIR       = DATA_ROOT / "projects"
-RAW_DIR            = DATA_ROOT / "raw"
+PROJECTS_DIR          = DATA_ROOT / "projects"
+RAW_DIR               = DATA_ROOT / "raw"
+DROPBOX_TOKENS_PATH   = DATA_ROOT / "dropbox_tokens.json"
 VIZ_DIR            = ROOT / "viz"
 
 PARSE_SCRIPT               = ROOT / "src" / "generalized" / "parse_document.py"
@@ -983,7 +984,7 @@ async def get_project_endpoint(project_id: str):
         obsidian_info = {
             "dropbox_folder": oc.get("dropbox_folder", ""),
             "doc_type":       oc.get("doc_type", "presseartikel"),
-            "connected":      bool(oc.get("tokens", {}).get("refresh_token")),
+            "connected":      _dropbox_connected(),
         }
     return JSONResponse({
         "ok":       True,
@@ -1111,8 +1112,22 @@ def _dropbox_env_ok() -> bool:
     return bool(_obs.DROPBOX_APP_KEY and _obs.DROPBOX_APP_SECRET)
 
 
+def _dropbox_connected() -> bool:
+    if not DROPBOX_TOKENS_PATH.exists():
+        return False
+    try:
+        return bool(json.loads(DROPBOX_TOKENS_PATH.read_text(encoding="utf-8")).get("refresh_token"))
+    except (json.JSONDecodeError, OSError):
+        return False
+
+
+@app.get("/api/obsidian/dropbox/status")
+async def obsidian_dropbox_status():
+    return JSONResponse({"connected": _dropbox_connected()})
+
+
 @app.get("/api/obsidian/oauth/start")
-async def obsidian_oauth_start(project_id: str, request: Request):
+async def obsidian_oauth_start(request: Request):
     if not _dropbox_env_ok():
         return JSONResponse({"ok": False, "error": "DROPBOX_APP_KEY / DROPBOX_APP_SECRET fehlen in .env"}, status_code=500)
     import src.generalized.ingest_obsidian as _obs
@@ -1128,7 +1143,7 @@ async def obsidian_oauth_start(project_id: str, request: Request):
     )
     auth_url = flow.start()
     csrf = session[_CSRF_SESSION_KEY]
-    _obsidian_oauth_states[csrf] = {"project_id": project_id, "session": session}
+    _obsidian_oauth_states[csrf] = {"session": session}
     return JSONResponse({"ok": True, "auth_url": auth_url})
 
 
@@ -1137,7 +1152,6 @@ async def obsidian_oauth_callback(code: str = "", state: str = ""):
     if not state or state not in _obsidian_oauth_states:
         return JSONResponse({"ok": False, "error": "Ungültiger OAuth-State"}, status_code=400)
     entry = _obsidian_oauth_states.pop(state)
-    project_id = entry["project_id"]
     import src.generalized.ingest_obsidian as _obs
     from dropbox.oauth import DropboxOAuth2Flow
     flow = DropboxOAuth2Flow(
@@ -1152,17 +1166,18 @@ async def obsidian_oauth_callback(code: str = "", state: str = ""):
         result = flow.finish({"code": code, "state": state})
     except Exception as exc:
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
-    cfg_path = PROJECTS_DIR / project_id / "config.json"
-    cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
-    oc = cfg.get("obsidian") or {}
-    oc["tokens"] = {
-        "access_token":  result.access_token,
-        "refresh_token": result.refresh_token,
-    }
-    cfg["obsidian"] = oc
-    cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse(f"/ingest?project={project_id}&step=2")
+    DROPBOX_TOKENS_PATH.write_text(
+        json.dumps({"access_token": result.access_token, "refresh_token": result.refresh_token},
+                   ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return HTMLResponse(
+        "<html><head><title>Dropbox verbunden</title></head>"
+        "<body style='font-family:sans-serif;text-align:center;padding:40px'>"
+        "<h2>&#10003; Dropbox verbunden</h2>"
+        "<p>Dieses Fenster schlie&szlig;t sich automatisch&hellip;</p>"
+        "<script>window.close();</script></body></html>"
+    )
 
 
 @app.post("/api/projects/{project_id}/obsidian/config")
@@ -1187,12 +1202,12 @@ async def test_obsidian_config(project_id: str, request: Request):
         return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
     cfg  = json.loads(cfg_path.read_text(encoding="utf-8"))
     oc   = cfg.get("obsidian") or {}
-    tokens = oc.get("tokens") or {}
     folder = oc.get("dropbox_folder", "")
-    if not tokens.get("refresh_token"):
+    if not _dropbox_connected():
         return JSONResponse({"ok": False, "error": "Dropbox nicht verbunden — OAuth erforderlich"}, status_code=400)
     if not folder:
         return JSONResponse({"ok": False, "error": "dropbox_folder nicht konfiguriert"}, status_code=400)
+    tokens = json.loads(DROPBOX_TOKENS_PATH.read_text(encoding="utf-8"))
     import asyncio
     def _check():
         try:
@@ -1214,7 +1229,7 @@ async def obsidian_sync(project_id: str, request: Request):
         return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
     cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
     oc  = cfg.get("obsidian") or {}
-    if not oc.get("tokens", {}).get("refresh_token"):
+    if not _dropbox_connected():
         return JSONResponse({"ok": False, "error": "Dropbox nicht verbunden"}, status_code=400)
     args = ["--project", project_id, "--source", "dropbox",
             "--doc-type", oc.get("doc_type", "presseartikel")]

@@ -569,6 +569,22 @@ buildDots();
   const npObsStat    = document.getElementById('np-obs-status');
   const npClose  = document.getElementById('np-close');
   let curSrc = 'file'; let npFile = null; let npObsProjId = null;
+  let npObsConnected = false;
+
+  async function checkDropboxStatus() {
+    try {
+      const res = await fetch('/api/obsidian/dropbox/status');
+      const data = await res.json();
+      npObsConnected = !!data.connected;
+    } catch (_) { npObsConnected = false; }
+    if (npObsConnected) {
+      npObsConnSt.textContent = '✓ Dropbox verbunden'; npObsConnSt.style.color = '#4f46e5';
+      npObsGo.disabled = !npObsFolder.value.trim();
+    } else {
+      npObsConnSt.textContent = 'Nicht verbunden'; npObsConnSt.style.color = '#6b7280';
+      npObsGo.disabled = true;
+    }
+  }
 
   card.addEventListener('click', () => { wrap.classList.toggle('np-open'); if (wrap.classList.contains('np-open')) npName.focus(); });
   npClose.addEventListener('click', () => { wrap.classList.remove('np-open'); resetNp(); });
@@ -579,7 +595,7 @@ buildDots();
     npFileGo.disabled = true; npFileGo.textContent = 'Analysieren →';
     npObsFolder.value = ''; npObsStat.textContent = '';
     npObsGo.disabled = true; npObsProjId = null;
-    npObsConnSt.textContent = 'Noch nicht verbunden'; npObsConnSt.style.color = '#6b7280';
+    npObsConnSt.textContent = ''; npObsConnSt.style.color = '#6b7280';
   }
 
   tabs.forEach(tab => tab.addEventListener('click', () => {
@@ -587,6 +603,7 @@ buildDots();
     curSrc = tab.dataset.src;
     subFile.style.display = curSrc === 'file' ? '' : 'none';
     subObs.style.display  = curSrc === 'obsidian' ? '' : 'none';
+    if (curSrc === 'obsidian') checkDropboxStatus();
   }));
 
   const fi = document.createElement('input'); fi.type = 'file'; fi.accept = '.txt,.md,.pdf,.docx';
@@ -619,30 +636,23 @@ buildDots();
     } catch (e) { npFileGo.disabled = false; npFileGo.textContent = 'Analysieren →'; alert('Fehler: ' + e.message); }
   });
 
+  npObsFolder.addEventListener('input', () => {
+    if (npObsConnected) npObsGo.disabled = !npObsFolder.value.trim();
+  });
+
   npObsConnect.addEventListener('click', async () => {
-    const name = npName.value.trim();
-    if (!name) { npObsConnSt.textContent = '✗ Projektname erforderlich'; npObsConnSt.style.color = '#dc2626'; return; }
-    // Projekt anlegen wenn noch nicht vorhanden
-    if (!npObsProjId) {
-      const projRes = await fetch('/api/projects', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: name, doc_type: 'presseartikel' }),
-      });
-      const projData = await projRes.json();
-      if (!projData.ok) { npObsConnSt.textContent = '✗ ' + projData.error; npObsConnSt.style.color = '#dc2626'; return; }
-      npObsProjId = projData.id;
-    }
     npObsConnSt.textContent = 'Öffne Dropbox-Auth …'; npObsConnSt.style.color = '';
     try {
-      const _oauthP = new URLSearchParams({ project_id: npObsProjId });
+      const _oauthP = new URLSearchParams();
       const _inv = window._INVITE_LIVE || _INVITE; if (_inv) _oauthP.set('invite', _inv);
       const res = await fetch('/api/obsidian/oauth/start?' + _oauthP.toString());
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
-      window.open(data.auth_url, '_blank');
-      npObsConnSt.textContent = '✓ Auth-Tab geöffnet — nach Verbindung hier fortfahren';
-      npObsConnSt.style.color = '#4f46e5';
-      npObsGo.disabled = !npName.value.trim();
+      const popup = window.open(data.auth_url, '_blank', 'width=700,height=600');
+      npObsConnSt.textContent = '…Dropbox-Verbindung herstellen'; npObsConnSt.style.color = '#6b7280';
+      const timer = setInterval(async () => {
+        if (!popup || popup.closed) { clearInterval(timer); await checkDropboxStatus(); }
+      }, 800);
     } catch (e) { npObsConnSt.textContent = '✗ ' + e.message; npObsConnSt.style.color = '#dc2626'; }
   });
 
@@ -687,32 +697,6 @@ buildDots();
     gotoStep(2);
   });
 
-  // Auto-restore nach OAuth-Redirect: ?project=...&step=2
-  {
-    const _up = new URLSearchParams(location.search);
-    const _uprojId = _up.get('project');
-    if (_uprojId && parseInt(_up.get('step') || '1', 10) === 2) {
-      npObsProjId = _uprojId;
-      wrap.classList.add('np-open');
-      tabs.forEach(t => t.classList.remove('active'));
-      wrap.querySelector('[data-src="obsidian"]')?.classList.add('active');
-      subFile.style.display = 'none'; subObs.style.display = ''; curSrc = 'obsidian';
-      npObsConnSt.textContent = 'Prüfe Verbindung …'; npObsConnSt.style.color = '#6b7280';
-      fetch('/api/projects/' + encodeURIComponent(_uprojId))
-        .then(r => r.json())
-        .then(cfg => {
-          if (cfg.obsidian?.connected) {
-            npObsConnSt.textContent = '✓ Dropbox verbunden'; npObsConnSt.style.color = '#4f46e5';
-            if (cfg.title)                   npName.value      = cfg.title;
-            if (cfg.obsidian.dropbox_folder) npObsFolder.value = cfg.obsidian.dropbox_folder;
-            npObsGo.disabled = false;
-          } else {
-            npObsConnSt.textContent = 'Noch nicht verbunden'; npObsConnSt.style.color = '#6b7280';
-          }
-        })
-        .catch(() => { npObsConnSt.textContent = 'Noch nicht verbunden'; npObsConnSt.style.color = '#6b7280'; });
-    }
-  }
 })();
 
 loadProjectList().then(() => {
@@ -744,7 +728,7 @@ loadProjectList().then(() => {
     state.project_title   = cfg.title || proj;
     state.doc_type        = cfg.doc_type || state.doc_type;
     state.isExistingProject = true;
-    if (cfg.obsidian?.connected) state.obsidian_source = 'dropbox';
+    if (cfg.obsidian?.dropbox_folder) state.obsidian_source = 'dropbox';
     state.time_config   = {
       year_min: cfg.year_min ?? 1800,
       year_max: cfg.year_max ?? 1920,
@@ -1716,13 +1700,21 @@ async function loadProjectList() {
       zConnBtn.addEventListener('click', async () => {
         zConnSt.textContent = 'Öffne Auth …'; zConnSt.style.color = '';
         try {
-          const _oauthP2 = new URLSearchParams({ project_id: projId });
+          const _oauthP2 = new URLSearchParams();
           const _inv2 = window._INVITE_LIVE || _INVITE; if (_inv2) _oauthP2.set('invite', _inv2);
           const res = await fetch('/api/obsidian/oauth/start?' + _oauthP2.toString());
           const data = await res.json();
           if (!data.ok) throw new Error(data.error);
-          window.open(data.auth_url, '_blank');
-          zConnSt.textContent = '✓ Auth-Tab geöffnet'; zConnSt.style.color = '#4f46e5';
+          const popup2 = window.open(data.auth_url, '_blank', 'width=700,height=600');
+          zConnSt.textContent = '…Dropbox-Verbindung herstellen'; zConnSt.style.color = '#6b7280';
+          const timer2 = setInterval(async () => {
+            if (!popup2 || popup2.closed) {
+              clearInterval(timer2);
+              const st = await fetch('/api/obsidian/dropbox/status').then(r => r.json()).catch(() => ({}));
+              zConnSt.textContent = st.connected ? '✓ Dropbox verbunden' : 'Nicht verbunden';
+              zConnSt.style.color = st.connected ? '#4f46e5' : '#6b7280';
+            }
+          }, 800);
         } catch (e) { zConnSt.textContent = '✗ ' + e.message; zConnSt.style.color = '#dc2626'; }
       });
 
