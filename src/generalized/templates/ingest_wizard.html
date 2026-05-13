@@ -681,7 +681,18 @@ buildDots();
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
           const msg = line.slice(6);
-          if (msg === '__done__') { npObsLog.textContent += '\n✓ Import abgeschlossen!'; npClose.textContent = 'Schließen'; loadProjectList(); return; }
+          if (msg === '__done__') {
+              npObsLog.textContent += '\n✓ Import abgeschlossen!';
+              state.project       = npObsProjId;
+              state.project_title = npName.value.trim();
+              state.doc_type      = npObsDtype.value;
+              state.isExistingProject = true;
+              await loadProjectDocuments();
+              maxReachedStep = 7;
+              wrap.classList.remove('np-open');
+              gotoStep(4);
+              return;
+            }
           if (msg.startsWith('__error__')) { npObsLog.textContent += '\n✗ ' + msg.slice(9); npObsImp.disabled = false; return; }
           if (!msg.startsWith('__')) { npObsLog.textContent += '\n' + msg; npObsLog.scrollTop = npObsLog.scrollHeight; }
         }
@@ -1479,6 +1490,15 @@ function _showInviteForm(listEl) {
   }
   btn.addEventListener('click', tryInvite);
   inp.addEventListener('keydown', e => { if (e.key === 'Enter') tryInvite(); });
+}
+
+async function loadProjectDocuments() {
+  const tokenRes = await fetch('/api/projects/' + encodeURIComponent(state.project) + '/token');
+  if (!tokenRes.ok) return;
+  const tokenData = await tokenRes.json();
+  if (!tokenData.ok) return;
+  state.token    = tokenData.token;
+  state.document = tokenData.doc_id || undefined;
 }
 
 async function loadProjectList() {

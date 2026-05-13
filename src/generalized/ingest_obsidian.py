@@ -339,13 +339,18 @@ def main() -> None:
     d_args = ["--project", args.project, "--document", doc_id]
     p_args = ["--project", args.project]
 
-    # Taxonomie prüfen — bei neuem Projekt leer → propose_taxonomy vorschalten
+    # Projekt-config.json mit aktuellem doc_id + doc_type aktualisieren
     cfg_path = project_dir / "config.json"
     cfg = {}
     try:
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         pass
+    cfg["doc_id"]   = doc_id
+    cfg["doc_type"] = args.doc_type
+    cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Taxonomie prüfen — bei neuem Projekt leer → propose_taxonomy vorschalten
     if not cfg.get("taxonomy"):
         print("\nKeine Taxonomie in config.json — starte propose_taxonomy …")
         if not _run("src/generalized/propose_taxonomy.py", d_args):
