@@ -827,6 +827,17 @@ btnBack.addEventListener('click', () => {
   else if (currentStep > 1) gotoStep(currentStep - 1);
 });
 btnNext.addEventListener('click', async () => {
+  if (currentStep === 2) {
+    const obsOpen = document.getElementById('new-proj-wrap')?.classList.contains('np-open')
+                 && document.getElementById('np-sub-obsidian')?.style.display !== 'none';
+    if (obsOpen && !state.document) {
+      const st = document.getElementById('np-obs-status');
+      st.textContent = 'Bitte zuerst Obsidian synchronisieren'; st.style.color = '#dc2626';
+      return;
+    }
+    gotoStep(3);
+    return;
+  }
   if (currentStep === 3 && state.isExistingProject) {
     gotoStep(4);
   } else if (currentStep === 4) {
