@@ -279,6 +279,9 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
 .np-tab.active{border-color:var(--c-primary);background:var(--c-primary-bg);color:var(--c-primary);font-weight:600}
 .np-sub{display:flex;flex-direction:column;gap:8px}
 </style>
+<script src="https://www.dropbox.com/static/api/2/dropins.js"
+        id="dropboxjs"
+        data-app-key="uokcsjlkiqc0vv6"></script>
 </head>
 <body>
 
@@ -334,6 +337,7 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
             <div class="zp-row">
               <span class="zp-label">Ordner</span>
               <input class="zp-input" id="np-obs-folder" type="text" placeholder="/Obsidian/BER-Clips">
+              <button class="zp-btn" id="np-obs-pick" style="flex-shrink:0">📁 Wählen</button>
               <small style="color:var(--c-text-3);font-size:10px;width:100%;margin-top:2px">Pfad in Dropbox — z.B. /Clips oder /Obsidian/BER</small>
             </div>
             <div class="zp-row">
@@ -574,6 +578,7 @@ buildDots();
   const npObsConnect = document.getElementById('np-obs-connect');
   const npObsConnSt  = document.getElementById('np-obs-connect-status');
   const npObsFolder  = document.getElementById('np-obs-folder');
+  const npObsPick    = document.getElementById('np-obs-pick');
   const npObsTest    = document.getElementById('np-obs-test');
   const npObsGo      = document.getElementById('np-obs-go');
   const npObsStat    = document.getElementById('np-obs-status');
@@ -664,6 +669,20 @@ buildDots();
         if (!popup || popup.closed) { clearInterval(timer); await checkDropboxStatus(); }
       }, 800);
     } catch (e) { npObsConnSt.textContent = '✗ ' + e.message; npObsConnSt.style.color = '#dc2626'; }
+  });
+
+  npObsPick.addEventListener('click', () => {
+    if (typeof Dropbox === 'undefined') { npObsStat.textContent = '✗ Dropbox-Script nicht geladen'; npObsStat.style.color = '#dc2626'; return; }
+    Dropbox.choose({
+      success: files => {
+        const name = files[0].name;
+        npObsFolder.value = '/' + name;
+        npObsFolder.dispatchEvent(new Event('input'));
+      },
+      cancel: () => {},
+      folderselect: true,
+      multiselect: false,
+    });
   });
 
   npObsTest.addEventListener('click', async () => {
@@ -1651,6 +1670,7 @@ async function loadProjectList() {
             <div class="zp-row">
               <span class="zp-label">Ordner</span>
               <input class="zp-input zp-folder" type="text" placeholder="/Obsidian/BER-Clips">
+              <button class="zp-btn zp-pick-folder" style="flex-shrink:0">📁 Wählen</button>
               <small style="color:var(--c-text-3);font-size:10px;width:100%;margin-top:2px">Pfad in Dropbox — z.B. /Clips oder /Obsidian/BER</small>
               <select class="zp-select zp-doctype">
                 <option value="presseartikel">Presseartikel</option>
@@ -1684,6 +1704,7 @@ async function loadProjectList() {
       const zBtn       = wrap.querySelector('.proj-card-obsidian');
       const zPanel     = wrap.querySelector('.obsidian-panel');
       const zFolder    = zPanel.querySelector('.zp-folder');
+      const zPickBtn   = zPanel.querySelector('.zp-pick-folder');
       const zDoctype   = zPanel.querySelector('.zp-doctype');
       const zConnBtn   = zPanel.querySelector('.zp-connect-btn');
       const zConnSt    = zPanel.querySelector('.zp-connect-status');
@@ -1701,6 +1722,18 @@ async function loadProjectList() {
 
       function closeObsidian() { wrap.classList.remove('obsidian-open'); zFormSt.textContent = ''; zSyncSt.textContent = ''; }
       zClose.addEventListener('click', closeObsidian);
+
+      zPickBtn.addEventListener('click', () => {
+        if (typeof Dropbox === 'undefined') { zFormSt.textContent = '✗ Dropbox-Script nicht geladen'; zFormSt.style.color = '#dc2626'; return; }
+        Dropbox.choose({
+          success: files => {
+            zFolder.value = '/' + files[0].name;
+          },
+          cancel: () => {},
+          folderselect: true,
+          multiselect: false,
+        });
+      });
 
       zBtn.addEventListener('click', async e => {
         e.stopPropagation();
