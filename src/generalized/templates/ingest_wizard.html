@@ -584,7 +584,7 @@ buildDots();
     npObsFolder.value = ''; npObsStat.textContent = '';
     npObsLog.style.display = 'none'; npObsLog.textContent = '';
     npObsImp.disabled = false; npObsProjId = null;
-    npObsConnSt.textContent = '';
+    npObsConnSt.textContent = 'Noch nicht verbunden'; npObsConnSt.style.color = '#6b7280';
   }
 
   tabs.forEach(tab => tab.addEventListener('click', () => {
@@ -663,7 +663,17 @@ buildDots();
   });
 
   npObsImp.addEventListener('click', async () => {
-    if (!npObsProjId) { npObsStat.textContent = '✗ Erst verbinden'; npObsStat.style.color = '#dc2626'; return; }
+    if (!npObsProjId) {
+      const name = npName.value.trim();
+      if (!name) { npObsStat.textContent = '✗ Projektname erforderlich'; npObsStat.style.color = '#dc2626'; return; }
+      const projRes = await fetch('/api/projects', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: name, doc_type: npObsDtype.value }),
+      });
+      const projData = await projRes.json();
+      if (!projData.ok) { npObsStat.textContent = '✗ ' + projData.error; npObsStat.style.color = '#dc2626'; return; }
+      npObsProjId = projData.id;
+    }
     npObsImp.disabled = true; npObsLog.style.display = 'block';
     npObsLog.textContent = 'Starte Obsidian-Import …';
     try {
@@ -699,6 +709,33 @@ buildDots();
       }
     } catch (e) { npObsLog.textContent += '\n✗ ' + e.message; npObsImp.disabled = false; }
   });
+
+  // Auto-restore nach OAuth-Redirect: ?project=...&step=2
+  {
+    const _up = new URLSearchParams(location.search);
+    const _uprojId = _up.get('project');
+    if (_uprojId && parseInt(_up.get('step') || '1', 10) === 2) {
+      npObsProjId = _uprojId;
+      wrap.classList.add('np-open');
+      tabs.forEach(t => t.classList.remove('active'));
+      wrap.querySelector('[data-src="obsidian"]')?.classList.add('active');
+      subFile.style.display = 'none'; subObs.style.display = ''; curSrc = 'obsidian';
+      npObsConnSt.textContent = 'Prüfe Verbindung …'; npObsConnSt.style.color = '#6b7280';
+      fetch('/api/projects/' + encodeURIComponent(_uprojId))
+        .then(r => r.json())
+        .then(cfg => {
+          if (cfg.obsidian?.connected) {
+            npObsConnSt.textContent = '✓ Dropbox verbunden'; npObsConnSt.style.color = '#4f46e5';
+            if (cfg.title)                   npName.value      = cfg.title;
+            if (cfg.obsidian.dropbox_folder) npObsFolder.value = cfg.obsidian.dropbox_folder;
+            if (cfg.obsidian.doc_type)       npObsDtype.value  = cfg.obsidian.doc_type;
+          } else {
+            npObsConnSt.textContent = 'Noch nicht verbunden'; npObsConnSt.style.color = '#6b7280';
+          }
+        })
+        .catch(() => { npObsConnSt.textContent = 'Noch nicht verbunden'; npObsConnSt.style.color = '#6b7280'; });
+    }
+  }
 })();
 
 loadProjectList().then(() => {
