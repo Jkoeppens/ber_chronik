@@ -526,9 +526,14 @@ function _aq() {
   return s ? '?' + s : '';
 }
 async function _getProjectToken(projId) {
-  const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/token' + _aq());
-  const data = await res.json();
-  return data.token || '';
+  try {
+    const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/token' + _aq());
+    if (!res.ok) return '';
+    const data = await res.json();
+    return data.token || '';
+  } catch (e) {
+    return '';
+  }
 }
 let currentStep = 1;
 let maxReachedStep = 1;
