@@ -627,7 +627,7 @@ buildDots();
     if (!npObsProjId) {
       const projRes = await fetch('/api/projects', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: name, doc_type: npObsDtype.value }),
+        body: JSON.stringify({ title: name, doc_type: 'presseartikel' }),
       });
       const projData = await projRes.json();
       if (!projData.ok) { npObsConnSt.textContent = '✗ ' + projData.error; npObsConnSt.style.color = '#dc2626'; return; }
@@ -652,7 +652,7 @@ buildDots();
     // Ordner speichern
     await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: npObsDtype.value }),
+      body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: 'presseartikel' }),
     });
     npObsStat.textContent = 'Teste …'; npObsStat.style.color = '';
     try {
