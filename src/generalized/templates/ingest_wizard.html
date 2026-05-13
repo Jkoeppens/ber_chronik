@@ -598,7 +598,6 @@ buildDots();
   function setNpFile(f) { npFile = f; npDrop.textContent = f.name; npDrop.classList.add('has-file'); npFileGo.disabled = !npName.value.trim(); }
   npName.addEventListener('input', () => {
     if (curSrc === 'file') npFileGo.disabled = !(npFile && npName.value.trim());
-    if (curSrc === 'obsidian') npObsGo.disabled = !npName.value.trim();
   });
 
   npFileGo.addEventListener('click', async () => {
@@ -683,7 +682,7 @@ buildDots();
     state.project         = npObsProjId;
     state.project_title   = name;
     state.obsidian_source = 'dropbox';
-    state.isExistingProject = false;
+    state.isExistingProject = true;
     wrap.classList.remove('np-open');
     gotoStep(2);
   });
@@ -830,16 +829,17 @@ btnNext.addEventListener('click', async () => {
   }
 });
 
+let syncRan = false;
 async function onEnterStep(n) {
   btnNext.disabled = false;
-  if (n === 1) { state.isExistingProject = false; }
+  if (n === 1) { state.isExistingProject = false; syncRan = false; }
   if (n === 3) {
     if (state.obsidian_source === 'dropbox') {
       document.getElementById('step3-title').textContent = 'Obsidian-Import';
       document.getElementById('step3-desc').textContent  = 'Dateien werden aus Dropbox geladen und verarbeitet.';
       document.getElementById('analysis-result').style.display = 'none';
       btnNext.disabled = true;
-      runObsidianSync();
+      if (!syncRan) { syncRan = true; runObsidianSync(); }
       return;
     }
     if (state.analysis) {
