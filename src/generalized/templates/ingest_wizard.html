@@ -1779,6 +1779,11 @@ async function loadProjectList() {
           const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/obsidian/test', {
             headers: { 'X-Project-Token': testTok },
           });
+          if (!res.ok || !res.headers.get('content-type')?.includes('json')) {
+            zFormSt.textContent = '✗ Server-Fehler ' + res.status;
+            zFormSt.style.color = '#dc2626';
+            return;
+          }
           const data = await res.json();
           zFormSt.textContent = data.ok ? '✓ ' + data.count + ' Dateien' : '✗ ' + data.error;
           zFormSt.style.color = data.ok ? '#4f46e5' : '#dc2626';
