@@ -51,6 +51,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from src.generalized.config import ROOT, DATA_ROOT
+load_dotenv(ROOT / ".env")
 PROJECTS_DIR          = DATA_ROOT / "projects"
 RAW_DIR               = DATA_ROOT / "raw"
 DROPBOX_TOKENS_PATH   = DATA_ROOT / "dropbox_tokens.json"
