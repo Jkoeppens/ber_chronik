@@ -1188,7 +1188,10 @@ async def save_obsidian_config(project_id: str, request: Request):
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
     oc = cfg.get("obsidian") or {}
-    oc["dropbox_folder"] = body.get("dropbox_folder", "").strip()
+    folder = body.get("dropbox_folder", "").strip()
+    if folder and not folder.startswith("/"):
+        folder = "/" + folder
+    oc["dropbox_folder"] = folder
     oc["doc_type"]       = body.get("doc_type", "presseartikel")
     cfg["obsidian"] = oc
     cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
