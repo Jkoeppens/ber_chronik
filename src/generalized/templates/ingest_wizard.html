@@ -1712,7 +1712,7 @@ async function loadProjectList() {
           const res = await fetch('/api/projects/' + encodeURIComponent(projId));
           const data = res.ok ? await res.json() : {};
           const oc = data.obsidian || {};
-          if (oc.dropbox_folder) zFolder.value = oc.dropbox_folder;
+          zFolder.value = oc.dropbox_folder || '';
           if (oc.doc_type) zDoctype.value = oc.doc_type;
           if (oc.dropbox_folder) {
             zSyncRow.style.display = ''; zSummary.style.display = '';
@@ -1723,7 +1723,7 @@ async function loadProjectList() {
             zSyncRow.style.display = 'none'; zSummary.style.display = 'none';
             zDetails.setAttribute('open', ''); zFormSt.textContent = '';
           }
-        } catch (_) { zFormSt.textContent = ''; }
+        } catch (_) { zFolder.value = ''; zFormSt.textContent = ''; }
       });
 
       zConnBtn.addEventListener('click', async () => {
