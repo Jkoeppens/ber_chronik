@@ -336,8 +336,8 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
             </div>
             <div class="zp-row">
               <span class="zp-label">Ordner</span>
-              <input class="zp-input" id="np-obs-folder" type="text" placeholder="/Obsidian/BER-Clips">
-              <button class="zp-btn" id="np-obs-pick" style="flex-shrink:0">📁 Wählen</button>
+              <input class="zp-input" id="np-obs-folder" type="text" placeholder="Dropbox_test1 oder /Dropbox_test1">
+              <button class="zp-btn" id="np-obs-pick" style="flex-shrink:0;opacity:0.4;cursor:not-allowed" disabled title="Ordner-Picker nur auf gehosteter Domain verfügbar">📁 Wählen</button>
               <small style="color:var(--c-text-3);font-size:10px;width:100%;margin-top:2px">Pfad in Dropbox — z.B. /Clips oder /Obsidian/BER</small>
             </div>
             <div class="zp-row">
@@ -539,6 +539,11 @@ async function _getProjectToken(projId) {
     return '';
   }
 }
+function normalizeFolder(val) {
+  val = (val || '').trim();
+  if (val && !val.startsWith('/')) val = '/' + val;
+  return val;
+}
 let currentStep = 1;
 let maxReachedStep = 1;
 let analysisRan = false;
@@ -694,7 +699,7 @@ buildDots();
         const tok = await _getProjectToken(npObsProjId);
         await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Project-Token': tok },
-          body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: 'presseartikel' }),
+          body: JSON.stringify({ dropbox_folder: normalizeFolder(npObsFolder.value), doc_type: 'presseartikel' }),
         });
         const testRes = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/test', {
           headers: { 'X-Project-Token': tok },
@@ -728,7 +733,7 @@ buildDots();
     // Ordner-Pfad speichern (doc_type folgt in Schritt 2)
     const cfgRes = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
       method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dropbox_folder: npObsFolder.value, doc_type: 'presseartikel' }),
+      body: JSON.stringify({ dropbox_folder: normalizeFolder(npObsFolder.value), doc_type: 'presseartikel' }),
     });
     const cfgData = await cfgRes.json();
     if (!cfgData.ok) {
@@ -1669,8 +1674,8 @@ async function loadProjectList() {
             </div>
             <div class="zp-row">
               <span class="zp-label">Ordner</span>
-              <input class="zp-input zp-folder" type="text" placeholder="/Obsidian/BER-Clips">
-              <button class="zp-btn zp-pick-folder" style="flex-shrink:0">📁 Wählen</button>
+              <input class="zp-input zp-folder" type="text" placeholder="Dropbox_test1 oder /Dropbox_test1">
+              <button class="zp-btn zp-pick-folder" style="flex-shrink:0;opacity:0.4;cursor:not-allowed" disabled title="Ordner-Picker nur auf gehosteter Domain verfügbar">📁 Wählen</button>
               <small style="color:var(--c-text-3);font-size:10px;width:100%;margin-top:2px">Pfad in Dropbox — z.B. /Clips oder /Obsidian/BER</small>
               <select class="zp-select zp-doctype">
                 <option value="presseartikel">Presseartikel</option>
@@ -1830,7 +1835,7 @@ async function loadProjectList() {
           const projToken = tokData.token || '';
           const res = await fetch('/api/projects/' + encodeURIComponent(projId) + '/obsidian/config', {
             method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Project-Token': projToken },
-            body: JSON.stringify({ dropbox_folder: zFolder.value, doc_type: zDoctype.value }),
+            body: JSON.stringify({ dropbox_folder: normalizeFolder(zFolder.value), doc_type: zDoctype.value }),
           });
           const data = await res.json();
           zFormSt.textContent = data.ok ? '✓ Gespeichert' : '✗ ' + data.error;
