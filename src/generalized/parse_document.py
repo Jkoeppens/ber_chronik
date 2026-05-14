@@ -37,8 +37,6 @@ from pathlib import Path
 import docx
 
 from src.generalized.config import ROOT, PROJECTS_DIR, RAW_DIR
-INPUT  = RAW_DIR / "Damakus Notizen.docx"
-OUTPUT = ROOT / "data" / "interim" / "generalized" / "segments.json"
 
 # ── Seitenzahl-Extraktion ──────────────────────────────────────────────────────
 # 1–3 Ziffern am Ende, getrennt durch Leerzeichen oder Klammer-zu
@@ -143,20 +141,21 @@ def parse(path: Path) -> list[dict]:
 # Kurze reine Jahres-Überschriften: weniger als 10 Zeichen, nur Ziffern (inkl. Leerzeichen)
 _YEAR_HEADING = re.compile(r"^\d[\d\s]{0,8}$")
 
+# Quellenangabe im Geicke-DOCX: "BZ, 01.01.1989" oder "Taz, 3.12.89)" etc.
+SOURCE_RE = re.compile(r"\b([A-Za-zÄÖÜäöüß/.-]{2,20}),\s*(\d{1,2}\.\d{1,2}\.\d{2,4})\)?")
+
 
 def parse_presseartikel(path: Path) -> list[dict]:
-    """Flacher Modus für Presseartikel / Chronik-Dokumente.
+    """Flacher Modus für Geicke-Chronik-DOCX (presseartikel/docx).
 
     Jeder nicht-leere Absatz → eigenes Segment.
-    Keine Hierarchie, kein source, kein page.
+    Keine Hierarchie, kein page.
     Reine Jahres-Überschriften (< 10 Zeichen, nur Ziffern) → type 'heading'.
-    Alle anderen → type 'content'.
-    year_bucket: int aus der letzten Jahres-Überschrift, None vor der ersten.
+    Alle anderen → type 'content' mit Quellen-Extraktion via SOURCE_RE.
     """
     doc = docx.Document(path)
     segments: list[dict] = []
     seg_id = 0
-    current_year: int | None = None
 
     for p in doc.paragraphs:
         text = p.text.strip()
@@ -164,22 +163,34 @@ def parse_presseartikel(path: Path) -> list[dict]:
             continue
 
         if len(text) < 10 and _YEAR_HEADING.match(text):
-            typ = "heading"
-            try:
-                current_year = int(text.strip())
-            except ValueError:
-                pass
-        else:
-            typ = "content"
+            seg_id += 1
+            segments.append({
+                "segment_id":   f"s{seg_id:04d}",
+                "type":         "heading",
+                "text":         text,
+                "source":       None,
+                "page":         None,
+                "ingest_source": "docx",
+            })
+            continue
+
+        matches = SOURCE_RE.findall(text)
+        source_name = ";".join(m[0].strip() for m in matches) if matches else None
+        source_date = ";".join(m[1].strip() for m in matches) if matches else None
+        is_quote    = text[:1] in ('"', '„', '“', '„', '‚', "'")
+        is_geicke   = not source_name and not is_quote
 
         seg_id += 1
         segments.append({
-            "segment_id":  f"s{seg_id:04d}",
-            "type":        typ,
-            "text":        text,
-            "source":      None,
-            "page":        None,
-            "year_bucket": current_year,
+            "segment_id":   f"s{seg_id:04d}",
+            "type":         "content",
+            "text":         text,
+            "source":       source_name,
+            "source_date":  source_date,
+            "is_quote":     is_quote,
+            "is_geicke":    is_geicke,
+            "page":         None,
+            "ingest_source": "docx",
         })
 
     return segments
