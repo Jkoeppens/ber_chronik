@@ -1739,6 +1739,9 @@ async function loadProjectList() {
       const zClose     = zPanel.querySelector('.zp-close');
       const projId     = card.dataset.id;
 
+      function updateSaveBtn() { zSave.disabled = !zFolder.value.trim(); }
+      zFolder.addEventListener('input', updateSaveBtn);
+
       function closeObsidian() { wrap.classList.remove('obsidian-open'); zFormSt.textContent = ''; zSyncSt.textContent = ''; }
       zClose.addEventListener('click', closeObsidian);
 
@@ -1765,6 +1768,7 @@ async function loadProjectList() {
           const data = res.ok ? await res.json() : {};
           const oc = data.obsidian || {};
           zFolder.value = oc.dropbox_folder || '';
+          updateSaveBtn();
           if (oc.doc_type) zDoctype.value = oc.doc_type;
           if (oc.dropbox_folder) {
             zSyncRow.style.display = ''; zSummary.style.display = '';

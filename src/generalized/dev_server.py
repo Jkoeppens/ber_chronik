@@ -1190,6 +1190,8 @@ async def save_obsidian_config(project_id: str, request: Request):
     folder = body.get("dropbox_folder", "").strip()
     if folder and not folder.startswith("/"):
         folder = "/" + folder
+    if not folder:
+        return JSONResponse({"ok": False, "error": "Ordner-Pfad darf nicht leer sein"}, status_code=400)
     oc["dropbox_folder"] = folder
     oc["doc_type"]       = body.get("doc_type", "presseartikel")
     cfg["obsidian"] = oc
