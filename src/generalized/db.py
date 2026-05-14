@@ -1,13 +1,9 @@
 """
 db.py — SQLite-Persistenz für Projekt-Metadaten via aiosqlite
 
-Tabelle: projects
-  id          TEXT PRIMARY KEY
-  title       TEXT
-  doc_type    TEXT
-  created_at  TEXT   (ISO-8601)
-  status      TEXT   (active | archived)
-  token       TEXT   (secrets.token_urlsafe(32))
+Tabellen:
+  projects   — Projekt-Identität, Auth, Token
+  documents  — Dokument-Metadaten (ingested_at, ingest_source, original_filename)
 
 Token-TTL: 30 Tage ab created_at
 """
@@ -39,10 +35,18 @@ async def init_db() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(_DDL)
-        # Idempotente Migration: neue Spalten hinzufügen falls noch nicht vorhanden
+        # Idempotente Migrationen
         for stmt in (
             "ALTER TABLE projects ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0",
             "ALTER TABLE projects ADD COLUMN owner_token TEXT",
+            """CREATE TABLE IF NOT EXISTS documents (
+                doc_id            TEXT PRIMARY KEY,
+                project_id        TEXT NOT NULL REFERENCES projects(id),
+                ingested_at       TEXT NOT NULL DEFAULT '',
+                doc_type          TEXT NOT NULL DEFAULT '',
+                ingest_source     TEXT,
+                original_filename TEXT
+            )""",
         ):
             try:
                 await db.execute(stmt)
@@ -143,6 +147,40 @@ async def delete_project(project_id: str) -> None:
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("DELETE FROM projects WHERE id = ?", (project_id,))
         await db.commit()
+
+
+# ── Dokumente ─────────────────────────────────────────────────────────────────
+
+async def upsert_document(
+    doc_id: str,
+    project_id: str,
+    ingested_at: str = "",
+    doc_type: str = "",
+    ingest_source: str | None = None,
+    original_filename: str | None = None,
+) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            """INSERT INTO documents (doc_id, project_id, ingested_at, doc_type, ingest_source, original_filename)
+               VALUES (?, ?, ?, ?, ?, ?)
+               ON CONFLICT(doc_id) DO UPDATE SET
+                 ingested_at=excluded.ingested_at,
+                 doc_type=excluded.doc_type,
+                 ingest_source=excluded.ingest_source,
+                 original_filename=excluded.original_filename""",
+            (doc_id, project_id, ingested_at, doc_type, ingest_source, original_filename),
+        )
+        await db.commit()
+
+
+async def get_latest_doc_id(project_id: str) -> str | None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute(
+            "SELECT doc_id FROM documents WHERE project_id=? ORDER BY ingested_at DESC LIMIT 1",
+            (project_id,),
+        ) as cur:
+            row = await cur.fetchone()
+    return row[0] if row else None
 
 
 # ── Token-Prüfung ─────────────────────────────────────────────────────────────

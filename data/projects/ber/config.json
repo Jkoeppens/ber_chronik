@@ -4,75 +4,80 @@
   "year_max": 2017,
   "taxonomy": [
     {
-      "name": "Planungsrecht",
-      "description": "Rechtliche Auseinandersetzungen um Standortentscheidungen, Planfeststellungsbeschlüsse und gerichtliche Überprüfungen des Flughafenprojekts.",
+      "name": "Fluggastaufkommen und Standortdebatten",
+      "description": "Dokumentiert Passagierzahlen in Millionen für die drei Berliner Flughäfen Tegel, Schönefeld und Tempelhof sowie konkurrierende Standortvorschläge (Sperenberg, Jüterbog). Analysiert Abfertigungskapazitäten, Ausbaupotenziale und politische Frontlinien zwischen CDU/Bund (pro Schönefeld) und SPD/Gewerkschaften (pro Sperenberg), einschließlich Volksentscheide zur Tempelhof-Erhaltung.",
       "keywords": [
-        "Planfeststellungsbeschluss",
-        "Oberverwaltungsgericht",
-        "Standortkür"
+        "millionen",
+        "schönefeld",
+        "tegel",
+        "berliner",
+        "flughäfen"
       ]
     },
     {
-      "name": "Baukomplexität",
-      "description": "Technische Details und Herausforderungen der Bauausführung, insbesondere bei sicherheitsrelevanten Anlagen wie Brandschutz.",
+      "name": "Eröffnungstermine und Aufsichtsratskrise",
+      "description": "Dokumentiert wiederholte Verschiebungen des BER-Eröffnungstermins durch Mehdorn und die TSP mit gescheiterten Prognosen (2011, 2012, 2014, 2017). Zentral sind Aufsichtsratssitzungen zu Entrauchungsanlagen, Teilbaugenehmigungen und McKinsey-Warnungen vor Eröffnungsverzögerungen, berichtet durch BerlZtg und Tsp.",
       "keywords": [
-        "Brandmelder",
-        "Sprinklerköpfe",
-        "Brandschutzanlage"
+        "ber",
+        "tsp",
+        "mehdorn",
+        "aufsichtsrat",
+        "eröffnung"
       ]
     },
     {
-      "name": "Kostensteigerung",
-      "description": "Dokumentation der massiven Überschreitungen ursprünglich kalkulierter Baukosten und Finanzierungsänderungen.",
+      "name": "Planfeststellung, Flugrouten und Nachtflugklagen",
+      "description": "Behandelt Planfeststellungsbeschlüsse, DFS-Flugrouten-Konzepte und Nachtflugverbote zwischen 22 Uhr und 6 Uhr vor Gericht. Dokumentiert Bürgerinitiativen gegen Lärmkorridore, Bundesverwaltungsgerichtsurteile und verfassungsrechtliche Anfechtungen der landesplanerischen Festlegungen durch Brandenburg.",
       "keywords": [
-        "Millionen Euro",
-        "Kostenexplosion",
-        "Regierungsterminal"
+        "uhr",
+        "tsp",
+        "nachtflugverbot",
+        "klagen",
+        "vor"
       ]
     },
     {
-      "name": "Privatisierung",
-      "description": "Versuche und Scheitern der privaten Finanzierung und Privatisierung der Flughafengesellschaft BBF.",
+      "name": "Technikchefs und Brandschutzdefizite",
+      "description": "Fokussiert auf Technikchefs Horst Amann und Jörg Marks sowie deren Verantwortung für Mängel an Brandschutzanlagen, Entrauchungsanlagen und Sprinkleranlagen. Behandelt Siemens-Verträge zur Behebung technischer Defizite, Imtech-Bestechungsfälle und Aufsichtsratsentscheidungen zur Bestandsaufnahme von Baugenehmigungsverletzungen.",
       "keywords": [
-        "Privatisierung",
-        "BBF",
-        "Finanzierung"
+        "technikchef",
+        "siemens",
+        "tsp",
+        "amann",
+        "horst"
       ]
     },
     {
-      "name": "Vergabeverfahren",
-      "description": "Rechtsstreitigkeiten und Unregelmäßigkeiten bei der Auftragsvergabe an Baukonsortien wie Hochtief und IVG.",
+      "name": "Flughafengesellschaft und Privatisierungsversuche",
+      "description": "Dokumentiert die Gründung der Berlin Brandenburg Flughafen GmbH (BBF/BBI) und gescheiterte Privatisierungsversuche durch Konsortien wie Hochtief und IVG. Behandelt Generalplaner (PG BBI), Schlechtleistungen bei Sicherheitstechnik und Gebäudeautomation sowie kartellrechtliche Beschwerdeverfahren gegen mangelnde Ingenieurkompetenz.",
       "keywords": [
-        "Hochtief",
-        "IVG",
-        "Vergabe"
+        "berlin",
+        "brandenburg",
+        "bbf",
+        "flughafen",
+        "bbi"
       ]
     },
     {
-      "name": "Lärmschutz",
-      "description": "Konflikte um Nachtflugverbote, Schallschutzauflagen und die Rechte betroffener Anwohner.",
+      "name": "Wahlen, Koalitionen und Flughafenpolitik",
+      "description": "Erfasst Wahlen zum Berliner Abgeordnetenhaus und Brandenburger Landtag sowie Koalitionsbildungen unter SPD-Führung mit Wowereit und Stolpe. Dokumentiert Wechsel von Bundesverkehrsministern, erfolgreiche Volksbegehrens für Nachtflugverbote und die Ablehnung von Privatisierungen „um jeden Preis\" durch die Landeschefs.",
       "keywords": [
-        "Nachtflugverbot",
-        "Schallschutz",
-        "Anwohner"
+        "spd",
+        "wahl",
+        "unter",
+        "koalition",
+        "abgeordnetenhaus"
       ]
     },
     {
-      "name": "Eröffnungsverzögerung",
-      "description": "Chronologie der immer wieder verschobenen Eröffnungstermine und der dafür verantwortlichen Faktoren.",
+      "name": "Kostenexplosion und Finanzierungslücken",
+      "description": "Analysiert die Gesamtkosten des BER in Milliarden Euro (von 3,5 auf 6,6 Milliarden) mit Kapitalspritzen, Darlehen und Schuldenübernahmen durch Bund, Berlin und Brandenburg. Behandelt Finanzierungslücken von 500 Millionen bis 1,17 Milliarden Euro, EU-Beihilfegenehmigungen und Rentabilitätskritik bei Ausbauvarianten.",
       "keywords": [
-        "Winterflugplan",
-        "Verschiebung",
-        "Baugenehmigung"
-      ]
-    },
-    {
-      "name": "PolitischeAkteure",
-      "description": "Rolle und Einfluss politischer Entscheidungsträger auf Bundes-, Landes- und EU-Ebene im Projektverlauf.",
-      "keywords": [
-        "Woidke",
-        "Gesellschafter",
-        "Aufsichtsrat"
+        "euro",
+        "milliarden",
+        "millionen",
+        "tsp",
+        "mark"
       ]
     }
   ],
@@ -520,5 +525,6 @@
         "Zeit"
       ]
     }
-  ]
+  ],
+  "events": []
 }

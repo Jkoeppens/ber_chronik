@@ -41,6 +41,7 @@ from src.generalized.db import (
     list_projects as db_list_projects,
     list_all_projects as db_list_all_projects,
     update_project, delete_project, token_valid,
+    upsert_document, get_latest_doc_id,
 )
 from src.generalized.utils import render_template as _render_template
 from src.generalized.invite_auth import invite_required, invite_valid, invite_info
@@ -576,6 +577,15 @@ async def ingest_save_config(request: Request):
         )
         db_proj = await get_project(project)
 
+    await upsert_document(
+        doc_id            = doc_id,
+        project_id        = project,
+        ingested_at       = doc_cfg.get("ingested_at", ""),
+        doc_type          = doc_cfg.get("doc_type", ""),
+        ingest_source     = doc_cfg.get("obsidian_source") or doc_cfg.get("ingest_source") or "docx",
+        original_filename = doc_cfg.get("original_filename"),
+    )
+
     return {"ok": True, "token": db_proj["token"]}
 
 
@@ -899,26 +909,8 @@ async def get_entity_editor():
     return HTMLResponse(content=_render_template("entity_editor.html"))
 
 
-def _get_latest_doc_id(project_id: str) -> str | None:
-    """Neuestes Dokument mit segments.json im Projekt, nach ingested_at sortiert."""
-    doc_dir = PROJECTS_DIR / project_id / "documents"
-    if not doc_dir.exists():
-        return None
-    candidates = []
-    for d in doc_dir.iterdir():
-        if (d / "segments.json").exists():
-            ingested_at = ""
-            cfg_p = d / "config.json"
-            if cfg_p.exists():
-                try:
-                    ingested_at = json.loads(cfg_p.read_text(encoding="utf-8")).get("ingested_at", "")
-                except (json.JSONDecodeError, OSError):
-                    pass
-            candidates.append((ingested_at, d.name))
-    if not candidates:
-        return None
-    candidates.sort(reverse=True)
-    return candidates[0][1]
+async def _get_latest_doc_id(project_id: str) -> str | None:
+    return await get_latest_doc_id(project_id)
 
 
 @app.post("/api/projects")
@@ -965,7 +957,7 @@ async def list_projects_endpoint(request: Request):
             "title":       row["title"],
             "doc_type":    row["doc_type"],
             "entry_count": entry_count,
-            "doc_id":      _get_latest_doc_id(row["id"]),
+            "doc_id":      await _get_latest_doc_id(row["id"]),
         })
     return JSONResponse(result)
 
@@ -1101,7 +1093,7 @@ async def get_project_token(project_id: str, request: Request):
     owner = proj.get("owner_token")
     if owner and owner != _get_invite(request):
         return JSONResponse({"ok": False, "error": "Kein Zugriff auf dieses Projekt"}, status_code=403)
-    doc_id = _get_latest_doc_id(project_id)
+    doc_id = await _get_latest_doc_id(project_id)
     return JSONResponse({"ok": True, "id": proj["id"], "token": proj["token"],
                          "created_at": proj["created_at"], "doc_id": doc_id})
 
