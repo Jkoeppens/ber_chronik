@@ -127,8 +127,7 @@ mark:hover{filter:brightness(0.88)}
 <div class="app-header">
   <h1>Entity Editor</h1>
   <span class="app-status" id="status">Lade…</span>
-  <button class="btn btn-outline" id="btn-sample" style="margin-left:auto">Stichprobe (schnell)</button>
-  <button class="btn btn-outline" id="btn-full">Vollständig (gründlich)</button>
+  <button class="btn btn-outline" id="btn-full" style="margin-left:auto">NER starten</button>
 </div>
 <div id="log" class="log-box"></div>
 
@@ -695,7 +694,6 @@ async function _runSse(endpoint, btnEl, body = null) {
   const togEl = document.getElementById('log-toggle');
   if (togEl) togEl.style.display = 'none';
   btnEl.disabled = true; btnEl.textContent = 'Läuft…';
-  document.getElementById('btn-sample').disabled = true;
   document.getElementById('btn-full').disabled = true;
   try {
     const fetchOpts = { method: 'POST', headers: _th() };
@@ -713,6 +711,7 @@ async function _runSse(endpoint, btnEl, body = null) {
         if (msg === '__done__') {
           logEl.textContent += '\\n✓ Fertig – lade neu…';
           await load();
+          switchTab('entities');
           logEl.classList.add('collapsed');
           const tog = document.getElementById('log-toggle');
           if (tog) {
@@ -723,14 +722,12 @@ async function _runSse(endpoint, btnEl, body = null) {
             };
           }
           btnEl.textContent = origLabel;
-          document.getElementById('btn-sample').disabled = false;
           document.getElementById('btn-full').disabled = false;
           return;
         }
         if (msg.startsWith('__error__')) {
           logEl.className = 'error'; logEl.textContent += '\\n✗ ' + msg.slice(9);
           btnEl.textContent = origLabel;
-          document.getElementById('btn-sample').disabled = false;
           document.getElementById('btn-full').disabled = false;
           return;
         }
@@ -740,14 +737,10 @@ async function _runSse(endpoint, btnEl, body = null) {
     }
   } finally {
     btnEl.disabled = false; btnEl.textContent = origLabel;
-    document.getElementById('btn-sample').disabled = false;
     document.getElementById('btn-full').disabled = false;
   }
 }
 
-document.getElementById('btn-sample').addEventListener('click', function() {
-  _runSse('/ingest/extract_entities', this, {mode: 'sample'});
-});
 document.getElementById('btn-full').addEventListener('click', function() {
   _runSse('/ingest/extract_entities', this, {mode: 'full'});
 });
