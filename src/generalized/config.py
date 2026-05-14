@@ -31,8 +31,7 @@ GLINER_LABELS: list[str] = [
 # "llm"    → entity_llm.py     (Fallback für Setups ohne GLiNER)
 # "spacy"  → entity_spacy.py   (Legacy, englischsprachige Pressetexte)
 NER_BACKEND: dict[str, str] = {
-    "presseartikel":     "gliner",
-    "forschungsnotizen": "gliner",
-    "buchnotizen":       "gliner",
+    "presseartikel": "gliner",
+    "buchnotizen":   "gliner",
 }
 # Default für unbekannte doc_types: "gliner"

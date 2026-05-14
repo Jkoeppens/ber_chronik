@@ -320,10 +320,8 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
             <div class="adp-row">
               <div class="adp-drop" id="np-drop">Datei hierher ziehen oder klicken</div>
               <select class="adp-select" id="np-doctype">
-                <option value="Forschungsnotizen">Forschungsnotizen</option>
-                <option value="Presseartikel">Presseartikel</option>
-                <option value="Transkripte">Transkripte</option>
-                <option value="Anderes">Anderes</option>
+                <option value="buchnotizen">Literaturexzerpt</option>
+                <option value="presseartikel">Presseexzerpt</option>
               </select>
               <button class="adp-run" id="np-file-go" disabled>Analysieren →</button>
             </div>
@@ -361,20 +359,12 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
     <p class="step-desc">Welche Art von Dokument wird verarbeitet?</p>
     <div class="doctype-grid">
       <label class="doctype-card selected">
-        <input type="radio" name="doc-type" value="Forschungsnotizen" checked>
-        <div><strong>Forschungsnotizen</strong><span>Akademische Lektürenotizen mit Quellenangaben</span></div>
+        <input type="radio" name="doc-type" value="buchnotizen" checked>
+        <div><strong>Literaturexzerpt</strong><span>Akademische Lektürenotizen mit Quellenangaben</span></div>
       </label>
       <label class="doctype-card">
-        <input type="radio" name="doc-type" value="Presseartikel">
-        <div><strong>Presseartikel</strong><span>Zeitungs- oder Zeitschriftenartikel</span></div>
-      </label>
-      <label class="doctype-card">
-        <input type="radio" name="doc-type" value="Transkripte">
-        <div><strong>Transkripte</strong><span>Interview- oder Sitzungsprotokolle</span></div>
-      </label>
-      <label class="doctype-card">
-        <input type="radio" name="doc-type" value="Anderes">
-        <div><strong>Anderes</strong><span>Sonstiger Dokumenttyp</span></div>
+        <input type="radio" name="doc-type" value="presseartikel">
+        <div><strong>Presseexzerpt</strong><span>Zeitungs- oder Zeitschriftenartikel (Geicke-DOCX)</span></div>
       </label>
     </div>
   </section>
@@ -496,7 +486,7 @@ const _INVITE = (document.cookie.match(/invite_token=([^;]+)/) || [])[1] || '';
 // ── State ──────────────────────────────────────────────────────────────────────
 const state = {
   files: [],
-  doc_type: 'Forschungsnotizen',
+  doc_type: 'buchnotizen',
   analysis: null,
   time_config: { year_min: 1800, year_max: 1920, events: [] },
   token: null,
