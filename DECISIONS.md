@@ -166,6 +166,26 @@ Endpoints: `/api/obsidian/oauth/start`, `/api/obsidian/oauth/callback`,
 
 **Lokaler Modus:** `--source local --vault /pfad` für Tests ohne Dropbox-Auth.
 
+### D-I3 — Drei kanonische Dokumenttypen
+
+Das System kennt genau drei Kombinationen aus `doc_type` und `ingest_source`:
+
+| Label UI | doc_type | ingest_source | Ingest-Pfad |
+|---|---|---|---|
+| Literaturexzerpt | `buchnotizen` | — | `parse_document.parse()` |
+| Presseexzerpt | `presseartikel` | `"docx"` | `parse_document.parse_presseartikel()` |
+| Pressesammlung | `presseartikel` | `"obsidian"` | `ingest_obsidian._build_segments()` |
+
+**Konsequenzen:**
+- DB-Migration: `Forschungsnotizen` → `buchnotizen` (historische Inkonsistenz bereinigt)
+- `NER_BACKEND` in `config.py`: nur noch `presseartikel` und `buchnotizen` als Schlüssel
+- UI (`ingest_wizard.html`): Datei-Tab select und Step-2-Grid zeigen nur noch Literaturexzerpt / Presseexzerpt; Pressesammlung ist implizit durch Obsidian-Tab
+- `_DOC_TYPE_MAP` in `dev_server.py` bleibt für ältere Projekte als Mapping `Forschungsnotizen → buchnotizen`
+
+**Archiviert:**
+- `ingest_zotero.py` (ersetzt durch D-I1)
+- `Transkripte` und `Anderes` als UI-Optionen (nie produktiv verwendet)
+
 ### D-I2 — Ingest-Architektur: Quelle × Material-Typ
 
 Zwei unabhängige Dimensionen bestimmen das Pipeline-Verhalten:
@@ -176,7 +196,7 @@ Zwei unabhängige Dimensionen bestimmen das Pipeline-Verhalten:
 
 **Material-Typ und Pipeline-Verhalten:**
 
-| | presseartikel/DOCX (Geicke-Stil) | presseartikel/Obsidian (Web-Artikel) | buchnotizen/forschungsnotizen |
+| | presseartikel/DOCX (Geicke-Stil) | presseartikel/Obsidian (Web-Artikel) | buchnotizen |
 |---|---|---|---|
 | Segment-Bau | `parse_presseartikel()`: flach, Jahres-Headings | `_build_segments()`: Heading-Seg + Absatz-Split auf `\n\n` | `parse()`: Werk-Hierarchie level 1/2/3 |
 | Datierung | Heading-Jahr aus Dokument-Struktur | `published`/`created` Frontmatter → `date`-Feld im Heading-Segment | Fließtext-Regex (exact/decade/event) |
@@ -228,14 +248,11 @@ Parser: `##`-Zeile = Kategoriename; nächste nicht-leere Zeile = Beschreibung;
 
 **NER-Backend-Switcher** (`extract_entities_v2.py`):
 ```python
-backend = NER_BACKEND.get(doc_type, "llm")  # NER_BACKEND in config.py
+backend = NER_BACKEND.get(doc_type, "gliner")  # NER_BACKEND in config.py
 ```
-- `presseartikel` → spaCy (`entity_spacy.py`): `en_core_web_trf` oder `en_core_web_sm` als Fallback
-- alle anderen → LLM-Pipeline (Schritt 1–4)
+- alle doc_types → GLiNER (`entity_gliner.py`), siehe D-E4
 
-Warum: Presseartikel sind englischsprachig und strukturiert — spaCy NER ist schneller
-und hat kein Kontextfenster-Problem. Lange Texte (z.B. Video-Transkripte) bleiben dem
-LLM-Pfad überlassen. Der Taxonomie-Vorschlag-Merge-Schritt (5 Batches → Häufigkeitszählung)
+Der Taxonomie-Vorschlag-Merge-Schritt (5 Batches → Häufigkeitszählung)
 ist durch D-P9 (3-stufige Keyword→Destillation) ersetzt worden.
 
 Warum kein JSON:
