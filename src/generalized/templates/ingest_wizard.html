@@ -498,6 +498,7 @@ const state = {
   project_title: '',
   isExistingProject: false,
   obsidian_source: null,   // 'dropbox' wenn Obsidian-Flow aktiv
+  obsidian_folder: null,   // gespeicherter Ordnerpfad für btnNext step 2
 };
 
 function slugify(name) {
@@ -725,11 +726,15 @@ buildDots();
       if (tokenData.ok) state.token = tokenData.token;
     }
     // Ordner-Pfad speichern (doc_type folgt in Schritt 2)
+    console.log('dropbox_folder:', npObsFolder.value);
+    console.log('normalized:', normalizeFolder(npObsFolder.value));
+    console.log('projId:', npObsProjId);
     const cfgRes = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
       method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ dropbox_folder: normalizeFolder(npObsFolder.value), doc_type: 'presseartikel' }),
     });
     const cfgData = await cfgRes.json();
+    console.log('config response:', cfgData);
     if (!cfgData.ok) {
       npObsStat.textContent = '✗ ' + (cfgData.error || 'Config-Fehler');
       npObsStat.style.color = '#dc2626';
@@ -739,6 +744,7 @@ buildDots();
     state.project         = npObsProjId;
     state.project_title   = name;
     state.obsidian_source = 'dropbox';
+    state.obsidian_folder = normalizeFolder(npObsFolder.value);
     state.isExistingProject = true;
     wrap.classList.remove('np-open');
     gotoStep(2);
@@ -835,12 +841,20 @@ btnBack.addEventListener('click', () => {
 });
 btnNext.addEventListener('click', async () => {
   if (currentStep === 2) {
+    console.log('btnNext state.project:', state.project);
+    console.log('btnNext obsidian_source:', state.obsidian_source);
     if (state.obsidian_source === 'dropbox' && state.project) {
-      // doc_type-Auswahl in obsidian/config persistieren vor dem Sync
-      await fetch('/api/projects/' + encodeURIComponent(state.project) + '/obsidian/config', {
-        method: 'POST', headers: authHeaders(),
-        body: JSON.stringify({ doc_type: state.doc_type }),
+      // doc_type-Auswahl + dropbox_folder in obsidian/config persistieren vor dem Sync
+      const cfgRes2 = await fetch('/api/projects/' + encodeURIComponent(state.project) + '/obsidian/config', {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ doc_type: state.doc_type, dropbox_folder: state.obsidian_folder }),
       });
+      const cfgData2 = await cfgRes2.json();
+      if (!cfgData2.ok) {
+        alert('Fehler beim Speichern der Konfiguration: ' + cfgData2.error);
+        return;
+      }
     }
     gotoStep(3);
     return;
@@ -1064,6 +1078,8 @@ async function runObsidianSync() {
   logEl.style.display   = 'none'; logEl.textContent = '';
   errEl.style.display   = 'none';
 
+  console.log('sync project:', state.project);
+  console.log('sync token:', state.token);
   // Token holen falls noch nicht vorhanden
   if (!state.token && state.project) {
     const td = await fetch('/api/projects/' + encodeURIComponent(state.project) + '/token');
@@ -1969,6 +1985,7 @@ async function openExistingProject(id, title, docType) {
     };
     if (cfg.obsidian?.dropbox_folder && !tokenData.doc_id) {
       state.obsidian_source   = 'dropbox';
+      state.obsidian_folder   = cfg.obsidian.dropbox_folder;
       state.isExistingProject = true;
       state.doc_type          = cfg.doc_type || 'presseartikel';
       maxReachedStep = 2;
