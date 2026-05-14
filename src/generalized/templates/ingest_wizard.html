@@ -358,13 +358,17 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
     <h2>Dokumenttyp</h2>
     <p class="step-desc">Welche Art von Dokument wird verarbeitet?</p>
     <div class="doctype-grid">
-      <label class="doctype-card selected">
+      <label class="doctype-card selected" id="dt-literaturexzerpt">
         <input type="radio" name="doc-type" value="buchnotizen" checked>
         <div><strong>Literaturexzerpt</strong><span>Akademische Lektürenotizen mit Quellenangaben</span></div>
       </label>
-      <label class="doctype-card">
+      <label class="doctype-card" id="dt-presseexzerpt">
         <input type="radio" name="doc-type" value="presseartikel">
         <div><strong>Presseexzerpt</strong><span>Zeitungs- oder Zeitschriftenartikel (Geicke-DOCX)</span></div>
+      </label>
+      <label class="doctype-card" id="dt-pressesammlung" style="display:none">
+        <input type="radio" name="doc-type" value="presseartikel">
+        <div><strong>Pressesammlung</strong><span>Einzelne Webartikel aus Obsidian</span></div>
       </label>
     </div>
   </section>
@@ -637,7 +641,7 @@ buildDots();
       if (!upRes.ok) throw new Error('Upload-Fehler ' + upRes.status);
       const upData = await upRes.json();
       state.project_title = name; state.doc_type = npDtype.value;
-      state.files = upData.files; state.isExistingProject = false;
+      state.files = upData.files; state.isExistingProject = false; state.obsidian_source = null;
       state.analysis = null; state.project = null; state.document = null; state.token = null;
       analysisRan = false;
       document.getElementById('project-name-input').value = name;
@@ -860,6 +864,26 @@ let syncRan = false;
 async function onEnterStep(n) {
   btnNext.disabled = false;
   if (n === 1) { state.isExistingProject = false; syncRan = false; }
+  if (n === 2) {
+    const dtLiteratur      = document.getElementById('dt-literaturexzerpt');
+    const dtPresseexzerpt  = document.getElementById('dt-presseexzerpt');
+    const dtPressesammlung = document.getElementById('dt-pressesammlung');
+    if (state.obsidian_source === 'dropbox') {
+      // Obsidian-Pfad: nur Pressesammlung anzeigen, auto-vorauswählen
+      dtLiteratur.style.display      = 'none';
+      dtPresseexzerpt.style.display  = 'none';
+      dtPressesammlung.style.display = '';
+      dtPressesammlung.querySelector('input').checked = true;
+      document.querySelectorAll('.doctype-card').forEach(c => c.classList.remove('selected'));
+      dtPressesammlung.classList.add('selected');
+      state.doc_type = 'presseartikel';
+    } else {
+      // Datei-Pfad: Literaturexzerpt + Presseexzerpt anzeigen, Pressesammlung verstecken
+      dtLiteratur.style.display      = '';
+      dtPresseexzerpt.style.display  = '';
+      dtPressesammlung.style.display = 'none';
+    }
+  }
   if (n === 3) {
     if (state.obsidian_source === 'dropbox') {
       document.getElementById('step3-title').textContent = 'Obsidian-Import';
