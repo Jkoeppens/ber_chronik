@@ -460,8 +460,12 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
       <div class="pipeline-step" data-script="match_entities.py"><span class="ps-icon">5</span><span class="ps-name">match_entities.py</span><span class="ps-status" id="ps-4">ausstehend</span><button class="ps-rerun" data-script="match_entities.py">↺ Neu</button></div>
       <div class="pipeline-step" data-script="export_preview.py"><span class="ps-icon">6</span><span class="ps-name">export_preview.py</span><span class="ps-status" id="ps-5">ausstehend</span><button class="ps-rerun" data-script="export_preview.py">↺ Neu</button></div>
     </div>
-    <div style="margin-bottom:8px">
+    <div style="margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <button id="btn-run-pipeline">Pipeline starten</button>
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--c-text-3);cursor:pointer">
+        <input type="checkbox" id="cb-summaries" style="cursor:pointer">
+        Entity-Zusammenfassungen erzeugen (dauert länger)
+      </label>
     </div>
     <div id="pipeline-log"></div>
     <a id="preview-link" href="/preview" target="_blank">Zeitanker bearbeiten →</a>
@@ -2057,9 +2061,10 @@ document.getElementById('btn-run-pipeline').addEventListener('click', async () =
   const res    = await fetch('/ingest/run', {
     method: 'POST', headers: authHeaders(),
     body: JSON.stringify({
-      project:  state.project  || undefined,
-      document: state.document || undefined,
-      filename: state.files[0]?.name || '',
+      project:      state.project  || undefined,
+      document:     state.document || undefined,
+      filename:     state.files[0]?.name || '',
+      no_summaries: !document.getElementById('cb-summaries').checked,
     }),
   });
   const reader = res.body.getReader(), decoder = new TextDecoder(); let buf = '';

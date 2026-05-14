@@ -591,10 +591,11 @@ async def ingest_save_config(request: Request):
 
 @app.post("/ingest/run")
 async def ingest_run(request: Request):
-    body     = await request.json()
-    filename = body.get("filename", "")
-    project  = body.get("project") or request.query_params.get("project")
-    doc_id   = body.get("document") or request.query_params.get("document")
+    body         = await request.json()
+    filename     = body.get("filename", "")
+    project      = body.get("project") or request.query_params.get("project")
+    doc_id       = body.get("document") or request.query_params.get("document")
+    no_summaries = body.get("no_summaries", True)
     if not project or not doc_id:
         return JSONResponse({"error": "project und document erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
@@ -602,7 +603,7 @@ async def ingest_run(request: Request):
 
     parse_args = ["--project", project, "--document", doc_id] + ([str(input_file)] if input_file else [])
     d_args     = ["--project", project, "--document", doc_id]
-    p_args     = ["--project", project]  # project-only (for exploration export)
+    p_args     = ["--project", project] + (["--no-summaries"] if no_summaries else [])
 
     doc_dir       = get_doc_dir(project, doc_id)
     has_segments  = (doc_dir / "segments.json").exists()

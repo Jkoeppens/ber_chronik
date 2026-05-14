@@ -231,8 +231,10 @@ def validate_and_stats(entries: list[dict]) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Alle Dokumente eines Projekts → exploration/")
-    ap.add_argument("--project",  required=True, help="Projektname (z.B. ber, damaskus)")
-    ap.add_argument("--document", default=None,  help="Nur dieses Dokument exportieren (optional)")
+    ap.add_argument("--project",      required=True, help="Projektname (z.B. ber, damaskus)")
+    ap.add_argument("--document",     default=None,  help="Nur dieses Dokument exportieren (optional)")
+    ap.add_argument("--no-summaries", action="store_true", default=False,
+                    help="Entity-Zusammenfassungen überspringen")
     args = ap.parse_args()
 
     project_dir     = PROJECTS_DIR / args.project
@@ -337,11 +339,12 @@ def main() -> None:
 
     # ── entities_summary.json ──────────────────────────────────────────────────
     summary_out = exploration_dir / "entities_summary.json"
-    if entities:
+    if entities and not args.no_summaries:
         print("\nErzeuge Entity-Summaries (LLM) …")
         _build_summaries(entries, entities, summary_out, min_mentions=3)
     else:
-        print("→ entities_summary.json übersprungen (keine Entities in config.json)")
+        reason = "keine Entities in config.json" if not entities else "--no-summaries gesetzt"
+        print(f"→ entities_summary.json übersprungen ({reason})")
 
     # ── project_meta.json ──────────────────────────────────────────────────────
     meta = build_meta(config, taxonomy, entities)
