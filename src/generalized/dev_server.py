@@ -1092,7 +1092,6 @@ async def get_editor(request: Request):
 
 @app.get("/api/projects/{project_id}/token")
 async def get_project_token(project_id: str, request: Request):
-    if err := _require_admin_key(request): return err
     proj = await get_project(project_id)
     if not proj:
         return JSONResponse({"ok": False, "error": "Projekt nicht gefunden"}, status_code=404)
