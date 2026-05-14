@@ -157,6 +157,9 @@ async def _require_token(request: Request, project: str | None = None) -> JSONRe
         return JSONResponse({"ok": False, "error": "Projekt nicht gefunden"}, status_code=403)
     if not token_valid(db_proj, token):
         return JSONResponse({"ok": False, "error": "Token ungültig oder abgelaufen"}, status_code=403)
+    owner = db_proj.get("owner_token")
+    if owner and owner != _get_invite(request):
+        return JSONResponse({"ok": False, "error": "Kein Zugriff auf dieses Projekt"}, status_code=403)
     return None
 
 
@@ -1095,6 +1098,9 @@ async def get_project_token(project_id: str, request: Request):
     proj = await get_project(project_id)
     if not proj:
         return JSONResponse({"ok": False, "error": "Projekt nicht gefunden"}, status_code=404)
+    owner = proj.get("owner_token")
+    if owner and owner != _get_invite(request):
+        return JSONResponse({"ok": False, "error": "Kein Zugriff auf dieses Projekt"}, status_code=403)
     doc_id = _get_latest_doc_id(project_id)
     return JSONResponse({"ok": True, "id": proj["id"], "token": proj["token"],
                          "created_at": proj["created_at"], "doc_id": doc_id})
