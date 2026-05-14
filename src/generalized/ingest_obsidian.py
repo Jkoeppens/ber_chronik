@@ -30,6 +30,7 @@ Lokaler Modus (Tests ohne Dropbox-Auth):
 """
 
 import argparse
+import asyncio
 import json
 import os
 import re
@@ -437,6 +438,16 @@ def main() -> None:
     # ── 6. Checkpoint speichern ───────────────────────────────────────────────
     _save_checkpoint(cp_path, processed_keys)
     print(f"\nCheckpoint aktualisiert: {len(processed_keys)} neue Dateien gespeichert")
+
+    from src.generalized.db import upsert_document
+    asyncio.run(upsert_document(
+        doc_id            = doc_id,
+        project_id        = args.project,
+        ingested_at       = doc_config["ingested_at"],
+        doc_type          = args.doc_type,
+        ingest_source     = "obsidian",
+        original_filename = doc_config["original_filename"],
+    ))
     print(f"✓ Obsidian-Ingest abgeschlossen  (project={args.project}, doc_id={doc_id})")
 
 
