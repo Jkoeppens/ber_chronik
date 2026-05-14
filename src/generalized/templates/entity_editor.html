@@ -709,20 +709,7 @@ async function _runSse(endpoint, btnEl, body = null) {
         if (!line.startsWith('data: ')) continue;
         const msg = line.slice(6);
         if (msg === '__done__') {
-          logEl.textContent += '\\n✓ Fertig – lade neu…';
-          await load();
-          switchTab('entities');
-          logEl.classList.add('collapsed');
-          const tog = document.getElementById('log-toggle');
-          if (tog) {
-            tog.textContent = 'Log anzeigen ▾'; tog.style.display = 'block';
-            tog.onclick = () => {
-              const open = logEl.classList.toggle('collapsed');
-              tog.textContent = open ? 'Log anzeigen ▾' : 'Log ausblenden ▴';
-            };
-          }
-          btnEl.textContent = origLabel;
-          document.getElementById('btn-full').disabled = false;
+          window.location.reload();
           return;
         }
         if (msg.startsWith('__error__')) {
