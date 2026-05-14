@@ -311,17 +311,6 @@ def main() -> None:
         print("Keine Daten gefunden.", file=sys.stderr)
         sys.exit(1)
 
-    # ── year_min/year_max aus tatsächlichen Ankerdaten berechnen ───────────────
-    anchor_years = [seg["time_from"] for seg in all_anchors if seg.get("time_from") is not None]
-    if anchor_years:
-        computed_min = min(anchor_years)
-        computed_max = max(anchor_years)
-        if config.get("year_min") != computed_min or config.get("year_max") != computed_max:
-            config["year_min"] = computed_min
-            config["year_max"] = computed_max
-            config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
-            print(f"→ year_min/year_max aktualisiert: {computed_min}–{computed_max}")
-
     # ── data.json ──────────────────────────────────────────────────────────────
     entries = build_entries(all_anchors, all_cls_map)
 
@@ -331,6 +320,14 @@ def main() -> None:
         raw = e.get("event_type")
         if raw is not None:
             e["event_type"] = normalize_category(raw, valid_names)
+
+    # ── year_min/year_max aus tatsächlichen Einträgen berechnen ───────────────
+    years = [e["year"] for e in entries if e.get("year")]
+    if years:
+        config["year_min"] = min(years)
+        config["year_max"] = max(years)
+        config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"→ year_min/year_max aktualisiert: {min(years)}–{max(years)}")
 
     data_obj = {
         "generated": str(date.today()),
