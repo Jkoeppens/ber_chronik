@@ -182,6 +182,20 @@ Das System kennt genau drei Kombinationen aus `doc_type` und `ingest_source`:
 - UI (`ingest_wizard.html`): Datei-Tab select und Step-2-Grid zeigen nur noch Literaturexzerpt / Presseexzerpt; Pressesammlung ist implizit durch Obsidian-Tab
 - `_DOC_TYPE_MAP` in `dev_server.py` bleibt für ältere Projekte als Mapping `Forschungsnotizen → buchnotizen`
 
+**precision-Werte nach Dokumenttyp** (gesetzt von `detect_anchors.py`, ergänzt von `interpolate_anchors.py`):
+
+| Dokumenttyp | precision-Wert | Bedeutung |
+|---|---|---|
+| presseartikel/docx | `"heading"` | Jahres-Heading im DOCX (`"1989"`) vererbt |
+| presseartikel/docx | `"exact"` | date-Feld aus Segment-Metadaten (Zotero) |
+| presseartikel/obsidian | `"exact"` | Heading-Segment mit `published`-Datum |
+| presseartikel/obsidian | `"interpolated"` | content-Seg nach Interpolation (Rule 4) |
+| buchnotizen | `"exact"` | Jahreszahl im Fließtext |
+| buchnotizen | `"event"` | Benanntes Ereignis (Tanzimat, WK1 …) |
+| buchnotizen | `"decade"` | Jahrzehnt-Referenz ohne genaue Zahl |
+| alle | `"manual"` | Override in `overrides.json` (`set_anchor`) |
+| alle | `"interpolated"` | Interpoliert durch `interpolate_anchors.py` |
+
 **Archiviert:**
 - `ingest_zotero.py` (ersetzt durch D-I1)
 - `Transkripte` und `Anderes` als UI-Optionen (nie produktiv verwendet)

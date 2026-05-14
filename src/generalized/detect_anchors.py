@@ -17,7 +17,14 @@ Aufruf:
 
 Output:
   data/interim/generalized/anchors.json   — alle content-Segmente mit
-    anchors: [...], time_from, time_to, precision (exact|event|decade|null)
+    anchors: [...], time_from, time_to, precision (exact|heading|event|decade|null)
+
+precision-Werte (gesetzt von diesem Skript):
+  exact    — konkrete Jahreszahl im Fließtext, oder Datum aus date-Feld (Zotero/Obsidian)
+  heading  — presseartikel/DOCX: Jahr vom letzten Jahres-Heading geerbt
+  event    — benanntes historisches Ereignis (buchnotizen)
+  decade   — Jahrzehnt-Referenz ohne genaues Jahr (buchnotizen)
+  null     — kein Anker gefunden; interpolate_anchors.py kann "interpolated" nachliefern
 """
 
 import argparse
@@ -121,6 +128,190 @@ def detect_anchors(text: str) -> list[dict]:
     return anchors
 
 
+# ── Verarbeitungs-Funktionen ───────────────────────────────────────────────────
+
+def _process_presseartikel(segments: list[dict]) -> list[dict]:
+    """Geicke-DOCX und Obsidian presseartikel — gibt output_rows zurück, druckt Stats."""
+    output_rows:           list[dict] = []
+    active_heading_year:   int | None = None
+    heading_count          = 0
+    date_field_count       = 0
+    obsidian_heading_count = 0
+    without_date           = 0
+
+    for seg in segments:
+        if seg.get("type") == "heading":
+            m = _YEAR_ONLY.match(seg.get("text", ""))
+            if m:
+                # DOCX-Stil: reine Jahreszahl im Text → setzt Jahres-Kontext
+                active_heading_year = int(m.group(1))
+            else:
+                # Obsidian-Stil: Artikel-Titel als Heading, Datum im date-Feld
+                date_str = (seg.get("date") or "").strip()
+                year: int | None = None
+                if re.match(r"^\d{4}", date_str):
+                    year = int(date_str[:4])
+                if year is not None:
+                    row = {**seg,
+                           "anchors": [{"type": "exact", "value": year,
+                                        "span": date_str, "source": "date"}],
+                           "time_from": year, "time_to": year,
+                           "precision": "exact"}
+                    if not row.get("date_raw"):
+                        row["date_raw"] = date_str
+                    output_rows.append(row)
+                    obsidian_heading_count += 1
+                # active_heading_year nicht setzen — content-Segs via Interpolation
+            continue
+
+        if seg.get("type") != "content":
+            continue
+
+        if seg.get("ingest_source") == "obsidian":
+            # Obsidian content: undatiert lassen, Interpolation erbt vom Heading-Anker
+            row = {**seg, "anchors": [], "time_from": None, "time_to": None,
+                   "precision": None}
+            if not row.get("date_raw") and row.get("date"):
+                row["date_raw"] = row["date"]
+            output_rows.append(row)
+            continue
+
+        if active_heading_year is not None:
+            anchors   = [{"type": "exact", "value": active_heading_year,
+                           "span": str(active_heading_year), "source": "heading"}]
+            time_from = time_to = active_heading_year
+            precision = "heading"
+            heading_count += 1
+        else:
+            # Kein Heading-Jahr — date-Feld aus Segment-Metadaten lesen (Zotero)
+            date_str = (seg.get("date") or "").strip()
+            year = None
+            if re.match(r"^\d{4}-\d{2}", date_str):   # YYYY-MM-DD oder YYYY-MM
+                year = int(date_str[:4])
+                precision = "exact"
+            elif re.match(r"^\d{4}$", date_str):       # nur YYYY
+                year = int(date_str)
+                precision = "exact"
+            else:
+                precision = None
+
+            if year is not None:
+                anchors   = [{"type": "exact", "value": year,
+                              "span": date_str, "source": "date"}]
+                time_from = time_to = year
+                date_field_count += 1
+            else:
+                anchors   = []
+                time_from = time_to = None
+                without_date += 1
+
+        row = {**seg, "anchors": anchors,
+               "time_from": time_from, "time_to": time_to,
+               "precision": precision}
+        if not row.get("date_raw") and row.get("date"):
+            row["date_raw"] = row["date"]
+        output_rows.append(row)
+
+    total     = len(output_rows)
+    n_content = sum(1 for r in output_rows if r.get("type") == "content")
+    print(f"Segmente gesamt:                  {total}")
+    if obsidian_heading_count:
+        print(f"  Obsidian-Headings (mit Datum):  {obsidian_heading_count}")
+        print(f"  Obsidian-content (undatiert):   {n_content}")
+    if n_content:
+        print(f"  mit DOCX-Heading-Jahr:          {heading_count}"
+              f"  ({heading_count/n_content*100:.1f} %)")
+        print(f"  mit date-Feld (Zotero):         {date_field_count}"
+              f"  ({date_field_count/n_content*100:.1f} %)")
+        print(f"  ohne Datum:                     {without_date}"
+              f"  ({without_date/n_content*100:.1f} %)")
+
+    return output_rows
+
+
+def _process_literatur(segments: list[dict]) -> list[dict]:
+    """buchnotizen/Forschungsnotizen — gibt output_rows zurück, druckt Stats."""
+    output_rows:     list[dict] = []
+    with_anchors:    list[dict] = []
+    without_anchors: list[dict] = []
+    type_counter:    Counter    = Counter()
+    year_counter:    Counter    = Counter()
+    heading_inherited           = 0
+
+    active_heading_year: int | None = None
+
+    for seg in segments:
+        if seg.get("type") == "heading":
+            m = _YEAR_ONLY.match(seg.get("text", ""))
+            active_heading_year = int(m.group(1)) if m else None
+            continue
+
+        if seg.get("type") != "content":
+            continue
+
+        anchors = detect_anchors(seg["text"])
+
+        years_exact = [a["value"] for a in anchors if a["type"] == "exact"]
+        years_event = [a["value"] for a in anchors
+                       if a["type"] == "event" and a["value"] is not None]
+
+        if years_exact:
+            time_from, time_to, precision = min(years_exact), max(years_exact), "exact"
+        elif years_event:
+            time_from, time_to, precision = min(years_event), max(years_event), "event"
+        elif any(a["type"] == "decade" for a in anchors):
+            time_from, time_to, precision = None, None, "decade"
+        elif active_heading_year is not None:
+            time_from  = time_to = active_heading_year
+            precision  = "exact"
+            anchors    = [{"type": "exact", "value": active_heading_year,
+                           "span": str(active_heading_year), "source": "heading"}]
+            heading_inherited += 1
+        else:
+            time_from, time_to, precision = None, None, None
+
+        row = {**seg, "anchors": anchors,
+               "time_from": time_from, "time_to": time_to, "precision": precision}
+        output_rows.append(row)
+
+        if anchors:
+            with_anchors.append(seg)
+            seen_types: set[str] = set()
+            for a in anchors:
+                if a["type"] not in seen_types:
+                    type_counter[a["type"]] += 1
+                    seen_types.add(a["type"])
+                if a["type"] == "exact":
+                    year_counter[a["value"]] += 1
+        else:
+            without_anchors.append(seg)
+
+    total = len(output_rows)
+    print(f"Segmente (type=content):          {total}")
+    print(f"  mit mindestens einem Anker:     {len(with_anchors)}"
+          f"  ({len(with_anchors)/total*100:.1f} %)")
+    print(f"    davon von Heading geerbt:     {heading_inherited}")
+    print(f"  ohne Anker:                     {len(without_anchors)}"
+          f"  ({len(without_anchors)/total*100:.1f} %)")
+    print()
+    print("Verteilung nach Anker-Typ")
+    print("  (Segment wird je Typ nur einmal gezählt)")
+    for typ in ("exact", "decade", "event"):
+        n = type_counter[typ]
+        print(f"  {typ:8s}  {n:4d}  ({n/total*100:.1f} %)")
+    print()
+    print("Top 10 Jahreswerte (exact-Anker, Häufigkeit = Anzahl Segmente):")
+    for year, count in year_counter.most_common(10):
+        bar = "█" * count
+        print(f"  {year}  {count:4d}  {bar}")
+    print()
+    print("Beispiele ohne Anker (erste 5):")
+    for seg in without_anchors[:5]:
+        print(f"  [{seg['segment_id']}] {seg['text'][:100]!r}")
+
+    return output_rows
+
+
 # ── Hauptprogramm ──────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -147,200 +338,15 @@ def main() -> None:
     else:
         doc_type = next((s.get("doc_type") for s in segments if s.get("doc_type")), "buchnotizen")
 
-    output_rows: list[dict] = []
-
     if doc_type == "presseartikel":
-        # ── Presseartikel-Modus: kein Fließtext-Regex ─────────────────────────
-        # Zwei Sub-Pfade je nach Quelle:
-        #   DOCX (Geicke-Stil): Jahres-Heading im Text ("1989") → active_heading_year
-        #                       content-Segs erben das Jahr direkt hier
-        #   Obsidian: Heading-Segment mit date-Feld → Anker-Row in Output
-        #             content-Segs bleiben undatiert → Interpolation erbt
-        active_heading_year: int | None = None
-        heading_count = 0
-        date_field_count = 0
-        obsidian_heading_count = 0
-        without_date = 0
-
-        for seg in segments:
-            if seg.get("type") == "heading":
-                m = _YEAR_ONLY.match(seg.get("text", ""))
-                if m:
-                    # DOCX-Stil: reine Jahreszahl im Text
-                    active_heading_year = int(m.group(1))
-                    # kein Output-Row für DOCX-Headings
-                else:
-                    # Obsidian-Stil: Artikel-Titel als Heading, Datum im date-Feld
-                    date_str = (seg.get("date") or "").strip()
-                    year: int | None = None
-                    if re.match(r"^\d{4}", date_str):
-                        year = int(date_str[:4])
-                    if year is not None:
-                        row = {**seg,
-                               "anchors": [{"type": "exact", "value": year,
-                                            "span": date_str, "source": "date"}],
-                               "time_from": year, "time_to": year,
-                               "precision": "exact"}
-                        if not row.get("date_raw"):
-                            row["date_raw"] = date_str
-                        output_rows.append(row)
-                        obsidian_heading_count += 1
-                    # active_heading_year nicht setzen — content-Segs via Interpolation
-                continue
-
-            if seg.get("type") != "content":
-                continue
-
-            if seg.get("ingest_source") == "obsidian":
-                # Obsidian content: undatiert lassen, Interpolation erbt vom Heading-Anker
-                row = {**seg, "anchors": [], "time_from": None, "time_to": None,
-                       "precision": None}
-                if not row.get("date_raw") and row.get("date"):
-                    row["date_raw"] = row["date"]
-                output_rows.append(row)
-                continue
-
-            if active_heading_year is not None:
-                anchors = [{"type": "exact", "value": active_heading_year,
-                             "span": str(active_heading_year), "source": "heading"}]
-                time_from = time_to = active_heading_year
-                precision = "heading"
-                heading_count += 1
-            else:
-                # Kein Heading-Jahr — date-Feld aus Segment-Metadaten lesen (Zotero)
-                date_str = (seg.get("date") or "").strip()
-                year = None
-                if re.match(r"^\d{4}-\d{2}", date_str):   # YYYY-MM-DD oder YYYY-MM
-                    year = int(date_str[:4])
-                    precision = "exact"
-                elif re.match(r"^\d{4}$", date_str):       # nur YYYY
-                    year = int(date_str)
-                    precision = "exact"
-                else:
-                    precision = None
-
-                if year is not None:
-                    anchors = [{"type": "exact", "value": year,
-                                "span": date_str, "source": "date"}]
-                    time_from = time_to = year
-                    date_field_count += 1
-                else:
-                    anchors = []
-                    time_from = time_to = None
-                    without_date += 1
-
-            row = {**seg, "anchors": anchors,
-                   "time_from": time_from, "time_to": time_to,
-                   "precision": precision}
-            if not row.get("date_raw") and row.get("date"):
-                row["date_raw"] = row["date"]
-            output_rows.append(row)
-
-        output_path.write_text(
-            json.dumps(output_rows, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-        total = len(output_rows)
-        n_content = sum(1 for r in output_rows if r.get("type") == "content")
-        print(f"→ {output_path}  ({total} Segmente, doc_type=presseartikel)\n")
-        print(f"Segmente gesamt:                  {total}")
-        if obsidian_heading_count:
-            print(f"  Obsidian-Headings (mit Datum):  {obsidian_heading_count}")
-            print(f"  Obsidian-content (undatiert):   {n_content}")
-        if n_content:
-            print(f"  mit DOCX-Heading-Jahr:          {heading_count}"
-                  f"  ({heading_count/n_content*100:.1f} %)")
-            print(f"  mit date-Feld (Zotero):         {date_field_count}"
-                  f"  ({date_field_count/n_content*100:.1f} %)")
-            print(f"  ohne Datum:                     {without_date}"
-                  f"  ({without_date/n_content*100:.1f} %)")
-        return
-
-    # ── Forschungsnotizen-Modus: Regex + Event-Liste + Heading-Vererbung ────────
-    with_anchors: list[dict] = []
-    without_anchors: list[dict] = []
-    type_counter:  Counter = Counter()
-    year_counter:  Counter = Counter()
-    heading_inherited = 0
-
-    active_heading_year_fn: int | None = None
-
-    for seg in segments:
-        # Heading-Segmente: Jahreskontext setzen, nicht in Output schreiben
-        if seg.get("type") == "heading":
-            m = _YEAR_ONLY.match(seg.get("text", ""))
-            active_heading_year_fn = int(m.group(1)) if m else None
-            continue
-
-        if seg.get("type") != "content":
-            continue
-
-        anchors = detect_anchors(seg["text"])
-
-        years_exact = [a["value"] for a in anchors if a["type"] == "exact"]
-        years_event = [a["value"] for a in anchors
-                       if a["type"] == "event" and a["value"] is not None]
-
-        if years_exact:
-            time_from, time_to, precision = min(years_exact), max(years_exact), "exact"
-        elif years_event:
-            time_from, time_to, precision = min(years_event), max(years_event), "event"
-        elif any(a["type"] == "decade" for a in anchors):
-            time_from, time_to, precision = None, None, "decade"
-        elif active_heading_year_fn is not None:
-            time_from = time_to = active_heading_year_fn
-            precision  = "exact"
-            anchors    = [{"type": "exact", "value": active_heading_year_fn,
-                           "span": str(active_heading_year_fn), "source": "heading"}]
-            heading_inherited += 1
-        else:
-            time_from, time_to, precision = None, None, None
-
-        row = {**seg, "anchors": anchors,
-               "time_from": time_from, "time_to": time_to, "precision": precision}
-        output_rows.append(row)
-
-        if anchors:
-            with_anchors.append(seg)
-            seen_types: set[str] = set()
-            for a in anchors:
-                if a["type"] not in seen_types:
-                    type_counter[a["type"]] += 1
-                    seen_types.add(a["type"])
-                if a["type"] == "exact":
-                    year_counter[a["value"]] += 1
-        else:
-            without_anchors.append(seg)
+        output_rows = _process_presseartikel(segments)
+    else:
+        output_rows = _process_literatur(segments)
 
     output_path.write_text(
         json.dumps(output_rows, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    print(f"→ {output_path}  ({len(output_rows)} Segmente)\n")
-
-    total = len(output_rows)
-    print(f"Segmente (type=content):          {total}")
-    print(f"  mit mindestens einem Anker:     {len(with_anchors)}"
-          f"  ({len(with_anchors)/total*100:.1f} %)")
-    print(f"    davon von Heading geerbt:     {heading_inherited}")
-    print(f"  ohne Anker:                     {len(without_anchors)}"
-          f"  ({len(without_anchors)/total*100:.1f} %)")
-    print()
-
-    print("Verteilung nach Anker-Typ")
-    print("  (Segment wird je Typ nur einmal gezählt)")
-    for typ in ("exact", "decade", "event"):
-        n = type_counter[typ]
-        print(f"  {typ:8s}  {n:4d}  ({n/total*100:.1f} %)")
-    print()
-
-    print("Top 10 Jahreswerte (exact-Anker, Häufigkeit = Anzahl Segmente):")
-    for year, count in year_counter.most_common(10):
-        bar = "█" * count
-        print(f"  {year}  {count:4d}  {bar}")
-    print()
-
-    print("Beispiele ohne Anker (erste 5):")
-    for seg in without_anchors[:5]:
-        print(f"  [{seg['segment_id']}] {seg['text'][:100]!r}")
+    print(f"\n→ {output_path}  ({len(output_rows)} Segmente, doc_type={doc_type})")
 
 
 if __name__ == "__main__":

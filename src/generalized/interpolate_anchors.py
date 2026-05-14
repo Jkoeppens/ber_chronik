@@ -228,17 +228,21 @@ def main() -> None:
 
     segments_raw: list[dict] = json.loads(input_path.read_text(encoding="utf-8"))
 
-    # doc_type aus doc config.json lesen
+    # doc_type und obsidian_source aus doc config.json lesen
     doc_cfg_path = doc_dir / "config.json"
+    doc_cfg: dict = {}
     if doc_cfg_path.exists():
-        doc_type = json.loads(doc_cfg_path.read_text(encoding="utf-8")).get("doc_type", "buchnotizen")
+        doc_cfg  = json.loads(doc_cfg_path.read_text(encoding="utf-8"))
+        doc_type = doc_cfg.get("doc_type", "buchnotizen")
     else:
         doc_type = next((s.get("doc_type") for s in segments_raw if s.get("doc_type")), "buchnotizen")
+
     if doc_type == "presseartikel":
-        # Obsidian-Artikel: content-Segs sind undatiert, Interpolation erbt vom Heading-Anker
-        # DOCX/Zotero-Artikel: Segs bereits datiert in detect_anchors – Bypass
-        first_seg = segments_raw[0] if segments_raw else {}
-        if first_seg.get("ingest_source") != "obsidian":
+        # obsidian_source gesetzt ("dropbox"|"local") → Obsidian-Ingest:
+        #   content-Segs undatiert, Interpolation erbt Heading-Datum (Rule 4)
+        # obsidian_source fehlt → Geicke-DOCX / Zotero:
+        #   Segs bereits datiert in detect_anchors → Bypass
+        if not doc_cfg.get("obsidian_source"):
             output_path.parent.mkdir(parents=True, exist_ok=True)
             output_path.write_text(
                 json.dumps(segments_raw, ensure_ascii=False, indent=2), encoding="utf-8"
