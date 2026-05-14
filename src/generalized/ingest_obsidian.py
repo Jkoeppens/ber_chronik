@@ -60,8 +60,6 @@ DROPBOX_REDIRECT_URL = os.environ.get(
 PIPELINE = [
     "src/generalized/detect_anchors.py",
     "src/generalized/interpolate_anchors.py",
-    "src/generalized/classify_segments.py",
-    "src/generalized/match_entities.py",
 ]
 
 
@@ -386,14 +384,6 @@ def main() -> None:
     cfg["doc_type"] = args.doc_type
     cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # Taxonomie prüfen — bei neuem Projekt leer → propose_taxonomy vorschalten
-    if not cfg.get("taxonomy"):
-        print("\nKeine Taxonomie in config.json — starte propose_taxonomy …")
-        if not _run("src/generalized/propose_taxonomy.py", d_args):
-            print("Fehler: propose_taxonomy fehlgeschlagen — Pipeline abgebrochen.",
-                  file=sys.stderr)
-            sys.exit(1)
-
     for script in PIPELINE:
         if not _run(script, d_args):
             print("Pipeline abgebrochen.", file=sys.stderr)
@@ -425,15 +415,9 @@ def main() -> None:
                     json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8"
                 )
                 print(f"  {len(entities)} Entities → config.json gespiegelt")
-                if not _run("src/generalized/match_entities.py", d_args):
-                    print("WARNING: match_entities (2. Lauf) fehlgeschlagen",
-                          file=sys.stderr)
     else:
         print(f"\n{len(cfg['entities'])} Entities bereits in config.json — "
               "Entity-Extraktion übersprungen")
-
-    if not _run("src/generalized/export_exploration.py", p_args):
-        print("WARNING: export_exploration fehlgeschlagen (nicht fatal)", file=sys.stderr)
 
     # ── 6. Checkpoint speichern ───────────────────────────────────────────────
     _save_checkpoint(cp_path, processed_keys)
