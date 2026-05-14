@@ -701,6 +701,7 @@ async function _runSse(endpoint, btnEl, body = null) {
     const fetchOpts = { method: 'POST', headers: _th() };
     if (body) fetchOpts.body = JSON.stringify(body);
     const res = await fetch(endpoint + _tq(), fetchOpts);
+    if (!res.ok) return;
     const reader = res.body.getReader(), decoder = new TextDecoder(); let buf = '';
     while (true) {
       const { done, value } = await reader.read(); if (done) break;
@@ -714,11 +715,13 @@ async function _runSse(endpoint, btnEl, body = null) {
           await load();
           logEl.classList.add('collapsed');
           const tog = document.getElementById('log-toggle');
-          tog.textContent = 'Log anzeigen ▾'; tog.style.display = 'block';
-          tog.onclick = () => {
-            const open = logEl.classList.toggle('collapsed');
-            tog.textContent = open ? 'Log anzeigen ▾' : 'Log ausblenden ▴';
-          };
+          if (tog) {
+            tog.textContent = 'Log anzeigen ▾'; tog.style.display = 'block';
+            tog.onclick = () => {
+              const open = logEl.classList.toggle('collapsed');
+              tog.textContent = open ? 'Log anzeigen ▾' : 'Log ausblenden ▴';
+            };
+          }
           btnEl.textContent = origLabel;
           document.getElementById('btn-sample').disabled = false;
           document.getElementById('btn-full').disabled = false;

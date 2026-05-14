@@ -726,15 +726,11 @@ buildDots();
       if (tokenData.ok) state.token = tokenData.token;
     }
     // Ordner-Pfad speichern (doc_type folgt in Schritt 2)
-    console.log('dropbox_folder:', npObsFolder.value);
-    console.log('normalized:', normalizeFolder(npObsFolder.value));
-    console.log('projId:', npObsProjId);
     const cfgRes = await fetch('/api/projects/' + encodeURIComponent(npObsProjId) + '/obsidian/config', {
       method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ dropbox_folder: normalizeFolder(npObsFolder.value), doc_type: 'presseartikel' }),
     });
     const cfgData = await cfgRes.json();
-    console.log('config response:', cfgData);
     if (!cfgData.ok) {
       npObsStat.textContent = '✗ ' + (cfgData.error || 'Config-Fehler');
       npObsStat.style.color = '#dc2626';
@@ -841,8 +837,6 @@ btnBack.addEventListener('click', () => {
 });
 btnNext.addEventListener('click', async () => {
   if (currentStep === 2) {
-    console.log('btnNext state.project:', state.project);
-    console.log('btnNext obsidian_source:', state.obsidian_source);
     if (state.obsidian_source === 'dropbox' && state.project) {
       // doc_type-Auswahl + dropbox_folder in obsidian/config persistieren vor dem Sync
       const cfgRes2 = await fetch('/api/projects/' + encodeURIComponent(state.project) + '/obsidian/config', {
@@ -1078,8 +1072,6 @@ async function runObsidianSync() {
   logEl.style.display   = 'none'; logEl.textContent = '';
   errEl.style.display   = 'none';
 
-  console.log('sync project:', state.project);
-  console.log('sync token:', state.token);
   // Token holen falls noch nicht vorhanden
   if (!state.token && state.project) {
     const td = await fetch('/api/projects/' + encodeURIComponent(state.project) + '/token');
