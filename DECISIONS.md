@@ -330,6 +330,45 @@ LLM-Pfad: keine spezielle Filterung — Chunking via `max_chars_per_chunk` fäng
 
 ---
 
+## Server-Architektur
+
+### D-Auth-1 — `_require_token` statt FastAPI Dependency Injection
+Auth läuft über eine explizite Hilfsfunktion, nicht über `Depends()`:
+
+```python
+if err := await _require_token(request, project): return err
+```
+
+`_require_token` gibt `None` bei Erfolg zurück, eine fertige `JSONResponse(403)` bei
+Misserfolg. Der Walrus-Operator (`:=`) erlaubt das in einer Zeile ohne Extra-Variable.
+
+**Warum kein `Depends()`:**
+FastAPI-Dependencies eignen sich für Middleware die für alle Routes identisch ist.
+`_require_token` braucht aber die `project`-ID, die je nach Endpoint unterschiedlich
+kommt — manche als Query-Parameter, manche als Pfadvariable, manche gar nicht.
+Eine `Depends()`-Lösung würde diese Unterschiede über komplexes Parameter-Forwarding
+lösen müssen. Das explizite Inline-Muster ist direkter und hat keine versteckten
+Abhängigkeiten; `grep _require_token` findet sofort jeden geschützten Endpoint.
+
+`_require_admin_key` folgt demselben Muster, ist aber synchron (kein DB-Lookup).
+
+### D-SSE-1 — Implizites SSE-Protokoll, kein typisiertes Schema
+Pipeline-Operationen streamen als `text/event-stream` mit vier festen Sentinels:
+`__ok__`, `__error__`, `__done__`, `__link__`. Das Protokoll ist in keinem
+OpenAPI-Schema formalisiert — es ist ein informeller Vertrag zwischen
+`run_script_sse` / `run_pipeline_sse` (Server) und dem Wizard-JS (Client).
+
+**Warum kein TypedDict / Schema:**
+Die Sentinels sind stabil seit der ersten SSE-Implementierung. Ein formales Schema
+würde eine Codegen-Schicht erfordern, die die Komplexität deutlich erhöht ohne
+Mehrwert zu liefern — der Wizard ist der einzige Consumer und liegt im selben Repo.
+Der vollständige Vertrag steht in `ARCHITECTURE.md` (Abschnitt „SSE-Protokoll").
+
+Alle anderen `data:`-Zeilen sind menschenlesbare Fortschrittsausgaben (stdout/stderr
+des Subprozesses). Der Client darf sie anzeigen, aber nicht programmatisch auswerten.
+
+---
+
 ## Architektur
 
 ### Kein Build-Tool, keine ES-Module
@@ -345,7 +384,7 @@ Konsequenz: Load-Reihenfolge in `index.html` ist **zwingend**. Wer eine Funktion
 highlight.js → highlight-state.js → panel.js → chart.js
 → utils.js → tabs.js → network.js → search.js → boot.js → tutorial.js
 ```
-ARCHITECTURE.md ist in diesem Punkt **veraltet** — tabs.js und boot.js wurden nachträglich extrahiert.
+tabs.js und boot.js wurden nachträglich aus früheren Monolithen extrahiert — Load-Reihenfolge daher nicht aus alten Commits ableiten.
 
 ---
 
