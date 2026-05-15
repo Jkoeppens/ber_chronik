@@ -855,12 +855,25 @@ async def get_doc_status(request: Request):
     if not project or not doc_id:
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
-    doc_dir = get_doc_dir(project, doc_id)
+    doc_dir        = get_doc_dir(project, doc_id)
+    anchors_p      = doc_dir / "anchors_interpolated.json"
+    year_min, year_max = None, None
+    if anchors_p.exists():
+        anchors_segs = read_json_safe(anchors_p, default=[])
+        if isinstance(anchors_segs, list):
+            years = [
+                int(s["time_from"]) for s in anchors_segs
+                if s.get("type") == "content" and isinstance(s.get("time_from"), (int, float))
+            ]
+            if years:
+                year_min, year_max = min(years), max(years)
     return JSONResponse({
         "segments":   (doc_dir / "segments.json").exists(),
-        "anchors":    (doc_dir / "anchors_interpolated.json").exists(),
+        "anchors":    anchors_p.exists(),
         "classified": (doc_dir / "classified.json").exists(),
         "preview":    (doc_dir / "preview.html").exists(),
+        "year_min":   year_min,
+        "year_max":   year_max,
     })
 
 
