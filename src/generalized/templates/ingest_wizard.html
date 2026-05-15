@@ -1193,7 +1193,7 @@ async function runClassifyAfterTaxonomy() {
               logEl.scrollTop = logEl.scrollHeight;
               return;
             }
-          } catch (_) { return; }
+          } catch (e) { console.error('doc_status vor Preview-Regenerierung fehlgeschlagen:', e); return; }
           logEl.textContent += '\n⟳ Preview generieren…';
           let buf2 = '';
           try {
@@ -1224,7 +1224,10 @@ async function runClassifyAfterTaxonomy() {
                 }
               }
             }
-          } catch (_) {}
+          } catch (e) {
+            console.error('Preview-Regenerierung fehlgeschlagen:', e);
+            logEl.innerHTML += `<span style="color:#f87171">\n✗ Preview-Verbindungsfehler</span>`;
+          }
           return;
         }
         if (msg.startsWith('__error__')) { logEl.innerHTML += `<span style="color:#f87171">\n✗ ${msg.slice(9)}</span>`; return; }
@@ -1232,7 +1235,10 @@ async function runClassifyAfterTaxonomy() {
         logEl.scrollTop = logEl.scrollHeight;
       }
     }
-  } catch (_) {}
+  } catch (e) {
+    console.error('Klassifizierung SSE-Verbindung fehlgeschlagen:', e);
+    logEl.innerHTML += `<span style="color:#f87171">\n✗ Verbindungsfehler</span>`;
+  }
 }
 
 // ── Step 5: Time config ────────────────────────────────────────────────────────
@@ -1255,7 +1261,7 @@ async function initTimeConfig() {
           frame.style.display = 'block';
         }
       }
-    } catch (_) {}
+    } catch (e) { console.error('doc_status in initTimeConfig fehlgeschlagen:', e); }
   }
 }
 
