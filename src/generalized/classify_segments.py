@@ -101,7 +101,7 @@ async def classify_one(
         except json.JSONDecodeError:
             if attempt == 0:
                 continue
-            return {**segment, "category": None, "confidence": "low"}
+            return {**segment, "category": None, "confidence": None}
 
 
 def print_stats(results: list[dict], taxonomy: list[dict]) -> None:
