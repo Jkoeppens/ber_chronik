@@ -221,11 +221,9 @@ Das Layout wird automatisch am Ende jedes `export_exploration.py`-Laufs neu bere
 
 ## Offene Sicherheitsprobleme
 
-### Token-Endpoint ohne Auth wenn ADMIN_KEY nicht gesetzt
+### ~~Token-Endpoint ohne Auth wenn ADMIN_KEY nicht gesetzt~~ ✓ behoben (2026-05-15, f41b766d)
 
-`GET /api/projects/{id}/token` ist nur geschützt wenn `ADMIN_KEY` in `.env` gesetzt ist. Ohne
-gesetzten Key gibt der Endpoint das Token ohne Auth zurück.
-Vor öffentlicher Nutzung: `ADMIN_KEY=<secret>` in `.env` setzen.
+`_require_admin_key` auf `GET /api/projects/{id}/token` ergänzt. Ohne Key: offen (Dev-Betrieb). Mit Key: geschützt.
 
 ### ~~`/ingest/save_config` ohne Token-Prüfung~~ ✓ behoben (2026-05-15, c0308946)
 
@@ -283,11 +281,9 @@ Beide Dateien nutzen `LINK_MIN_COUNT = 2` mit gegenseitigem Kommentar-Verweis. L
 
 Fehlte `config.json["taxonomy"]`, fiel `export_preview.py` auf die per-doc `taxonomy_proposal.json` zurück — statt mit Fehler abzubrechen. Behoben: Fallback entfernt, expliziter Fehler wenn Taxonomie fehlt (analog `classify_segments.py` und `export_exploration.py`).
 
-### I13 — `saveTimeConfig()` fire-and-forget ohne Error-Feedback [MITTEL]
+### ~~I13 — `saveTimeConfig()` fire-and-forget ohne Error-Feedback~~ ✓ behoben (2026-05-15, 034fe408)
 
-`saveTimeConfig()` in `ingest_wizard.html` (Z. 1329) feuert `fetch(...)` ohne `await` und ohne `.catch()`. Wenn der Server nicht erreichbar ist oder kurz unterbrochen wird, verliert der Nutzer seine Zeitkonfigurationsänderungen still — keine UI-Rückmeldung, keine Konsolen-Warnung.
-
-**Lösung (Backlog):** Mindestens `.catch(e => console.warn('saveTimeConfig:', e))` ergänzen. Besser: `async/await` + UI-Feedback analog zum `tax-status`-Element ("⚠ Nicht gespeichert"). (Quelle: REVIEW_15_05.md §3)
+`.catch(e => console.warn(...))` ergänzt — Netzwerkfehler erscheinen im Devtools-Log.
 
 ### I14 — Segment-Schema nicht in ARCHITECTURE.md dokumentiert [GERING]
 
@@ -332,11 +328,9 @@ Im Wizard an mindestens 3 Stellen schluckt `catch (_) {}` Fehler ohne Nutzer-Fee
 
 **Lösung:** Mindestens `console.error` in den kritischen Catches; besser UI-Feedback analog `statusEl.textContent = '✗ Fehler'`. (Quelle: REVIEW_15_05.md §3)
 
-### I22 — Pipeline-Teilfehler: `export_exploration` nicht-fatal, aber `__done__` + Viz-Link kommen trotzdem [GERING]
+### ~~I22 — Pipeline-Teilfehler: Viz-Link trotz fehlgeschlagenem Export~~ ✓ behoben (2026-05-15, b549bf12)
 
-In `ingest_run` gilt `export_exploration` als nicht-fatal (break statt return bei `__error__`). Danach werden `__done__` und der Viz-Link trotzdem gesendet. Der Nutzer sieht einen Link, der auf veraltete oder leere Daten zeigt, ohne Hinweis dass der Export fehlschlug.
-
-**Lösung:** Viz-Link nur senden wenn Exploration erfolgreich war. Mindestens eine SSE-Zeile `data: ⚠ Explorer-Export fehlgeschlagen\n\n` vor `__done__`. (Quelle: REVIEW_15_05.md §1)
+`exploration_ok`-Flag: `__link__` nur bei Erfolg, sonst SSE-Warnung. `__done__` kommt immer.
 
 ### I23 — `_obsidian_oauth_states` in-memory: verliert State bei Hot-Reload [GERING]
 
