@@ -369,17 +369,14 @@ In `ingest_run` gilt `export_exploration` als nicht-fatal (break statt return be
 - ~~**`doc_id` unvalidiert in mehreren Endpoints**~~ ✓ behoben (2026-05-15, bb8dfcf5)
   `validate_doc_id()` auf 7 Endpoints: `/overrides`, `/ingest/analyze`, `/ingest/save_config`, `/ingest/run`, `/ingest/extract_entities`, `/ingest/entities/reject`, `/ingest/doc_status`.
 
-- **`entity_spacy.py:83` — alle spaCy-Fehler geschluckt**
-  `except Exception as exc: print(...); continue` pro Segment. Wenn spaCy für alle Segmente versagt, gibt `extract_with_spacy()` eine leere Entity-Liste zurück ohne `sys.exit`. `ingest_zotero.py:210` macht dagegen `sys.exit(1)` — inkonsistentes Fehlerverhalten im selben Pipeline-Pfad.
+- ~~**`entity_spacy.py:83` — alle spaCy-Fehler geschluckt**~~ ✓ behoben (2026-05-15, aa8659d4)
+  `RuntimeError` wenn `raw_entities` leer und `content_segs` nicht leer — statt stiller leerer Rückgabe.
 
-- **`CAT_PALETTE` zweifach mit verschiedenen Farben definiert**
-  `export_preview.py:31` → `["#0891b2", "#d97706", "#16a34a", ...]`
-  `export_exploration.py:42` → `["#3b82f6", "#f59e0b", "#10b981", ...]`
-  Gleiche Kategorie trägt in `preview.html` und Viz-Explorer unterschiedliche Farben.
+- ~~**`CAT_PALETTE` zweifach mit verschiedenen Farben definiert**~~ ✓ behoben (2026-05-15, d58ebd69)
+  `export_preview.py` auf kanonische Palette aus `export_exploration.py` vereinheitlicht.
 
-- **`db.list_all_projects()` und `db.update_status()` — dead code**
-  `db.py:116`: importiert als `db_list_all_projects` in `dev_server.py:42`, aber in keinem Endpoint aufgerufen.
-  `db.py:137`: `update_status()` nur definiert, nirgends aufgerufen.
+- ~~**`db.list_all_projects()` und `db.update_status()` — dead code**~~ ✓ behoben (2026-05-15, 701f1a89)
+  Beide Funktionen und der Import in `dev_server.py` entfernt.
 
 ### Niedrig
 
