@@ -166,6 +166,16 @@ async def _require_token(request: Request, project: str | None = None) -> JSONRe
 
 # ── Projekt-Hilfsfunktionen ────────────────────────────────────────────────────
 
+# Locks für config.json-Writes: verhindert Race Conditions wenn mehrere Requests
+# gleichzeitig taxonomy, entities oder andere Felder in dieselbe Datei schreiben.
+_project_locks: dict[str, asyncio.Lock] = {}
+
+def _project_lock(project: str) -> asyncio.Lock:
+    if project not in _project_locks:
+        _project_locks[project] = asyncio.Lock()
+    return _project_locks[project]
+
+
 def _slugify(name: str) -> str:
     """Menschlicher Projektname → technische ID (lowercase, Leerzeichen→_, Sonderzeichen weg)."""
     s = name.lower().strip()
@@ -350,14 +360,15 @@ async def save_taxonomy(request: Request):
     project_dir = get_project_dir(project)
     project_dir.mkdir(parents=True, exist_ok=True)
     config_p    = project_dir / "config.json"
-    cfg: dict = {}
-    if config_p.exists():
-        try:
-            cfg = json.loads(config_p.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-    cfg["taxonomy"] = body
-    config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    async with _project_lock(project):
+        cfg: dict = {}
+        if config_p.exists():
+            try:
+                cfg = json.loads(config_p.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                pass
+        cfg["taxonomy"] = body
+        config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     return {"ok": True, "count": len(body)}
 
 
@@ -533,25 +544,26 @@ async def ingest_save_config(request: Request):
     project_dir = get_project_dir(project)
     project_dir.mkdir(parents=True, exist_ok=True)
     proj_cfg_path = project_dir / "config.json"
-    proj_cfg: dict = {}
-    if proj_cfg_path.exists():
-        try:
-            proj_cfg = json.loads(proj_cfg_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-    for field in ("title", "year_min", "year_max", "taxonomy", "entities"):
-        if field in body:
-            proj_cfg[field] = body[field]
-    if "time_config" in body:
-        tc = body["time_config"]
-        if isinstance(tc, dict):
-            if "year_min" in tc:
-                proj_cfg["year_min"] = tc["year_min"]
-            if "year_max" in tc:
-                proj_cfg["year_max"] = tc["year_max"]
-            if "events" in tc:
-                proj_cfg["events"] = tc["events"]
-    proj_cfg_path.write_text(json.dumps(proj_cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    async with _project_lock(project):
+        proj_cfg: dict = {}
+        if proj_cfg_path.exists():
+            try:
+                proj_cfg = json.loads(proj_cfg_path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                pass
+        for field in ("title", "year_min", "year_max", "taxonomy", "entities"):
+            if field in body:
+                proj_cfg[field] = body[field]
+        if "time_config" in body:
+            tc = body["time_config"]
+            if isinstance(tc, dict):
+                if "year_min" in tc:
+                    proj_cfg["year_min"] = tc["year_min"]
+                if "year_max" in tc:
+                    proj_cfg["year_max"] = tc["year_max"]
+                if "events" in tc:
+                    proj_cfg["events"] = tc["events"]
+        proj_cfg_path.write_text(json.dumps(proj_cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # ── Dokumentebene: doc_type, original_filename ──────────────────────────────
     doc_dir = get_doc_dir(project, doc_id)
@@ -770,14 +782,15 @@ async def save_entities(request: Request):
     project_dir = get_project_dir(project)
     project_dir.mkdir(parents=True, exist_ok=True)
     config_p = project_dir / "config.json"
-    cfg: dict = {}
-    if config_p.exists():
-        try:
-            cfg = json.loads(config_p.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-    cfg["entities"] = clean
-    config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    async with _project_lock(project):
+        cfg: dict = {}
+        if config_p.exists():
+            try:
+                cfg = json.loads(config_p.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                pass
+        cfg["entities"] = clean
+        config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     return {"ok": True, "count": len(clean)}
 
 
@@ -933,9 +946,10 @@ async def create_project_endpoint(request: Request):
     proj_dir   = PROJECTS_DIR / project_id
     proj_dir.mkdir(parents=True, exist_ok=True)
     cfg_path = proj_dir / "config.json"
-    if not cfg_path.exists():
-        cfg_path.write_text(json.dumps({"title": title, "doc_type": doc_type},
-                                       ensure_ascii=False, indent=2), encoding="utf-8")
+    async with _project_lock(project_id):
+        if not cfg_path.exists():
+            cfg_path.write_text(json.dumps({"title": title, "doc_type": doc_type},
+                                           ensure_ascii=False, indent=2), encoding="utf-8")
     invite_tok = _get_invite(request)
     db_proj = await get_project(project_id)
     if db_proj is None:
@@ -1015,14 +1029,15 @@ async def update_project_endpoint(project_id: str, request: Request):
     await update_project(project_id, title=title)
     # Auch config.json auf Dateisystem aktualisieren
     cfg_path = PROJECTS_DIR / project_id / "config.json"
-    if cfg_path.exists():
-        try:
-            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
-            cfg["title"] = title
-            cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
-        except (json.JSONDecodeError, OSError) as e:
-            print(f"Warnung: config.json für {project_id} konnte nicht aktualisiert werden: {e}",
-                  file=sys.stderr)
+    async with _project_lock(project_id):
+        if cfg_path.exists():
+            try:
+                cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+                cfg["title"] = title
+                cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+            except (json.JSONDecodeError, OSError) as e:
+                print(f"Warnung: config.json für {project_id} konnte nicht aktualisiert werden: {e}",
+                      file=sys.stderr)
     return JSONResponse({"ok": True, "id": project_id, "title": title})
 
 
@@ -1190,18 +1205,22 @@ async def obsidian_oauth_callback(code: str = "", state: str = ""):
 async def save_obsidian_config(project_id: str, request: Request):
     if err := await _require_token(request, project_id): return err
     body = await request.json()
-    cfg_path = PROJECTS_DIR / project_id / "config.json"
-    cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
-    oc = cfg.get("obsidian") or {}
     folder = body.get("dropbox_folder", "").strip()
     if folder and not folder.startswith("/"):
         folder = "/" + folder
     if not folder:
         return JSONResponse({"ok": False, "error": "Ordner-Pfad darf nicht leer sein"}, status_code=400)
-    oc["dropbox_folder"] = folder
-    oc["doc_type"]       = body.get("doc_type", "presseartikel")
-    cfg["obsidian"] = oc
-    cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    cfg_path = PROJECTS_DIR / project_id / "config.json"
+    async with _project_lock(project_id):
+        try:
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
+        except (json.JSONDecodeError, OSError):
+            cfg = {}
+        oc = cfg.get("obsidian") or {}
+        oc["dropbox_folder"] = folder
+        oc["doc_type"]       = body.get("doc_type", "presseartikel")
+        cfg["obsidian"] = oc
+        cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     return JSONResponse({"ok": True})
 
 
