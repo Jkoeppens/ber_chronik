@@ -654,13 +654,18 @@ async def ingest_run(request: Request):
                     yield "data: __done__\n\n"
                     return
         # Run exploration export as final step
+        exploration_ok = True
         async for chunk in run_script_sse(EXPORT_EXPLORATION_SCRIPT, p_args):
             if chunk == "data: __ok__\n\n":
                 break
             yield chunk
             if "__error__" in chunk:
-                break  # non-fatal: exploration failure doesn't abort
-        yield f"data: __link__:/viz/?project={project}\n\n"
+                exploration_ok = False
+                break
+        if exploration_ok:
+            yield f"data: __link__:/viz/?project={project}\n\n"
+        else:
+            yield "data: ⚠ Explorer-Export fehlgeschlagen — Viz-Link nicht verfügbar\n\n"
         yield "data: __done__\n\n"
 
     return sse_response(gen())
