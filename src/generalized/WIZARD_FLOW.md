@@ -81,7 +81,11 @@ Im DOCX-Datei-Pfad wird dieser Schritt übersprungen.
 #### DOCX-Pfad (Literaturexzerpt / Pressezusammenfassung)
 
 **Neues Projekt:**
-1. `POST /ingest/analyze` → `parse_document.py` + LLM-Analyse → JSON
+1. `POST /ingest/analyze` — Das Dokument wird in Absätze zerlegt; eine Stichprobe von
+   bis zu 30 zufälligen Absätzen geht ans LLM, das daraus den Zeitraum des Materials
+   (`year_min`/`year_max`), wichtige historische Ereignisse mit Jahreszahlen und die
+   Dokumentsprache erkennt. Der Nutzer bekommt danach eine vorausgefüllte Zeitkonfiguration
+   für Schritt 5 statt leerer Felder.
 2. Response setzt: `state.project`, `state.document`, `state.analysis`, `state.time_config`
 3. Sofort danach: `POST /ingest/save_config` mit `title`, `doc_type`, `time_config`
    - Server schreibt `projects/{project}/config.json` + `documents/{doc_id}/config.json`
