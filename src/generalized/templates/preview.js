@@ -54,36 +54,71 @@ const btnExport    = document.getElementById("btn-export");
 const btnRecompute = document.getElementById("btn-recompute");
 const logEl        = document.getElementById("recompute-log");
 
-// ── Overrides exportieren → POST /overrides ───────────────────────────────────
+// ── Overrides speichern → POST /overrides (SSE-Stream, löst recompute aus) ────
 btnExport.addEventListener("click", async () => {
   const arr = [...overrides.values()];
   btnExport.disabled = true;
   btnExport.textContent = "Speichere…";
+  logEl.className = "";
+  logEl.textContent = "";
+  logEl.style.display = "block";
+
   try {
     const res = await fetch("/overrides" + _aq(), {
       method: "POST",
       headers: _th(),
       body: JSON.stringify(arr),
     });
-    if (res.ok) {
-      btnExport.textContent = "Gespeichert ✓";
-      setTimeout(() => {
-        btnExport.textContent = "Overrides exportieren";
-        updateExportBtn();
-      }, 1500);
-    } else {
-      btnExport.textContent = "Fehler – nochmal?";
-      btnExport.disabled = false;
+    if (!res.ok || !res.body) throw new Error("Server-Fehler " + res.status);
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let   buf     = "";
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, {stream: true});
+      const lines = buf.split("\\n");
+      buf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const msg = line.slice(6);
+        if (msg === "__done__") {
+          logEl.textContent += "\\n✓ Fertig – Seite wird neu geladen…";
+          logEl.scrollTop = logEl.scrollHeight;
+          setTimeout(() => window.location.reload(), 800);
+          return;
+        }
+        if (msg.startsWith("__report__:")) {
+          try {
+            const rpt = JSON.parse(msg.slice(11));
+            if (rpt.warnings && rpt.warnings.length) {
+              logEl.textContent += "\\n⚠ " + rpt.warnings.join("\\n⚠ ");
+            }
+            logEl.textContent += `\\nKonfidenz niedrig: ${rpt.low_confidence} (${rpt.low_confidence_pct}%)`;
+          } catch(_) {}
+          logEl.scrollTop = logEl.scrollHeight;
+          continue;
+        }
+        if (msg.startsWith("__error__")) {
+          logEl.className = "error";
+          logEl.textContent += "\\n" + msg.slice(9).trim();
+          logEl.scrollTop = logEl.scrollHeight;
+          btnExport.disabled = false;
+          btnExport.textContent = "Overrides exportieren";
+          return;
+        }
+        logEl.textContent += (logEl.textContent ? "\\n" : "") + msg;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
     }
-  } catch {
-    // Server nicht erreichbar → Fallback: Datei herunterladen
+  } catch (err) {
+    logEl.className = "error";
+    logEl.textContent += "\\nServer nicht erreichbar: " + err.message;
+    btnExport.disabled = false;
     btnExport.textContent = "Overrides exportieren";
-    updateExportBtn();
-    const blob = new Blob([JSON.stringify(arr, null, 2)], {type: "application/json"});
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url; a.download = "overrides.json"; a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 });
 

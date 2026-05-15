@@ -269,7 +269,7 @@ async def save_overrides(request: Request):
     doc_dir.mkdir(parents=True, exist_ok=True)
     overrides_p = doc_dir / "overrides.json"
     overrides_p.write_text(json.dumps(body, ensure_ascii=False, indent=2), encoding="utf-8")
-    return {"ok": True, "count": len(body)}
+    return sse_response(recompute_sse(project, doc_id))
 
 
 # ── POST /recompute ────────────────────────────────────────────────────────────
