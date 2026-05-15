@@ -88,7 +88,7 @@ def build_entries(anchors: list[dict], cls_map: dict[str, dict]) -> list[dict]:
         cls       = cls_map.get(sid, {})
         tf        = seg.get("time_from")
         prec      = seg.get("precision")
-        date_raw  = seg.get("date_raw") or (str(tf) if tf is not None else None)
+        date_raw  = seg.get("date_raw") or seg.get("date") or (str(tf) if tf is not None else None)
         src       = seg.get("source")
 
         # date_js: ISO-8601 Tag-String für präzises Timeline-Positioning
