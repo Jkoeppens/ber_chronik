@@ -397,7 +397,8 @@ async def ingest_analyze(request: Request):
     doc_type = body.get("doc_type", "")
     doc_type = _DOC_TYPE_MAP.get(doc_type, doc_type)  # Wizard-Label → interner Wert
     project_name = body.get("project_name", "").strip()
-    project  = _slugify(project_name) if project_name else body.get("project")
+    raw_project  = project_name or body.get("project", "")
+    project      = _slugify(raw_project) if raw_project else None
     if not project:
         return JSONResponse({"ok": False, "error": "project_name oder project im Body erforderlich"}, status_code=400)
     doc_id   = body.get("document") or str(uuid.uuid4())[:8]
