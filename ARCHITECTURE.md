@@ -212,3 +212,106 @@ faktisch obsolet ist aber nicht entfernt wurde.
 
 `WIZARD_FLOW.md` enthält noch einen Zotero-Flow-Abschnitt — dort als historische
 Dokumentation belassen.
+
+---
+
+## Segment-Schema
+
+Ein Segment ist ein Dict. Welche Felder gesetzt sind, hängt davon ab welche Skripte
+bisher gelaufen sind. Die Tabelle zeigt den vollständigen Lebenszyklus:
+
+| Feld | Typ | Gesetzt von | Mögliche Werte / Hinweis |
+|---|---|---|---|
+| `segment_id` | `str` | `parse_document`, `ingest_obsidian` | `"s0001"` … `"s9999"` — fortlaufend pro Dokument |
+| `type` | `str` | `parse_document`, `ingest_obsidian` | `"content"` \| `"heading"` — headings werden nach detect_anchors herausgefiltert |
+| `text` | `str` | `parse_document`, `ingest_obsidian` | Originaler Absatztext |
+| `source` | `str \| dict \| None` | `parse_document` | String (Quellenname) oder `{"name": "…", "date": "…"}` bei DOCX mit Datumsangabe; `None` für unbekannte Quellen |
+| `page` | `int \| None` | `parse_document` | DOCX-Seitennummer, `None` bei Obsidian |
+| `doc_type` | `str` | `parse_document`, `ingest_obsidian` | `"presseartikel"` \| `"buchnotizen"` — Typ des übergeordneten Dokuments |
+| `ingest_source` | `str` | `parse_document`, `ingest_obsidian` | `"docx"` \| `"obsidian"` |
+| `source_date` | `str \| None` | `parse_document` | Datumsstring aus DOCX-Quellen-Notation (z.B. `"15.03.2005"`), nur DOCX |
+| `is_quote` | `bool` | `parse_document` | `True` wenn Text mit Anführungszeichen beginnt |
+| `date` | `str \| None` | `ingest_obsidian` | ISO-Datum aus Frontmatter (`published` oder `created`), nur Obsidian |
+| `date_raw` | `str \| None` | `detect_anchors` (via presseartikel-Bypass) | Rohes Datum für Timeline-Positionierung; analog zu `date` bei Obsidian/Zotero |
+| `url` | `str` | `ingest_obsidian` | Quell-URL; leer (`""`) für DOCX |
+| `author` | `str` | `ingest_obsidian` | Autor aus Frontmatter; fehlt bei DOCX-Segmenten |
+| `abstract` | `str` | `ingest_obsidian` | Beschreibung aus Frontmatter; fehlt bei DOCX-Segmenten |
+| `obsidian_path` | `str` | `ingest_obsidian` | Relativer Pfad der Markdown-Quelldatei |
+| `anchors` | `list[dict]` | `detect_anchors` | Erkannte Zeitanker: `[{"type": "exact"\|"decade"\|"event", "value": int\|null, "span": str}]` |
+| `time_from` | `int \| None` | `detect_anchors`, `interpolate_anchors` | Jahr-Untergrenze; `None` wenn undatiert |
+| `time_to` | `int \| None` | `detect_anchors`, `interpolate_anchors` | Jahr-Obergrenze; gleich `time_from` bei Punkt-Datierung |
+| `precision` | `str \| None` | `detect_anchors`, `interpolate_anchors` | `"exact"` \| `"heading"` \| `"event"` \| `"decade"` \| `"manual"` \| `"interpolated"` \| `null` |
+| `category` | `str \| None` | `classify_segments` | Taxonomie-Kategorie-Label; `None` wenn Klassifizierung fehlschlug |
+| `confidence` | `str \| None` | `classify_segments` | `"high"` \| `"medium"` \| `"low"` \| `None` (None = Fehlerfall, wird bei Resume erneut versucht) |
+| `actors` | `list[str]` | `match_entities` | Normformen der erkannten Entitäten; `[]` wenn keine Treffer |
+
+### Wann ein Feld fehlen kann
+
+- DOCX-Segmente haben kein `url`, `author`, `abstract`, `obsidian_path`, `date`.
+- Obsidian-Segmente haben kein `source_date`, `is_quote`, `page`.
+- `anchors`, `time_from`, `time_to`, `precision` fehlen vor `detect_anchors`-Lauf.
+- `category`, `confidence`, `actors` fehlen vor `classify_segments`-Lauf (bzw. vor `match_entities`-Lauf für `actors`).
+- `precision = null` und `time_from = null` bedeuten: kein Anker gefunden, Interpolation nicht möglich.
+
+---
+
+## data.json-Schema (exploration/data.json)
+
+`exploration/data.json` ist die zentrale Schnittstelle zwischen Pipeline
+und Visualisierungs-App. Autoritative Quelle: `export_exploration.py:build_entries()`.
+
+### Toplevel
+
+```json
+{
+  "generated": "2026-05-16",
+  "count":     1234,
+  "entries":   [ … ]
+}
+```
+
+| Feld | Typ | Inhalt |
+|---|---|---|
+| `generated` | `str` | ISO-Datum des letzten Exports |
+| `count` | `int` | Anzahl Einträge (= `len(entries)`) |
+| `entries` | `list[dict]` | Alle datierten content-Segmente (undatierte werden herausgefiltert) |
+
+### Entry-Schema
+
+Jedes Element von `entries` entspricht einem datierten content-Segment:
+
+| Feld | Typ | Inhalt |
+|---|---|---|
+| `id` | `int` | Fortlaufend ab 1 — stabiler Index für die Visualisierung |
+| `doc_anchor` | `str` | `segment_id` aus dem Segment (`"s0001"`) |
+| `year` | `int \| null` | `time_from` des Segments — Jahr-Untergrenze für Heatmap-Einordnung |
+| `date_raw` | `str \| null` | Rohes Datum (`"15.03.2005"`, `"2005"`, `"2005-03-15"`) — für Tooltip |
+| `date_js` | `str \| null` | ISO-8601-String (`"2005-03-15"`) — für präzises Timeline-Positioning; bei Jahresdatum `"{year}-01-01"` |
+| `date_precision` | `str` | `"exact"` (exact/heading/manual) \| `"year"` (interpolated/decade/event) \| `"none"` |
+| `text` | `str` | Originaltext des Segments |
+| `event_type` | `str \| null` | Taxonomie-Kategorie nach Normalisierung; `null` wenn unklassifiziert |
+| `confidence` | `str \| null` | `"high"` \| `"med"` \| `"low"` \| `null` (`"medium"` wird zu `"med"` normiert) |
+| `source_name` | `str \| null` | Quellname (aus `seg.source`) |
+| `source_date` | `str \| null` | Quell-Datum (aus `seg.source.date` oder `date_raw`) |
+| `url` | `str` | URL der Quelle; `""` für DOCX-Segmente |
+| `is_quote` | `bool` | Aus Segment-Feld — Zitat-Kennzeichnung |
+| `actors` | `list[str]` | Normformen der erkannten Entitäten |
+| `causal_theme` | `list` | Immer `[]` — reserviert, noch nicht befüllt |
+
+### project_meta.json
+
+Liegt neben `data.json` in `exploration/` und wird von der Viz-App als
+Ergänzung zu `data.json` geladen:
+
+```json
+{
+  "title":    "BER Chronik",
+  "doc_type": "presseartikel",
+  "taxonomy": [ {"id": "…", "label": "…", "color": "#…"} ],
+  "entities": [ {"normalform": "…", "type": "…"} ]
+}
+```
+
+`year_min` und `year_max` stehen nicht in `data.json` sondern werden von
+`export_exploration.py` direkt in `config.json` auf Projektebene zurückgeschrieben
+und von `GET /api/projects/{id}` geliefert.

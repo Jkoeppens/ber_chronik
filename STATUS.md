@@ -285,17 +285,13 @@ Fehlte `config.json["taxonomy"]`, fiel `export_preview.py` auf die per-doc `taxo
 
 `.catch(e => console.warn(...))` ergänzt — Netzwerkfehler erscheinen im Devtools-Log.
 
-### I14 — Segment-Schema nicht in ARCHITECTURE.md dokumentiert [GERING]
+### ~~I14 — Segment-Schema nicht in ARCHITECTURE.md dokumentiert~~ ✓ behoben (2026-05-16)
 
-Die Felder eines Segments (`segment_id`, `type`, `text`, `source`, `time_from`, `time_to`, `precision`, `anchors`, `actors`, `category`, `confidence`, `doc_type`, …) sind in keinem Dokument beschrieben. Wer verstehen will, welche Felder wann gesetzt sind und von welchem Skript, muss den Quellcode lesen.
+Tabelle „Segment-Schema" in ARCHITECTURE.md ergänzt: alle Felder, welches Skript sie setzt, mögliche Werte und wann ein Feld fehlen kann.
 
-**Lösung (Backlog):** Segment-Schema-Tabelle in ARCHITECTURE.md ergänzen — welche Felder von welchem Skript gesetzt werden und was ihre möglichen Werte sind.
+### ~~I15 — data.json-Format nicht in ARCHITECTURE.md dokumentiert~~ ✓ behoben (2026-05-16)
 
-### I15 — data.json-Format nicht in ARCHITECTURE.md dokumentiert [GERING]
-
-`exploration/data.json` ist die zentrale Schnittstelle zwischen Pipeline und Visualisierung, aber ihr Schema ist nirgends beschrieben. `boot.js` und `panel.js` lesen `entries`, `taxonomy`, `entities`, `year_min`/`year_max` daraus — wer den Explorer debuggen will, muss beide Seiten im Kopf haben.
-
-**Lösung (Backlog):** data.json-Toplevel-Felder und Entry-Schema in ARCHITECTURE.md dokumentieren, idealerweise mit Verweis auf `export_exploration.py:build_entries()` als autoritative Quelle.
+Abschnitt „data.json-Schema" in ARCHITECTURE.md ergänzt: Toplevel-Felder, vollständiges Entry-Schema mit Typen, Verweis auf `export_exploration.py:build_entries()` als autoritative Quelle. Auch `project_meta.json`-Struktur dokumentiert.
 
 ### ~~I16 — `export_exploration.py` mutiert config.json als Seiteneffekt~~ ✓ behoben (2026-05-15, e5e9b494)
 
