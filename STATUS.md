@@ -269,9 +269,9 @@ Entity-Editor speichert in `config.json["entities"]`. match_entities und export_
 
 Beide Dateien nutzen `LINK_MIN_COUNT = 2` mit gegenseitigem Kommentar-Verweis. Layout und Viz filtern identisch.
 
-### I10 — Playwright-Tests testen nur BER-Projekt
+### ~~I10 — Playwright-Tests testen nur BER-Projekt~~ ✓ behoben (2026-05-16, Branch test/api-coverage, 349f0336)
 
-`tests/viz.spec.js` öffnet hardcodiert `http://localhost:8765/` und setzt BER-Daten voraus. Keine Tests für andere Projekte oder für den Ingest-Wizard.
+`tests/api_coverage.spec.js` ergänzt mit drei API-Tests: B (doc_status year_min/year_max aus geseedeten anchors), C (Taxonomy + Entity save/load Roundtrip), D (ingest/run ohne Eingabe → __error__ ohne __link__). `tests/ingest.spec.js`: is_geicke-Referenz entfernt (Feld in Fix 2 gelöscht).
 
 ### I11 — `/taxonomy/propose` + `taxonomy_editor.html` ohne Auth ✓ behoben
 
