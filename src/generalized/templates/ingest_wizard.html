@@ -1344,7 +1344,7 @@ function saveTimeConfig() {
       document:    state.document || undefined,
       time_config: state.time_config,
     }),
-  });
+  }).catch(e => console.warn('saveTimeConfig fehlgeschlagen:', e));
 }
 
 let _timeConfigSaveTimer = null;
