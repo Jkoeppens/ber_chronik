@@ -360,13 +360,14 @@ In `ingest_run` gilt `export_exploration` als nicht-fatal (break statt return be
 
 ### Kritisch (Deployment-Blocker)
 
-- **`POST /ingest/analyze` — Path Traversal** (`dev_server.py:381`)
-  Kein `_require_token`-Check. `project` wird nur slugifiziert wenn `project_name` im Body vorhanden — bei direktem `project`-Feld keine Sanitierung. `doc_id` ebenfalls unvalidiert. `get_doc_dir(project, doc_id)` baut Pfad direkt aus User-Input; `mkdir(parents=True)` + Datei-Schreiboperationen folgen. Angreifer mit Invite-Token kann Dateien außerhalb von `PROJECTS_DIR` anlegen.
+- ~~**`POST /ingest/analyze` — Path Traversal**~~ ✓ behoben (2026-05-15)
+  Fix A (e2ebf665): `project` immer durch `_slugify`, egal ob `project_name` oder `project` kommt.
+  Fix B (bb8dfcf5): `doc_id` via `validate_doc_id()` — nur `[0-9a-f]{8}` oder `main` akzeptiert.
 
 ### Mittel
 
-- **`doc_id` unvalidiert in mehreren Endpoints** (`dev_server.py:241, 791, 821`)
-  `POST /overrides`, `POST /ingest/classified/update`, `GET /ingest/segments/data`: `_require_token` prüft `project` gegen DB (impliziter Traversal-Schutz), aber `doc_id` wird nicht validiert. Valides `project` + `doc_id = "../../other_project/documents/main"` ermöglicht Lese-/Schreibzugriff auf fremde Dokumente.
+- ~~**`doc_id` unvalidiert in mehreren Endpoints**~~ ✓ behoben (2026-05-15, bb8dfcf5)
+  `validate_doc_id()` auf 7 Endpoints: `/overrides`, `/ingest/analyze`, `/ingest/save_config`, `/ingest/run`, `/ingest/extract_entities`, `/ingest/entities/reject`, `/ingest/doc_status`.
 
 - **`entity_spacy.py:83` — alle spaCy-Fehler geschluckt**
   `except Exception as exc: print(...); continue` pro Segment. Wenn spaCy für alle Segmente versagt, gibt `extract_with_spacy()` eine leere Entity-Liste zurück ohne `sys.exit`. `ingest_zotero.py:210` macht dagegen `sys.exit(1)` — inkonsistentes Fehlerverhalten im selben Pipeline-Pfad.
