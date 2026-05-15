@@ -444,42 +444,54 @@ async def ingest_analyze(request: Request):
         if s.get("type") == "bibliography" and s.get("text")
     ][:10]
 
-    # 3. LLM-Analyse (nur year_min, year_max, events, language)
-    load_dotenv(ROOT / ".env")
-    try:
-        provider = get_provider(task=TASK_ANALYZE)
-    except RuntimeError as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    # 3. Analyse: presseartikel → aus segments.json, buchnotizen → LLM
+    if doc_type == "presseartikel":
+        time_froms = [
+            s["time_from"] for s in segments
+            if s.get("type") == "content" and isinstance(s.get("time_from"), (int, float))
+        ]
+        if time_froms:
+            yr_min = int(min(time_froms))
+            yr_max = int(max(time_froms))
+        else:
+            yr_min, yr_max = None, None
+        analysis: dict = {"year_min": yr_min, "year_max": yr_max, "events": [], "language": "de"}
+    else:
+        load_dotenv(ROOT / ".env")
+        try:
+            provider = get_provider(task=TASK_ANALYZE)
+        except RuntimeError as e:
+            return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
-    prompt = (
-        "Analysiere diese Dokument-Ausschnitte und erkenne:\n"
-        "1. Zeitraum des Materials (year_min, year_max als Integer)\n"
-        "2. Wichtige historische Ereignisse oder Perioden mit Jahreszahlen – mindestens 3, maximal 8.\n"
-        "   Jedes Ereignis MUSS dieses Format haben: {\"name\": \"...\", \"year_from\": 1234, \"year_to\": 1234}\n"
-        "   year_from und year_to sind Integer-Jahreszahlen. Kein Fließtext, keine Sätze als name.\n"
-        "   Gib konkrete Ereignisse aus dem Material zurück, keine leere Liste.\n"
-        "3. Hauptsprache des Dokuments als Sprachcode (de/en/fr/tr/ar/andere) — "
-        "beschreibe die Sprache des Quellmaterials, nicht die Sprache dieser Antwort.\n\n"
-        "Wichtig: Antworte ausschließlich auf Deutsch. "
-        "Antworte ausschließlich als JSON ohne Erklärungen, mit den Feldern:\n"
-        "{\"year_min\": ..., \"year_max\": ..., \"events\": [...], \"language\": \"...\"}\n\n"
-        f"Ausschnitte:\n---\n{sample_text}"
-    )
-    system = "Du bist ein Forschungsassistent der Notizen und Dokumente analysiert."
-    try:
-        analysis = await asyncio.to_thread(provider.complete_json, prompt, system)
-    except (json.JSONDecodeError, ValueError):
-        analysis = {}
+        prompt = (
+            "Analysiere diese Dokument-Ausschnitte und erkenne:\n"
+            "1. Zeitraum des Materials (year_min, year_max als Integer)\n"
+            "2. Wichtige historische Perioden mit Jahreszahlen – mindestens 3, maximal 8.\n"
+            "   Jedes Ereignis MUSS dieses Format haben: {\"name\": \"...\", \"year_from\": 1234, \"year_to\": 1234}\n"
+            "   year_from und year_to sind Integer-Jahreszahlen. Kein Fließtext, keine Sätze als name.\n"
+            "   Gib konkrete Perioden aus dem Material zurück, keine leere Liste.\n"
+            "3. Hauptsprache des Dokuments als Sprachcode (de/en/fr/tr/ar/andere) — "
+            "beschreibe die Sprache des Quellmaterials, nicht die Sprache dieser Antwort.\n\n"
+            "Wichtig: Antworte ausschließlich auf Deutsch. "
+            "Antworte ausschließlich als JSON ohne Erklärungen, mit den Feldern:\n"
+            "{\"year_min\": ..., \"year_max\": ..., \"events\": [...], \"language\": \"...\"}\n\n"
+            f"Ausschnitte:\n---\n{sample_text}"
+        )
+        system = "Du bist ein Forschungsassistent der Notizen und Dokumente analysiert."
+        try:
+            analysis = await asyncio.to_thread(provider.complete_json, prompt, system)
+        except (json.JSONDecodeError, ValueError):
+            analysis = {}
 
-    if not isinstance(analysis, dict):
-        analysis = {}
+        if not isinstance(analysis, dict):
+            analysis = {}
 
-    # Normalize events: drop entries that are not dicts with name+year_from+year_to
-    raw_events = analysis.get("events", [])
-    analysis["events"] = [
-        e for e in raw_events
-        if isinstance(e, dict) and e.get("name") and isinstance(e.get("year_from"), int)
-    ] if isinstance(raw_events, list) else []
+        # Normalize events: drop entries that are not dicts with name+year_from+year_to
+        raw_events = analysis.get("events", [])
+        analysis["events"] = [
+            e for e in raw_events
+            if isinstance(e, dict) and e.get("name") and isinstance(e.get("year_from"), int)
+        ] if isinstance(raw_events, list) else []
 
     analysis["organizer_headings"]    = organizer_headings
     analysis["bibliography_keywords"] = bibliography_keywords
