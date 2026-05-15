@@ -4,9 +4,21 @@ utils.py — Gemeinsame Hilfsfunktionen für src/generalized.
 
 import json
 import os
+import re
 from pathlib import Path
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+_VALID_DOC_ID_RE = re.compile(r"^([0-9a-f]{8}|main)$")
+
+
+def validate_doc_id(doc_id: str) -> bool:
+    """Gibt True zurück wenn doc_id ein gültiger Dokumentpfad-Bezeichner ist.
+
+    Gültig: 8 lowercase hex chars (UUID-Kurzform) oder "main" (Legacy-BER).
+    Verhindert Path-Traversal via doc_id wie "../../other_project/documents/main".
+    """
+    return bool(_VALID_DOC_ID_RE.match(doc_id or ""))
 
 
 def write_atomic(path: Path, data: str, encoding: str = "utf-8") -> None:

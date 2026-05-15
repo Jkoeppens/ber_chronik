@@ -43,7 +43,7 @@ from src.generalized.db import (
     update_project, delete_project, token_valid,
     upsert_document, get_latest_doc_id,
 )
-from src.generalized.utils import render_template as _render_template, read_json_safe
+from src.generalized.utils import render_template as _render_template, read_json_safe, validate_doc_id
 from src.generalized.invite_auth import invite_required, invite_valid, invite_info
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Request, UploadFile
@@ -260,6 +260,8 @@ async def save_overrides(request: Request):
     doc_id  = request.query_params.get("document")
     if not project or not doc_id:
         return JSONResponse({"ok": False, "error": "project und document Parameter erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"error": "invalid document id"}, status_code=400)
     if err := await _require_token(request, project): return err
     body = await request.json()
     if not isinstance(body, list):
@@ -402,6 +404,8 @@ async def ingest_analyze(request: Request):
     if not project:
         return JSONResponse({"ok": False, "error": "project_name oder project im Body erforderlich"}, status_code=400)
     doc_id   = body.get("document") or str(uuid.uuid4())[:8]
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"ok": False, "error": "invalid document id"}, status_code=400)
 
     input_file = RAW_DIR / filename
     doc_dir    = get_doc_dir(project, doc_id)
@@ -535,6 +539,8 @@ async def ingest_save_config(request: Request):
     doc_id  = body.get("document") or request.query_params.get("document")
     if not project or not doc_id:
         return JSONResponse({"ok": False, "error": "project und document erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"ok": False, "error": "invalid document id"}, status_code=400)
 
     # Token-Check: wenn das Projekt bereits in der DB existiert, muss ein gültiger
     # Token mitgeschickt werden. Beim ersten Aufruf (Neuanlage) gibt es noch keinen
@@ -610,6 +616,8 @@ async def ingest_run(request: Request):
     no_summaries = body.get("no_summaries", True)
     if not project or not doc_id:
         return JSONResponse({"error": "project und document erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"error": "invalid document id"}, status_code=400)
     if err := await _require_token(request, project): return err
     input_file = RAW_DIR / filename if filename else None
 
@@ -720,6 +728,8 @@ async def ingest_extract_entities(request: Request):
     doc_id  = request.query_params.get("document")
     if not project or not doc_id:
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"error": "invalid document id"}, status_code=400)
     if err := await _require_token(request, project): return err
     body = {}
     try:
@@ -838,6 +848,8 @@ async def reject_entity(request: Request):
     doc_id  = body.get("document") or request.query_params.get("document")
     if not project or not doc_id:
         return JSONResponse({"ok": False, "error": "project und document Parameter erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"ok": False, "error": "invalid document id"}, status_code=400)
     if err := await _require_token(request, project): return err
     doc_dir       = get_doc_dir(project, doc_id)
     rejected_path = doc_dir / "entities_rejected.json"
@@ -855,6 +867,8 @@ async def get_doc_status(request: Request):
     doc_id  = request.query_params.get("document")
     if not project or not doc_id:
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"error": "invalid document id"}, status_code=400)
     if err := await _require_token(request, project): return err
     doc_dir        = get_doc_dir(project, doc_id)
     anchors_p      = doc_dir / "anchors_interpolated.json"
