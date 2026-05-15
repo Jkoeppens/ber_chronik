@@ -257,9 +257,9 @@ Entity-Editor speichert in `config.json["entities"]`. match_entities und export_
 
 `_llm_task2_validate_aliases`, `_llm_task3_clarify_types`, `_llm_extract_uncovered`, `_select_uncovered_stratified` und weitere wurden entfernt. `entity_llm.py` enthält heute nur noch 8 aktiv genutzte Funktionen, alle importiert von `extract_entities_v2.py`.
 
-### I7 — `actors` wird nach Override nicht aktualisiert
+### ~~I7 — `actors` wird nach Override nicht aktualisiert~~ ✓ behoben (2026-05-15, 8ff17283)
 
-Wenn ein Segment via overrides.json manuell datiert wird, läuft match_entities.py nicht automatisch neu. Das `actors`-Feld stammt aus dem letzten Lauf und kann veraltet sein.
+`POST /overrides` speichert overrides.json und startet danach direkt `recompute_sse` als SSE-Stream. preview.js konsumiert den Stream identisch zu btnRecompute.
 
 ### I8 — presseartikel-Logik verteilt über 3 Skripte
 
