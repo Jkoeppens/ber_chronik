@@ -1,6 +1,6 @@
 # STATUS — Aktueller Stand des Projekts
 
-Stand: 2026-04-27 | Branch: fix/except-blocks | D-P1–D-P8 umgesetzt
+Stand: 2026-05-15 | Branch: feature/flexible-timeline-bins | D-P1–D-P8 umgesetzt
 
 ---
 
@@ -163,9 +163,11 @@ Im Presseartikel-Modus: wenn kein Heading-Jahr aktiv, wird `seg["date"]` als Ank
 
 normalize_category() läuft jetzt in allen drei Skripten.
 
-### classify_segments.py — Resume mit alter Taxonomie
+### classify_segments.py — Resume mit alter Taxonomie [MITTEL]
 
-Beim Neustart werden bereits klassifizierte Segmente aus classified.json übersprungen (`--force` überschreibt das). Wenn die Taxonomie zwischenzeitlich geändert wurde, enthält classified.json danach Einträge aus zwei verschiedenen Taxonomien.
+Beim Neustart werden bereits klassifizierte Segmente aus classified.json übersprungen (`--force` überschreibt das). Wenn die Taxonomie zwischenzeitlich geändert wurde, enthält classified.json danach Einträge aus zwei verschiedenen Taxonomien. `normalize_category` mappt alte Namen auf `"(unbekannt)"` ohne Warnung.
+
+**Lösung (Backlog):** Beim Start einen Taxonomie-Hash berechnen und in `classified.json` als Metadaten-Feld speichern. Beim Resume: Hash vergleichen — abweichender Hash → Warnung + Auto-`--force`. (Quelle: REVIEW_15_05.md §1)
 
 ### ~~export_exploration.py — entities-Fallback auf Dokumentebene~~ ✓ behoben (D-P4)
 
@@ -276,6 +278,24 @@ Beide Dateien nutzen `LINK_MIN_COUNT = 2` mit gegenseitigem Kommentar-Verweis. L
 ### I12 — `export_preview.py` D-P1-Fallback auf taxonomy_proposal.json ✓ behoben
 
 Fehlte `config.json["taxonomy"]`, fiel `export_preview.py` auf die per-doc `taxonomy_proposal.json` zurück — statt mit Fehler abzubrechen. Behoben: Fallback entfernt, expliziter Fehler wenn Taxonomie fehlt (analog `classify_segments.py` und `export_exploration.py`).
+
+### I13 — `saveTimeConfig()` fire-and-forget ohne Error-Feedback [MITTEL]
+
+`saveTimeConfig()` in `ingest_wizard.html` (Z. 1329) feuert `fetch(...)` ohne `await` und ohne `.catch()`. Wenn der Server nicht erreichbar ist oder kurz unterbrochen wird, verliert der Nutzer seine Zeitkonfigurationsänderungen still — keine UI-Rückmeldung, keine Konsolen-Warnung.
+
+**Lösung (Backlog):** Mindestens `.catch(e => console.warn('saveTimeConfig:', e))` ergänzen. Besser: `async/await` + UI-Feedback analog zum `tax-status`-Element ("⚠ Nicht gespeichert"). (Quelle: REVIEW_15_05.md §3)
+
+### I14 — Segment-Schema nicht in ARCHITECTURE.md dokumentiert [GERING]
+
+Die Felder eines Segments (`segment_id`, `type`, `text`, `source`, `time_from`, `time_to`, `precision`, `anchors`, `actors`, `category`, `confidence`, `is_geicke`, `doc_type`, …) sind in keinem Dokument beschrieben. Wer verstehen will, welche Felder wann gesetzt sind und von welchem Skript, muss den Quellcode lesen.
+
+**Lösung (Backlog):** Segment-Schema-Tabelle in ARCHITECTURE.md ergänzen — welche Felder von welchem Skript gesetzt werden und was ihre möglichen Werte sind.
+
+### I15 — data.json-Format nicht in ARCHITECTURE.md dokumentiert [GERING]
+
+`exploration/data.json` ist die zentrale Schnittstelle zwischen Pipeline und Visualisierung, aber ihr Schema ist nirgends beschrieben. `boot.js` und `panel.js` lesen `entries`, `taxonomy`, `entities`, `year_min`/`year_max` daraus — wer den Explorer debuggen will, muss beide Seiten im Kopf haben.
+
+**Lösung (Backlog):** data.json-Toplevel-Felder und Entry-Schema in ARCHITECTURE.md dokumentieren, idealerweise mit Verweis auf `export_exploration.py:build_entries()` als autoritative Quelle.
 
 ---
 
