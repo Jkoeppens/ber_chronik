@@ -25,6 +25,36 @@ Dienst. Der Nutzer steuert sein Material, seine Taxonomie und seine Entitätslis
 
 ---
 
+## Drei Quellentypen
+
+Das System kennt genau drei Quellentypen. Welcher Typ vorliegt, bestimmt wie das System
+jeden einzelnen Pipeline-Schritt ausführt — Segmentierung, Datierung, Interpolation.
+Wer das nicht weiß, versteht weder den Wizard noch den Code.
+
+**Literaturexzerpt** (Beispiele: Damaskus-Studie, Osmanisches Reich)
+Strukturierte Forschungsnotizen, als DOCX. Der Historiker hat ein Werk exzerpiert und
+die Notizen nach Kapiteln oder Jahres-Überschriften gegliedert. Ein Segment entspricht
+einem Absatz. Datierung läuft über Jahres-Überschriften im Text oder explizite
+Jahreszahlen im Fließtext; wo beides fehlt, interpoliert das System zwischen bekannten
+Ankern. Die inhaltliche Tiefe variiert stark — ein Absatz kann eine Dekade oder ein
+einzelnes Ereignis beschreiben.
+
+**Pressezusammenfassung** (Geicke-Stil, Beispiel: BER Chronik 1989–2017)
+Eine verdichtete Chronik, als DOCX. Jeder Eintrag beschreibt ein konkretes Ereignis mit
+expliziter Datumsangabe im Text. Ein Segment entspricht einem solchen Ereigniseintrag.
+Datierung ist fast immer exakt — Jahres-Überschriften im DOCX oder Datumsangaben im
+Fließtext. Interpolation wird kaum gebraucht. Der Informationsdichtetyp ist hoch und
+homogen.
+
+**Pressesammlung** (Obsidian-Ingest, Beispiel: tagesaktuelle Berichterstattung)
+Ganze Presseartikel aus Web-Clipping via Obsidian, als Markdown-Dateien mit
+YAML-Frontmatter. Ein Segment entspricht einem Artikel. Datierung kommt aus dem
+Frontmatter-Feld `published` (oder `created` als Fallback) — immer exakt auf den Tag.
+Interpolation entfällt vollständig. Die Segmente sind heterogen in Länge und Stil;
+viele sprechen dieselben Ereignisse aus unterschiedlichen Blickwinkeln an.
+
+---
+
 ## Die sieben Schritte: vom Rohdokument zur Visualisierung
 
 **Schritt 1 — Ingest**
@@ -90,22 +120,25 @@ Interface — die Heuristik ist unsichtbar.
 
 ---
 
-## Was eine neue Instanz zuerst lesen sollte
+## Lesereihenfolge
 
-**1. `DECISIONS.md`** — Warum das System so gebaut ist wie es ist.
-Enthält alle nicht-offensichtlichen Entscheidungen: warum `config.json` die einzige
-Quelle für Taxonomie und Entitäten ist, warum classified.json ein gemeinsames Dokument
-ist, warum Obsidian Zotero abgelöst hat. Bevor irgendwas geändert wird, sollte
-überprüft werden ob eine relevante Entscheidung schon dokumentiert ist.
+**1. `CLAUDE.md`** (dieser Text) — Zweck, Quellentypen, was das System leistet.
+Ohne das ist jedes andere Dokument Kontext ohne Rahmen.
 
-**2. `src/generalized/WIZARD_FLOW.md`** — Wie Wizard und Pipeline zusammenhängen.
+**2. `src/generalized/WIZARD_FLOW.md`** — Wie ein Dokument durch das System läuft.
 Beschreibt die 7 Wizard-Schritte, welche Endpoints aufgerufen werden, welche Dateien
-dabei entstehen, und wo kritische Abhängigkeiten liegen. Unverzichtbar bevor an
-`dev_server.py` oder `ingest_wizard.html` gearbeitet wird.
+dabei entstehen, und wo kritische Abhängigkeiten zwischen Schritten liegen. Der
+konkrete Ablauf vor den Gründen.
 
-**3. `STATUS.md`** — Was gerade tatsächlich funktioniert und was nicht.
-Listet bekannte Fallbacks, offene Inkonsistenzen und Bugs. Verhindert dass Arbeit
-in einen Bereich investiert wird, der gerade sowieso kaputt ist.
+**3. `DECISIONS.md`** — Warum so und nicht anders.
+Enthält alle nicht-offensichtlichen Entscheidungen: warum `config.json` die einzige
+Quelle für Taxonomie und Entitäten ist, warum `classified.json` ein gemeinsames
+Dokument ist, warum Obsidian Zotero abgelöst hat. Vor jeder Änderung prüfen ob eine
+relevante Entscheidung schon dokumentiert ist.
 
-`ARCHITECTURE.md` kommt danach — es erklärt die technischen Muster (Datenpfade, SSE,
-Auth), setzt aber Verständnis des Wizards voraus.
+**4. `ARCHITECTURE.md`** — Technische Muster.
+Datenpfade, SSE-Protokoll, Auth-Pattern, Locks. Setzt Verständnis des Wizards voraus.
+
+**5. `STATUS.md`** — Was gerade tatsächlich funktioniert und was nicht.
+Bekannte Fallbacks, offene Inkonsistenzen, Bugs. Zuletzt lesen — es erklärt Abweichungen
+vom Soll-Zustand, der erst durch die anderen Dokumente klar ist.
