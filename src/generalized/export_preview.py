@@ -29,9 +29,8 @@ from src.generalized.classify_segments import normalize_category  # noqa: E402
 
 # 10-Farben-Palette für Kategorien (Reihenfolge = Taxonomie-Reihenfolge)
 CAT_PALETTE = [
-    "#0891b2", "#d97706", "#16a34a", "#9333ea",
-    "#dc2626", "#0d9488", "#c2410c", "#4f46e5",
-    "#0369a1", "#b45309",
+    "#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444",
+    "#06b6d4", "#f97316", "#6366f1", "#14b8a6", "#a855f7",
 ]
 
 
