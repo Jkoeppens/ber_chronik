@@ -43,7 +43,7 @@ from src.generalized.db import (
     update_project, delete_project, token_valid,
     upsert_document, get_latest_doc_id,
 )
-from src.generalized.utils import render_template as _render_template
+from src.generalized.utils import render_template as _render_template, read_json_safe
 from src.generalized.invite_auth import invite_required, invite_valid, invite_info
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Request, UploadFile
@@ -285,9 +285,7 @@ def _compute_quality_report(project: str, doc_id: str) -> dict | None:
         from src.generalized.export_preview import build_quality_report
         classified = json.loads(classified_p.read_text(encoding="utf-8"))
         # D-P1: einzige Quelle ist config.json["taxonomy"] — kein Fallback mehr
-        taxonomy = None
-        if config_p.exists():
-            taxonomy = json.loads(config_p.read_text(encoding="utf-8")).get("taxonomy") or None
+        taxonomy = read_json_safe(config_p).get("taxonomy") or None
         classifications = {r["segment_id"]: r for r in classified if r.get("segment_id")}
         return build_quality_report(list(classifications.values()), classifications, taxonomy)
     except Exception as e:
@@ -342,10 +340,7 @@ async def get_taxonomy_data(request: Request):
     if err := await _require_token(request, project): return err
     config_p = get_project_dir(project) / "config.json"
     # D-P1: einzige Quelle ist config.json["taxonomy"] — kein Fallback mehr
-    if config_p.exists():
-        taxonomy = json.loads(config_p.read_text(encoding="utf-8")).get("taxonomy") or []
-        return JSONResponse(taxonomy)
-    return JSONResponse([])
+    return JSONResponse(read_json_safe(config_p).get("taxonomy") or [])
 
 
 @app.post("/taxonomy/save")
@@ -361,12 +356,7 @@ async def save_taxonomy(request: Request):
     project_dir.mkdir(parents=True, exist_ok=True)
     config_p    = project_dir / "config.json"
     async with _project_lock(project):
-        cfg: dict = {}
-        if config_p.exists():
-            try:
-                cfg = json.loads(config_p.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):
-                pass
+        cfg = read_json_safe(config_p)
         cfg["taxonomy"] = body
         config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     return {"ok": True, "count": len(body)}
@@ -545,12 +535,7 @@ async def ingest_save_config(request: Request):
     project_dir.mkdir(parents=True, exist_ok=True)
     proj_cfg_path = project_dir / "config.json"
     async with _project_lock(project):
-        proj_cfg: dict = {}
-        if proj_cfg_path.exists():
-            try:
-                proj_cfg = json.loads(proj_cfg_path.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):
-                pass
+        proj_cfg = read_json_safe(proj_cfg_path)
         for field in ("title", "year_min", "year_max", "taxonomy", "entities"):
             if field in body:
                 proj_cfg[field] = body[field]
@@ -569,12 +554,7 @@ async def ingest_save_config(request: Request):
     doc_dir = get_doc_dir(project, doc_id)
     doc_dir.mkdir(parents=True, exist_ok=True)
     doc_cfg_path = doc_dir / "config.json"
-    doc_cfg: dict = {}
-    if doc_cfg_path.exists():
-        try:
-            doc_cfg = json.loads(doc_cfg_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
+    doc_cfg = read_json_safe(doc_cfg_path)
     for field in ("doc_type", "original_filename"):
         if field in body:
             doc_cfg[field] = body[field]
@@ -783,12 +763,7 @@ async def save_entities(request: Request):
     project_dir.mkdir(parents=True, exist_ok=True)
     config_p = project_dir / "config.json"
     async with _project_lock(project):
-        cfg: dict = {}
-        if config_p.exists():
-            try:
-                cfg = json.loads(config_p.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):
-                pass
+        cfg = read_json_safe(config_p)
         cfg["entities"] = clean
         config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     return {"ok": True, "count": len(clean)}
@@ -804,12 +779,7 @@ async def get_near_duplicates(request: Request):
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     config_p = get_project_dir(project) / "config.json"
-    if not config_p.exists():
-        return JSONResponse([])
-    try:
-        entities = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
-    except (json.JSONDecodeError, OSError):
-        return JSONResponse([])
+    entities = read_json_safe(config_p).get("entities") or []
     if len(entities) < 2:
         return JSONResponse([])
     try:
@@ -989,13 +959,8 @@ async def get_project_endpoint(project_id: str):
     proj = await get_project(project_id)
     if not proj:
         return JSONResponse({"ok": False, "error": "Nicht gefunden"}, status_code=404)
-    cfg: dict = {}
     cfg_path = PROJECTS_DIR / project_id / "config.json"
-    if cfg_path.exists():
-        try:
-            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
+    cfg = read_json_safe(cfg_path)
     oc = cfg.get("obsidian") or {}
     obsidian_info = None
     if oc.get("dropbox_folder"):
@@ -1031,11 +996,11 @@ async def update_project_endpoint(project_id: str, request: Request):
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     async with _project_lock(project_id):
         if cfg_path.exists():
+            cfg = read_json_safe(cfg_path)
+            cfg["title"] = title
             try:
-                cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
-                cfg["title"] = title
                 cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
-            except (json.JSONDecodeError, OSError) as e:
+            except OSError as e:
                 print(f"Warnung: config.json für {project_id} konnte nicht aktualisiert werden: {e}",
                       file=sys.stderr)
     return JSONResponse({"ok": True, "id": project_id, "title": title})
@@ -1212,10 +1177,7 @@ async def save_obsidian_config(project_id: str, request: Request):
         return JSONResponse({"ok": False, "error": "Ordner-Pfad darf nicht leer sein"}, status_code=400)
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     async with _project_lock(project_id):
-        try:
-            cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
-        except (json.JSONDecodeError, OSError):
-            cfg = {}
+        cfg = read_json_safe(cfg_path)
         oc = cfg.get("obsidian") or {}
         oc["dropbox_folder"] = folder
         oc["doc_type"]       = body.get("doc_type", "presseartikel")
@@ -1230,8 +1192,8 @@ async def test_obsidian_config(project_id: str, request: Request):
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     if not cfg_path.exists():
         return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
-    cfg  = json.loads(cfg_path.read_text(encoding="utf-8"))
-    oc   = cfg.get("obsidian") or {}
+    cfg = read_json_safe(cfg_path)
+    oc  = cfg.get("obsidian") or {}
     folder = oc.get("dropbox_folder", "")
     if folder and not folder.startswith("/"):
         folder = "/" + folder
@@ -1263,7 +1225,7 @@ async def obsidian_sync(project_id: str, request: Request):
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     if not cfg_path.exists():
         return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
-    cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    cfg = read_json_safe(cfg_path)
     oc  = cfg.get("obsidian") or {}
     if not _dropbox_connected():
         return JSONResponse({"ok": False, "error": "Dropbox nicht verbunden"}, status_code=400)

@@ -2,6 +2,7 @@
 utils.py — Gemeinsame Hilfsfunktionen für src/generalized.
 """
 
+import json
 import os
 from pathlib import Path
 
@@ -18,6 +19,14 @@ def write_atomic(path: Path, data: str, encoding: str = "utf-8") -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(data, encoding=encoding)
     os.replace(tmp, path)
+
+
+def read_json_safe(path: Path, default: "dict | None" = None) -> dict:
+    """Liest eine JSON-Datei; gibt default (oder {}) zurück bei Fehler oder fehlendem File."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return default if default is not None else {}
 
 
 def render_template(name: str, **kwargs: str) -> str:
