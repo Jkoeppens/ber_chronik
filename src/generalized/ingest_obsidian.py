@@ -160,59 +160,31 @@ def _extract_date(meta: dict) -> str | None:
 
 def _build_segments(start_idx: int, meta: dict, body: str,
                     doc_type: str, file_path: str) -> list[dict]:
-    """Baut alle Segmente für eine .md-Datei.
+    """Ein content-Segment pro .md-Datei (wie Zotero).
 
-    Gibt zuerst ein Heading-Segment (type="heading") zurück, dann pro Absatz
-    ein content-Segment. detect_anchors liest das date-Feld des Headings als
-    Anker; interpolate_anchors erbt diesen Anker auf die content-Segmente.
+    Das date-Feld trägt das Erscheinungsdatum; detect_anchors liest es
+    direkt am content-Segment (kein Heading-Umweg, keine Interpolation).
     """
-    title = str(meta.get("title") or Path(file_path).stem)
-    date  = _extract_date(meta)
-    url   = str(meta.get("source") or "")
-    author = _clean_obsidian_links(meta.get("author") or "")
+    title    = str(meta.get("title") or Path(file_path).stem)
+    date     = _extract_date(meta)
+    url      = str(meta.get("source") or "")
+    author   = _clean_obsidian_links(meta.get("author") or "")
     abstract = str(meta.get("description") or "")
 
-    common = {
-        "source":       title,
-        "page":         None,
-        "doc_type":     doc_type,
+    return [{
+        "segment_id":    f"s{start_idx:04d}",
+        "type":          "content",
+        "source":        title,
+        "text":          body.strip(),
+        "page":          None,
+        "doc_type":      doc_type,
+        "date":          date,
+        "url":           url,
+        "author":        author,
+        "abstract":      abstract,
         "ingest_source": "obsidian",
-        "url":          url,
-        "author":       author,
-        "abstract":     abstract,
         "obsidian_path": file_path,
-    }
-
-    segs: list[dict] = []
-    idx = start_idx
-
-    # Heading-Segment: Anker für detect_anchors / interpolate_anchors
-    segs.append({
-        "segment_id": f"s{idx:04d}",
-        "level":      2,
-        "type":       "heading",
-        "text":       title,
-        "date":       date,
-        **common,
-    })
-    idx += 1
-
-    paras = [p.strip() for p in body.split("\n\n") if p.strip()]
-    if not paras:
-        paras = [body.strip()] if body.strip() else []
-
-    for para in paras:
-        segs.append({
-            "segment_id": f"s{idx:04d}",
-            "level":      3,
-            "type":       "content",
-            "text":       para,
-            "date":       date,
-            **common,
-        })
-        idx += 1
-
-    return segs
+    }]
 
 
 # ── Pipeline-Ausführung ───────────────────────────────────────────────────────
@@ -397,11 +369,13 @@ def main() -> None:
         pass
 
     if not cfg.get("entities"):
-        print("\nKeine Entities in config.json — starte extract_entities_v2 (sample) …")
+        print("\nKeine Entities in config.json — starte extract_entities_v2 …")
         extract_ok = _run(
             "src/generalized/extract_entities_v2.py",
-            d_args + ["--mode", "sample"],
+            d_args,
         )
+        if not extract_ok:
+            print("WARNUNG: Entity-Extraktion fehlgeschlagen", file=sys.stderr, flush=True)
         proposal_path = doc_dir / "entities_proposal.json"
         if extract_ok and proposal_path.exists():
             try:

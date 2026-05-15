@@ -238,17 +238,13 @@ def main() -> None:
         doc_type = next((s.get("doc_type") for s in segments_raw if s.get("doc_type")), "buchnotizen")
 
     if doc_type == "presseartikel":
-        # obsidian_source gesetzt ("dropbox"|"local") → Obsidian-Ingest:
-        #   content-Segs undatiert, Interpolation erbt Heading-Datum (Rule 4)
-        # obsidian_source fehlt → Geicke-DOCX / Zotero:
-        #   Segs bereits datiert in detect_anchors → Bypass
-        if not doc_cfg.get("obsidian_source"):
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(
-                json.dumps(segments_raw, ensure_ascii=False, indent=2), encoding="utf-8"
-            )
-            print(f"→ {output_path}  (presseartikel/DOCX – Interpolation übersprungen, {len(segments_raw)} Segmente)")
-            return
+        # DOCX, Zotero, Obsidian: Segs bereits durch detect_anchors datiert → Bypass
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(segments_raw, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        print(f"→ {output_path}  (presseartikel – Interpolation übersprungen, {len(segments_raw)} Segmente)")
+        return
 
     override_list: list[dict] = []
     if overrides_path.exists():
