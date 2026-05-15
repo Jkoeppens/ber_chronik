@@ -522,6 +522,13 @@ async def ingest_save_config(request: Request):
     if not project or not doc_id:
         return JSONResponse({"ok": False, "error": "project und document erforderlich"}, status_code=400)
 
+    # Token-Check: wenn das Projekt bereits in der DB existiert, muss ein gültiger
+    # Token mitgeschickt werden. Beim ersten Aufruf (Neuanlage) gibt es noch keinen
+    # Token — dort ist kein Check möglich.
+    existing = await get_project(project)
+    if existing is not None:
+        if err := await _require_token(request, project): return err
+
     # ── Projektebene: title, year_min/max, taxonomy, entities ──────────────────
     project_dir = get_project_dir(project)
     project_dir.mkdir(parents=True, exist_ok=True)
