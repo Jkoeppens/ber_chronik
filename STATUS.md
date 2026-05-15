@@ -227,6 +227,14 @@ Das Layout wird automatisch am Ende jedes `export_exploration.py`-Laufs neu bere
 gesetzten Key gibt der Endpoint das Token ohne Auth zurück.
 Vor öffentlicher Nutzung: `ADMIN_KEY=<secret>` in `.env` setzen.
 
+### `/ingest/save_config` ohne Token-Prüfung [KRITISCH]
+
+`POST /ingest/save_config` hat keinen `_require_token`-Call. Der Endpoint schreibt `config.json` auf Projektebene (taxonomy, entities, year_min/max, title) und legt Projekte in der DB an. Jeder mit bekanntem Projektnamen kann `taxonomy: []` senden und damit alle Taxonomie-Daten unwiederbringlich überschreiben.
+
+Der erste `save_config`-Call in `runAnalysis()` erfolgt vor Token-Existenz (korrekt — kein Token-Check möglich). Aber alle nachfolgenden Calls aus Schritt 7 könnten einen Token-Check haben und tun es nicht.
+
+**Lösung:** Endpoint aufteilen: `POST /ingest/bootstrap_config` (initiale Neuanlage, kein Token) + `POST /ingest/save_config` (alle Folge-Calls, mit `_require_token`). Oder kurzfristig: Token optional prüfen — wenn Token vorhanden, validieren; wenn kein Token aber Projekt schon in DB: ablehnen. (Quelle: REVIEW_15_05.md §2)
+
 ---
 
 ## Offene Inkonsistenzen
@@ -297,6 +305,73 @@ Die Felder eines Segments (`segment_id`, `type`, `text`, `source`, `time_from`, 
 
 **Lösung (Backlog):** data.json-Toplevel-Felder und Entry-Schema in ARCHITECTURE.md dokumentieren, idealerweise mit Verweis auf `export_exploration.py:build_entries()` als autoritative Quelle.
 
+### I16 — `export_exploration.py` mutiert config.json als Seiteneffekt [KRITISCH]
+
+`export_exploration.py:327–329` schreibt `year_min`/`year_max` mit Read-Modify-Write direkt in `config.json` — als Seiteneffekt eines Export-Skripts. Wenn gleichzeitig `save_taxonomy` oder `save_entities` läuft, kann der Export-Schritt deren Änderungen überschreiben (letzter Write gewinnt, kein Lock).
+
+**Lösung:** Nur die zwei Felder atomar patchen (`read → parse → patch → write_atomic`), nie das gesamte Config-Objekt neu schreiben. (Quelle: REVIEW_15_05.md §1)
+
+### I17 — Race Condition auf config.json: 4 Endpoints ohne Lock [KRITISCH]
+
+Fix 5 hat `create_project_endpoint` und `update_project_endpoint` mit `_project_lock` geschützt. Vier weitere Endpoints schreiben config.json ohne Locking:
+- `save_taxonomy` → `cfg["taxonomy"]`
+- `save_entities` → `cfg["entities"]`
+- `save_obsidian_config` → `cfg["obsidian"]`
+- `ingest_save_config` → bis zu 5 Felder gleichzeitig
+
+Zwei gleichzeitige Browser-Tabs können Read-Modify-Write-Konflikte auslösen.
+
+**Lösung:** `async with _project_lock(project):` in alle vier Endpoints. (Quelle: REVIEW_15_05.md §1)
+
+### I18 — `classified.json` nicht atomar geschrieben [MITTEL]
+
+`match_entities.py:88–90` und `classify_segments.py:254` schreiben `classified.json` via direktem `write_text` (truncate-Modus). Bei Prozessabbruch während des Schreibens ist die Datei truncated und nicht wiederherstellbar. `write_atomic()` existiert in `utils.py`, wird von diesen Skripten aber nicht benutzt.
+
+**Lösung:** Beide Skripte auf `write_atomic(path, json.dumps(...))` aus `utils.py` umstellen. (Quelle: REVIEW_15_05.md §1)
+
+### I19 — `taxData` — unkontrollierte Mutation an 7+ Stellen [MITTEL]
+
+`taxData` ist ein Modul-globales Array das direkt mutiert wird (`push`, `splice`, `taxData[idx].name = ...`). Nach einem KI-Vorschlag setzt `_runProposeTaxonomy` erst `taxData` (via `initTaxonomy()`) und dann sofort `taxDirty = true`. Wenn der Nutzer in diesem Moment navigiert, triggert `gotoStep` ein `saveTaxonomy()` bevor `taxDirty` zurückgesetzt ist — Doppel-Save möglich.
+
+**Lösung (Backlog):** `taxData` und `taxDirty` in ein State-Objekt zusammenführen mit definierten Setter-Funktionen. (Quelle: REVIEW_15_05.md §3)
+
+### I20 — `console.log` Debug-Statement in Produktionscode [GERING]
+
+`renderEventsList()` (Z. 1392) feuert `console.log('[renderEventsList] events:', JSON.stringify(state.time_config.events))` bei jeder Timeline-Änderung. REVIEW-Priorität war „Sofort".
+
+**Lösung:** Eine Zeile löschen. (Quelle: REVIEW_15_05.md §3)
+
+### I21 — Stille `catch (_) {}` an operativen Stellen [GERING]
+
+Im Wizard an mindestens 3 Stellen schluckt `catch (_) {}` Fehler ohne Nutzer-Feedback:
+- Z. 1218: Preview-Regenerierung nach Classify
+- Z. 1297: `runAnchorPipeline` — Nutzer denkt Pipeline läuft, obwohl Request scheiterte
+- Z. 1249: `doc_status`-Check in `initTimeConfig`
+
+**Lösung:** Mindestens `console.error` in den kritischen Catches; besser UI-Feedback analog `statusEl.textContent = '✗ Fehler'`. (Quelle: REVIEW_15_05.md §3)
+
+### I22 — Pipeline-Teilfehler: `export_exploration` nicht-fatal, aber `__done__` + Viz-Link kommen trotzdem [GERING]
+
+In `ingest_run` gilt `export_exploration` als nicht-fatal (break statt return bei `__error__`). Danach werden `__done__` und der Viz-Link trotzdem gesendet. Der Nutzer sieht einen Link, der auf veraltete oder leere Daten zeigt, ohne Hinweis dass der Export fehlschlug.
+
+**Lösung:** Viz-Link nur senden wenn Exploration erfolgreich war. Mindestens eine SSE-Zeile `data: ⚠ Explorer-Export fehlgeschlagen\n\n` vor `__done__`. (Quelle: REVIEW_15_05.md §1)
+
+### I23 — `_obsidian_oauth_states` in-memory: verliert State bei Hot-Reload [GERING]
+
+`_obsidian_oauth_states` ist ein Modul-globales Dict. `uvicorn --reload` triggert einen Modul-Reload bei Quelldatei-Änderungen — alle laufenden OAuth-Flows werden ungültig. Betrifft nur Entwicklung, nicht Produktion.
+
+**Lösung:** OAuth-State in einer temporären Datei oder SQLite-Tabelle persistieren. Kurzfristig: `--reload-exclude dev_server.py` in Entwicklungsanleitung dokumentieren. (Quelle: REVIEW_15_05.md §2)
+
+### I24 — DB und Filesystem können divergieren [GERING]
+
+`create_project` in SQLite und das Anlegen von `config.json` auf dem Filesystem sind zwei separate Operationen ohne gemeinsame Transaktion. Bei Serverabsturz zwischen beiden Operationen existiert das Verzeichnis ohne DB-Eintrag (oder umgekehrt). `list_projects_endpoint` zeigt das Projekt danach nicht, das Verzeichnis bleibt.
+
+**Lösung (Backlog):** Reconcile-Schritt beim Serverstart — Projekte in DB aber nicht im FS als `orphan` markieren. Kein Auto-Delete. (Quelle: REVIEW_15_05.md §4)
+
+### I25 — `export_preview.py` wird bei Taxonomie-Update nicht neu generiert [Hinweis]
+
+`ingest_run` schaltet `export_preview.py` nur dann ein, wenn `has_anchors` zuvor `false` war (Z. 624–625). Wenn Anchors bereits existieren und die Pipeline neu läuft (z.B. nach Taxonomie-Änderung in Schritt 4), bleibt `preview.html` veraltet. Designentscheidung oder Lücke — nirgends dokumentiert. (Quelle: REVIEW_15_05.md §5)
+
 ---
 
 ## Audit-Befunde (2026-04-30)
@@ -331,9 +406,9 @@ Die Felder eines Segments (`segment_id`, `type`, `text`, `source`, `time_from`, 
 - **`is_geicke` BER-Feld im generalisierten Code**
   `export_exploration.py:118, 182`: `"is_geicke"` in `build_entries()` und `REQUIRED_FIELDS`. Alle Nicht-BER-Projekte emittieren `"is_geicke": false` in `data.json`.
 
-- **Config-Lesen ohne Helper** — 12 Stellen
-  `json.loads(path.read_text(encoding="utf-8"))` ohne gemeinsamen Wrapper:
-  `dev_server.py:274, 330, 350, 717, 744` — `extract_entities_v2.py:86, 99` — `export_preview.py:498, 517` — `export_exploration.py:249` — `propose_taxonomy.py:224` — `parse_document.py:210`
+- **Config-Lesen ohne Helper — teilweise behoben**
+  Fix 6 (2026-05-15) hat `read_json_safe()` in `utils.py` eingeführt und alle `dev_server.py`-Stellen umgestellt. Noch offen (kein Helper):
+  `extract_entities_v2.py:86, 99` — `export_preview.py:498, 517` — `export_exploration.py:249` — `propose_taxonomy.py:224` — `parse_document.py:210`
 
 - **`classify_segments.py:100` — silent fallback zu `category: None`**
   Nach 2 fehlgeschlagenen LLM-Parses: `return {**segment, "category": None, "confidence": "low"}` ohne Warning oder Zähler im Output.
