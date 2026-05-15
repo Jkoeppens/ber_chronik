@@ -1389,7 +1389,6 @@ function renderTimeline() {
 }
 
 function renderEventsList() {
-  console.log('[renderEventsList] events:', JSON.stringify(state.time_config.events));
   const el = document.getElementById('events-list');
   el.innerHTML = '';
   state.time_config.events.forEach(ev => {
