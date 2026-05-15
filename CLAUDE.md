@@ -100,10 +100,12 @@ Die Visualisierung ist danach direkt im Browser nutzbar.
 ## Die drei Ausgaben
 
 **Timeline-Heatmap**
-Alle Segmente als Punkte auf einem Zeitstrahl, gruppiert nach Jahr und Monat, eingefärbt
-nach Kategorie. Der Historiker sieht auf einen Blick, in welchen Jahren bestimmte
-Ereignistypen gehäuft auftraten. Ein Klick auf einen Punkt öffnet den Originaltext.
-Die Timeline ist filterbar nach Kategorie und Entität.
+Alle Segmente als Punkte auf einem Zeitstrahl, eingefärbt nach Kategorie. Die
+Zeitraum-Granularität passt sich dynamisch an den abgedeckten Zeitraum an: bei mehreren
+Jahrzehnten sind die Bins Jahre, bei wenigen Jahren Monate, bei noch kürzerem Zeitraum
+Tage. Das bestimmt was die Visualisierung zeigt — ein Jahrzehnte-Projekt und ein
+Jahres-Archiv sehen grundlegend anders aus. Ein Klick auf einen Punkt öffnet den
+Originaltext. Die Timeline ist filterbar nach Kategorie und Entität.
 
 **Akteursnetzwerk**
 Alle Entitäten als Knoten, verbunden wenn sie im selben Segment erscheinen. Die
