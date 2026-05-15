@@ -32,6 +32,7 @@ from pathlib import Path
 
 from src.generalized.classify_segments import normalize_category
 from src.generalized.config import ROOT, PROJECTS_DIR
+from src.generalized.utils import read_json_safe
 from src.generalized.generate_entity_summaries import build_summaries as _build_summaries
 
 # ── date_js-Hilfsmuster ────────────────────────────────────────────────────────
@@ -247,7 +248,7 @@ def main() -> None:
     if not config_path.exists():
         print(f"Fehler: config.json nicht gefunden: {config_path}", file=sys.stderr)
         sys.exit(1)
-    config   = json.loads(config_path.read_text(encoding="utf-8"))
+    config   = read_json_safe(config_path)
     taxonomy = config.get("taxonomy") or []
     entities = config.get("entities") or []  # D-P4: einzige gültige Quelle
     if not taxonomy:
@@ -289,8 +290,8 @@ def main() -> None:
             print(f"  [{doc_id}] classified.json fehlt – übersprungen", file=sys.stderr)
             continue
 
-        anchors    = json.loads(anchors_path.read_text(encoding="utf-8"))
-        classified = json.loads(classified_path.read_text(encoding="utf-8"))
+        anchors    = read_json_safe(anchors_path, default=[])
+        classified = read_json_safe(classified_path, default=[])
 
         # segment_id mit doc_id-Präfix versehen (Kollisionsvermeidung)
         for seg in anchors:
@@ -326,10 +327,7 @@ def main() -> None:
     # mit dem veralteten config-Objekt von oben überschrieben wird.
     years = [e["year"] for e in entries if e.get("year")]
     if years:
-        try:
-            cfg_live = json.loads(config_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            cfg_live = dict(config)
+        cfg_live = read_json_safe(config_path) or dict(config)
         cfg_live["year_min"] = min(years)
         cfg_live["year_max"] = max(years)
         config_path.write_text(json.dumps(cfg_live, ensure_ascii=False, indent=2), encoding="utf-8")

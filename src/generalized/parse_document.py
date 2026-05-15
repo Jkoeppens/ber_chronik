@@ -37,6 +37,7 @@ from pathlib import Path
 import docx
 
 from src.generalized.config import ROOT, PROJECTS_DIR, RAW_DIR
+from src.generalized.utils import read_json_safe
 
 # ── Seitenzahl-Extraktion ──────────────────────────────────────────────────────
 # 1–3 Ziffern am Ende, getrennt durch Leerzeichen oder Klammer-zu
@@ -213,10 +214,8 @@ def main() -> None:
     doc_dir.mkdir(parents=True, exist_ok=True)
 
     # Dokumentebene config lesen (falls schon vorhanden)
-    doc_config: dict = {}
     doc_config_path = doc_dir / "config.json"
-    if doc_config_path.exists():
-        doc_config = json.loads(doc_config_path.read_text(encoding="utf-8"))
+    doc_config: dict = read_json_safe(doc_config_path)
 
     # input_path: explizit > doc config > Fehler
     if args.input:
