@@ -102,6 +102,13 @@ def extract_with_spacy(
 
     print(f"  {len(raw_entities)} Roh-Entities aus spaCy")
 
+    if not raw_entities and content_segs:
+        raise RuntimeError(
+            f"spaCy hat für alle {len(content_segs)} Segmente versagt — "
+            "Entity-Extraktion komplett fehlgeschlagen. "
+            "Prüfe ob das spaCy-Modell geladen werden kann."
+        )
+
     # Programmatische Dedup vor dem LLM-Gruppierungsschritt
     deduped = _merge([raw_entities])
     print(f"  {len(deduped)} nach _merge()")
