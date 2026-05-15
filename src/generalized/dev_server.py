@@ -39,7 +39,6 @@ import shutil
 from src.generalized.db import (
     init_db, create_project, get_project,
     list_projects as db_list_projects,
-    list_all_projects as db_list_all_projects,
     update_project, delete_project, token_valid,
     upsert_document, get_latest_doc_id,
 )
