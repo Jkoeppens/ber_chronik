@@ -380,18 +380,16 @@ In `ingest_run` gilt `export_exploration` als nicht-fatal (break statt return be
 
 ### Niedrig
 
-- **`"date"` vs `"date_raw"` — Feldnamen inkonsistent**
-  `ingest_zotero.py:152` schreibt `"date"` in Segmente. `export_exploration.py:91` liest `seg.get("date_raw")` — gibt für Zotero-Segmente immer `None` zurück; Fallback `str(tf)` verliert Tag-Genauigkeit.
+- ~~**`"date"` vs `"date_raw"` — Feldnamen inkonsistent**~~ ✓ behoben (2026-05-15, 150fc424)
+  `export_exploration.py`: `seg.get("date_raw") or seg.get("date")` — Obsidian/Zotero-Tagesdaten nicht mehr verloren.
 
-- **`is_geicke` BER-Feld im generalisierten Code**
-  `export_exploration.py:118, 182`: `"is_geicke"` in `build_entries()` und `REQUIRED_FIELDS`. Alle Nicht-BER-Projekte emittieren `"is_geicke": false` in `data.json`.
+- ~~**`is_geicke` BER-Feld im generalisierten Code**~~ ✓ behoben (2026-05-15, 2a7b55eb)
+  Aus `parse_document.py`, `export_exploration.py` (emit + REQUIRED_FIELDS) entfernt.
 
-- **Config-Lesen ohne Helper — teilweise behoben**
-  Fix 6 (2026-05-15) hat `read_json_safe()` in `utils.py` eingeführt und alle `dev_server.py`-Stellen umgestellt. Noch offen (kein Helper):
-  `extract_entities_v2.py:86, 99` — `export_preview.py:498, 517` — `export_exploration.py:249` — `propose_taxonomy.py:224` — `parse_document.py:210`
+- ~~**Config-Lesen ohne Helper**~~ ✓ behoben (2026-05-15, 87676925)
+  17 nackte `json.loads()`-Aufrufe in 5 Skripten auf `read_json_safe()` umgestellt.
 
-- **`classify_segments.py:100` — silent fallback zu `category: None`**
-  Nach 2 fehlgeschlagenen LLM-Parses: `return {**segment, "category": None, "confidence": "low"}` ohne Warning oder Zähler im Output.
+- ~~**`classify_segments.py:104` — silent fallback zu `category: None`**~~ ✓ behoben (2026-05-15, 0ff5d3ba)
+  `confidence` im Fallback auf `None` gesetzt — Resume versucht fehlgeschlagene Segmente erneut.
 
-- **`entity_utils.py:9` — `VALID_TYPES` als `set` statt `frozenset`**
-  Mutable, wird nie modifiziert — kein Laufzeitproblem, aber falsches Signal.
+- ~~**`entity_utils.py:9` — `VALID_TYPES` als `set` statt `frozenset`**~~ ✓ behoben (2026-05-15, 9f4660c6)
