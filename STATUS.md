@@ -287,7 +287,7 @@ Fehlte `config.json["taxonomy"]`, fiel `export_preview.py` auf die per-doc `taxo
 
 ### I14 — Segment-Schema nicht in ARCHITECTURE.md dokumentiert [GERING]
 
-Die Felder eines Segments (`segment_id`, `type`, `text`, `source`, `time_from`, `time_to`, `precision`, `anchors`, `actors`, `category`, `confidence`, `is_geicke`, `doc_type`, …) sind in keinem Dokument beschrieben. Wer verstehen will, welche Felder wann gesetzt sind und von welchem Skript, muss den Quellcode lesen.
+Die Felder eines Segments (`segment_id`, `type`, `text`, `source`, `time_from`, `time_to`, `precision`, `anchors`, `actors`, `category`, `confidence`, `doc_type`, …) sind in keinem Dokument beschrieben. Wer verstehen will, welche Felder wann gesetzt sind und von welchem Skript, muss den Quellcode lesen.
 
 **Lösung (Backlog):** Segment-Schema-Tabelle in ARCHITECTURE.md ergänzen — welche Felder von welchem Skript gesetzt werden und was ihre möglichen Werte sind.
 
@@ -319,14 +319,9 @@ Liest config.json jetzt direkt vor dem Schreiben frisch von Disk, damit kein ver
 
 `console.log` in `renderEventsList()` entfernt.
 
-### I21 — Stille `catch (_) {}` an operativen Stellen [GERING]
+### ~~I21 — Stille `catch (_) {}` an operativen Stellen~~ ✓ behoben (2026-05-16, 0b2c1f84)
 
-Im Wizard an mindestens 3 Stellen schluckt `catch (_) {}` Fehler ohne Nutzer-Feedback:
-- Z. 1218: Preview-Regenerierung nach Classify
-- Z. 1297: `runAnchorPipeline` — Nutzer denkt Pipeline läuft, obwohl Request scheiterte
-- Z. 1249: `doc_status`-Check in `initTimeConfig`
-
-**Lösung:** Mindestens `console.error` in den kritischen Catches; besser UI-Feedback analog `statusEl.textContent = '✗ Fehler'`. (Quelle: REVIEW_15_05.md §3)
+`console.error` in allen drei Stellen ergänzt; bei preview- und classify-SSE-Fehlern zusätzlich Fehlertext im logEl.
 
 ### ~~I22 — Pipeline-Teilfehler: Viz-Link trotz fehlgeschlagenem Export~~ ✓ behoben (2026-05-15, b549bf12)
 
