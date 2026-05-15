@@ -6,7 +6,7 @@ import json
 from collections import Counter, defaultdict
 from pathlib import Path
 
-VALID_TYPES = {"Person", "Organisation", "Ort", "Konzept"}
+VALID_TYPES = frozenset({"Person", "Organisation", "Ort", "Konzept"})
 
 SOURCE_PRIORITY = {
     "seed": 0,
