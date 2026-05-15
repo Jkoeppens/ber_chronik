@@ -322,11 +322,18 @@ def main() -> None:
             e["event_type"] = normalize_category(raw, valid_names)
 
     # ── year_min/year_max aus tatsächlichen Einträgen berechnen ───────────────
+    # Frisches Lesen kurz vor dem Schreiben: verhindert, dass ein zwischenzeitlich
+    # durch einen anderen Endpoint (taxonomy/save, entities/save) geänderter Stand
+    # mit dem veralteten config-Objekt von oben überschrieben wird.
     years = [e["year"] for e in entries if e.get("year")]
     if years:
-        config["year_min"] = min(years)
-        config["year_max"] = max(years)
-        config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+        try:
+            cfg_live = json.loads(config_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            cfg_live = dict(config)
+        cfg_live["year_min"] = min(years)
+        cfg_live["year_max"] = max(years)
+        config_path.write_text(json.dumps(cfg_live, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"→ year_min/year_max aktualisiert: {min(years)}–{max(years)}")
 
     data_obj = {
