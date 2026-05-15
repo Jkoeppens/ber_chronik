@@ -1,6 +1,6 @@
 # Wizard Flow — Referenz
 
-Stand: 2026-05-15 | Branch: fix/review-15-05
+Stand: 2026-05-15 | Branch: feature/flexible-timeline-bins
 
 ---
 
@@ -14,7 +14,7 @@ komplett anders aussieht.
 |---|---|---|---|
 | **Schritt 1** | Datei-Upload im Dialog | Datei-Upload im Dialog | Obsidian-Tab im Dialog oder Karte öffnen |
 | **Schritt 2** | **übersprungen** (doc_type im Dialog) | **übersprungen** (doc_type im Dialog) | **angezeigt** (nur Pressesammlung sichtbar, auto-ausgewählt) |
-| **Schritt 3** | `POST /ingest/analyze` (LLM-Analyse) | `POST /ingest/analyze` (LLM-Analyse) | `POST /obsidian/sync` (SSE-Stream aus Dropbox) |
+| **Schritt 3** | `POST /ingest/analyze` (LLM erkennt Zeitraum + Perioden) | `POST /ingest/analyze` (kein LLM — year_min/max aus Segmenten) | `POST /obsidian/sync` (SSE-Stream aus Dropbox) |
 | **Schritt 4** | Taxonomie — normal | Taxonomie — normal | Taxonomie — normal |
 | **Schritt 5** | Anker-Pipeline läuft voll | Anker-Pipeline läuft voll | detect+interpolate laufen, tun faktisch Bypass |
 | **Schritt 6** | Entities — normal | Entities — normal | Entities — normal |
@@ -81,11 +81,17 @@ Im DOCX-Datei-Pfad wird dieser Schritt übersprungen.
 #### DOCX-Pfad (Literaturexzerpt / Pressezusammenfassung)
 
 **Neues Projekt:**
-1. `POST /ingest/analyze` — Das Dokument wird in Absätze zerlegt; eine Stichprobe von
-   bis zu 30 zufälligen Absätzen geht ans LLM, das daraus den Zeitraum des Materials
-   (`year_min`/`year_max`), wichtige historische Ereignisse mit Jahreszahlen und die
-   Dokumentsprache erkennt. Der Nutzer bekommt danach eine vorausgefüllte Zeitkonfiguration
-   für Schritt 5 statt leerer Felder.
+1. `POST /ingest/analyze` — parse_document zerlegt das Dokument in Segmente.
+   Danach **verzweigt der Server nach `doc_type`:**
+
+   - **`buchnotizen`:** Eine Stichprobe von bis zu 30 Absätzen geht ans LLM, das
+     daraus den Zeitraum (`year_min`/`year_max`) und wichtige historische **Perioden**
+     mit Jahreszahlen erkennt. Ergebnis-Felder: `year_min`, `year_max`, `events`, `language`.
+
+   - **`presseartikel`:** Kein LLM-Aufruf. `year_min`/`year_max` wird direkt aus den
+     `time_from`-Feldern in `segments.json` berechnet (parse_document setzt diese aus
+     DOCX-Jahresüberschriften). `events` bleibt leer.
+
 2. Response setzt: `state.project`, `state.document`, `state.analysis`, `state.time_config`
 3. Sofort danach: `POST /ingest/save_config` mit `title`, `doc_type`, `time_config`
    - Server schreibt `projects/{project}/config.json` + `documents/{doc_id}/config.json`
@@ -107,11 +113,15 @@ Die Schrittüberschrift wechselt auf „Obsidian-Import".
    - Dropbox-Verbindung, .md-Dateien listen, Segmente bauen
    - `detect_anchors.py` + `interpolate_anchors.py` laufen serverseitig
    - Output-Log wird im Wizard angezeigt
-3. Bei `__done__`: `loadProjectDocuments()` + `gotoStep(4)`
+3. Bei `__done__`:
+   - `loadProjectDocuments()`
+   - `GET /ingest/doc_status?project=…&document=main` — liest `year_min`/`year_max`
+     aus den bereits vorhandenen `anchors_interpolated.json` (die der Sync erzeugt hat)
+     und schreibt sie in `state.time_config`
+   - `gotoStep(4)`
 
-Der Analyse-Output (year_min/max, Taxonomie-Vorschlag) den der DOCX-Pfad liefert
-existiert im Obsidian-Pfad nicht — `state.analysis` und `state.time_config` werden
-nicht aus dem Sync befüllt. Schritt 5 zeigt daher Standardwerte.
+`state.analysis` (Taxonomie-Vorschlag) wird im Obsidian-Pfad nicht befüllt —
+Schritt 4 startet mit leerem Vorschlag-Button.
 
 **Dateien geschrieben:** `documents/{doc_id}/segments.json`, `anchors.json`,
 `anchors_interpolated.json`
