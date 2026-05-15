@@ -177,20 +177,18 @@ def parse_presseartikel(path: Path) -> list[dict]:
         matches = SOURCE_RE.findall(text)
         source_name = ";".join(m[0].strip() for m in matches) if matches else None
         source_date = ";".join(m[1].strip() for m in matches) if matches else None
-        is_quote    = text[:1] in ('"', '„', '“', '„', '‚', "'")
-        is_geicke   = not source_name and not is_quote
+        is_quote    = text[:1] in ('”', '„', '”', '„', '‚', “'”)
 
         seg_id += 1
         segments.append({
-            "segment_id":   f"s{seg_id:04d}",
-            "type":         "content",
-            "text":         text,
-            "source":       source_name,
-            "source_date":  source_date,
-            "is_quote":     is_quote,
-            "is_geicke":    is_geicke,
-            "page":         None,
-            "ingest_source": "docx",
+            “segment_id”:   f”s{seg_id:04d}”,
+            “type”:         “content”,
+            “text”:         text,
+            “source”:       source_name,
+            “source_date”:  source_date,
+            “is_quote”:     is_quote,
+            “page”:         None,
+            “ingest_source”: “docx”,
         })
 
     return segments

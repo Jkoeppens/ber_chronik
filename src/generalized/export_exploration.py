@@ -115,7 +115,6 @@ def build_entries(anchors: list[dict], cls_map: dict[str, dict]) -> list[dict]:
             "source_date":    _source_date(src) or date_raw,
             "url":            seg.get("url", ""),
             "is_quote":       bool(seg.get("is_quote", False)),
-            "is_geicke":      bool(seg.get("is_geicke", False)),
             "actors":         list(cls.get("actors") or []),
             "causal_theme":   [],
         })
@@ -179,7 +178,7 @@ def build_meta(config: dict, taxonomy: list[dict], entities: list[dict], project
 REQUIRED_FIELDS = [
     "id", "doc_anchor", "year", "date_raw", "date_js", "date_precision",
     "text", "event_type", "confidence", "source_name", "source_date", "url",
-    "is_quote", "is_geicke", "actors", "causal_theme",
+    "is_quote", "actors", "causal_theme",
 ]
 
 def validate_and_stats(entries: list[dict]) -> None:
