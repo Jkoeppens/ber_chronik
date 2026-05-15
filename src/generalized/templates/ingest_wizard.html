@@ -1103,6 +1103,15 @@ async function runObsidianSync() {
         if (msg === '__done__') {
           logEl.textContent += '\n✓ Import abgeschlossen!';
           await loadProjectDocuments();
+          const dsUrl = '/ingest/doc_status?project=' + encodeURIComponent(state.project) + '&document=main&token=' + encodeURIComponent(state.token || '');
+          const dsRes = await fetch(dsUrl, { headers: authHeaders() }).catch(() => null);
+          if (dsRes && dsRes.ok) {
+            const ds = await dsRes.json();
+            if (typeof ds.year_min === 'number' && typeof ds.year_max === 'number') {
+              state.time_config.year_min = ds.year_min;
+              state.time_config.year_max = ds.year_max;
+            }
+          }
           gotoStep(4);
           return;
         }
