@@ -2,9 +2,22 @@
 utils.py — Gemeinsame Hilfsfunktionen für src/generalized.
 """
 
+import os
 from pathlib import Path
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+
+def write_atomic(path: Path, data: str, encoding: str = "utf-8") -> None:
+    """Schreibt data atomar nach path via temporäre Datei + os.replace().
+
+    Verhindert truncated/corrupted files bei Prozessabbruch während des Schreibens.
+    Die .tmp-Datei liegt im selben Verzeichnis wie path, damit os.replace() ein
+    atomarer Rename auf demselben Dateisystem ist.
+    """
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(data, encoding=encoding)
+    os.replace(tmp, path)
 
 
 def render_template(name: str, **kwargs: str) -> str:
