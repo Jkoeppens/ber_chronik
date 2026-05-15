@@ -227,13 +227,9 @@ Das Layout wird automatisch am Ende jedes `export_exploration.py`-Laufs neu bere
 gesetzten Key gibt der Endpoint das Token ohne Auth zurück.
 Vor öffentlicher Nutzung: `ADMIN_KEY=<secret>` in `.env` setzen.
 
-### `/ingest/save_config` ohne Token-Prüfung [KRITISCH]
+### ~~`/ingest/save_config` ohne Token-Prüfung~~ ✓ behoben (2026-05-15, c0308946)
 
-`POST /ingest/save_config` hat keinen `_require_token`-Call. Der Endpoint schreibt `config.json` auf Projektebene (taxonomy, entities, year_min/max, title) und legt Projekte in der DB an. Jeder mit bekanntem Projektnamen kann `taxonomy: []` senden und damit alle Taxonomie-Daten unwiederbringlich überschreiben.
-
-Der erste `save_config`-Call in `runAnalysis()` erfolgt vor Token-Existenz (korrekt — kein Token-Check möglich). Aber alle nachfolgenden Calls aus Schritt 7 könnten einen Token-Check haben und tun es nicht.
-
-**Lösung:** Endpoint aufteilen: `POST /ingest/bootstrap_config` (initiale Neuanlage, kein Token) + `POST /ingest/save_config` (alle Folge-Calls, mit `_require_token`). Oder kurzfristig: Token optional prüfen — wenn Token vorhanden, validieren; wenn kein Token aber Projekt schon in DB: ablehnen. (Quelle: REVIEW_15_05.md §2)
+Wenn das Projekt bereits in der DB existiert, wird jetzt `_require_token` aufgerufen. Erste Neuanlage (kein Token vorhanden) bleibt ohne Check — ist korrekt, da beim ersten Call noch kein Token existiert.
 
 ---
 
@@ -305,29 +301,17 @@ Die Felder eines Segments (`segment_id`, `type`, `text`, `source`, `time_from`, 
 
 **Lösung (Backlog):** data.json-Toplevel-Felder und Entry-Schema in ARCHITECTURE.md dokumentieren, idealerweise mit Verweis auf `export_exploration.py:build_entries()` als autoritative Quelle.
 
-### I16 — `export_exploration.py` mutiert config.json als Seiteneffekt [KRITISCH]
+### ~~I16 — `export_exploration.py` mutiert config.json als Seiteneffekt~~ ✓ behoben (2026-05-15, e5e9b494)
 
-`export_exploration.py:327–329` schreibt `year_min`/`year_max` mit Read-Modify-Write direkt in `config.json` — als Seiteneffekt eines Export-Skripts. Wenn gleichzeitig `save_taxonomy` oder `save_entities` läuft, kann der Export-Schritt deren Änderungen überschreiben (letzter Write gewinnt, kein Lock).
+Liest config.json jetzt direkt vor dem Schreiben frisch von Disk, damit kein veralteter Stand aus dem Skript-Start überschrieben wird.
 
-**Lösung:** Nur die zwei Felder atomar patchen (`read → parse → patch → write_atomic`), nie das gesamte Config-Objekt neu schreiben. (Quelle: REVIEW_15_05.md §1)
+### ~~I17 — Race Condition auf config.json: 4 Endpoints ohne Lock~~ ✓ behoben (2026-05-15, ca27c5d0)
 
-### I17 — Race Condition auf config.json: 4 Endpoints ohne Lock [KRITISCH]
+`save_taxonomy`, `save_entities`, `save_obsidian_config`, `ingest_save_config` haben alle `async with _project_lock(project):`.
 
-Fix 5 hat `create_project_endpoint` und `update_project_endpoint` mit `_project_lock` geschützt. Vier weitere Endpoints schreiben config.json ohne Locking:
-- `save_taxonomy` → `cfg["taxonomy"]`
-- `save_entities` → `cfg["entities"]`
-- `save_obsidian_config` → `cfg["obsidian"]`
-- `ingest_save_config` → bis zu 5 Felder gleichzeitig
+### ~~I18 — `classified.json` nicht atomar geschrieben~~ ✓ behoben (2026-05-15, a7da8926)
 
-Zwei gleichzeitige Browser-Tabs können Read-Modify-Write-Konflikte auslösen.
-
-**Lösung:** `async with _project_lock(project):` in alle vier Endpoints. (Quelle: REVIEW_15_05.md §1)
-
-### I18 — `classified.json` nicht atomar geschrieben [MITTEL]
-
-`match_entities.py:88–90` und `classify_segments.py:254` schreiben `classified.json` via direktem `write_text` (truncate-Modus). Bei Prozessabbruch während des Schreibens ist die Datei truncated und nicht wiederherstellbar. `write_atomic()` existiert in `utils.py`, wird von diesen Skripten aber nicht benutzt.
-
-**Lösung:** Beide Skripte auf `write_atomic(path, json.dumps(...))` aus `utils.py` umstellen. (Quelle: REVIEW_15_05.md §1)
+`match_entities.py` und `classify_segments.py` nutzen jetzt `write_atomic()` aus `utils.py`.
 
 ### I19 — `taxData` — unkontrollierte Mutation an 7+ Stellen [MITTEL]
 
@@ -335,11 +319,9 @@ Zwei gleichzeitige Browser-Tabs können Read-Modify-Write-Konflikte auslösen.
 
 **Lösung (Backlog):** `taxData` und `taxDirty` in ein State-Objekt zusammenführen mit definierten Setter-Funktionen. (Quelle: REVIEW_15_05.md §3)
 
-### I20 — `console.log` Debug-Statement in Produktionscode [GERING]
+### ~~I20 — `console.log` Debug-Statement in Produktionscode~~ ✓ behoben (2026-05-15, 513a1f8c)
 
-`renderEventsList()` (Z. 1392) feuert `console.log('[renderEventsList] events:', JSON.stringify(state.time_config.events))` bei jeder Timeline-Änderung. REVIEW-Priorität war „Sofort".
-
-**Lösung:** Eine Zeile löschen. (Quelle: REVIEW_15_05.md §3)
+`console.log` in `renderEventsList()` entfernt.
 
 ### I21 — Stille `catch (_) {}` an operativen Stellen [GERING]
 
