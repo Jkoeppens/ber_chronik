@@ -261,9 +261,9 @@ Entity-Editor speichert in `config.json["entities"]`. match_entities und export_
 
 `POST /overrides` speichert overrides.json und startet danach direkt `recompute_sse` als SSE-Stream. preview.js konsumiert den Stream identisch zu btnRecompute.
 
-### I8 — presseartikel-Logik verteilt über 3 Skripte
+### ~~I8 — presseartikel-Logik verteilt über 3 Skripte~~ ✓ behoben (2026-05-15)
 
-Sonderbehandlung liegt in parse_document.py (Parser-Modus), detect_anchors.py (kein Fließtext-Regex) und interpolate_anchors.py (Interpolation übersprungen). Kein zentraler Ort, der beschreibt was presseartikel-Dokumente anders machen.
+`utils.is_presseartikel(doc_dir)` zentralisiert den Typ-Check. detect_anchors.py und interpolate_anchors.py nutzen ihn. parse_document.py: direkter Vergleich (doc_type kommt vom CLI-Arg, vor config.json). DECISIONS.md D-I4.
 
 ### ~~I9 — Link-Schwelle unterschiedlich in precompute vs. boot~~ ✓ behoben
 

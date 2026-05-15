@@ -200,6 +200,17 @@ Das System kennt genau drei Kombinationen aus `doc_type` und `ingest_source`:
 - `ingest_zotero.py` (ersetzt durch D-I1)
 - `Transkripte` und `Anderes` als UI-Optionen (nie produktiv verwendet)
 
+### D-I4 — `is_presseartikel(doc_dir)` als zentraler Typ-Check
+
+Die Sonderbehandlung für `presseartikel` verteilte sich auf drei Skripte ohne gemeinsamen Einstiegspunkt. `utils.is_presseartikel(doc_dir)` liest `doc_type` aus `doc_dir/config.json` (via `read_json_safe`) und gibt `True/False` zurück.
+
+Alle drei Verzweigungsstellen nutzen die Funktion:
+- `detect_anchors.py`: `_process_presseartikel` vs. `_process_literatur`
+- `interpolate_anchors.py`: Bypass-Pfad vs. volle Interpolation
+- `parse_document.py`: direkter Vergleich (`doc_type == "presseartikel"`) — `is_presseartikel` ist hier redundant weil `doc_type` bereits aus dem CLI-Argument aufgelöst wird, bevor config.json existiert
+
+Neuer Dokumenttyp: `is_presseartikel` ergänzen reicht nicht — jedes Skript hat eigene Logik pro Typ. Aber `is_presseartikel` macht die Stellen grep-bar.
+
 ### D-I2 — Ingest-Architektur: Quelle × Material-Typ
 
 Zwei unabhängige Dimensionen bestimmen das Pipeline-Verhalten:

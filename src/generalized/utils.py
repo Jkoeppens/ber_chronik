@@ -33,6 +33,16 @@ def write_atomic(path: Path, data: str, encoding: str = "utf-8") -> None:
     os.replace(tmp, path)
 
 
+def is_presseartikel(doc_dir: Path) -> bool:
+    """Gibt True zurück wenn das Dokument doc_type=presseartikel hat.
+
+    Liest aus doc_dir/config.json via read_json_safe. Zentraler Ort für
+    alle drei Skripte (detect_anchors, interpolate_anchors, parse_document)
+    die presseartikel-Sonderbehandlung benötigen.
+    """
+    return read_json_safe(doc_dir / "config.json").get("doc_type") == "presseartikel"
+
+
 def read_json_safe(path: Path, default: "dict | None" = None) -> dict:
     """Liest eine JSON-Datei; gibt default (oder {}) zurück bei Fehler oder fehlendem File."""
     try:
