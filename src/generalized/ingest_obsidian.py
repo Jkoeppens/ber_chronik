@@ -362,7 +362,8 @@ def main() -> None:
     cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
     for script in PIPELINE:
-        if not _run(script, d_args):
+        args_for_script = p_args if script.endswith("export_exploration.py") else d_args
+        if not _run(script, args_for_script):
             print("Pipeline abgebrochen.", file=sys.stderr)
             sys.exit(1)
 
