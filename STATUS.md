@@ -1,6 +1,6 @@
 # STATUS — Aktueller Stand des Projekts
 
-Stand: 2026-04-27 | Branch: fix/except-blocks | D-P1–D-P8 umgesetzt
+Stand: 2026-05-15 | Branch: feature/flexible-timeline-bins | D-P1–D-P8 umgesetzt
 
 ---
 
@@ -176,9 +176,11 @@ Im Presseartikel-Modus: wenn kein Heading-Jahr aktiv, wird `seg["date"]` als Ank
 
 normalize_category() läuft jetzt in allen drei Skripten.
 
-### classify_segments.py — Resume mit alter Taxonomie
+### classify_segments.py — Resume mit alter Taxonomie [MITTEL]
 
-Beim Neustart werden bereits klassifizierte Segmente aus classified.json übersprungen (`--force` überschreibt das). Wenn die Taxonomie zwischenzeitlich geändert wurde, enthält classified.json danach Einträge aus zwei verschiedenen Taxonomien.
+Beim Neustart werden bereits klassifizierte Segmente aus classified.json übersprungen (`--force` überschreibt das). Wenn die Taxonomie zwischenzeitlich geändert wurde, enthält classified.json danach Einträge aus zwei verschiedenen Taxonomien. `normalize_category` mappt alte Namen auf `"(unbekannt)"` ohne Warnung.
+
+**Lösung (Backlog):** Beim Start einen Taxonomie-Hash berechnen und in `classified.json` als Metadaten-Feld speichern. Beim Resume: Hash vergleichen — abweichender Hash → Warnung + Auto-`--force`. (Quelle: REVIEW_15_05.md §1)
 
 ### ~~export_exploration.py — entities-Fallback auf Dokumentebene~~ ✓ behoben (D-P4)
 
@@ -232,11 +234,13 @@ Das Layout wird automatisch am Ende jedes `export_exploration.py`-Laufs neu bere
 
 ## Offene Sicherheitsprobleme
 
-### Token-Endpoint ohne Auth wenn ADMIN_KEY nicht gesetzt
+### ~~Token-Endpoint ohne Auth wenn ADMIN_KEY nicht gesetzt~~ ✓ behoben (2026-05-15, f41b766d)
 
-`GET /api/projects/{id}/token` ist nur geschützt wenn `ADMIN_KEY` in `.env` gesetzt ist. Ohne
-gesetzten Key gibt der Endpoint das Token ohne Auth zurück.
-Vor öffentlicher Nutzung: `ADMIN_KEY=<secret>` in `.env` setzen.
+`_require_admin_key` auf `GET /api/projects/{id}/token` ergänzt. Ohne Key: offen (Dev-Betrieb). Mit Key: geschützt.
+
+### ~~`/ingest/save_config` ohne Token-Prüfung~~ ✓ behoben (2026-05-15, c0308946)
+
+Wenn das Projekt bereits in der DB existiert, wird jetzt `_require_token` aufgerufen. Erste Neuanlage (kein Token vorhanden) bleibt ohne Check — ist korrekt, da beim ersten Call noch kein Token existiert.
 
 ---
 
@@ -266,21 +270,21 @@ Entity-Editor speichert in `config.json["entities"]`. match_entities und export_
 
 `_llm_task2_validate_aliases`, `_llm_task3_clarify_types`, `_llm_extract_uncovered`, `_select_uncovered_stratified` und weitere wurden entfernt. `entity_llm.py` enthält heute nur noch 8 aktiv genutzte Funktionen, alle importiert von `extract_entities_v2.py`.
 
-### I7 — `actors` wird nach Override nicht aktualisiert
+### ~~I7 — `actors` wird nach Override nicht aktualisiert~~ ✓ behoben (2026-05-15, 8ff17283)
 
-Wenn ein Segment via overrides.json manuell datiert wird, läuft match_entities.py nicht automatisch neu. Das `actors`-Feld stammt aus dem letzten Lauf und kann veraltet sein.
+`POST /overrides` speichert overrides.json und startet danach direkt `recompute_sse` als SSE-Stream. preview.js konsumiert den Stream identisch zu btnRecompute.
 
-### I8 — presseartikel-Logik verteilt über 3 Skripte
+### ~~I8 — presseartikel-Logik verteilt über 3 Skripte~~ ✓ behoben (2026-05-15)
 
-Sonderbehandlung liegt in parse_document.py (Parser-Modus), detect_anchors.py (kein Fließtext-Regex) und interpolate_anchors.py (Interpolation übersprungen). Kein zentraler Ort, der beschreibt was presseartikel-Dokumente anders machen.
+`utils.is_presseartikel(doc_dir)` zentralisiert den Typ-Check. detect_anchors.py und interpolate_anchors.py nutzen ihn. parse_document.py: direkter Vergleich (doc_type kommt vom CLI-Arg, vor config.json). DECISIONS.md D-I4.
 
 ### ~~I9 — Link-Schwelle unterschiedlich in precompute vs. boot~~ ✓ behoben
 
 Beide Dateien nutzen `LINK_MIN_COUNT = 2` mit gegenseitigem Kommentar-Verweis. Layout und Viz filtern identisch.
 
-### I10 — Playwright-Tests testen nur BER-Projekt
+### ~~I10 — Playwright-Tests testen nur BER-Projekt~~ ✓ behoben (2026-05-16, Branch test/api-coverage, 349f0336)
 
-`tests/viz.spec.js` öffnet hardcodiert `http://localhost:8765/` und setzt BER-Daten voraus. Keine Tests für andere Projekte oder für den Ingest-Wizard.
+`tests/api_coverage.spec.js` ergänzt mit drei API-Tests: B (doc_status year_min/year_max aus geseedeten anchors), C (Taxonomy + Entity save/load Roundtrip), D (ingest/run ohne Eingabe → __error__ ohne __link__). `tests/ingest.spec.js`: is_geicke-Referenz entfernt (Feld in Fix 2 gelöscht).
 
 ### I11 — `/taxonomy/propose` + `taxonomy_editor.html` ohne Auth ✓ behoben
 
@@ -290,46 +294,100 @@ Beide Dateien nutzen `LINK_MIN_COUNT = 2` mit gegenseitigem Kommentar-Verweis. L
 
 Fehlte `config.json["taxonomy"]`, fiel `export_preview.py` auf die per-doc `taxonomy_proposal.json` zurück — statt mit Fehler abzubrechen. Behoben: Fallback entfernt, expliziter Fehler wenn Taxonomie fehlt (analog `classify_segments.py` und `export_exploration.py`).
 
+### ~~I13 — `saveTimeConfig()` fire-and-forget ohne Error-Feedback~~ ✓ behoben (2026-05-15, 034fe408)
+
+`.catch(e => console.warn(...))` ergänzt — Netzwerkfehler erscheinen im Devtools-Log.
+
+### ~~I14 — Segment-Schema nicht in ARCHITECTURE.md dokumentiert~~ ✓ behoben (2026-05-16)
+
+Tabelle „Segment-Schema" in ARCHITECTURE.md ergänzt: alle Felder, welches Skript sie setzt, mögliche Werte und wann ein Feld fehlen kann.
+
+### ~~I15 — data.json-Format nicht in ARCHITECTURE.md dokumentiert~~ ✓ behoben (2026-05-16)
+
+Abschnitt „data.json-Schema" in ARCHITECTURE.md ergänzt: Toplevel-Felder, vollständiges Entry-Schema mit Typen, Verweis auf `export_exploration.py:build_entries()` als autoritative Quelle. Auch `project_meta.json`-Struktur dokumentiert.
+
+### ~~I16 — `export_exploration.py` mutiert config.json als Seiteneffekt~~ ✓ behoben (2026-05-15, e5e9b494)
+
+Liest config.json jetzt direkt vor dem Schreiben frisch von Disk, damit kein veralteter Stand aus dem Skript-Start überschrieben wird.
+
+### ~~I17 — Race Condition auf config.json: 4 Endpoints ohne Lock~~ ✓ behoben (2026-05-15, ca27c5d0)
+
+`save_taxonomy`, `save_entities`, `save_obsidian_config`, `ingest_save_config` haben alle `async with _project_lock(project):`.
+
+### ~~I18 — `classified.json` nicht atomar geschrieben~~ ✓ behoben (2026-05-15, a7da8926)
+
+`match_entities.py` und `classify_segments.py` nutzen jetzt `write_atomic()` aus `utils.py`.
+
+### I19 — `taxData` — unkontrollierte Mutation an 7+ Stellen [MITTEL]
+
+`taxData` ist ein Modul-globales Array das direkt mutiert wird (`push`, `splice`, `taxData[idx].name = ...`). Nach einem KI-Vorschlag setzt `_runProposeTaxonomy` erst `taxData` (via `initTaxonomy()`) und dann sofort `taxDirty = true`. Wenn der Nutzer in diesem Moment navigiert, triggert `gotoStep` ein `saveTaxonomy()` bevor `taxDirty` zurückgesetzt ist — Doppel-Save möglich.
+
+**Lösung (Backlog):** `taxData` und `taxDirty` in ein State-Objekt zusammenführen mit definierten Setter-Funktionen. (Quelle: REVIEW_15_05.md §3)
+
+### ~~I20 — `console.log` Debug-Statement in Produktionscode~~ ✓ behoben (2026-05-15, 513a1f8c)
+
+`console.log` in `renderEventsList()` entfernt.
+
+### ~~I21 — Stille `catch (_) {}` an operativen Stellen~~ ✓ behoben (2026-05-16, 0b2c1f84)
+
+`console.error` in allen drei Stellen ergänzt; bei preview- und classify-SSE-Fehlern zusätzlich Fehlertext im logEl.
+
+### ~~I22 — Pipeline-Teilfehler: Viz-Link trotz fehlgeschlagenem Export~~ ✓ behoben (2026-05-15, b549bf12)
+
+`exploration_ok`-Flag: `__link__` nur bei Erfolg, sonst SSE-Warnung. `__done__` kommt immer.
+
+### I23 — `_obsidian_oauth_states` in-memory: verliert State bei Hot-Reload [GERING]
+
+`_obsidian_oauth_states` ist ein Modul-globales Dict. `uvicorn --reload` triggert einen Modul-Reload bei Quelldatei-Änderungen — alle laufenden OAuth-Flows werden ungültig. Betrifft nur Entwicklung, nicht Produktion.
+
+**Lösung:** OAuth-State in einer temporären Datei oder SQLite-Tabelle persistieren. Kurzfristig: `--reload-exclude dev_server.py` in Entwicklungsanleitung dokumentieren. (Quelle: REVIEW_15_05.md §2)
+
+### I24 — DB und Filesystem können divergieren [GERING]
+
+`create_project` in SQLite und das Anlegen von `config.json` auf dem Filesystem sind zwei separate Operationen ohne gemeinsame Transaktion. Bei Serverabsturz zwischen beiden Operationen existiert das Verzeichnis ohne DB-Eintrag (oder umgekehrt). `list_projects_endpoint` zeigt das Projekt danach nicht, das Verzeichnis bleibt.
+
+**Lösung (Backlog):** Reconcile-Schritt beim Serverstart — Projekte in DB aber nicht im FS als `orphan` markieren. Kein Auto-Delete. (Quelle: REVIEW_15_05.md §4)
+
+### I25 — `export_preview.py` wird bei Taxonomie-Update nicht neu generiert [Hinweis]
+
+`ingest_run` schaltet `export_preview.py` nur dann ein, wenn `has_anchors` zuvor `false` war (Z. 624–625). Wenn Anchors bereits existieren und die Pipeline neu läuft (z.B. nach Taxonomie-Änderung in Schritt 4), bleibt `preview.html` veraltet. Designentscheidung oder Lücke — nirgends dokumentiert. (Quelle: REVIEW_15_05.md §5)
+
 ---
 
 ## Audit-Befunde (2026-04-30)
 
 ### Kritisch (Deployment-Blocker)
 
-- **`POST /ingest/analyze` — Path Traversal** (`dev_server.py:381`)
-  Kein `_require_token`-Check. `project` wird nur slugifiziert wenn `project_name` im Body vorhanden — bei direktem `project`-Feld keine Sanitierung. `doc_id` ebenfalls unvalidiert. `get_doc_dir(project, doc_id)` baut Pfad direkt aus User-Input; `mkdir(parents=True)` + Datei-Schreiboperationen folgen. Angreifer mit Invite-Token kann Dateien außerhalb von `PROJECTS_DIR` anlegen.
+- ~~**`POST /ingest/analyze` — Path Traversal**~~ ✓ behoben (2026-05-15)
+  Fix A (e2ebf665): `project` immer durch `_slugify`, egal ob `project_name` oder `project` kommt.
+  Fix B (bb8dfcf5): `doc_id` via `validate_doc_id()` — nur `[0-9a-f]{8}` oder `main` akzeptiert.
 
 ### Mittel
 
-- **`doc_id` unvalidiert in mehreren Endpoints** (`dev_server.py:241, 791, 821`)
-  `POST /overrides`, `POST /ingest/classified/update`, `GET /ingest/segments/data`: `_require_token` prüft `project` gegen DB (impliziter Traversal-Schutz), aber `doc_id` wird nicht validiert. Valides `project` + `doc_id = "../../other_project/documents/main"` ermöglicht Lese-/Schreibzugriff auf fremde Dokumente.
+- ~~**`doc_id` unvalidiert in mehreren Endpoints**~~ ✓ behoben (2026-05-15, bb8dfcf5)
+  `validate_doc_id()` auf 7 Endpoints: `/overrides`, `/ingest/analyze`, `/ingest/save_config`, `/ingest/run`, `/ingest/extract_entities`, `/ingest/entities/reject`, `/ingest/doc_status`.
 
-- **`entity_spacy.py:83` — alle spaCy-Fehler geschluckt**
-  `except Exception as exc: print(...); continue` pro Segment. Wenn spaCy für alle Segmente versagt, gibt `extract_with_spacy()` eine leere Entity-Liste zurück ohne `sys.exit`. `ingest_zotero.py:210` macht dagegen `sys.exit(1)` — inkonsistentes Fehlerverhalten im selben Pipeline-Pfad.
+- ~~**`entity_spacy.py:83` — alle spaCy-Fehler geschluckt**~~ ✓ behoben (2026-05-15, aa8659d4)
+  `RuntimeError` wenn `raw_entities` leer und `content_segs` nicht leer — statt stiller leerer Rückgabe.
 
-- **`CAT_PALETTE` zweifach mit verschiedenen Farben definiert**
-  `export_preview.py:31` → `["#0891b2", "#d97706", "#16a34a", ...]`
-  `export_exploration.py:42` → `["#3b82f6", "#f59e0b", "#10b981", ...]`
-  Gleiche Kategorie trägt in `preview.html` und Viz-Explorer unterschiedliche Farben.
+- ~~**`CAT_PALETTE` zweifach mit verschiedenen Farben definiert**~~ ✓ behoben (2026-05-15, d58ebd69)
+  `export_preview.py` auf kanonische Palette aus `export_exploration.py` vereinheitlicht.
 
-- **`db.list_all_projects()` und `db.update_status()` — dead code**
-  `db.py:116`: importiert als `db_list_all_projects` in `dev_server.py:42`, aber in keinem Endpoint aufgerufen.
-  `db.py:137`: `update_status()` nur definiert, nirgends aufgerufen.
+- ~~**`db.list_all_projects()` und `db.update_status()` — dead code**~~ ✓ behoben (2026-05-15, 701f1a89)
+  Beide Funktionen und der Import in `dev_server.py` entfernt.
 
 ### Niedrig
 
-- **`"date"` vs `"date_raw"` — Feldnamen inkonsistent**
-  `ingest_zotero.py:152` schreibt `"date"` in Segmente. `export_exploration.py:91` liest `seg.get("date_raw")` — gibt für Zotero-Segmente immer `None` zurück; Fallback `str(tf)` verliert Tag-Genauigkeit.
+- ~~**`"date"` vs `"date_raw"` — Feldnamen inkonsistent**~~ ✓ behoben (2026-05-15, 150fc424)
+  `export_exploration.py`: `seg.get("date_raw") or seg.get("date")` — Obsidian/Zotero-Tagesdaten nicht mehr verloren.
 
-- **`is_geicke` BER-Feld im generalisierten Code**
-  `export_exploration.py:118, 182`: `"is_geicke"` in `build_entries()` und `REQUIRED_FIELDS`. Alle Nicht-BER-Projekte emittieren `"is_geicke": false` in `data.json`.
+- ~~**`is_geicke` BER-Feld im generalisierten Code**~~ ✓ behoben (2026-05-15, 2a7b55eb)
+  Aus `parse_document.py`, `export_exploration.py` (emit + REQUIRED_FIELDS) entfernt.
 
-- **Config-Lesen ohne Helper** — 12 Stellen
-  `json.loads(path.read_text(encoding="utf-8"))` ohne gemeinsamen Wrapper:
-  `dev_server.py:274, 330, 350, 717, 744` — `extract_entities_v2.py:86, 99` — `export_preview.py:498, 517` — `export_exploration.py:249` — `propose_taxonomy.py:224` — `parse_document.py:210`
+- ~~**Config-Lesen ohne Helper**~~ ✓ behoben (2026-05-15, 87676925)
+  17 nackte `json.loads()`-Aufrufe in 5 Skripten auf `read_json_safe()` umgestellt.
 
-- **`classify_segments.py:100` — silent fallback zu `category: None`**
-  Nach 2 fehlgeschlagenen LLM-Parses: `return {**segment, "category": None, "confidence": "low"}` ohne Warning oder Zähler im Output.
+- ~~**`classify_segments.py:104` — silent fallback zu `category: None`**~~ ✓ behoben (2026-05-15, 0ff5d3ba)
+  `confidence` im Fallback auf `None` gesetzt — Resume versucht fehlgeschlagene Segmente erneut.
 
-- **`entity_utils.py:9` — `VALID_TYPES` als `set` statt `frozenset`**
-  Mutable, wird nie modifiziert — kein Laufzeitproblem, aber falsches Signal.
+- ~~**`entity_utils.py:9` — `VALID_TYPES` als `set` statt `frozenset`**~~ ✓ behoben (2026-05-15, 9f4660c6)

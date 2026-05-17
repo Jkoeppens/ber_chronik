@@ -117,14 +117,6 @@ async def list_projects(invite_token: str | None = None) -> list[dict]:
     return [_row_to_dict(r) for r in rows]
 
 
-async def list_all_projects() -> list[dict]:
-    """Gibt alle Projekte zurück (nur intern/admin)."""
-    async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("SELECT * FROM projects ORDER BY created_at") as cur:
-            rows = await cur.fetchall()
-    return [_row_to_dict(r) for r in rows]
-
-
 async def update_project(project_id: str, **fields) -> None:
     """Aktualisiert beliebige Felder (title, doc_type, status)."""
     allowed = {"title", "doc_type", "status"}
@@ -136,10 +128,6 @@ async def update_project(project_id: str, **fields) -> None:
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(f"UPDATE projects SET {set_clause} WHERE id = ?", values)
         await db.commit()
-
-
-async def update_status(project_id: str, status: str) -> None:
-    await update_project(project_id, status=status)
 
 
 async def delete_project(project_id: str) -> None:

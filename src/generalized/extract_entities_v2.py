@@ -43,6 +43,7 @@ from src.generalized.entity_llm import (
 )
 
 from src.generalized.config import ROOT, PROJECTS_DIR, DEFAULTS_DIR, NER_BACKEND
+from src.generalized.utils import read_json_safe
 BATCH_SIZE      = 5           # Segmente pro Batch in Schritt 2
 CHECKPOINT_NAME = "_v2_checkpoint.json"
 
@@ -83,45 +84,37 @@ def _mirror_to_config(doc_dir: Path, entities: list[dict]) -> None:
     if not config_p.exists():
         return
     try:
-        cfg = json.loads(config_p.read_text(encoding="utf-8"))
+        cfg = read_json_safe(config_p)
         cfg["entities"] = entities
         config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"→ config.json[\"entities\"]  ({len(entities)} gespiegelt)")
-    except (json.JSONDecodeError, OSError) as exc:
+    except OSError as exc:
         print(f"WARNING: config.json-Spiegel fehlgeschlagen: {exc}", file=sys.stderr)
 
 
 def _load_seed_and_rejected(doc_dir: Path, doc_type: str = "") -> tuple[list[dict], set[str]]:
     seed: list[dict] = []
     config_p = doc_dir.parent.parent / "config.json"
-    if config_p.exists():
-        try:
-            cfg_entities = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
-            if cfg_entities:
-                seed = [dict(e, _source="seed") for e in cfg_entities]
-                print(f"Seed: {len(seed)} bestätigte Entities aus config.json")
-        except (json.JSONDecodeError, OSError):
-            pass
+    cfg_entities = read_json_safe(config_p).get("entities") or []
+    if cfg_entities:
+        seed = [dict(e, _source="seed") for e in cfg_entities]
+        print(f"Seed: {len(seed)} bestätigte Entities aus config.json")
     if not seed and doc_type:
         default_p = DEFAULTS_DIR / f"entities_{doc_type}.json"
-        if default_p.exists():
-            try:
-                default_entities = json.loads(default_p.read_text(encoding="utf-8"))
-                if default_entities:
-                    seed = [dict(e, _source="seed") for e in default_entities]
-                    print(f"Seed: {len(seed)} Default-Entities für doc_type '{doc_type}'")
-            except (json.JSONDecodeError, OSError):
-                pass
+        default_entities = read_json_safe(default_p, default=[])
+        if default_entities:
+            seed = [dict(e, _source="seed") for e in default_entities]
+            print(f"Seed: {len(seed)} Default-Entities für doc_type '{doc_type}'")
     if not seed:
         print("Kein Seed — Extraktion startet ohne Few-Shot-Beispiele")
 
     rejected_lc: set[str] = set()
     rejected_path = doc_dir / "entities_rejected.json"
-    if rejected_path.exists():
-        for e in json.loads(rejected_path.read_text(encoding="utf-8")):
-            norm = (e.get("normalform") or "").lower()
-            if norm:
-                rejected_lc.add(norm)
+    for e in read_json_safe(rejected_path, default=[]):
+        norm = (e.get("normalform") or "").lower()
+        if norm:
+            rejected_lc.add(norm)
+    if rejected_lc:
         print(f"Rejected: {len(rejected_lc)} Normalformen gefiltert")
 
     return seed, rejected_lc
@@ -143,14 +136,10 @@ def main() -> None:
     # doc_type aus Dokument-Config lesen — bestimmt NER-Backend
     doc_type = ""
     doc_cfg_p = doc_dir / "config.json"
-    if doc_cfg_p.exists():
-        try:
-            doc_type = json.loads(doc_cfg_p.read_text(encoding="utf-8")).get("doc_type", "")
-        except (json.JSONDecodeError, OSError):
-            pass
+    doc_type = read_json_safe(doc_cfg_p).get("doc_type", "")
 
     backend = NER_BACKEND.get(doc_type.lower(), "gliner")
-    segments  = json.loads(segments_path.read_text(encoding="utf-8"))
+    segments  = read_json_safe(segments_path, default=[])
     n_content = sum(1 for s in segments if s.get("type") == "content")
     print(f"Segmente: {len(segments)} gesamt, {n_content} content  |  "
           f"Modus: {args.mode}  |  Backend: {backend} (doc_type='{doc_type}')")
@@ -188,12 +177,11 @@ def main() -> None:
     provider = get_provider(task=TASK_EXTRACT)
     cp: dict = {}
     if args.mode == "full" and checkpoint_path.exists():
-        try:
-            cp = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+        cp = read_json_safe(checkpoint_path)
+        if cp:
             print("Checkpoint geladen")
-        except (json.JSONDecodeError, KeyError):
+        else:
             print("Checkpoint ungültig — starte von vorn", file=sys.stderr)
-            cp = {}
 
     cp_path = checkpoint_path if args.mode == "full" else None
 

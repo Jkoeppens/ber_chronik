@@ -39,11 +39,10 @@ import shutil
 from src.generalized.db import (
     init_db, create_project, get_project,
     list_projects as db_list_projects,
-    list_all_projects as db_list_all_projects,
     update_project, delete_project, token_valid,
     upsert_document, get_latest_doc_id,
 )
-from src.generalized.utils import render_template as _render_template
+from src.generalized.utils import render_template as _render_template, read_json_safe, validate_doc_id
 from src.generalized.invite_auth import invite_required, invite_valid, invite_info
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Request, UploadFile
@@ -166,6 +165,16 @@ async def _require_token(request: Request, project: str | None = None) -> JSONRe
 
 # ── Projekt-Hilfsfunktionen ────────────────────────────────────────────────────
 
+# Locks für config.json-Writes: verhindert Race Conditions wenn mehrere Requests
+# gleichzeitig taxonomy, entities oder andere Felder in dieselbe Datei schreiben.
+_project_locks: dict[str, asyncio.Lock] = {}
+
+def _project_lock(project: str) -> asyncio.Lock:
+    if project not in _project_locks:
+        _project_locks[project] = asyncio.Lock()
+    return _project_locks[project]
+
+
 def _slugify(name: str) -> str:
     """Menschlicher Projektname → technische ID (lowercase, Leerzeichen→_, Sonderzeichen weg)."""
     s = name.lower().strip()
@@ -250,6 +259,8 @@ async def save_overrides(request: Request):
     doc_id  = request.query_params.get("document")
     if not project or not doc_id:
         return JSONResponse({"ok": False, "error": "project und document Parameter erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"error": "invalid document id"}, status_code=400)
     if err := await _require_token(request, project): return err
     body = await request.json()
     if not isinstance(body, list):
@@ -258,7 +269,7 @@ async def save_overrides(request: Request):
     doc_dir.mkdir(parents=True, exist_ok=True)
     overrides_p = doc_dir / "overrides.json"
     overrides_p.write_text(json.dumps(body, ensure_ascii=False, indent=2), encoding="utf-8")
-    return {"ok": True, "count": len(body)}
+    return sse_response(recompute_sse(project, doc_id))
 
 
 # ── POST /recompute ────────────────────────────────────────────────────────────
@@ -275,9 +286,7 @@ def _compute_quality_report(project: str, doc_id: str) -> dict | None:
         from src.generalized.export_preview import build_quality_report
         classified = json.loads(classified_p.read_text(encoding="utf-8"))
         # D-P1: einzige Quelle ist config.json["taxonomy"] — kein Fallback mehr
-        taxonomy = None
-        if config_p.exists():
-            taxonomy = json.loads(config_p.read_text(encoding="utf-8")).get("taxonomy") or None
+        taxonomy = read_json_safe(config_p).get("taxonomy") or None
         classifications = {r["segment_id"]: r for r in classified if r.get("segment_id")}
         return build_quality_report(list(classifications.values()), classifications, taxonomy)
     except Exception as e:
@@ -332,10 +341,7 @@ async def get_taxonomy_data(request: Request):
     if err := await _require_token(request, project): return err
     config_p = get_project_dir(project) / "config.json"
     # D-P1: einzige Quelle ist config.json["taxonomy"] — kein Fallback mehr
-    if config_p.exists():
-        taxonomy = json.loads(config_p.read_text(encoding="utf-8")).get("taxonomy") or []
-        return JSONResponse(taxonomy)
-    return JSONResponse([])
+    return JSONResponse(read_json_safe(config_p).get("taxonomy") or [])
 
 
 @app.post("/taxonomy/save")
@@ -350,14 +356,10 @@ async def save_taxonomy(request: Request):
     project_dir = get_project_dir(project)
     project_dir.mkdir(parents=True, exist_ok=True)
     config_p    = project_dir / "config.json"
-    cfg: dict = {}
-    if config_p.exists():
-        try:
-            cfg = json.loads(config_p.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-    cfg["taxonomy"] = body
-    config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    async with _project_lock(project):
+        cfg = read_json_safe(config_p)
+        cfg["taxonomy"] = body
+        config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     return {"ok": True, "count": len(body)}
 
 
@@ -396,10 +398,13 @@ async def ingest_analyze(request: Request):
     doc_type = body.get("doc_type", "")
     doc_type = _DOC_TYPE_MAP.get(doc_type, doc_type)  # Wizard-Label → interner Wert
     project_name = body.get("project_name", "").strip()
-    project  = _slugify(project_name) if project_name else body.get("project")
+    raw_project  = project_name or body.get("project", "")
+    project      = _slugify(raw_project) if raw_project else None
     if not project:
         return JSONResponse({"ok": False, "error": "project_name oder project im Body erforderlich"}, status_code=400)
     doc_id   = body.get("document") or str(uuid.uuid4())[:8]
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"ok": False, "error": "invalid document id"}, status_code=400)
 
     input_file = RAW_DIR / filename
     doc_dir    = get_doc_dir(project, doc_id)
@@ -443,42 +448,54 @@ async def ingest_analyze(request: Request):
         if s.get("type") == "bibliography" and s.get("text")
     ][:10]
 
-    # 3. LLM-Analyse (nur year_min, year_max, events, language)
-    load_dotenv(ROOT / ".env")
-    try:
-        provider = get_provider(task=TASK_ANALYZE)
-    except RuntimeError as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    # 3. Analyse: presseartikel → aus segments.json, buchnotizen → LLM
+    if doc_type == "presseartikel":
+        time_froms = [
+            s["time_from"] for s in segments
+            if s.get("type") == "content" and isinstance(s.get("time_from"), (int, float))
+        ]
+        if time_froms:
+            yr_min = int(min(time_froms))
+            yr_max = int(max(time_froms))
+        else:
+            yr_min, yr_max = None, None
+        analysis: dict = {"year_min": yr_min, "year_max": yr_max, "events": [], "language": "de"}
+    else:
+        load_dotenv(ROOT / ".env")
+        try:
+            provider = get_provider(task=TASK_ANALYZE)
+        except RuntimeError as e:
+            return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
-    prompt = (
-        "Analysiere diese Dokument-Ausschnitte und erkenne:\n"
-        "1. Zeitraum des Materials (year_min, year_max als Integer)\n"
-        "2. Wichtige historische Ereignisse oder Perioden mit Jahreszahlen – mindestens 3, maximal 8.\n"
-        "   Jedes Ereignis MUSS dieses Format haben: {\"name\": \"...\", \"year_from\": 1234, \"year_to\": 1234}\n"
-        "   year_from und year_to sind Integer-Jahreszahlen. Kein Fließtext, keine Sätze als name.\n"
-        "   Gib konkrete Ereignisse aus dem Material zurück, keine leere Liste.\n"
-        "3. Hauptsprache des Dokuments als Sprachcode (de/en/fr/tr/ar/andere) — "
-        "beschreibe die Sprache des Quellmaterials, nicht die Sprache dieser Antwort.\n\n"
-        "Wichtig: Antworte ausschließlich auf Deutsch. "
-        "Antworte ausschließlich als JSON ohne Erklärungen, mit den Feldern:\n"
-        "{\"year_min\": ..., \"year_max\": ..., \"events\": [...], \"language\": \"...\"}\n\n"
-        f"Ausschnitte:\n---\n{sample_text}"
-    )
-    system = "Du bist ein Forschungsassistent der Notizen und Dokumente analysiert."
-    try:
-        analysis = await asyncio.to_thread(provider.complete_json, prompt, system)
-    except (json.JSONDecodeError, ValueError):
-        analysis = {}
+        prompt = (
+            "Analysiere diese Dokument-Ausschnitte und erkenne:\n"
+            "1. Zeitraum des Materials (year_min, year_max als Integer)\n"
+            "2. Wichtige historische Perioden mit Jahreszahlen – mindestens 3, maximal 8.\n"
+            "   Jedes Ereignis MUSS dieses Format haben: {\"name\": \"...\", \"year_from\": 1234, \"year_to\": 1234}\n"
+            "   year_from und year_to sind Integer-Jahreszahlen. Kein Fließtext, keine Sätze als name.\n"
+            "   Gib konkrete Perioden aus dem Material zurück, keine leere Liste.\n"
+            "3. Hauptsprache des Dokuments als Sprachcode (de/en/fr/tr/ar/andere) — "
+            "beschreibe die Sprache des Quellmaterials, nicht die Sprache dieser Antwort.\n\n"
+            "Wichtig: Antworte ausschließlich auf Deutsch. "
+            "Antworte ausschließlich als JSON ohne Erklärungen, mit den Feldern:\n"
+            "{\"year_min\": ..., \"year_max\": ..., \"events\": [...], \"language\": \"...\"}\n\n"
+            f"Ausschnitte:\n---\n{sample_text}"
+        )
+        system = "Du bist ein Forschungsassistent der Notizen und Dokumente analysiert."
+        try:
+            analysis = await asyncio.to_thread(provider.complete_json, prompt, system)
+        except (json.JSONDecodeError, ValueError):
+            analysis = {}
 
-    if not isinstance(analysis, dict):
-        analysis = {}
+        if not isinstance(analysis, dict):
+            analysis = {}
 
-    # Normalize events: drop entries that are not dicts with name+year_from+year_to
-    raw_events = analysis.get("events", [])
-    analysis["events"] = [
-        e for e in raw_events
-        if isinstance(e, dict) and e.get("name") and isinstance(e.get("year_from"), int)
-    ] if isinstance(raw_events, list) else []
+        # Normalize events: drop entries that are not dicts with name+year_from+year_to
+        raw_events = analysis.get("events", [])
+        analysis["events"] = [
+            e for e in raw_events
+            if isinstance(e, dict) and e.get("name") and isinstance(e.get("year_from"), int)
+        ] if isinstance(raw_events, list) else []
 
     analysis["organizer_headings"]    = organizer_headings
     analysis["bibliography_keywords"] = bibliography_keywords
@@ -521,41 +538,41 @@ async def ingest_save_config(request: Request):
     doc_id  = body.get("document") or request.query_params.get("document")
     if not project or not doc_id:
         return JSONResponse({"ok": False, "error": "project und document erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"ok": False, "error": "invalid document id"}, status_code=400)
+
+    # Token-Check: wenn das Projekt bereits in der DB existiert, muss ein gültiger
+    # Token mitgeschickt werden. Beim ersten Aufruf (Neuanlage) gibt es noch keinen
+    # Token — dort ist kein Check möglich.
+    existing = await get_project(project)
+    if existing is not None:
+        if err := await _require_token(request, project): return err
 
     # ── Projektebene: title, year_min/max, taxonomy, entities ──────────────────
     project_dir = get_project_dir(project)
     project_dir.mkdir(parents=True, exist_ok=True)
     proj_cfg_path = project_dir / "config.json"
-    proj_cfg: dict = {}
-    if proj_cfg_path.exists():
-        try:
-            proj_cfg = json.loads(proj_cfg_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-    for field in ("title", "year_min", "year_max", "taxonomy", "entities"):
-        if field in body:
-            proj_cfg[field] = body[field]
-    if "time_config" in body:
-        tc = body["time_config"]
-        if isinstance(tc, dict):
-            if "year_min" in tc:
-                proj_cfg["year_min"] = tc["year_min"]
-            if "year_max" in tc:
-                proj_cfg["year_max"] = tc["year_max"]
-            if "events" in tc:
-                proj_cfg["events"] = tc["events"]
-    proj_cfg_path.write_text(json.dumps(proj_cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    async with _project_lock(project):
+        proj_cfg = read_json_safe(proj_cfg_path)
+        for field in ("title", "year_min", "year_max", "taxonomy", "entities"):
+            if field in body:
+                proj_cfg[field] = body[field]
+        if "time_config" in body:
+            tc = body["time_config"]
+            if isinstance(tc, dict):
+                if "year_min" in tc:
+                    proj_cfg["year_min"] = tc["year_min"]
+                if "year_max" in tc:
+                    proj_cfg["year_max"] = tc["year_max"]
+                if "events" in tc:
+                    proj_cfg["events"] = tc["events"]
+        proj_cfg_path.write_text(json.dumps(proj_cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # ── Dokumentebene: doc_type, original_filename ──────────────────────────────
     doc_dir = get_doc_dir(project, doc_id)
     doc_dir.mkdir(parents=True, exist_ok=True)
     doc_cfg_path = doc_dir / "config.json"
-    doc_cfg: dict = {}
-    if doc_cfg_path.exists():
-        try:
-            doc_cfg = json.loads(doc_cfg_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
+    doc_cfg = read_json_safe(doc_cfg_path)
     for field in ("doc_type", "original_filename"):
         if field in body:
             doc_cfg[field] = body[field]
@@ -598,6 +615,8 @@ async def ingest_run(request: Request):
     no_summaries = body.get("no_summaries", True)
     if not project or not doc_id:
         return JSONResponse({"error": "project und document erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"error": "invalid document id"}, status_code=400)
     if err := await _require_token(request, project): return err
     input_file = RAW_DIR / filename if filename else None
 
@@ -635,13 +654,18 @@ async def ingest_run(request: Request):
                     yield "data: __done__\n\n"
                     return
         # Run exploration export as final step
+        exploration_ok = True
         async for chunk in run_script_sse(EXPORT_EXPLORATION_SCRIPT, p_args):
             if chunk == "data: __ok__\n\n":
                 break
             yield chunk
             if "__error__" in chunk:
-                break  # non-fatal: exploration failure doesn't abort
-        yield f"data: __link__:/viz/?project={project}\n\n"
+                exploration_ok = False
+                break
+        if exploration_ok:
+            yield f"data: __link__:/viz/?project={project}\n\n"
+        else:
+            yield "data: ⚠ Explorer-Export fehlgeschlagen — Viz-Link nicht verfügbar\n\n"
         yield "data: __done__\n\n"
 
     return sse_response(gen())
@@ -708,6 +732,8 @@ async def ingest_extract_entities(request: Request):
     doc_id  = request.query_params.get("document")
     if not project or not doc_id:
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"error": "invalid document id"}, status_code=400)
     if err := await _require_token(request, project): return err
     body = {}
     try:
@@ -763,14 +789,10 @@ async def save_entities(request: Request):
     project_dir = get_project_dir(project)
     project_dir.mkdir(parents=True, exist_ok=True)
     config_p = project_dir / "config.json"
-    cfg: dict = {}
-    if config_p.exists():
-        try:
-            cfg = json.loads(config_p.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
-    cfg["entities"] = clean
-    config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    async with _project_lock(project):
+        cfg = read_json_safe(config_p)
+        cfg["entities"] = clean
+        config_p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     return {"ok": True, "count": len(clean)}
 
 
@@ -784,12 +806,7 @@ async def get_near_duplicates(request: Request):
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
     if err := await _require_token(request, project): return err
     config_p = get_project_dir(project) / "config.json"
-    if not config_p.exists():
-        return JSONResponse([])
-    try:
-        entities = json.loads(config_p.read_text(encoding="utf-8")).get("entities") or []
-    except (json.JSONDecodeError, OSError):
-        return JSONResponse([])
+    entities = read_json_safe(config_p).get("entities") or []
     if len(entities) < 2:
         return JSONResponse([])
     try:
@@ -835,6 +852,8 @@ async def reject_entity(request: Request):
     doc_id  = body.get("document") or request.query_params.get("document")
     if not project or not doc_id:
         return JSONResponse({"ok": False, "error": "project und document Parameter erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"ok": False, "error": "invalid document id"}, status_code=400)
     if err := await _require_token(request, project): return err
     doc_dir       = get_doc_dir(project, doc_id)
     rejected_path = doc_dir / "entities_rejected.json"
@@ -852,13 +871,28 @@ async def get_doc_status(request: Request):
     doc_id  = request.query_params.get("document")
     if not project or not doc_id:
         return JSONResponse({"error": "project und document Parameter erforderlich"}, status_code=400)
+    if not validate_doc_id(doc_id):
+        return JSONResponse({"error": "invalid document id"}, status_code=400)
     if err := await _require_token(request, project): return err
-    doc_dir = get_doc_dir(project, doc_id)
+    doc_dir        = get_doc_dir(project, doc_id)
+    anchors_p      = doc_dir / "anchors_interpolated.json"
+    year_min, year_max = None, None
+    if anchors_p.exists():
+        anchors_segs = read_json_safe(anchors_p, default=[])
+        if isinstance(anchors_segs, list):
+            years = [
+                int(s["time_from"]) for s in anchors_segs
+                if s.get("type") == "content" and isinstance(s.get("time_from"), (int, float))
+            ]
+            if years:
+                year_min, year_max = min(years), max(years)
     return JSONResponse({
         "segments":   (doc_dir / "segments.json").exists(),
-        "anchors":    (doc_dir / "anchors_interpolated.json").exists(),
+        "anchors":    anchors_p.exists(),
         "classified": (doc_dir / "classified.json").exists(),
         "preview":    (doc_dir / "preview.html").exists(),
+        "year_min":   year_min,
+        "year_max":   year_max,
     })
 
 
@@ -926,9 +960,10 @@ async def create_project_endpoint(request: Request):
     proj_dir   = PROJECTS_DIR / project_id
     proj_dir.mkdir(parents=True, exist_ok=True)
     cfg_path = proj_dir / "config.json"
-    if not cfg_path.exists():
-        cfg_path.write_text(json.dumps({"title": title, "doc_type": doc_type},
-                                       ensure_ascii=False, indent=2), encoding="utf-8")
+    async with _project_lock(project_id):
+        if not cfg_path.exists():
+            cfg_path.write_text(json.dumps({"title": title, "doc_type": doc_type},
+                                           ensure_ascii=False, indent=2), encoding="utf-8")
     invite_tok = _get_invite(request)
     db_proj = await get_project(project_id)
     if db_proj is None:
@@ -968,13 +1003,8 @@ async def get_project_endpoint(project_id: str):
     proj = await get_project(project_id)
     if not proj:
         return JSONResponse({"ok": False, "error": "Nicht gefunden"}, status_code=404)
-    cfg: dict = {}
     cfg_path = PROJECTS_DIR / project_id / "config.json"
-    if cfg_path.exists():
-        try:
-            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
+    cfg = read_json_safe(cfg_path)
     oc = cfg.get("obsidian") or {}
     obsidian_info = None
     if oc.get("dropbox_folder"):
@@ -1008,14 +1038,15 @@ async def update_project_endpoint(project_id: str, request: Request):
     await update_project(project_id, title=title)
     # Auch config.json auf Dateisystem aktualisieren
     cfg_path = PROJECTS_DIR / project_id / "config.json"
-    if cfg_path.exists():
-        try:
-            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    async with _project_lock(project_id):
+        if cfg_path.exists():
+            cfg = read_json_safe(cfg_path)
             cfg["title"] = title
-            cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
-        except (json.JSONDecodeError, OSError) as e:
-            print(f"Warnung: config.json für {project_id} konnte nicht aktualisiert werden: {e}",
-                  file=sys.stderr)
+            try:
+                cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+            except OSError as e:
+                print(f"Warnung: config.json für {project_id} konnte nicht aktualisiert werden: {e}",
+                      file=sys.stderr)
     return JSONResponse({"ok": True, "id": project_id, "title": title})
 
 
@@ -1088,6 +1119,7 @@ async def get_editor(request: Request):
 
 @app.get("/api/projects/{project_id}/token")
 async def get_project_token(project_id: str, request: Request):
+    if err := _require_admin_key(request): return err
     proj = await get_project(project_id)
     if not proj:
         return JSONResponse({"ok": False, "error": "Projekt nicht gefunden"}, status_code=404)
@@ -1183,18 +1215,19 @@ async def obsidian_oauth_callback(code: str = "", state: str = ""):
 async def save_obsidian_config(project_id: str, request: Request):
     if err := await _require_token(request, project_id): return err
     body = await request.json()
-    cfg_path = PROJECTS_DIR / project_id / "config.json"
-    cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
-    oc = cfg.get("obsidian") or {}
     folder = body.get("dropbox_folder", "").strip()
     if folder and not folder.startswith("/"):
         folder = "/" + folder
     if not folder:
         return JSONResponse({"ok": False, "error": "Ordner-Pfad darf nicht leer sein"}, status_code=400)
-    oc["dropbox_folder"] = folder
-    oc["doc_type"]       = body.get("doc_type", "presseartikel")
-    cfg["obsidian"] = oc
-    cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    cfg_path = PROJECTS_DIR / project_id / "config.json"
+    async with _project_lock(project_id):
+        cfg = read_json_safe(cfg_path)
+        oc = cfg.get("obsidian") or {}
+        oc["dropbox_folder"] = folder
+        oc["doc_type"]       = body.get("doc_type", "presseartikel")
+        cfg["obsidian"] = oc
+        cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     return JSONResponse({"ok": True})
 
 
@@ -1204,8 +1237,8 @@ async def test_obsidian_config(project_id: str, request: Request):
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     if not cfg_path.exists():
         return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
-    cfg  = json.loads(cfg_path.read_text(encoding="utf-8"))
-    oc   = cfg.get("obsidian") or {}
+    cfg = read_json_safe(cfg_path)
+    oc  = cfg.get("obsidian") or {}
     folder = oc.get("dropbox_folder", "")
     if folder and not folder.startswith("/"):
         folder = "/" + folder
@@ -1237,7 +1270,7 @@ async def obsidian_sync(project_id: str, request: Request):
     cfg_path = PROJECTS_DIR / project_id / "config.json"
     if not cfg_path.exists():
         return JSONResponse({"ok": False, "error": "config.json nicht gefunden"}, status_code=404)
-    cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    cfg = read_json_safe(cfg_path)
     oc  = cfg.get("obsidian") or {}
     if not _dropbox_connected():
         return JSONResponse({"ok": False, "error": "Dropbox nicht verbunden"}, status_code=400)

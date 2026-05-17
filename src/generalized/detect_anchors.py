@@ -35,6 +35,7 @@ from collections import Counter
 from pathlib import Path
 
 from src.generalized.config import ROOT, PROJECTS_DIR
+from src.generalized.utils import is_presseartikel
 
 # ── Konfiguration ──────────────────────────────────────────────────────────────
 
@@ -301,14 +302,8 @@ def main() -> None:
 
     segments: list[dict] = json.loads(input_path.read_text(encoding="utf-8"))
 
-    # doc_type aus doc config.json lesen (Fallback: erstes Segment, dann buchnotizen)
-    doc_cfg_path = doc_dir / "config.json"
-    if doc_cfg_path.exists():
-        doc_type = json.loads(doc_cfg_path.read_text(encoding="utf-8")).get("doc_type", "buchnotizen")
-    else:
-        doc_type = next((s.get("doc_type") for s in segments if s.get("doc_type")), "buchnotizen")
-
-    if doc_type == "presseartikel":
+    press = is_presseartikel(doc_dir)
+    if press:
         output_rows = _process_presseartikel(segments)
     else:
         output_rows = _process_literatur(segments)
@@ -316,6 +311,7 @@ def main() -> None:
     output_path.write_text(
         json.dumps(output_rows, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+    doc_type = "presseartikel" if press else "buchnotizen"
     print(f"\n→ {output_path}  ({len(output_rows)} Segmente, doc_type={doc_type})")
 
 

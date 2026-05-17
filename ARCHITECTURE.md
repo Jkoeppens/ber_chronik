@@ -1,431 +1,317 @@
-# BER Chronik — Architektur
+# BER Chronik — Server-Architektur
 
-> Lies diese Datei vor jeder Änderung am viz/-Code. Sie beschreibt welche Funktionen welchen State setzen, welche Event-Handler welche Funktionen aufrufen, und wo die drei riskantesten Stellen im Code sind.
-
----
-
-## Überblick
-
-Alle JS-Dateien laufen im **globalen Browser-Scope** — keine Module, kein Build-Tool. Ladereihenfolge in `index.html` ist zwingend:
-
-```
-highlight.js        → Konstanten, aliasMap, Highlight-State, setHighlight()
-panel.js            → View-State, Panel-Logik, renderParaCard(), Tooltip
-chart.js            → drawChart(), _applyChartEntityHighlight()
-utils.js            → pairKey()
-tabs.js             → Tab-State, geteilte Daten-Globals (netNodes etc.), switchTab()
-network.js          → applyNetworkState(), drawNetwork()
-search.js           → sendChat(), fulltextSearch(), renderChatAnswer()
-boot.js             → Promise.all: Daten laden, drawChart aufrufen, netNodes/netLinks befüllen
-tutorial.js         → Tutorial-Overlay, STEPS, tutorialStart()
-```
+> Dieses Dokument beschreibt den Server-seitigen Teil des Systems:
+> Dateipfade, Auth-Pattern, SSE-Protokoll, Datenbank und historisches Erbe.
+> Viz/JS-Architektur lebt in DECISIONS.md (Abschnitt „Architektur").
 
 ---
 
-## Globaler State
+## Datenpfade (PROJECTS_DIR-Schema)
 
-### highlight.js
-| Variable | Typ | Bedeutung |
-|---|---|---|
-| `hlState` | `{mode, anchors, active, focusEntity}` | Zentraler Highlight-Zustand. `mode`: `"none"` / `"answer"` / `"single"`. `anchors`: Set von doc_anchor-Strings. `active`: einzelner doc_anchor. `focusEntity`: Entitätsname. |
-| `selectedEntity` | `string \| null` | Aktuell geöffnete Entität im Panel |
-| `netNodeSelection` | D3 selection | D3-Auswahl aller Netzwerk-Knoten. `null` bis `drawNetwork` aufgerufen. |
-| `netNeighbors` | `Map<id, Set<id>>` | Nachbarschaftsgraph (alle Links, unabhängig von Filtern) |
-| `actorsByAnchor` | `Map<anchor, Set<name>>` | doc_anchor → Akteursnamen |
-| `chartDotSelection` | D3 selection | D3-Auswahl aller Timeline-Punkte. Wird bei jedem `drawChart` neu gesetzt. |
-| `DIM` | `0.35` | Konstante: Opacity für gedimmte Elemente |
-| `aliasMap` | `{[alias]: {normalform, typ}}` | Alias → kanonischer Name + Typ |
-| `aliasesSorted` | `string[]` | Aliase absteigend nach Länge sortiert (für Regex-Matching) |
-| `summaryMap` | `{[name]: {summary, count}}` | KI-Zusammenfassungen pro Entität |
-| `EVENT_TYPES` | `string[]` | Vollständige Liste der Ereignistypen |
-| `COLOR` | `{[type]: hex}` | Farbe pro Ereignistyp |
-| `NODE_COLOR` | `{[typ]: hex}` | Farbe pro Entitätstyp (Person/Org/Gremium/Partei) |
-
-### tabs.js
-| Variable | Typ | Bedeutung |
-|---|---|---|
-| `networkDrawn` | boolean | True nach erstem `drawNetwork`-Aufruf |
-| `netNodes` | `Node[]` | Alle Knoten (befüllt in boot.js) |
-| `netLinks` | `Link[]` | Alle Links (befüllt in boot.js) |
-| `entriesByActor` | `Map<name, Entry[]>` | Akteur → zugehörige Einträge (befüllt in boot.js) |
-| `entriesByAnchor` | `Map<anchor, Entry>` | doc_anchor → Entry-Objekt (befüllt in boot.js) |
-
-### network.js
-| Variable | Typ | Bedeutung |
-|---|---|---|
-| `netFocusNode` | `string \| null` | ID des Ego-Knotens. Wenn gesetzt: Ego-Graph-Modus |
-| `netFocusPair` | `{key, sid, tid} \| null` | Fokussiertes Knotenpaar. Wenn gesetzt: Edge-Focus-Modus |
-| `activeNetThemes` | `Set<string>` | Aktuell sichtbare Ereignistypen (Legende = Filter) |
-| `activeNodeTypes` | `Set<string>` | Aktuell sichtbare Entitätstypen |
-| `netLinkSelection` | D3 selection | D3-Auswahl der sichtbaren Links |
-| `_networkLayout` | object \| null | Vorberechnete Knotenpositionen (aus `layout.json`) |
-
-### panel.js
-| Variable | Typ | Bedeutung |
-|---|---|---|
-| `viewStack` | `View[]` | Stack für Back-Navigation. Jeder Eintrag hat `{type, title, renderFn, entityKey, hlSnapshot}` |
-| `currentView` | `View` | Aktuell angezeigte View |
-| `panelExpanded` | boolean | Ob Panel auf 2/3 Breite expandiert |
-| `activeDot` | DOM element \| null | Aktuell aktiver Timeline-Punkt |
-| `dimmedTypes` | `Set<string>` | Ausgeblendete Ereignistypen (Timeline-Legende) |
-
-### search.js
-| Variable | Typ | Bedeutung |
-|---|---|---|
-| `allEntries` | `Entry[]` | Alle geladenen Einträge (befüllt in boot.js) |
-
----
-
-## State-Mutationen: wer setzt was
-
-### `hlState` — nur über `setHighlight()`
-```
-sendChat()           → setHighlight("answer", anchors)
-dot click            → setHighlight("answer", anchorSet, anchor, null)
-entity click         → setHighlight("answer", anchors, null, entity)
-goHome()             → setHighlight("none")
-goBack()             → setHighlight(snapshot.mode, ...)
-tutorial step        → setHighlight("answer", anchors, null, "Hartmut Mehdorn")
-hit-line click       → setHighlight("answer", sharedAnchors, null, null)
-```
-`setHighlight` ruft immer synchron `_applyHighlight()` → `_applyTimelineHighlight()` + `applyNetworkState()` + `_applyChartEntityHighlight()`.
-
-### `selectedEntity` — über `selectEntity()`
-```
-node click           → selectEntity(id)          (network.js)
-entity span click    → selectEntity(normalform)   (panel.js, via #panel-content click)
-tutorial action      → selectEntity(node.id)
-```
-`selectEntity` ruft `_renderView("entity", ...)` und `setHighlight("answer", ...)`.
-
-### `netFocusNode` — direkt in network.js
-```
-node click           → netFocusNode = d.id, dann applyNetworkState()
-SVG click (leer)     → netFocusNode = null, dann applyNetworkState()
-```
-
-### `netFocusPair` — direkt in network.js
-```
-hit-line click       → netFocusPair = {key, sid, tid}, dann applyNetworkState()
-SVG click (leer)     → netFocusPair = null, dann applyNetworkState()
-```
-
-### `activeNetThemes` / `activeNodeTypes` / `topN` / `minLinks`
-```
-Legende-Klick        → Set add/delete, recomputeGraph()
-Slider #net-slider   → topN = value, recomputeGraph()
-Slider #net-minlinks → minLinks = value (nur on mouseup), recomputeGraph()
-```
-
-### `viewStack` / `currentView`
-```
-showView()           → push currentView, replace currentView
-goBack()             → pop viewStack, restore currentView
-goHome()             → viewStack = [], currentView = chat
-```
-
----
-
-## Zentrale Aufrufketten
-
-### Timeline-Punkt klicken
-```
-dot.click
-  → activeDot.classList.add("active")
-  → showView("timeline", year+type, renderFn)
-    → _renderView() → renderFn(el)
-      → renderParaList(entries) → renderParaCard() × n
-  → setHighlight("answer", anchorSet)
-    → _applyHighlight()
-      → _applyTimelineHighlight()   (dimmt/hebt Punkte)
-      → applyNetworkState()          (Netzwerk-Overlay)
-      → _applyChartEntityHighlight() (Linien-Overlay)
-```
-
-### Entitäts-Span im Panel klicken
-```
-#panel-content.click (delegiert)
-  → netFocusNode = name          ← VOR selectEntity setzen!
-  → selectEntity(normalform)
-    → _renderView("entity", ...)
-      → renderEntityView() → renderParaCard() × n
-    → setHighlight("answer", anchors, null, name)
-      → _applyHighlight() → applyNetworkState()
-```
-
-### Netzwerk-Knoten klicken
-```
-node.click
-  → d.fx = d.x; d.fy = d.y  (pinnen)
-  → netFocusNode = d.id
-  → selectEntity(d.id)        (öffnet Panel)
-  → applyNetworkState()       (Ego-Graph-Modus)
-  → svg.transition().call(zoomBehavior.translateTo, d.x, d.y)
-```
-
-### Chat/Suche absenden
-```
-sendChat()
-  → (falls nicht chat view) _renderView("chat", ...)
-  → setHighlight("none")
-  → fetch API stream ODER fulltextSearch()
-  → renderChatAnswer()
-    → renderParaCard() × n   (Quellkarten mit id="src-...")
-    → setHighlight("answer", sources)
-```
-
-### Filter im Netzwerk ändern
-```
-Legende / Slider
-  → recomputeGraph()
-    → k-core Pruning (iterativ)
-    → sim.nodes(visibleNodes)
-    → sim.force("link").links(newSimLinks)
-    → sim.alpha(0.05 | 0.1).restart()
-    → node.attr("display", ...)
-    → computeOffsets()
-    → rerender()
-    → applyNetworkState()
-```
-
----
-
-## renderParaCard — zentrale Karten-Funktion
-
-Definiert in `panel.js`. Rendert ein einzelnes Paragraphen-Card. Wird von drei Stellen aufgerufen:
-
-| Aufrufer | `id` | `anchor` | `highlightFn` |
-|---|---|---|---|
-| `renderParaList` (Timeline/Entity-View) | — | `p.doc_anchor` | `highlightEntities` oder `highlightWithKeywords(..., focusEntity)` |
-| `renderChatAnswer` — KI-Quellkarten | `src-{anchor}` | — | `highlightEntities` |
-| `renderChatAnswer` — Volltext-Treffer | — | — | `highlightWithKeywords(..., keywords)` |
-
-`id` und `anchor` sind exklusiv: `id` erzeugt ein DOM-`id`-Attribut (für `href="#src-..."` Links aus KI-Antworten); `anchor` erzeugt `data-anchor` (für Highlight-Sync).
-
----
-
-## applyNetworkState — State Machine
-
-Wird aus `_applyHighlight()` und direkt aus network.js-Handlern aufgerufen. Vier exklusive Modi, geprüft in dieser Reihenfolge:
-
-1. **Ego-Graph** (`netFocusNode !== null`) — fokussiert Nachbarn eines Knotens
-2. **Edge-Focus** (`netFocusPair !== null`) — fokussiert ein Knotenpaar und ihre Links
-3. **Default** (`mode === "none"` oder keine Anchors) — alle Knoten/Links voll sichtbar
-4. **KI-Subgraph** — hebt Akteure aus `hlState.anchors` hervor
-
-Wichtig: `applyNetworkState` liest `netFocusNode`, `netFocusPair`, `hlState`, `activeNetThemes` alle gleichzeitig. Wenn mehrere davon gesetzt sind, gewinnt immer die **erste** Bedingung.
-
----
-
-## Boot-Sequenz (boot.js)
-
-```
-Promise.all([data.json, entities_seed.csv, entities_summary.json])
-  → buildAliasMap(csvText)          (füllt aliasMap, aliasesSorted)
-  → summaryMap = summaries
-  → allEntries = entries
-  → füllt entriesByAnchor, actorsByAnchor
-  → baut Timeline-Series
-  → drawChart(series, years)
-  → new ResizeObserver(drawChart)
-  → baut netNodes, netLinks, entriesByActor
-```
-`drawNetwork` wird **nicht** beim Boot aufgerufen — erst beim ersten Klick auf den Netzwerk-Tab (in `tabs.js`).
-
----
-
-## Die drei riskantesten Stellen
-
-### 1. `recomputeGraph` + `_tempPinned` setTimeout-Race
-
-**Datei:** `network.js`, Funktion `recomputeGraph()`
-
-Beim Aufruf werden bestehende `_tempPinned`-Knoten zuerst entpinnt, dann neue gepinnt, und nach 500ms per `setTimeout` wieder freigegeben. Das `setTimeout` schließt eine `pinSnapshot`-Kopie ein.
-
-**Problem:** Wenn `recomputeGraph` innerhalb von 500ms zweimal aufgerufen wird (z.B. schnelles Ziehen am Slider), laufen zwei `setTimeout`-Callbacks. Der erste Callback unpinnt Knoten anhand seines `pinSnapshot` — unabhängig davon was der zweite Aufruf bereits gesetzt hat. Das Ergebnis: Knoten die eigentlich gepinnt bleiben sollten werden vorzeitig freigegeben, der Graph "zuckt".
-
-**Vorsichtsmaßnahme:** Slider `#net-minlinks` feuert nur auf `mouseup`, nicht auf `input`. Der Top-N-Slider feuert auf `input` — bei schnellem Ziehen kann das Race trotzdem auftreten.
-
----
-
-### 2. `setHighlight` → `applyNetworkState` während Simulation läuft
-
-**Dateien:** `highlight.js` → `network.js`
-
-`setHighlight` ist synchron und ruft sofort `applyNetworkState()` auf. `applyNetworkState` mutiert D3 Selections (`.attr("opacity", ...)`, `.attr("stroke", ...)`). Die D3 Force-Simulation läuft asynchron und ruft bei jedem Tick `rerender()` auf, das ebenfalls auf dieselben Elemente schreibt (`.attr("transform", ...)`).
-
-**Problem:** Wenn `setHighlight` während eines laufenden Sim-Ticks aufgerufen wird, überschreibt `rerender()` im nächsten Tick eventuell Attribute die `applyNetworkState` gerade gesetzt hat — oder umgekehrt. In der Praxis entsteht ein einziges visuell falsches Frame, das im nächsten Tick korrigiert wird. Sichtbar als kurzes Flackern bei gleichzeitigem Filtern und Entity-Klick.
-
-**Vorsichtsmaßnahme:** `applyNetworkState` wird am Ende von `recomputeGraph()` explizit nochmals aufgerufen, sodass der finale Zustand konsistent ist.
-
----
-
-### 3. Boot-Abhängigkeit: `netNodes`/`netLinks` in boot.js gesetzt, in network.js gelesen
-
-**Dateien:** `boot.js` → `tabs.js` (Globals) → `network.js` (`drawNetwork`)
-
-`netNodes`, `netLinks` und `entriesByActor` sind in `tabs.js` als leere Globals deklariert, werden in `boot.js`'s `Promise.all`-Boot befüllt, und von `drawNetwork` beim ersten Tab-Klick gelesen.
-
-**Problem 1:** Wenn der Nutzer auf "Netzwerk" klickt bevor der Boot-Promise aufgelöst ist, ist `netNodes = []` und das Netzwerk zeichnet sich leer — ohne Fehlermeldung.
-
-**Problem 2:** Wenn `entities_seed.csv` nicht erreichbar ist, liefert das `.catch(() => "")` einen leeren String an `buildAliasMap`. Das Ergebnis: `aliasMap` ist leer, alle Entitäts-Highlights im Panel fehlen schweigend.
-
-**Problem 3:** `entities_summary.json` hat ebenfalls ein `.catch(() => ({}))`. Fehlt die Datei, ist `summaryMap` leer — Knoten im Netzwerk erscheinen gestrichelt (korrekt), aber im Panel erscheinen keine KI-Zusammenfassungen.
-
----
-
----
-
-## Ingest-Pipeline
-
-### Übersicht
-
-```
-DOCX-Datei
-     │
-     ▼
-parse_document.py ─────────────────────── segments.json
-     │
-     ├─── propose_taxonomy.py ──────────── taxonomy_proposal.json
-     │
-     ▼
-detect_anchors.py ─────────────────────── anchors.json
-     │
-     ▼
-interpolate_anchors.py ─────────────────── anchors_interpolated.json
-     │
-     ├─── extract_entities_v2.py ────────── entities_proposal.json
-     │         │
-     │         ▼  (Entity-Editor + Merge)
-     │    entities_seed.json
-     │
-     ▼
-classify_segments.py ──────────────────── classified.json
-     │
-     ▼
-match_entities.py ─────────────────────── classified.json  (+actors-Feld)
-     │
-     ├─── export_preview.py ─────────────── preview.html
-     │
-     ▼
-export_exploration.py ──────────────────── exploration/data.json
-                                            exploration/entities_seed.csv
-                                            exploration/project_meta.json
-                                                   │
-                                                   ▼
-                                            viz/index.html  (Browser-App)
-```
-
-`extract_entities_v2.py` ist **nicht Teil von `ingest/run`** — wird separat über Wizard Step 6 oder CLI angestoßen.
-
----
-
-### Pipeline-Schritte (Input → Output)
-
-| Schritt | Skript | Input | Output |
-|---------|--------|-------|--------|
-| 1 | `parse_document.py` | DOCX-Datei | `segments.json` |
-| 2 | `propose_taxonomy.py` | `segments.json` | `taxonomy_proposal.json` |
-| 3 | `detect_anchors.py` | `segments.json` | `anchors.json` |
-| 4 | `interpolate_anchors.py` | `anchors.json`, optional `overrides.json` | `anchors_interpolated.json` |
-| 5 | `classify_segments.py` | `segments.json` + Taxonomie | `classified.json` |
-| — | `extract_entities_v2.py` | `segments.json`, optional `entities_seed.json` | `entities_proposal.json` |
-| 6 | `match_entities.py` | `segments.json` + `classified.json` + Entities | `classified.json` (+actors) |
-| 7 | `export_preview.py` | `anchors_interpolated.json` + `classified.json` | `preview.html` |
-| 8 | `export_exploration.py` | alle Doc-Outputs + `config.json` | `exploration/` |
-
-Schritte 1–2 + 5–8 laufen via `ingest/run`. Schritt 2 (Taxonomy) hat einen eigenen Proposal-Step. Entity-Extraktion ist ein separater manueller Schritt.
-
----
-
-### Dateistruktur (Projekt)
+`PROJECTS_DIR` ist `data/projects/`. Darunter liegen Projekte als Verzeichnisse,
+jedes mit einem Slug als Name (Beispiel: `ber`, `damaskus`).
 
 ```
 data/
-  raw/
-    {filename}.docx                 Hochgeladene Rohdokumente
+└── projects/
+    └── {project_id}/                   ← _slugify(title), z.B. "ber"
+        ├── config.json                 ← Einzige autoritative Quelle:
+        │                                  taxonomy, entities, title, year_min/max,
+        │                                  doc_type, obsidian.*
+        ├── obsidian_checkpoint.json    ← Welche .md-Dateien bereits ingested
+        ├── documents/
+        │   └── {doc_id}/               ← doc_id = uuid4 hex (8 Zeichen), außer "main"
+        │       ├── config.json         ← doc_type, original_filename, ingested_at
+        │       ├── segments.json       ← parse_document / ingest_obsidian Output
+        │       ├── anchors.json        ← detect_anchors Output
+        │       ├── anchors_interpolated.json  ← interpolate_anchors Output
+        │       ├── classified.json     ← classify_segments + match_entities (D-P3)
+        │       ├── overrides.json      ← manuelle Anker-Korrekturen
+        │       ├── preview.html        ← export_preview Output
+        │       └── bge_embeddings.npy  ← Cache für BGE-M3 (git-ignoriert)
+        └── exploration/
+            ├── data.json               ← export_exploration Output (Haupt-Datendatei)
+            ├── project_meta.json       ← Farb-Mapping, Taxonomie-Summary
+            ├── entities_seed.csv       ← Alias-Tabelle für Entity-Highlighting
+            ├── entities_summary.json   ← LLM-Zusammenfassungen pro Entity
+            └── network_layout.json     ← Vorberechnetes D3-Netzwerk-Layout
 
-  projects/
-    projects.db                     SQLite – Projekt-Metadaten + Tokens
-
-    {project_id}/
-      config.json                   Projektebene: title, year_min/max, taxonomy, entities
-      exploration/
-        data.json                   → viz/boot.js (alle Einträge)
-        entities_seed.csv           → viz/boot.js (Alias-Tabelle für Highlighting)
-        project_meta.json           → viz/boot.js (Farben, Kategorienamen)
-
-      documents/
-        {doc_id}/
-          config.json               Dokumentebene: doc_type, original_filename, ingested_at
-          segments.json             Alle Absätze nach parse_document.py
-          taxonomy_proposal.json    LLM-Kategorienvorschlag
-          anchors.json              Segmente + erkannte Zeitanker
-          anchors_interpolated.json Segmente + interpolierte Zeitspannen + Overrides
-          overrides.json            Manuelle Korrekturen (aus preview.html heruntergeladen)
-          classified.json           Segmente + LLM-Kategorie + actors-Feld
-          entities_proposal.json    Extrahierte Entity-Kandidaten
-          entities_seed.json        Bestätigte Entities (manuell im Editor kuratiert)
-          entities_merged.json      Merge aus seed + proposal + _status-Feldern
-          entities_rejected.json    Abgelehnte Entities (dauerhaft ausgeschlossen)
-          _v2_checkpoint.json       Resume-Checkpoint für extract_entities_v2 --mode full
-
-  interim/
-    generalized/
-      project_config.json           Pointer auf aktuelles Projekt + Dokument
+data/
+├── projects.db                         ← SQLite: Projekt-Auth, Token, Dokument-Metadaten
+└── dropbox_tokens.json                 ← Dropbox OAuth2 Tokens (refresh_token + access_token)
 ```
 
+### Kanonizität
+
+`config.json` auf Projektebene ist die einzige autoritative Quelle für Taxonomie
+(D-P1) und Entities (D-P4). Die Felder `year_min`/`year_max` werden von
+`export_exploration.py` am Ende eines jeden Exports frisch aus den tatsächlichen
+Eintrags-Jahren berechnet und zurückgeschrieben — nicht aus den Rohanker-Daten.
+
+`classified.json` auf Dokumentebene ist ein gemeinsames Dokument (D-P3):
+`classify_segments.py` schreibt `category` + `confidence`,
+`match_entities.py` ergänzt `actors` in-place. Beide müssen in dieser Reihenfolge
+laufen, damit kein Mischzustand entsteht.
+
+### SQLite (`projects.db`)
+
+Zwei Tabellen:
+- `projects`: `id`, `title`, `doc_type`, `created_at`, `status`, `token`, `is_public`, `owner_token`
+- `documents`: `doc_id`, `project_id`, `ingested_at`, `doc_type`, `ingest_source`, `original_filename`
+
+`projects.db` ist die autoritative Quelle für Auth-Token. `config.json` ist die
+autoritative Quelle für Inhaltsdaten. Die beiden überschneiden sich nicht —
+`projects.db` kennt keine Taxonomie, `config.json` kennt keine Token.
+
 ---
 
-### Entity-Pipeline (4 LLM-Schritte)
+## SSE-Protokoll
 
-`extract_entities_v2.py` orchestriert vier Schritte über `entity_llm.py`:
+Alle langen Pipeline-Operationen streamen als `text/event-stream`. Der Vertrag
+ist implizit (kein OpenAPI-Schema), aber fest — jeder Client, der SSE konsumiert,
+verlässt sich auf genau diese Sentinels:
 
-| Schritt | Funktion | Modus |
-|---------|----------|-------|
-| 1 — Stichprobe | `_llm_sample_iteration` | immer (50 zufällige Segmente) |
-| 2 — Vollextraktion | `_llm_full_extract` | nur `--mode full` + Seed vorhanden |
-| 3 — Dedup | `_llm_dedup` | immer; alle Kandidatenpaare in einem LLM-Request |
-| 4 — Normalform | `_llm_task1_normalize` | immer; Batches à 20, Retry + Fallback |
+| Sentinel | Richtung | Bedeutung |
+|---|---|---|
+| `data: __ok__\n\n` | Server → Client | Schritt erfolgreich abgeschlossen. `run_pipeline_sse` bricht innere Schleife ab und geht zum nächsten Schritt. |
+| `data: __error__ <text>\n\n` | Server → Client | Fataler Fehler. `run_pipeline_sse` bricht ab und schickt kein `__done__`. Client sollte UI als fehlgeschlagen markieren. |
+| `data: __done__\n\n` | Server → Client | Gesamte Pipeline abgeschlossen (alle Schritte). Immer letztes Event wenn kein `__error__` kam. |
+| `data: __link__:<url>\n\n` | Server → Client | Optionaler Deeplink direkt vor `__done__`. Wizard öffnet diesen Link automatisch. Aktuell nur in `POST /ingest/run` nach `export_exploration`. |
 
-Checkpoint/Resume: Schritt 2 hat Sub-Batch-Resume (`step2_batch`/`step2_entities`). Schritte 1, 3, 4 über `_run_stage` (per-Step-Checkpoint).
+Alle anderen `data:` Zeilen sind menschenlesbare Fortschrittszeilen (stdout/stderr
+des Subprozesses). Der Client darf sie anzeigen, aber nicht programmatisch parsen.
 
-Merge-Priorität bei Konflikten (`SOURCE_PRIORITY`): seed > llm > classifier/embedding.
-
----
-
-### LLM-Provider-Abstraktion
-
-`src/generalized/llm.py` — einheitliche Schnittstelle für alle Pipeline-Schritte:
+### Implementierung
 
 ```python
-provider = get_provider(task=TASK_EXTRACT)   # liest LLM_PROVIDER + Modell-Override aus .env
-text = provider.complete(prompt, system="…")
-data = provider.complete_json(prompt, system="…")   # parst JSON automatisch
+async def run_script_sse(script_path, args):
+    # …startet subprocess, leitet stdout/stderr zeilenweise weiter…
+    if proc.returncode != 0:
+        yield f"data: __error__ {label} Exit-Code {proc.returncode}\n\n"
+        return
+    yield "data: __ok__\n\n"
+
+async def run_pipeline_sse(steps):
+    for script, args in steps:
+        async for chunk in run_script_sse(script, args):
+            if chunk == "data: __ok__\n\n":
+                break                        # → nächster Schritt
+            yield chunk
+            if "__error__" in chunk:
+                return                       # Kein __done__
+    yield "data: __done__\n\n"
 ```
 
-| Provider | Default-Modell | `max_concurrency` |
-|----------|----------------|-------------------|
-| `ollama` | `OLLAMA_MODEL` aus `.env` | 1 |
-| `anthropic` | `claude-haiku-4-5-20251001` | 10 |
-
-`complete_json` entfernt Code-Fences, überspringt führende Prosa, verwendet `json.JSONDecoder.raw_decode`.
+`sse_response(gen)` wraps jeden async Generator in `StreamingResponse` mit
+`Cache-Control: no-cache` und `X-Accel-Buffering: no` (verhindert Nginx-Pufferung).
 
 ---
 
-## Dateistruktur (viz/)
+## Auth-Pattern: `_require_token`
 
+### Aufrufsyntax (Walrus-Operator)
+
+```python
+@app.post("/taxonomy/save")
+async def save_taxonomy(request: Request):
+    project = request.query_params.get("project")
+    if err := await _require_token(request, project): return err
+    # …
 ```
-viz/
-  index.html           HTML-Struktur: #left-col (header + chart/network) | #panel
-  style.css            Alle Styles; kein CSS-in-JS außer tutorial.js
-  highlight.js         Konstanten, aliasMap, Highlight-State + setHighlight(), highlightEntities()
-  panel.js             View-Stack, Panel-Navigation, renderParaCard(), selectEntity(), Tooltip
-  chart.js             drawChart(), _applyChartEntityHighlight()
-  utils.js             pairKey()
-  tabs.js              Tab-State, geteilte Daten-Globals (netNodes/netLinks/entriesByActor), switchTab()
-  network.js           applyNetworkState(), drawNetwork(), recomputeGraph()
-  search.js            sendChat(), fulltextSearch(), renderChatAnswer()
-  boot.js              App-Initialisierung: Daten laden, Timeline + Netzwerk aufbauen
-  tutorial.js          Tutorial-Overlay, STEPS, tutorialStart()
+
+`_require_token` gibt `None` bei Erfolg, eine fertige `JSONResponse(403)` bei
+Misserfolg zurück. Der Walrus-Operator (`:=`) weist das Ergebnis zu und prüft
+gleichzeitig ob es truthy ist — `None` ist falsy, daher kein Early-Return.
+
+### Was geprüft wird
+
+1. Token aus `?token=` Query-Parameter oder `X-Project-Token` Header
+2. Projekt existiert in SQLite (`projects` Tabelle)
+3. Token stimmt mit `projects.token` überein und ist nicht abgelaufen (30 Tage TTL)
+4. Wenn Projekt einen `owner_token` hat: Invite-Token des Requesters muss passen
+
+### Warum kein FastAPI `Dependency`
+
+FastAPI `Depends()` ist für Middleware gedacht die für jede Route gleich ist.
+`_require_token` braucht aber die `project`-ID, die je nach Endpoint unterschiedlich
+kommt:
+- Manche Endpoints: `project = request.query_params.get("project")` (Wizard-Flows)
+- Manche Endpoints: `project_id` als Pfadparameter (REST `/api/projects/{project_id}/…`)
+- Einige Endpoints: kein Token nötig (GET `/api/projects` Übersicht, statische Assets)
+
+Eine `Depends()`-Lösung müsste diese Unterschiede über Overrides oder komplexe
+Parameter-Forwarding lösen. Das explizite Inline-Pattern ist lesbarer und hat
+keine versteckten Abhängigkeiten.
+
+`_require_admin_key` (für Projekt-Erstellung) folgt demselben Muster, ist aber
+synchron da kein DB-Lookup nötig.
+
+---
+
+## `z`-Präfix: Zotero-Erbgut
+
+Im Codebase taucht `z` als Variablen- oder Kommentar-Präfix sporadisch auf
+(z.B. in Kommentaren in `detect_anchors.py`: „Zotero/Obsidian",
+in `interpolate_anchors.py`: „DOCX, Zotero, Obsidian").
+
+**Das ist historisch bedingt.** Zotero war bis 2026-05-12 der primäre externe
+Ingest-Pfad. `ingest_zotero.py` existiert noch auf dem Dateisystem, hat aber
+keine aktiven Endpoints mehr in `dev_server.py`. Alle Zotero-Referenzen im
+restlichen Code beschreiben das frühere Verhalten, sind aber inhaltlich weiterhin
+korrekt — Obsidian folgt denselben Konventionen (ein content-Segment pro Artikel,
+`date`-Feld für Datierung, gleicher presseartikel-Bypass in `interpolate_anchors.py`).
+
+Ein `z_`-Präfix auf einer Variable ist kein Code-Stil, sondern ein Zufallstreffer.
+Das System hat keine einheitliche Namenskonvention für Quell-Typ-Präfixe.
+
+---
+
+## Locks: `_project_lock(project)`
+
+```python
+_project_locks: dict[str, asyncio.Lock] = {}
+
+def _project_lock(project: str) -> asyncio.Lock:
+    if project not in _project_locks:
+        _project_locks[project] = asyncio.Lock()
+    return _project_locks[project]
 ```
+
+Alle Endpoints die `config.json` lesen und zurückschreiben (Read-Modify-Write)
+laufen unter `async with _project_lock(project):`. Das verhindert Race Conditions
+wenn zwei Requests gleichzeitig z.B. taxonomy und entities in dieselbe Datei
+schreiben.
+
+Lock-Granularität ist Projekt-ID (nicht global), damit parallele Requests auf
+unterschiedliche Projekte sich nicht blockieren.
+
+---
+
+## Entfernte Features
+
+### Zotero-Ingest
+
+**Deaktiviert seit: 2026-05-12** (ersetzt durch Obsidian/Dropbox, D-I1)
+
+Der Zotero-Flow war ein direkter API-Ingest ohne Wizard-Schritte:
+
+1. Nutzer konfiguriert API-Key, User-ID, Collection-ID in der Projektkarte
+2. `POST /api/projects/{id}/zotero/config` speichert Credentials in `config.json["zotero"]`
+3. `GET /api/projects/_new/zotero/test` testet die Verbindung via pyzotero im Thread-Executor
+4. `POST /api/projects/{id}/zotero/sync` (SSE) → `ingest_zotero.py` läuft durch:
+   - pyzotero: Items der Collection laden
+   - Checkpoint prüfen (`zotero_checkpoint.json`) — neue Items identifizieren
+   - Segmente bauen, detect_anchors, interpolate, classify, match_entities, export_preview
+   - Checkpoint aktualisieren
+
+**Diese Endpoints existieren nicht mehr in `dev_server.py`.**
+`ingest_zotero.py` liegt noch im Dateisystem (`src/generalized/ingest_zotero.py`),
+wird aber von keinem Endpoint aufgerufen. `D-E3` (`videoRecording`-Filterung) und
+das `item_type`-Feld in Segmenten sind Zotero-Erbgut, das durch GLiNER/Obsidian
+faktisch obsolet ist aber nicht entfernt wurde.
+
+`WIZARD_FLOW.md` enthält noch einen Zotero-Flow-Abschnitt — dort als historische
+Dokumentation belassen.
+
+---
+
+## Segment-Schema
+
+Ein Segment ist ein Dict. Welche Felder gesetzt sind, hängt davon ab welche Skripte
+bisher gelaufen sind. Die Tabelle zeigt den vollständigen Lebenszyklus:
+
+| Feld | Typ | Gesetzt von | Mögliche Werte / Hinweis |
+|---|---|---|---|
+| `segment_id` | `str` | `parse_document`, `ingest_obsidian` | `"s0001"` … `"s9999"` — fortlaufend pro Dokument |
+| `type` | `str` | `parse_document`, `ingest_obsidian` | `"content"` \| `"heading"` — headings werden nach detect_anchors herausgefiltert |
+| `text` | `str` | `parse_document`, `ingest_obsidian` | Originaler Absatztext |
+| `source` | `str \| dict \| None` | `parse_document` | String (Quellenname) oder `{"name": "…", "date": "…"}` bei DOCX mit Datumsangabe; `None` für unbekannte Quellen |
+| `page` | `int \| None` | `parse_document` | DOCX-Seitennummer, `None` bei Obsidian |
+| `doc_type` | `str` | `parse_document`, `ingest_obsidian` | `"presseartikel"` \| `"buchnotizen"` — Typ des übergeordneten Dokuments |
+| `ingest_source` | `str` | `parse_document`, `ingest_obsidian` | `"docx"` \| `"obsidian"` |
+| `source_date` | `str \| None` | `parse_document` | Datumsstring aus DOCX-Quellen-Notation (z.B. `"15.03.2005"`), nur DOCX |
+| `is_quote` | `bool` | `parse_document` | `True` wenn Text mit Anführungszeichen beginnt |
+| `date` | `str \| None` | `ingest_obsidian` | ISO-Datum aus Frontmatter (`published` oder `created`), nur Obsidian |
+| `date_raw` | `str \| None` | `detect_anchors` (via presseartikel-Bypass) | Rohes Datum für Timeline-Positionierung; analog zu `date` bei Obsidian/Zotero |
+| `url` | `str` | `ingest_obsidian` | Quell-URL; leer (`""`) für DOCX |
+| `author` | `str` | `ingest_obsidian` | Autor aus Frontmatter; fehlt bei DOCX-Segmenten |
+| `abstract` | `str` | `ingest_obsidian` | Beschreibung aus Frontmatter; fehlt bei DOCX-Segmenten |
+| `obsidian_path` | `str` | `ingest_obsidian` | Relativer Pfad der Markdown-Quelldatei |
+| `anchors` | `list[dict]` | `detect_anchors` | Erkannte Zeitanker: `[{"type": "exact"\|"decade"\|"event", "value": int\|null, "span": str}]` |
+| `time_from` | `int \| None` | `detect_anchors`, `interpolate_anchors` | Jahr-Untergrenze; `None` wenn undatiert |
+| `time_to` | `int \| None` | `detect_anchors`, `interpolate_anchors` | Jahr-Obergrenze; gleich `time_from` bei Punkt-Datierung |
+| `precision` | `str \| None` | `detect_anchors`, `interpolate_anchors` | `"exact"` \| `"heading"` \| `"event"` \| `"decade"` \| `"manual"` \| `"interpolated"` \| `null` |
+| `category` | `str \| None` | `classify_segments` | Taxonomie-Kategorie-Label; `None` wenn Klassifizierung fehlschlug |
+| `confidence` | `str \| None` | `classify_segments` | `"high"` \| `"medium"` \| `"low"` \| `None` (None = Fehlerfall, wird bei Resume erneut versucht) |
+| `actors` | `list[str]` | `match_entities` | Normformen der erkannten Entitäten; `[]` wenn keine Treffer |
+
+### Wann ein Feld fehlen kann
+
+- DOCX-Segmente haben kein `url`, `author`, `abstract`, `obsidian_path`, `date`.
+- Obsidian-Segmente haben kein `source_date`, `is_quote`, `page`.
+- `anchors`, `time_from`, `time_to`, `precision` fehlen vor `detect_anchors`-Lauf.
+- `category`, `confidence`, `actors` fehlen vor `classify_segments`-Lauf (bzw. vor `match_entities`-Lauf für `actors`).
+- `precision = null` und `time_from = null` bedeuten: kein Anker gefunden, Interpolation nicht möglich.
+
+---
+
+## data.json-Schema (exploration/data.json)
+
+`exploration/data.json` ist die zentrale Schnittstelle zwischen Pipeline
+und Visualisierungs-App. Autoritative Quelle: `export_exploration.py:build_entries()`.
+
+### Toplevel
+
+```json
+{
+  "generated": "2026-05-16",
+  "count":     1234,
+  "entries":   [ … ]
+}
+```
+
+| Feld | Typ | Inhalt |
+|---|---|---|
+| `generated` | `str` | ISO-Datum des letzten Exports |
+| `count` | `int` | Anzahl Einträge (= `len(entries)`) |
+| `entries` | `list[dict]` | Alle datierten content-Segmente (undatierte werden herausgefiltert) |
+
+### Entry-Schema
+
+Jedes Element von `entries` entspricht einem datierten content-Segment:
+
+| Feld | Typ | Inhalt |
+|---|---|---|
+| `id` | `int` | Fortlaufend ab 1 — stabiler Index für die Visualisierung |
+| `doc_anchor` | `str` | `segment_id` aus dem Segment (`"s0001"`) |
+| `year` | `int \| null` | `time_from` des Segments — Jahr-Untergrenze für Heatmap-Einordnung |
+| `date_raw` | `str \| null` | Rohes Datum (`"15.03.2005"`, `"2005"`, `"2005-03-15"`) — für Tooltip |
+| `date_js` | `str \| null` | ISO-8601-String (`"2005-03-15"`) — für präzises Timeline-Positioning; bei Jahresdatum `"{year}-01-01"` |
+| `date_precision` | `str` | `"exact"` (exact/heading/manual) \| `"year"` (interpolated/decade/event) \| `"none"` |
+| `text` | `str` | Originaltext des Segments |
+| `event_type` | `str \| null` | Taxonomie-Kategorie nach Normalisierung; `null` wenn unklassifiziert |
+| `confidence` | `str \| null` | `"high"` \| `"med"` \| `"low"` \| `null` (`"medium"` wird zu `"med"` normiert) |
+| `source_name` | `str \| null` | Quellname (aus `seg.source`) |
+| `source_date` | `str \| null` | Quell-Datum (aus `seg.source.date` oder `date_raw`) |
+| `url` | `str` | URL der Quelle; `""` für DOCX-Segmente |
+| `is_quote` | `bool` | Aus Segment-Feld — Zitat-Kennzeichnung |
+| `actors` | `list[str]` | Normformen der erkannten Entitäten |
+| `causal_theme` | `list` | Immer `[]` — reserviert, noch nicht befüllt |
+
+### project_meta.json
+
+Liegt neben `data.json` in `exploration/` und wird von der Viz-App als
+Ergänzung zu `data.json` geladen:
+
+```json
+{
+  "title":    "BER Chronik",
+  "doc_type": "presseartikel",
+  "taxonomy": [ {"id": "…", "label": "…", "color": "#…"} ],
+  "entities": [ {"normalform": "…", "type": "…"} ]
+}
+```
+
+`year_min` und `year_max` stehen nicht in `data.json` sondern werden von
+`export_exploration.py` direkt in `config.json` auf Projektebene zurückgeschrieben
+und von `GET /api/projects/{id}` geliefert.

@@ -15,6 +15,7 @@ import json
 import re
 import sys
 from src.generalized.config import ROOT, PROJECTS_DIR
+from src.generalized.utils import write_atomic
 
 
 def build_patterns(entities: list[dict]) -> list[tuple[str, re.Pattern]]:
@@ -85,9 +86,7 @@ def main() -> None:
                 matched += 1
         # Segmente ohne classified-Eintrag überspringen
 
-    CLASSIFIED_PATH.write_text(
-        json.dumps(classified, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    write_atomic(CLASSIFIED_PATH, json.dumps(classified, ensure_ascii=False, indent=2))
 
     print(f"\n→ {CLASSIFIED_PATH}")
     print(f"  Segmente mit ≥1 Entity: {matched}")

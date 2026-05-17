@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 
 from src.generalized.config import ROOT, PROJECTS_DIR
 from src.generalized.llm import get_provider, TASK_CLASSIFY
+from src.generalized.utils import write_atomic
 from tqdm import tqdm
 
 BATCH_PAUSE    = 12.0   # Sekunden nach jedem Batch (10 req / 12s ≈ 50 RPM); 0 bei max_concurrency==1
@@ -100,7 +101,7 @@ async def classify_one(
         except json.JSONDecodeError:
             if attempt == 0:
                 continue
-            return {**segment, "category": None, "confidence": "low"}
+            return {**segment, "category": None, "confidence": None}
 
 
 def print_stats(results: list[dict], taxonomy: list[dict]) -> None:
@@ -165,7 +166,7 @@ def _classify_bge(
         results.append({**seg, "category": valid_names[best_idx], "confidence": confidence})
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_atomic(output_path, json.dumps(results, ensure_ascii=False, indent=2))
     print(f"\n→ {output_path}  ({len(results)} Segmente)")
     print_stats(results, taxonomy)
 
@@ -251,7 +252,7 @@ async def main_async() -> None:
         out = [all_results[s["segment_id"]] for s in content_segments
                if s["segment_id"] in all_results]
         OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-        OUTPUT_PATH.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+        write_atomic(OUTPUT_PATH, json.dumps(out, ensure_ascii=False, indent=2))
 
     with tqdm(total=len(to_classify), unit="seg") as bar:
         for batch_idx, batch in enumerate(batches):

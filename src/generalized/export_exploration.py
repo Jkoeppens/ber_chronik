@@ -32,6 +32,7 @@ from pathlib import Path
 
 from src.generalized.classify_segments import normalize_category
 from src.generalized.config import ROOT, PROJECTS_DIR
+from src.generalized.utils import read_json_safe
 from src.generalized.generate_entity_summaries import build_summaries as _build_summaries
 
 # ── date_js-Hilfsmuster ────────────────────────────────────────────────────────
@@ -88,7 +89,7 @@ def build_entries(anchors: list[dict], cls_map: dict[str, dict]) -> list[dict]:
         cls       = cls_map.get(sid, {})
         tf        = seg.get("time_from")
         prec      = seg.get("precision")
-        date_raw  = seg.get("date_raw") or (str(tf) if tf is not None else None)
+        date_raw  = seg.get("date_raw") or seg.get("date") or (str(tf) if tf is not None else None)
         src       = seg.get("source")
 
         # date_js: ISO-8601 Tag-String für präzises Timeline-Positioning
@@ -115,7 +116,6 @@ def build_entries(anchors: list[dict], cls_map: dict[str, dict]) -> list[dict]:
             "source_date":    _source_date(src) or date_raw,
             "url":            seg.get("url", ""),
             "is_quote":       bool(seg.get("is_quote", False)),
-            "is_geicke":      bool(seg.get("is_geicke", False)),
             "actors":         list(cls.get("actors") or []),
             "causal_theme":   [],
         })
@@ -179,7 +179,7 @@ def build_meta(config: dict, taxonomy: list[dict], entities: list[dict], project
 REQUIRED_FIELDS = [
     "id", "doc_anchor", "year", "date_raw", "date_js", "date_precision",
     "text", "event_type", "confidence", "source_name", "source_date", "url",
-    "is_quote", "is_geicke", "actors", "causal_theme",
+    "is_quote", "actors", "causal_theme",
 ]
 
 def validate_and_stats(entries: list[dict]) -> None:
@@ -248,7 +248,7 @@ def main() -> None:
     if not config_path.exists():
         print(f"Fehler: config.json nicht gefunden: {config_path}", file=sys.stderr)
         sys.exit(1)
-    config   = json.loads(config_path.read_text(encoding="utf-8"))
+    config   = read_json_safe(config_path)
     taxonomy = config.get("taxonomy") or []
     entities = config.get("entities") or []  # D-P4: einzige gültige Quelle
     if not taxonomy:
@@ -290,8 +290,8 @@ def main() -> None:
             print(f"  [{doc_id}] classified.json fehlt – übersprungen", file=sys.stderr)
             continue
 
-        anchors    = json.loads(anchors_path.read_text(encoding="utf-8"))
-        classified = json.loads(classified_path.read_text(encoding="utf-8"))
+        anchors    = read_json_safe(anchors_path, default=[])
+        classified = read_json_safe(classified_path, default=[])
 
         # segment_id mit doc_id-Präfix versehen (Kollisionsvermeidung)
         for seg in anchors:
@@ -322,11 +322,15 @@ def main() -> None:
             e["event_type"] = normalize_category(raw, valid_names)
 
     # ── year_min/year_max aus tatsächlichen Einträgen berechnen ───────────────
+    # Frisches Lesen kurz vor dem Schreiben: verhindert, dass ein zwischenzeitlich
+    # durch einen anderen Endpoint (taxonomy/save, entities/save) geänderter Stand
+    # mit dem veralteten config-Objekt von oben überschrieben wird.
     years = [e["year"] for e in entries if e.get("year")]
     if years:
-        config["year_min"] = min(years)
-        config["year_max"] = max(years)
-        config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+        cfg_live = read_json_safe(config_path) or dict(config)
+        cfg_live["year_min"] = min(years)
+        cfg_live["year_max"] = max(years)
+        config_path.write_text(json.dumps(cfg_live, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"→ year_min/year_max aktualisiert: {min(years)}–{max(years)}")
 
     data_obj = {

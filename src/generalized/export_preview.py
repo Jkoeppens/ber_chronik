@@ -24,14 +24,13 @@ from pathlib import Path
 
 from src.generalized.config import ROOT, PROJECTS_DIR
 
-from src.generalized.utils import render_template as _render_template  # noqa: E402
+from src.generalized.utils import render_template as _render_template, read_json_safe  # noqa: E402
 from src.generalized.classify_segments import normalize_category  # noqa: E402
 
 # 10-Farben-Palette für Kategorien (Reihenfolge = Taxonomie-Reihenfolge)
 CAT_PALETTE = [
-    "#0891b2", "#d97706", "#16a34a", "#9333ea",
-    "#dc2626", "#0d9488", "#c2410c", "#4f46e5",
-    "#0369a1", "#b45309",
+    "#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444",
+    "#06b6d4", "#f97316", "#6366f1", "#14b8a6", "#a855f7",
 ]
 
 
@@ -477,25 +476,24 @@ def main() -> None:
         print(f"Datei nicht gefunden: {input_path}", file=sys.stderr)
         sys.exit(1)
 
-    segments = json.loads(input_path.read_text(encoding="utf-8"))
+    segments = read_json_safe(input_path, default=[])
 
-    initial_overrides: list[dict] = []
-    if overrides_path.exists():
-        initial_overrides = json.loads(overrides_path.read_text(encoding="utf-8"))
+    initial_overrides: list[dict] = read_json_safe(overrides_path, default=[])
+    if initial_overrides:
         print(f"← {overrides_path}  ({len(initial_overrides)} Overrides geladen)")
 
     classifications: dict[str, dict] = {}
-    if classified_path.exists():
-        for r in json.loads(classified_path.read_text(encoding="utf-8")):
-            if r.get("segment_id"):
-                classifications[r["segment_id"]] = r
+    for r in read_json_safe(classified_path, default=[]):
+        if r.get("segment_id"):
+            classifications[r["segment_id"]] = r
+    if classifications:
         print(f"← {classified_path}  ({len(classifications)} Klassifizierungen geladen)")
 
     # D-P1: Taxonomie ausschließlich aus config.json — kein Fallback auf taxonomy_proposal.json
     if not config_path.exists():
         print(f"Fehler: config.json nicht gefunden: {config_path}", file=sys.stderr)
         sys.exit(1)
-    taxonomy: list[dict] | None = json.loads(config_path.read_text(encoding="utf-8")).get("taxonomy") or None
+    taxonomy: list[dict] | None = read_json_safe(config_path).get("taxonomy") or None
     if not taxonomy:
         print(
             f"Fehler: Keine Taxonomie in {config_path}\n"
@@ -511,13 +509,7 @@ def main() -> None:
         if raw is not None:
             cls["category"] = normalize_category(raw, valid_names)
 
-    page_title: str | None = None
-    if config_path.exists():
-        try:
-            cfg = json.loads(config_path.read_text(encoding="utf-8"))
-            page_title = cfg.get("title") or None
-        except Exception:
-            pass
+    page_title: str | None = read_json_safe(config_path).get("title") or None
 
     html = build_html(segments, initial_overrides, classifications, taxonomy, title=page_title)
 

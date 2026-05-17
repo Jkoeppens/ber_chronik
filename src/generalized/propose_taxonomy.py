@@ -34,6 +34,7 @@ from dotenv import load_dotenv
 
 from src.generalized.config import ROOT, PROJECTS_DIR
 from src.generalized.llm import get_provider, TASK_ANALYZE
+from src.generalized.utils import read_json_safe
 
 MAX_SEGMENTS  = 80    # maximale Segmente aus dem Pool
 KW_BATCH_SIZE = 4     # Segmente pro Keyword-Batch (Stufe 1)
@@ -241,7 +242,7 @@ def main() -> None:
     load_dotenv(ROOT / ".env")
     provider = get_provider(task=TASK_ANALYZE)
 
-    segments = json.loads(input_path.read_text(encoding="utf-8"))
+    segments = read_json_safe(input_path, default=[])
     pool = [s for s in segments
             if s.get("type") == "content" and len(s.get("text", "")) >= MIN_LENGTH]
 
@@ -256,7 +257,7 @@ def main() -> None:
         cache_path = doc_dir / "bge_embeddings.npy"
         texts, _   = _bge.load_segments(input_path)
 
-        cfg_existing = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
+        cfg_existing = read_json_safe(config_path)
         prev_tax     = cfg_existing.get("taxonomy") or None
 
         # n_clusters: aus bestehender Taxonomie ableiten oder CLI-Default
@@ -368,7 +369,7 @@ def main() -> None:
 
     # ── config.json schreiben (D-P1) — beide Pfade ───────────────────────────
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    cfg = json.loads(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
+    cfg = read_json_safe(config_path)
     cfg["taxonomy"] = taxonomy
     config_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 

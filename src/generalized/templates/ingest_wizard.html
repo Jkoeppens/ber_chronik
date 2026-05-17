@@ -1103,6 +1103,15 @@ async function runObsidianSync() {
         if (msg === '__done__') {
           logEl.textContent += '\n✓ Import abgeschlossen!';
           await loadProjectDocuments();
+          const dsUrl = '/ingest/doc_status?project=' + encodeURIComponent(state.project) + '&document=main&token=' + encodeURIComponent(state.token || '');
+          const dsRes = await fetch(dsUrl, { headers: authHeaders() }).catch(() => null);
+          if (dsRes && dsRes.ok) {
+            const ds = await dsRes.json();
+            if (typeof ds.year_min === 'number' && typeof ds.year_max === 'number') {
+              state.time_config.year_min = ds.year_min;
+              state.time_config.year_max = ds.year_max;
+            }
+          }
           gotoStep(4);
           return;
         }
@@ -1184,7 +1193,7 @@ async function runClassifyAfterTaxonomy() {
               logEl.scrollTop = logEl.scrollHeight;
               return;
             }
-          } catch (_) { return; }
+          } catch (e) { console.error('doc_status vor Preview-Regenerierung fehlgeschlagen:', e); return; }
           logEl.textContent += '\n⟳ Preview generieren…';
           let buf2 = '';
           try {
@@ -1215,7 +1224,10 @@ async function runClassifyAfterTaxonomy() {
                 }
               }
             }
-          } catch (_) {}
+          } catch (e) {
+            console.error('Preview-Regenerierung fehlgeschlagen:', e);
+            logEl.innerHTML += `<span style="color:#f87171">\n✗ Preview-Verbindungsfehler</span>`;
+          }
           return;
         }
         if (msg.startsWith('__error__')) { logEl.innerHTML += `<span style="color:#f87171">\n✗ ${msg.slice(9)}</span>`; return; }
@@ -1223,7 +1235,10 @@ async function runClassifyAfterTaxonomy() {
         logEl.scrollTop = logEl.scrollHeight;
       }
     }
-  } catch (_) {}
+  } catch (e) {
+    console.error('Klassifizierung SSE-Verbindung fehlgeschlagen:', e);
+    logEl.innerHTML += `<span style="color:#f87171">\n✗ Verbindungsfehler</span>`;
+  }
 }
 
 // ── Step 5: Time config ────────────────────────────────────────────────────────
@@ -1246,7 +1261,7 @@ async function initTimeConfig() {
           frame.style.display = 'block';
         }
       }
-    } catch (_) {}
+    } catch (e) { console.error('doc_status in initTimeConfig fehlgeschlagen:', e); }
   }
 }
 
@@ -1335,7 +1350,7 @@ function saveTimeConfig() {
       document:    state.document || undefined,
       time_config: state.time_config,
     }),
-  });
+  }).catch(e => console.warn('saveTimeConfig fehlgeschlagen:', e));
 }
 
 let _timeConfigSaveTimer = null;
@@ -1389,7 +1404,6 @@ function renderTimeline() {
 }
 
 function renderEventsList() {
-  console.log('[renderEventsList] events:', JSON.stringify(state.time_config.events));
   const el = document.getElementById('events-list');
   el.innerHTML = '';
   state.time_config.events.forEach(ev => {

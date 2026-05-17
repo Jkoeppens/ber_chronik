@@ -37,6 +37,7 @@ import sys
 from pathlib import Path
 
 from src.generalized.config import ROOT, PROJECTS_DIR
+from src.generalized.utils import is_presseartikel
 
 
 def _source_key(seg: dict) -> str:
@@ -228,16 +229,7 @@ def main() -> None:
 
     segments_raw: list[dict] = json.loads(input_path.read_text(encoding="utf-8"))
 
-    # doc_type und obsidian_source aus doc config.json lesen
-    doc_cfg_path = doc_dir / "config.json"
-    doc_cfg: dict = {}
-    if doc_cfg_path.exists():
-        doc_cfg  = json.loads(doc_cfg_path.read_text(encoding="utf-8"))
-        doc_type = doc_cfg.get("doc_type", "buchnotizen")
-    else:
-        doc_type = next((s.get("doc_type") for s in segments_raw if s.get("doc_type")), "buchnotizen")
-
-    if doc_type == "presseartikel":
+    if is_presseartikel(doc_dir):
         # DOCX, Zotero, Obsidian: Segs bereits durch detect_anchors datiert → Bypass
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(

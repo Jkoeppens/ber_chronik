@@ -1,12 +1,30 @@
 # Wizard Flow — Referenz
 
-Stand: 2026-04-27 (aktualisiert) | Branch: fix/except-blocks
+Stand: 2026-05-15 | Branch: feature/flexible-timeline-bins
+
+---
+
+## Die drei Quellentypen im Wizard-Ablauf
+
+Das Verhalten des Wizards hängt direkt vom Quellentyp ab. Wer das nicht weiß,
+versteht weder den Schritt-2-Unterschied noch warum Step 3 beim Obsidian-Pfad
+komplett anders aussieht.
+
+| Schritt | Literaturexzerpt (`buchnotizen`) | Pressezusammenfassung (`presseartikel`/DOCX) | Pressesammlung (`presseartikel`/Obsidian) |
+|---|---|---|---|
+| **Schritt 1** | Datei-Upload im Dialog | Datei-Upload im Dialog | Obsidian-Tab im Dialog oder Karte öffnen |
+| **Schritt 2** | **übersprungen** (doc_type im Dialog) | **übersprungen** (doc_type im Dialog) | **angezeigt** (nur Pressesammlung sichtbar, auto-ausgewählt) |
+| **Schritt 3** | `POST /ingest/analyze` (LLM erkennt Zeitraum + Perioden) | `POST /ingest/analyze` (kein LLM — year_min/max aus Segmenten) | `POST /obsidian/sync` (SSE-Stream aus Dropbox) |
+| **Schritt 4** | Taxonomie — normal | Taxonomie — normal | Taxonomie — normal |
+| **Schritt 5** | Anker-Pipeline läuft voll | Anker-Pipeline läuft voll | detect+interpolate laufen, tun faktisch Bypass |
+| **Schritt 6** | Entities — normal | Entities — normal | Entities — normal |
+| **Schritt 7** | Pipeline ohne parse (Segs schon da) | Pipeline ohne parse | Pipeline ohne parse und detect/interpolate |
 
 ---
 
 ## Schritt-für-Schritt
 
-### Schritt 1 — Projektstartseite (Version C)
+### Schritt 1 — Projektliste
 
 **Trigger:** Seitenload. Zeigt Projektliste statt Upload-Box.
 
@@ -16,45 +34,97 @@ Stand: 2026-04-27 (aktualisiert) | Branch: fix/except-blocks
   - Bei Erfolg: Projekt-Karten werden gerendert
 - Erste Karte immer: **„Neues Projekt +"** — öffnet inline Dialog
 
-**Dialog „Neues Projekt +" — Datei-Pfad:**
-- Projektname-Input + Datei-Drop + Dok-Typ
-- Klick „Analysieren →": Upload → setzt `state.project_title`, `state.doc_type`, `state.files` → `gotoStep(3)`
-- Schritt 2 wird übersprungen
+**Dialog „Neues Projekt +" — Datei-Pfad (Literaturexzerpt / Pressezusammenfassung):**
+- Projektname-Input + Datei-Drop + Dok-Typ-Selector
+- Klick „Analysieren →":
+  1. `POST /ingest/upload`
+  2. Setzt `state.project_title`, `state.doc_type`, `state.files`
+  3. `gotoStep(3)` — **Schritt 2 wird übersprungen**, doc_type kommt aus dem Dialog
 
-**Dialog „Neues Projekt +" — Zotero-Pfad:**
-→ Siehe Abschnitt [Zotero-Flow](#zotero-flow) unten.
+**Dialog „Neues Projekt +" — Obsidian-Tab (Pressesammlung):**
+- Dropbox-Auth-Button + Ordner-Input (oder Ordner-Picker)
+- Klick „Importieren →":
+  1. `POST /api/projects` → legt Projekt in DB an, gibt `token` zurück
+  2. Setzt `state.project`, `state.obsidian_source = 'dropbox'`, `state.isExistingProject = true`
+  3. `gotoStep(2)` — **Schritt 2 wird angezeigt**, automatisch Pressesammlung vorausgewählt
 
-**Kein regulärer „Weiter"-Button auf Schritt 1** — Navigation erfolgt ausschließlich über die Karten-Buttons.
+**Bestehende Projekt-Karte öffnen:**
+- „Dokument hinzufügen" → Datei-Upload-Flow → `gotoStep(3)`
+- Karte mit Obsidian-Konfiguration → setzt `state.obsidian_source = 'dropbox'` → `gotoStep(2)`
+- Karte mit vorhandenen Dokumenten → `maxReachedStep = 7` → `gotoStep(6)`
+
+**Kein regulärer „Weiter"-Button auf Schritt 1** — Navigation über Karten-Buttons.
 
 ---
 
 ### Schritt 2 — Dokumenttyp
 
+**Wann angezeigt:** Nur im Obsidian-Pfad (neu oder bestehend ohne Dokument).
+Im DOCX-Datei-Pfad wird dieser Schritt übersprungen.
+
 **Was passiert:**
-- Nutzer wählt `doc_type` (Forschungsnotizen / Buchnotizen / Presseartikel)
-- Schreibt `state.doc_type`
-- Kein API-Call — reine UI
-- **Wird im Datei-Pfad von Schritt 1 übersprungen** (doc_type kommt aus dem Inline-Dialog)
+- `onEnterStep(2)`: Wenn `state.obsidian_source === 'dropbox'` → nur Pressesammlung-Karte
+  sichtbar, automatisch ausgewählt; Literaturexzerpt und Presseexzerpt ausgeblendet
+- Schreibt `state.doc_type = 'presseartikel'`
+- Kein API-Call beim Betreten — reine UI
+
+**Weiter-Button:**
+- Im Obsidian-Pfad: `POST /api/projects/{id}/obsidian/config` mit `{doc_type, dropbox_folder}`
+- Dann `gotoStep(3)`
 
 ---
 
-### Schritt 3 — LLM-Analyse
+### Schritt 3 — Analyse oder Obsidian-Import
 
-**Was passiert beim Vorwärtsnavigieren:**
+**Zwei komplett verschiedene Pfade:**
+
+#### DOCX-Pfad (Literaturexzerpt / Pressezusammenfassung)
 
 **Neues Projekt:**
-1. `POST /ingest/analyze` → `parse_document.py` + LLM-Analyse → JSON
+1. `POST /ingest/analyze` — parse_document zerlegt das Dokument in Segmente.
+   Danach **verzweigt der Server nach `doc_type`:**
+
+   - **`buchnotizen`:** Eine Stichprobe von bis zu 30 Absätzen geht ans LLM, das
+     daraus den Zeitraum (`year_min`/`year_max`) und wichtige historische **Perioden**
+     mit Jahreszahlen erkennt. Ergebnis-Felder: `year_min`, `year_max`, `events`, `language`.
+
+   - **`presseartikel`:** Kein LLM-Aufruf. `year_min`/`year_max` wird direkt aus den
+     `time_from`-Feldern in `segments.json` berechnet (parse_document setzt diese aus
+     DOCX-Jahresüberschriften). `events` bleibt leer.
+
 2. Response setzt: `state.project`, `state.document`, `state.analysis`, `state.time_config`
 3. Sofort danach: `POST /ingest/save_config` mit `title`, `doc_type`, `time_config`
-   - Server schreibt `projects/{project}/config.json` (alle Felder) + `documents/{doc_id}/config.json` (doc_type, original_filename)
-   - Server legt Projekt in DB an und gibt `token` zurück → `state.token`
+   - Server schreibt `projects/{project}/config.json` + `documents/{doc_id}/config.json`
+   - Legt Projekt in DB an, gibt `token` zurück → `state.token`
 
 **Bestehendes Projekt (Restore via URL):**
 1. `GET /ingest/doc_status` — prüft ob `segments.json` vorhanden
-2. Wenn ja: direkt weiter zu Schritt 4 (kein neuer Analyse-Lauf)
-3. Wenn nein: `runAnalysis()` wie oben
+2. Wenn ja: `gotoStep(4)` (kein neuer Analyse-Lauf)
+3. Wenn nein: Analyse wie oben
 
-**Dateien geschrieben:** `data/raw/{filename}` (Upload), `segments.json` (parse_document.py)
+**Dateien geschrieben:** `data/raw/{filename}`, `segments.json`
+
+#### Obsidian-Pfad (Pressesammlung)
+
+Die Schrittüberschrift wechselt auf „Obsidian-Import".
+
+1. `runObsidianSync()` startet automatisch bei `onEnterStep(3)` (nur einmal, `syncRan`-Flag)
+2. `POST /api/projects/{id}/obsidian/sync` → SSE-Stream
+   - Dropbox-Verbindung, .md-Dateien listen, Segmente bauen
+   - `detect_anchors.py` + `interpolate_anchors.py` laufen serverseitig
+   - Output-Log wird im Wizard angezeigt
+3. Bei `__done__`:
+   - `loadProjectDocuments()`
+   - `GET /ingest/doc_status?project=…&document=main` — liest `year_min`/`year_max`
+     aus den bereits vorhandenen `anchors_interpolated.json` (die der Sync erzeugt hat)
+     und schreibt sie in `state.time_config`
+   - `gotoStep(4)`
+
+`state.analysis` (Taxonomie-Vorschlag) wird im Obsidian-Pfad nicht befüllt —
+Schritt 4 startet mit leerem Vorschlag-Button.
+
+**Dateien geschrieben:** `documents/{doc_id}/segments.json`, `anchors.json`,
+`anchors_interpolated.json`
 
 ---
 
@@ -66,12 +136,19 @@ Stand: 2026-04-27 (aktualisiert) | Branch: fix/except-blocks
 - `taxDirty = false`
 
 **Aktionen:**
-- "+ Kategorie": `taxData.push(...)`, `markTaxDirty()`
-- "KI-Vorschlag": `POST /ingest/propose_taxonomy` (SSE) → `propose_taxonomy.py` → schreibt direkt in `config.json["taxonomy"]` → danach `initTaxonomy()` + `markTaxDirty()`
-- "Speichern": `POST /taxonomy/save` → schreibt `config.json["taxonomy"]` + setzt `taxDirty = false`
-- "Neu klassifizieren": `POST /ingest/run/step` mit `classify_segments.py` (SSE) → danach ggf. `export_preview.py`
+- „+ Kategorie": `taxData.push(...)`, `markTaxDirty()`
+- **„Themen vorschlagen" / „Taxonomie verfeinern ↻"** (Button-Label dynamisch):
+  - Leer → „Themen vorschlagen"; vorhanden → „Taxonomie verfeinern ↻"
+  - `POST /ingest/propose_taxonomy?method=bge` → `propose_taxonomy.py` via BGE-M3 (D-T1)
+  - SSE-Stream → danach `initTaxonomy()` + `markTaxDirty()`
+- „Speichern": `POST /taxonomy/save` → schreibt `config.json["taxonomy"]` + `taxDirty = false`
+- „Neu klassifizieren": `POST /ingest/run/step` mit `{step: 'classify_segments.py', force: true, method: 'bge'}`
 
-**Weiter-Button:** Ruft `saveTaxonomy()` (wenn `taxDirty`) dann `gotoStep(5)`.
+**Weiter-Button:**
+- Ruft `saveTaxonomy()` (wenn `taxDirty`)
+- Dann: `gotoStep(state.isExistingProject ? 6 : 5)`
+  - **Neues Projekt → Schritt 5** (Zeitkonfiguration)
+  - **Bestehendes Projekt → Schritt 6** (Entities, Schritt 5 übersprungen)
 
 **Dateien geschrieben:** `config.json["taxonomy"]`
 
@@ -79,16 +156,24 @@ Stand: 2026-04-27 (aktualisiert) | Branch: fix/except-blocks
 
 ### Schritt 5 — Zeitkonfiguration
 
-**onEnterStep(5):** `initTimeConfig()` liest aus `state.time_config` (bereits beim Analyse-Schritt befüllt). Lädt Preview-iframe wenn `anchors_interpolated.json` vorhanden.
+**onEnterStep(5):** `initTimeConfig()` liest aus `state.time_config` (beim DOCX-Analyse-Schritt befüllt;
+beim Obsidian-Pfad Standardwerte). Lädt Preview-iframe wenn `anchors_interpolated.json` vorhanden.
 
 **Aktionen:**
 - Jahr-Inputs + Ereignis-Editor: mutieren `state.time_config` inline
-- `saveTimeConfig()` (bei jeder Änderung): `POST /ingest/save_config` mit `time_config` → schreibt `year_min`, `year_max`, `events` in `config.json`
-- "Zeitanker berechnen" / Weiter-Button: `runAnchorPipeline()`
-  1. `POST /ingest/run/step` → `detect_anchors.py` (SSE)
-  2. `POST /ingest/run/step` → `interpolate_anchors.py` (SSE)
-  3. Wenn Taxonomie vorhanden: `POST /ingest/run/step` → `export_preview.py` (SSE)
-  4. Lädt Preview-iframe: `/preview?project=&document=&token=`
+- `saveTimeConfig()` (bei jeder Änderung): `POST /ingest/save_config` mit `time_config`
+  → schreibt `year_min`, `year_max`, `events` in `config.json`
+
+**Weiter-Button → `runAnchorPipeline()`:**
+1. `POST /ingest/run/step` → `detect_anchors.py` (SSE)
+2. `POST /ingest/run/step` → `interpolate_anchors.py` (SSE)
+3. Wenn Taxonomie vorhanden: `POST /ingest/run/step` → `export_preview.py` (SSE)
+4. Lädt Preview-iframe: `/preview?project=&document=&token=`
+5. Bei Erfolg: `gotoStep(6)`
+
+**Für Obsidian-Pressesammlung:** `detect_anchors.py` und `interpolate_anchors.py` laufen
+technisch, tun aber faktisch nichts — Segmente sind bereits datiert (Bypass-Regel für
+`presseartikel` in `interpolate_anchors.py`).
 
 **Dateien geschrieben:** `anchors.json`, `anchors_interpolated.json`, `preview.html`
 
@@ -96,35 +181,51 @@ Stand: 2026-04-27 (aktualisiert) | Branch: fix/except-blocks
 
 ### Schritt 6 — Entities
 
-**onEnterStep(6):** `initEntities()` → setzt `src` des iframes auf `/ingest/entities?project=&document=&token=`
+**onEnterStep(6):** `initEntities()` → setzt `src` des iframes auf
+`/ingest/entities?project=&document=&token=`
 
 Der iframe lädt `entity_editor.html` als eigenständige Seite mit eigenen Fetch-Calls:
-- `GET /ingest/entities/data` → liest `entities_proposal.json` (Prio 1), dann `config.json["entities"]` (Fallback)
-- `POST /ingest/entities/save` → schreibt `entities_proposal.json` + spiegelt in `config.json["entities"]`
-- `POST /ingest/entities/reject` → schreibt `entities_rejected.json` + entfernt Entity aus `entities_proposal.json`
-- `POST /ingest/entities/extract` (SSE) → `extract_entities_v2.py` → schreibt `entities_proposal.json`
+- `GET /ingest/entities/data` → liest ausschließlich `config.json["entities"]` (D-P4)
+- `POST /ingest/entities/save` → schreibt `config.json["entities"]`
+- `POST /ingest/entities/reject` → schreibt `entities_rejected.json` (Filter für nächsten Extraction-Run)
+- `POST /ingest/entities/extract` (SSE) → `extract_entities_v2.py` → schreibt direkt in `config.json["entities"]`
+- `GET /ingest/entities/near-duplicates` → Embedding-basierte Duplikat-Vorschläge
 
-**Dateien gelesen/geschrieben:**
-- `entities_proposal.json` — kanonische Quelle, Lesen + Schreiben
-- `config.json["entities"]` — Spiegel für Pipeline-Schritte
-- `entities_rejected.json` — Filter für nächsten Extraction-Run
+**Keine `entities_proposal.json` mehr.** D-P4: `config.json["entities"]` ist einzige
+kanonische Quelle — kein Fallback-Layer zwischen Extraktion und Editor.
+
+**Weiter-Button:** `gotoStep(7)` — kein API-Call.
 
 ---
 
 ### Schritt 7 — Pipeline
 
-**Beim Klick auf "Pipeline starten":**
-1. `POST /ingest/save_config` mit `title`, `doc_type`, `time_config`, `created_at`
+**Beim Klick auf „Pipeline starten":**
+1. `POST /ingest/save_config` mit `title`, `doc_type`, `time_config`
    - `taxonomy: taxData` **nur wenn `taxData.length > 0`** — verhindert Überschreiben
-2. `POST /ingest/run` (SSE) → läuft alle 8 Pipeline-Schritte sequenziell:
-   `parse_document.py` → `detect_anchors.py` → `interpolate_anchors.py` →
-   `classify_segments.py` → `match_entities.py` → `export_preview.py` →
-   `extract_entities_v2.py` (optional) → `export_exploration.py`
+2. `POST /ingest/run` (SSE) → **konditionelle Pipeline:**
 
-   **Pipeline-Skipping:** `parse_document.py` wird übersprungen wenn `segments.json`
-   bereits vorhanden ist. `detect_anchors.py` und `interpolate_anchors.py` werden
-   übersprungen wenn `anchors_interpolated.json` bereits vorhanden ist.
+```
+Wenn segments.json fehlt:       parse_document.py
+Wenn anchors_interp. fehlt:     detect_anchors.py
+                                interpolate_anchors.py
+Immer:                          classify_segments.py
+                                match_entities.py
+Wenn anchors_interp. fehlt:     export_preview.py
+Immer (letzter Schritt):        export_exploration.py
+```
+
+Die Bedingungen spiegeln die Wizard-Geschichte wider: Segmente und Anker wurden
+in früheren Schritten bereits gebaut. In Schritt 7 klassifiziert und exportiert
+das System üblicherweise neu, ohne erneut zu parsen oder zu datieren.
+
 3. Am Ende: SSE sendet `__link__:/viz/?project=...` → Viz-Link erscheint
+
+**`extract_entities_v2.py` läuft nicht automatisch in `POST /ingest/run`.** Entity-Extraktion
+ist ausschließlich aus Schritt 6 aufrufbar.
+
+**Einzelne Schritte wiederholen:** Über die Rerun-Buttons neben jedem Schritt-Status
+→ `POST /ingest/run/step` mit `{step: 'script.py'}`.
 
 **Dateien geschrieben:** alle Pipeline-Outputs, final `exploration/data.json`
 
@@ -136,14 +237,17 @@ Der iframe lädt `entity_editor.html` als eigenständige Seite mit eigenen Fetch
 |---|---|---|---|
 | `state.project` | string | Analyse-Response, `openExistingProject`, `restoreFromUrl` | Alle API-Calls via `_aq()` |
 | `state.document` | string | Analyse-Response, `openExistingProject`, `restoreFromUrl` | Alle API-Calls via `_aq()` |
-| `state.token` | string | `save_config`-Response, `openExistingProject`-Token-Fetch, `restoreFromUrl` | `authHeaders()`, `_aq()` |
-| `state.project_title` | string | Schritt 1 Input, `restoreFromUrl` | Schritt 1 Anzeige, `save_config` |
-| `state.doc_type` | string | Schritt 2 Auswahl, `restoreFromUrl` | `save_config`, Analyse |
-| `state.analysis` | object | Analyse-Response | Schritt 3 Anzeige, `save_config` |
-| `state.time_config` | object | Analyse-Response, `restoreFromUrl` (aus `cfg`) | Schritt 5, `saveTimeConfig`, Pipeline-`save_config` |
-| `state.isExistingProject` | bool | `restoreFromUrl` → `true`; Schritt 1 → `false` | Schritt-3-Logik, `save_config` (`taxonomy:[]` guard) |
-| `taxData` | array | `initTaxonomy()`, `restoreFromUrl` (aus `cfg.taxonomy`), Inline-Edits | Schritt 4 Grid, `saveTaxonomy()`, Pipeline-`save_config` |
+| `state.token` | string | `save_config`-Response, Token-Fetch, `restoreFromUrl` | `authHeaders()`, `_aq()` |
+| `state.project_title` | string | Schritt-1-Dialog, `restoreFromUrl` | Schritt-1-Anzeige, `save_config` |
+| `state.doc_type` | string | Schritt-1-Dialog oder Schritt-2-Auswahl, `restoreFromUrl` | `save_config`, Analyse |
+| `state.analysis` | object | Analyse-Response (nur DOCX-Pfad) | Schritt-3-Anzeige, `save_config` |
+| `state.time_config` | object | Analyse-Response (DOCX) oder Standardwerte (Obsidian), `restoreFromUrl` | Schritt 5, `saveTimeConfig`, Pipeline-`save_config` |
+| `state.isExistingProject` | bool | `restoreFromUrl` → `true`; Schritt-1-Dialog Datei-Pfad → `false` | Schritt-3-Logik, Schritt-4-Weiter (→5 oder →6) |
+| `state.obsidian_source` | string\|null | Obsidian-Flow → `'dropbox'`; Datei-Flow → `null` | Schritt-2-UI, Schritt-3-Routing, btnNext-Logik |
+| `state.obsidian_folder` | string | Obsidian-Dialog + `restoreFromUrl` | `POST /obsidian/config` |
+| `taxData` | array | `initTaxonomy()`, `restoreFromUrl`, Inline-Edits | Schritt-4-Grid, `saveTaxonomy()`, Pipeline-`save_config` |
 | `taxDirty` | bool | `markTaxDirty()` → `true`; `initTaxonomy()`, `saveTaxonomy()` → `false` | Weiter-Button Schritt 4 |
+| `syncRan` | bool | Nach erstem `runObsidianSync()` → `true`; `onEnterStep(1)` → `false` | Verhindert doppelten Sync in Schritt 3 |
 | `currentStep` | int | `gotoStep(n)` | Navigation, URL-Schreiben |
 | `maxReachedStep` | int | `updateProgress(n)`, `restoreFromUrl` | Dot-Klick-Guard |
 | `analysisRan` | bool | nach erstem `runAnalysis()` → `true` | Schritt-3-Guard gegen Doppelstart |
@@ -154,24 +258,27 @@ Der iframe lädt `entity_editor.html` als eigenständige Seite mit eigenen Fetch
 ## Kritische Abhängigkeiten
 
 ```
-Schritt 3 benötigt:  state.files (Upload), state.project_title
-                     → schreibt state.project, state.document, state.token
+Schritt 3 (DOCX)   benötigt:  state.files (Upload), state.project_title
+                               → schreibt state.project, state.document, state.token
 
-Schritt 4 benötigt:  state.project, state.token (für /taxonomy/data)
-                     → ohne token: 401, taxData bleibt []
+Schritt 3 (Obsidian) benötigt: state.project, state.token (bereits aus Schritt 1)
+                               → schreibt segments.json + anchors direkt
 
-Schritt 5 benötigt:  segments.json (aus Schritt 3)
-                     → runAnchorPipeline schlägt fehl ohne segments
+Schritt 4          benötigt:  state.project, state.token (für /taxonomy/data)
+                               → ohne token: 401, taxData bleibt []
 
-Schritt 6 benötigt:  state.project, state.token (iframe-src)
-                     → ohne token: iframe zeigt Fehler
+Schritt 5          benötigt:  segments.json (aus Schritt 3)
+                               → runAnchorPipeline schlägt fehl ohne segments
 
-Schritt 7 benötigt:  config.json["taxonomy"] nicht leer
-                     → classify_segments.py bricht ab mit "Keine Taxonomie"
-                     → Taxonomie muss in Schritt 4 gespeichert worden sein
+Schritt 6          benötigt:  state.project, state.token (iframe-src)
+                               → ohne token: iframe zeigt Fehler
 
-Pipeline classify    benötigt: segments.json, config.json["taxonomy"]
-Pipeline match_ent.  benötigt: classified.json, config.json["entities"]
+Schritt 7          benötigt:  config.json["taxonomy"] nicht leer
+                               → classify_segments.py bricht ab mit "Keine Taxonomie"
+                               → Taxonomie muss in Schritt 4 gespeichert worden sein
+
+Pipeline classify   benötigt: segments.json, config.json["taxonomy"]
+Pipeline match_ent. benötigt: classified.json, config.json["entities"]
 Pipeline export_prev benötigt: anchors_interpolated.json, classified.json, config.json["taxonomy"]
 Pipeline export_expl benötigt: alle obigen
 ```
@@ -182,24 +289,19 @@ Pipeline export_expl benötigt: alle obigen
 
 ### `projects/{project}/config.json`
 
-**Kanonische Quelle für:** `taxonomy`, `entities`, `year_min/max`, `events`, `title`
+**Kanonische Quelle für:** `taxonomy`, `entities`, `year_min/max`, `events`, `title`, `obsidian.*`
 
 | Feld | Geschrieben von | Darf überschrieben werden |
 |---|---|---|
 | `taxonomy` | `/taxonomy/save`, `propose_taxonomy.py`, `/ingest/save_config` (nur wenn `taxData.length > 0`) | Nur durch explizites Speichern in Schritt 4 — nie mit leerem Array |
-| `entities` | `/ingest/entities/save` | Bei jedem Editor-Save |
+| `entities` | `/ingest/entities/save`, `extract_entities_v2.py` | Bei jedem Editor-Save oder Extraction-Run |
 | `year_min/max/events` | `/ingest/save_config` via `time_config` | Bei jeder Zeitconfig-Änderung |
+| `obsidian.*` | `/api/projects/{id}/obsidian/config` | Bei jedem Obsidian-Config-Save |
 | `title` | `/ingest/save_config`, `PUT /api/projects/{id}` | Unkritisch |
 
-**Gelesen von:** `classify_segments.py`, `match_entities.py`, `export_preview.py`, `export_exploration.py`, `/taxonomy/data`, `/ingest/entities/data` (Fallback), `restoreFromUrl` via `/api/projects/{id}`
-
-### `documents/{doc_id}/entities_proposal.json`
-
-**Kanonische Quelle für:** Entity-Liste nach Extraction
-
-**Geschrieben von:** `extract_entities_v2.py` (Extraction-Run), `/ingest/entities/save` (Editor-Save), `/ingest/entities/reject` (Entity entfernen)
-
-**Gelesen von:** `/ingest/entities/data` (Prio 1)
+**Gelesen von:** `classify_segments.py`, `match_entities.py`, `export_preview.py`,
+`export_exploration.py`, `/taxonomy/data`, `/ingest/entities/data`, `restoreFromUrl`
+via `/api/projects/{id}`
 
 ### `documents/{doc_id}/entities_rejected.json`
 
@@ -211,15 +313,19 @@ Pipeline export_expl benötigt: alle obigen
 
 ### `documents/{doc_id}/segments.json`
 
-Geschrieben von `parse_document.py`. Eingabe für alle nachgelagerten Schritte.
+Geschrieben von `parse_document.py` (DOCX) oder `ingest_obsidian.py` (Obsidian).
+Eingabe für alle nachgelagerten Schritte.
 
 ### `documents/{doc_id}/anchors.json` / `anchors_interpolated.json`
 
-Geschrieben von `detect_anchors.py` / `interpolate_anchors.py`. Eingabe für `export_preview.py` und `export_exploration.py`.
+Geschrieben von `detect_anchors.py` / `interpolate_anchors.py`.
+Bei Obsidian: beide Dateien entstehen, aber `anchors_interpolated.json` enthält
+dieselben Zeitanker wie `anchors.json` (kein Interpolationsbedarf).
 
 ### `documents/{doc_id}/classified.json`
 
-Geschrieben von `classify_segments.py` (category + confidence) und `match_entities.py` (actors, in-place). Eingabe für beide Export-Skripte.
+Geschrieben von `classify_segments.py` (category + confidence) und
+`match_entities.py` (actors, in-place). Eingabe für beide Export-Skripte.
 
 ---
 
@@ -232,75 +338,21 @@ Geschrieben von `classify_segments.py` (category + confidence) und `match_entiti
 
 Beim Laden liest `restoreFromUrl()` diese Parameter:
 1. `GET /api/projects/{id}/token` → `state.token`
-2. `GET /api/projects/{id}` → `state.project_title`, `state.doc_type`, `state.time_config`, `taxData` (wenn `cfg.taxonomy.length > 0`)
+2. `GET /api/projects/{id}` → `state.project_title`, `state.doc_type`, `state.time_config`,
+   `taxData` (wenn `cfg.taxonomy.length > 0`), `state.obsidian_source` (wenn `cfg.obsidian.dropbox_folder`)
 3. `gotoStep(step)` → springt direkt zum gespeicherten Schritt
 
 **Token ist nie in der URL** — wird immer neu geholt.
 
 ---
 
-## Zotero-Flow
+## Entfernte Features
 
-### Neues Zotero-Projekt anlegen (Schritt 1, Inline-Dialog)
+### Zotero-Flow (deaktiviert seit 2026-05-12)
 
-1. Nutzer klickt „Neues Projekt +" → Tab „Zotero" wählen
-2. Felder: Projektname, API-Key, User-ID, Collection-Key, Dok-Typ
-3. **Testen**: `GET /api/projects/_new/zotero/test?api_key=&user_id=&collection=`
-   → pyzotero-Test im Thread-Executor, gibt `{ok, count}` zurück
-4. **Importieren →**:
-   1. `POST /api/projects` → legt Projekt in DB + `config.json` an, gibt `token` zurück
-   2. `POST /api/projects/{id}/zotero/config` → speichert Credentials in `config.json["zotero"]`
-   3. `POST /api/projects/{id}/zotero/sync` (SSE) → `ingest_zotero.py` läuft durch
-5. SSE-Log wird inline angezeigt; bei `__done__`: „Schließen"-Button + `loadProjectList()`
+Der Zotero-Flow erlaubte einen direkten API-Ingest ohne Wizard-Schritte. Endpoints:
+`/api/projects/_new/zotero/test`, `/api/projects/{id}/zotero/config`,
+`/api/projects/{id}/zotero/sync`. **Diese Endpoints existieren nicht mehr in `dev_server.py`.**
 
-**Kein Wizard-Schritt wird durchlaufen** — der gesamte Ingest (Fetch → Segmente → Pipeline) läuft serverseitig in `ingest_zotero.py`.
-
-### Zotero-Sync für bestehendes Projekt (Projekt-Karte)
-
-- Karte hat Zotero-Button: wenn konfiguriert → zeigt „Aktualisieren ↻" + aufklappbare Konfig-Sektion
-- „Aktualisieren ↻": `POST /api/projects/{id}/zotero/sync` (SSE) → SSE-Log in Karte
-- Konfig bearbeiten: API-Key, User-ID, Collection, Dok-Typ → Testen + Speichern (`POST /api/projects/{id}/zotero/config`)
-
-### Was `ingest_zotero.py` intern tut
-
-```
-1. pyzotero: Items der Collection laden
-   Attachments und Notes auf oberster Ebene werden gefiltert
-2. Checkpoint prüfen (zotero_checkpoint.json) — neue Items identifizieren,
-   bereits verarbeitete Keys überspringen
-3. Pro neuem Item: HTML-Snapshot → trafilatura-Volltext
-   Fallback 1: URL direkt fetchen
-   Fallback 2: Abstract (mit WARNING)
-   Kein Text → Item überspringen
-4. segments.json schreiben (doc_id = neue UUID)
-   Jedes Segment trägt:
-     "source"    → Titel des Artikels
-     "date"      → Erscheinungsdatum aus Zotero-Metadaten (issued/date-Feld)
-     "item_type" → Zotero-Typ, z.B. "newspaperArticle", "videoRecording"
-     "url"       → Artikel-URL aus Zotero-Metadaten
-5. Taxonomie prüfen: config.json["taxonomy"] leer?
-   → propose_taxonomy.py vorschalten (--project, --document)
-6. Pipeline:
-     detect_anchors.py      (liest "date"-Feld im Presseartikel-Modus, D-P8)
-     interpolate_anchors.py
-     classify_segments.py
-     match_entities.py
-7. export_exploration.py (aggregiert alle Dokumente des Projekts)
-   Jedes data.json-Entry enthält das url-Feld aus dem Segment (D-P10)
-8. Checkpoint aktualisieren (verarbeitete Keys speichern)
-```
-
-**Entity-Extraktion läuft NICHT automatisch** — `extract_entities_v2.py` ist nicht
-in der Zotero-Pipeline. Entities werden bei Bedarf über den Entity-Editor (Wizard
-Schritt 6) oder manuell extrahiert:
-```
-python3 -m src.generalized.extract_entities_v2 --project … --document … --mode sample
-```
-Der NER-Backend-Switcher (D-E1) gilt: `doc_type=presseartikel` → spaCy-Backend,
-das `item_type=="videoRecording"`-Segmente automatisch überspringt (D-E3).
-
-**Unterschied zu Datei-Upload-Flow:**
-- Kein Wizard-Schritt 2 (Dok-Typ kommt aus Zotero-Config)
-- Kein Schritt 3 (parse_document.py entfällt — Segmente werden direkt gebaut)
-- Kein Schritt 4–6 interaktiv — Taxonomie wird automatisch vorgeschlagen, Entities manuell
-- Segmente haben `"date"`-Feld aus Zotero-Metadaten; `detect_anchors.py` liest es im Presseartikel-Modus direkt als Anker (D-P8)
+`ingest_zotero.py` liegt noch im Dateisystem, wird aber von keiner Stelle aufgerufen.
+Vollständige historische Dokumentation des Flows: `ARCHITECTURE.md` (Abschnitt „Entfernte Features").

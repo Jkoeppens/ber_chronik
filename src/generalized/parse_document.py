@@ -37,6 +37,7 @@ from pathlib import Path
 import docx
 
 from src.generalized.config import ROOT, PROJECTS_DIR, RAW_DIR
+from src.generalized.utils import read_json_safe
 
 # ── Seitenzahl-Extraktion ──────────────────────────────────────────────────────
 # 1–3 Ziffern am Ende, getrennt durch Leerzeichen oder Klammer-zu
@@ -177,20 +178,18 @@ def parse_presseartikel(path: Path) -> list[dict]:
         matches = SOURCE_RE.findall(text)
         source_name = ";".join(m[0].strip() for m in matches) if matches else None
         source_date = ";".join(m[1].strip() for m in matches) if matches else None
-        is_quote    = text[:1] in ('"', '„', '“', '„', '‚', "'")
-        is_geicke   = not source_name and not is_quote
+        is_quote    = text[:1] in ('”', '„', '”', '„', '‚', “'”)
 
         seg_id += 1
         segments.append({
-            "segment_id":   f"s{seg_id:04d}",
-            "type":         "content",
-            "text":         text,
-            "source":       source_name,
-            "source_date":  source_date,
-            "is_quote":     is_quote,
-            "is_geicke":    is_geicke,
-            "page":         None,
-            "ingest_source": "docx",
+            “segment_id”:   f”s{seg_id:04d}”,
+            “type”:         “content”,
+            “text”:         text,
+            “source”:       source_name,
+            “source_date”:  source_date,
+            “is_quote”:     is_quote,
+            “page”:         None,
+            “ingest_source”: “docx”,
         })
 
     return segments
@@ -215,10 +214,8 @@ def main() -> None:
     doc_dir.mkdir(parents=True, exist_ok=True)
 
     # Dokumentebene config lesen (falls schon vorhanden)
-    doc_config: dict = {}
     doc_config_path = doc_dir / "config.json"
-    if doc_config_path.exists():
-        doc_config = json.loads(doc_config_path.read_text(encoding="utf-8"))
+    doc_config: dict = read_json_safe(doc_config_path)
 
     # input_path: explizit > doc config > Fehler
     if args.input:
