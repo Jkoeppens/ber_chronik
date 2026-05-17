@@ -471,7 +471,32 @@ Railway setzt `PORT` automatisch und erwartet, dass der Server darauf hört. `de
 
 `dropbox_tokens.json` speichert alle OAuth-Token in einer einzigen globalen Datei ohne Nutzer- oder Projekt-Trennung. Bei mehreren Nutzern oder Projekten überschreiben die OAuth-Callbacks sich gegenseitig — der zuletzt authentifizierte Nutzer gewinnt, alle anderen verlieren den Sync-Zugang.
 
-**Lösung:** Token pro Projekt in `config.json["obsidian"]["tokens"]` speichern statt global in `dropbox_tokens.json`. OAuth-Callback schreibt Token in das jeweilige Projekt anhand der `project_id` aus dem OAuth-State.
+Was für echte Multi-User-Nutzung fehlt:
+1. `/api/obsidian/oauth/start` muss `project_id` empfangen und im OAuth-State mitführen
+2. `_obsidian_oauth_states` muss `project_id` speichern, damit der Callback weiß wohin
+3. Callback schreibt Token in `config.json["obsidian"]["tokens"]` des jeweiligen Projekts (statt globale `dropbox_tokens.json`)
+4. `_obsidian_oauth_states` muss persistent sein (SQLite, I23) — bei Restart gehen laufende OAuth-Flows verloren
+
+**Lösung:** OAuth-State um `project_id` erweitern. Token-Speicherung pro Projekt in `config.json`. Bestehende `DROPBOX_TOKENS_PATH`-Referenzen in `dev_server.py` und `ingest_obsidian.py` auf projekt-lokale Pfade umstellen.
+
+#### R10 — `DROPBOX_REDIRECT_URL` auf Railway nicht konfiguriert [HOCH]
+
+`ingest_obsidian.py:55–58` liest `DROPBOX_REDIRECT_URL` aus `os.environ`, Default: `http://localhost:8001/api/obsidian/oauth/callback`. Auf Railway ist die URL `https://{service}.railway.app/api/obsidian/oauth/callback`. Dropbox lehnt den OAuth-Flow ab wenn `redirect_uri` nicht mit dem in der Dropbox-App registrierten Wert übereinstimmt — der Callback erhält keinen `code`, `flow.finish()` schlägt fehl, der Wizard zeigt einen JSON-Parse-Fehler.
+
+`DROPBOX_APP_KEY`/`SECRET` werden korrekt aus Railway-Env-Vars gelesen (via `os.environ.get()` nach `load_dotenv()`).
+
+**Lösung:** `DROPBOX_REDIRECT_URL=https://{service}.railway.app/api/obsidian/oauth/callback` als Railway-Variable setzen. Zusätzlich diese URL in der Dropbox-App-Konfiguration unter "Redirect URIs" eintragen.
+
+#### R11 — BER Demo-Daten auf Railway Volume nicht vorhanden [MITTEL]
+
+Mit `DATA_ROOT=/data` liest der Server vom Railway Volume. Committed `data/projects/ber/`-Dateien liegen im Container-Dateisystem unter `/app/data/`, aber der Server liest von `/data/` (Volume) — die Demo-Daten sind nicht sichtbar.
+
+Optionen:
+- **(a) Seed-Script beim Start:** Prüft ob `/data/projects/ber/` leer ist und kopiert Daten aus `/app/data/projects/ber/`. Einmalig, idempotent, reproduzierbar. Empfohlen.
+- **(b) Manuell via Railway Volume:** Nicht reproduzierbar, entfällt bei Volume-Reset.
+- **(c) Nur `exploration/data.json` committen + statisch ausliefern:** Funktioniert für Read-Only-Demo ohne Wizard, umgeht das Volume-Problem.
+
+**Lösung (Backlog):** `startCommand` um Seed-Script erweitern: `python src/generalized/seed_demo.py && uvicorn ...`. Script kopiert `/app/data/projects/ber/` nach `/data/projects/ber/` wenn Zielverzeichnis leer.
 
 ---
 
