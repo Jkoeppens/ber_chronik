@@ -10,6 +10,24 @@ __pycache__/
 # Data – raw bleibt lokal (Urheberrecht)
 data/raw/
 
+# Laufzeit-Daten (auf Railway im Volume, lokal nicht committen)
+data/projects.db
+data/dropbox_tokens.json
+*.npy
+
+# Test- und Experiment-Projekte
+data/projects/obsidian_*/
+data/projects/zotero*/
+data/projects/test_*/
+data/projects/damaskus_test_*/
+data/projects/*_test/
+data/projects/*_test_*/
+
+# Pipeline-Outputs die nicht versioniert werden
+data/projects/*/obsidian_checkpoint.json
+data/projects/*/zotero_checkpoint.json
+data/projects/ber/documents/main/centroid_trajectory/
+
 # Secrets
 .env
 invites.json
