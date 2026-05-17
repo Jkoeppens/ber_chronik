@@ -420,3 +420,75 @@ Vergleichsergebnis (2026-05-17): MiniLM beste Qualität für kurze Entity-String
   `confidence` im Fallback auf `None` gesetzt — Resume versucht fehlgeschlagene Segmente erneut.
 
 - ~~**`entity_utils.py:9` — `VALID_TYPES` als `set` statt `frozenset`**~~ ✓ behoben (2026-05-15, 9f4660c6)
+
+---
+
+## Railway Deployment
+
+Analysiert 2026-05-17. Noch kein Fix implementiert.
+
+### BLOCKER
+
+#### R1 — BGE-M3 (~2,5 GB) im Container
+
+`BGEProvider` lädt `BAAI/bge-m3` lazy beim ersten Request (`embeddings.py`). Modell-Gewichte (~2,5 GB) müssen entweder im Image liegen (Build schlägt fehl oder dauert 10+ Minuten) oder bei jedem Container-Start neu heruntergeladen werden. Kein Preload-Mechanismus. Erster Request triggert 60–120s Ladezeit → Railway-HTTP-Timeout.
+
+Bei `EMBEDDING_PROVIDER=voyage` entfällt dieses Problem vollständig.
+
+#### R2 — `data/` + `projects.db` ephemeral
+
+Railway-Container haben kein persistentes Filesystem. Bei jedem Restart verloren:
+
+- `data/projects.db` — alle Projekte, Dokument-Metadaten, Auth-Tokens
+- `data/projects/{id}/config.json` — Taxonomie, Entity-Liste, Zeitraum
+- `data/projects/{id}/documents/*/` — Segmente, Klassifizierungen, Embedding-Cache
+- `data/dropbox_tokens.json` — Dropbox OAuth Refresh Token
+- `data/projects/{id}/obsidian_checkpoint.json` — Stand des letzten Syncs
+
+`config.py` unterstützt bereits `DATA_ROOT` als Env-Var — auf ein Railway Volume zeigend würde es funktionieren. Volume ist aber nicht konfiguriert.
+
+#### R3 — `LLM_PROVIDER=ollama` als Default — Connection refused auf Railway
+
+`get_provider()` in `llm.py` defaultet auf `ollama` wenn `LLM_PROVIDER` nicht gesetzt. Ollama läuft nicht auf Railway → erster LLM-Call gibt `RuntimeError: Ollama nicht erreichbar (http://localhost:11434)`. Betrifft alle Pipeline-Schritte die LLM nutzen (Klassifizierung, Entity-Extraktion, Taxonomie-Vorschlag, Summaries).
+
+#### R4 — `railway.toml` und `Dockerfile` starten verschiedene Apps
+
+`railway.toml` startet `src.api_server:app` (leichte Chat-Only-API, kein Wizard).
+`Dockerfile` startet `src.generalized.dev_server:app` (vollständiger Wizard-Server).
+Railway nutzt bei Nixpacks-Build `railway.toml` — `Dockerfile` wird ignoriert. Der Wizard ist damit auf Railway nie erreichbar.
+
+---
+
+### HOCH
+
+#### R5 — Node.js fehlt für `precompute_network.js`
+
+`export_exploration.py` ruft `node src/precompute_network.js` via `subprocess.run` auf. Node.js ist weder im `Dockerfile` noch in `railway.toml` (`requirements-api.txt`) als Dependency deklariert. Das Netzwerk-Layout wird stumm übersprungen oder wirft einen Fehler.
+
+#### R6 — `PORT`-Env-Var wird ignoriert in `dev_server.py`
+
+Railway setzt `PORT` automatisch und erwartet, dass der Server darauf hört. `dev_server.py` hat keinen `PORT`-Env-Var-Support — `uvicorn` würde hardcoded auf 8001 starten. Der Healthcheck schlägt fehl, Railway sieht den Service als nicht bereit.
+
+---
+
+### MITTEL
+
+#### R7 — Keine `.env.example` / Deployment-Dokumentation
+
+Benötigte Env-Vars für Railway sind nirgends dokumentiert. Erforderlich (je nach Konfiguration):
+
+| Variable | Erforderlich wenn | Default |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | `LLM_PROVIDER=anthropic` | — |
+| `LLM_PROVIDER` | immer | `ollama` (→ R3) |
+| `EMBEDDING_PROVIDER` | immer | `local` (→ R1) |
+| `VOYAGE_API_KEY` | `EMBEDDING_PROVIDER=voyage` | — |
+| `DROPBOX_APP_KEY` / `DROPBOX_APP_SECRET` | Obsidian-Sync | `""` |
+| `DATA_ROOT` | persistentes Volume | `./data` |
+| `ADMIN_KEY` | Admin-Bypass | — |
+
+Kein `.env.example`, kein README-Abschnitt zu Railway.
+
+#### R8 — Kein Request-Timeout für BGE/GLiNER-Loads beim ersten Aufruf
+
+`asyncio.create_subprocess_exec` in `dev_server.py` hat kein Timeout. Läuft ein Pipeline-Script das BGE-M3 oder GLiNER erstmalig lädt, hängt der SSE-Stream bis Railway den Container terminiert (default: 60s). Für den Client sieht das wie ein Silent Failure aus.
