@@ -155,6 +155,19 @@ Stufe 1: Keywords pro Segment (kurze stabile Calls, parallelisierbar). Stufe 2: 
 ### detect_anchors — date-Feld für Zotero-Segmente
 Im Presseartikel-Modus: wenn kein Heading-Jahr aktiv, wird `seg["date"]` als Anker gesetzt (`precision="exact"`). Zotero-Metadaten-Datum (YYYY oder YYYY-MM-DD) landet damit direkt in `anchors.json`.
 
+### Flexible Timeline-Bins (2026-05-17, Branch feature/flexible-timeline-bins, 3b26da66)
+
+`viz/boot.js`: Zeitachsen-Domain kommt jetzt primär aus `meta.year_min`/`year_max` (via `project_meta.json`, befüllt aus `config.json`), nicht mehr aus den Rohdaten-Extremwerten. Vier Granularitätsstufen anstatt drei:
+
+| Zeitspanne | Bins |
+|---|---|
+| ≤ 50 Tage | täglich (`d3.timeDay`) |
+| 51–350 Tage | wöchentlich (`d3.timeWeek`) — neu |
+| 351–1500 Tage | monatlich (`d3.timeMonth`) |
+| > 1500 Tage | jährlich (`d3.timeYear`) |
+
+`viz/chart.js`: `_fmtBinDate` und `getContiguousSegments` um `d3.timeWeek`-Fall ergänzt. BER (1989–2017, ~10 200 Tage) greift weiterhin auf jährliche Bins.
+
 ---
 
 ## Bekannte Fallbacks und Workarounds
