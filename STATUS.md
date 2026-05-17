@@ -367,6 +367,22 @@ Aktuell kein Workaround — `--no-summaries`-Flag ist vorhanden und kann manuell
 
 ---
 
+### I27 — Embedding-Provider-Abstraktion [BACKLOG]
+
+Analog zu `get_provider()` für LLMs. Aktuell drei unabhängige Modell-Ladestellen ohne gemeinsame Abstraktion.
+
+Lokal:
+- MiniLM (`paraphrase-multilingual-MiniLM-L12-v2`) für Entity-Clustering
+- BGE-M3 (`BAAI/bge-m3`) für Taxonomie-Vorschlag und Klassifizierung
+
+API-Alternative (für Deployment ohne lokale Modelle):
+- Voyage-4 via `voyageai` SDK, `VOYAGE_API_KEY` bereits in `.env` vorhanden
+- Threshold für Entity-Clustering: ~0.78 statt 0.82 (MiniLM-Wert)
+
+Vergleichsergebnis (2026-05-17): MiniLM beste Qualität für kurze Entity-Strings; BGE-M3 ungeeignet für Entity-Clustering; Voyage-4 funktioniert mit angepasstem Threshold.
+
+---
+
 ## Audit-Befunde (2026-04-30)
 
 ### Kritisch (Deployment-Blocker)
