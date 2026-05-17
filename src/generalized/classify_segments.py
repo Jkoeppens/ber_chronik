@@ -140,21 +140,35 @@ def _classify_bge(
 ) -> None:
     """Klassifiziert Segmente per BGE-M3 cosine similarity — kein LLM-Call."""
     import numpy as np
-    import src.generalized.test_tfidf_anchor_taxonomy as _bge
+    from src.generalized.embeddings import EMB_TASK_CLASSIFY, get_embedding_provider
 
+    SEG_CHARS  = 500
     cache_path = doc_dir / "bge_embeddings.npy"
-    texts      = [s.get("text", "")[:_bge.SEG_CHARS] for s in content_segments]
+    texts      = [s.get("text", "")[:SEG_CHARS] for s in content_segments]
+    n          = len(content_segments)
 
-    print(f"BGE: {len(content_segments)} Segmente", flush=True)
-    bge      = _bge._load_bge()
-    seg_embs = _bge._compute_segment_embeddings(bge, texts, cache_path)
+    print(f"BGE: {n} Segmente", flush=True)
+    provider = get_embedding_provider(EMB_TASK_CLASSIFY)
+
+    if cache_path.exists():
+        cached = np.load(cache_path)
+        if cached.shape[0] == n:
+            print(f"  Embeddings aus Cache ({cached.shape})", flush=True)
+            seg_embs = cached
+        else:
+            print(f"  Cache: neu berechnen (shape mismatch: {cached.shape[0]} != {n})", flush=True)
+            seg_embs = provider.encode(texts)
+            np.save(cache_path, seg_embs)
+    else:
+        seg_embs = provider.encode(texts)
+        np.save(cache_path, seg_embs)
 
     tax_texts = [
         f"{c['name']}. {c.get('description', '')}. {' '.join(c.get('keywords', []))}"
         for c in taxonomy
     ]
     print(f"BGE: {len(tax_texts)} Taxonomie-Kategorien embedden…", flush=True)
-    tax_embs    = _bge._embed_texts(bge, tax_texts)
+    tax_embs    = provider.encode(tax_texts)
     valid_names = [c["name"] for c in taxonomy]
 
     results = []

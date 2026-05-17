@@ -810,12 +810,10 @@ async def get_near_duplicates(request: Request):
     if len(entities) < 2:
         return JSONResponse([])
     try:
-        from src.generalized.entity_gliner import _load_emb_model
+        from src.generalized.embeddings import EMB_TASK_CLUSTER, get_embedding_provider
         import numpy as np
-        model = _load_emb_model("paraphrase-multilingual-MiniLM-L12-v2")
         texts = [e.get("normalform", "") for e in entities]
-        embs  = model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
-        embs  = np.array(embs, dtype=np.float32)
+        embs  = get_embedding_provider(EMB_TASK_CLUSTER).encode(texts)
         sim   = embs @ embs.T
         LOW, HIGH = 0.80, 0.91
         all_pairs = []
@@ -1262,6 +1260,54 @@ async def test_obsidian_config(project_id: str, request: Request):
     except asyncio.TimeoutError:
         return JSONResponse({"ok": False, "error": "Dropbox-Timeout"}, status_code=504)
     return JSONResponse(result)
+
+
+@app.get("/api/projects/{project_id}/obsidian/debug")
+async def obsidian_debug(project_id: str, request: Request):
+    """Temporärer Diagnose-Endpoint: Dropbox-Listing + Checkpoint-Stand."""
+    if err := await _require_token(request, project_id): return err
+    cfg_path = PROJECTS_DIR / project_id / "config.json"
+    if not cfg_path.exists():
+        return JSONResponse({"error": "config.json nicht gefunden"}, status_code=404)
+    cfg = read_json_safe(cfg_path)
+    obs = cfg.get("obsidian") or {}
+    tokens = obs.get("tokens") or {}
+    folder = obs.get("dropbox_folder") or ""
+    if not folder:
+        return JSONResponse({"error": "dropbox_folder nicht konfiguriert"}, status_code=400)
+    if not folder.startswith("/"):
+        folder = "/" + folder
+    if not tokens.get("refresh_token"):
+        return JSONResponse({"error": "Kein refresh_token — OAuth fehlt"}, status_code=400)
+
+    try:
+        import dropbox, dropbox.files as dbx_files
+        dbx = dropbox.Dropbox(
+            oauth2_refresh_token=tokens["refresh_token"],
+            app_key=os.environ.get("DROPBOX_APP_KEY", ""),
+            app_secret=os.environ.get("DROPBOX_APP_SECRET", ""),
+        )
+        acc = dbx.users_get_current_account()
+        result = dbx.files_list_folder(folder, recursive=True)
+        entries = list(result.entries)
+        while result.has_more:
+            result = dbx.files_list_folder_continue(result.cursor)
+            entries.extend(result.entries)
+        md_files = [e.path_display for e in entries
+                    if isinstance(e, dbx_files.FileMetadata) and e.name.endswith(".md")]
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)}, status_code=500)
+
+    cp_path = PROJECTS_DIR / project_id / "obsidian_checkpoint.json"
+    checkpoint = read_json_safe(cp_path) or {"done": []}
+
+    return JSONResponse({
+        "account":    acc.name.display_name,
+        "folder":     folder,
+        "md_count":   len(md_files),
+        "md_files":   md_files,
+        "checkpoint": checkpoint,
+    })
 
 
 @app.post("/api/projects/{project_id}/obsidian/sync")

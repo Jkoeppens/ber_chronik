@@ -162,17 +162,14 @@ def _label_all_clusters(provider, cluster_texts: list[list[str]]) -> list[dict]:
 
 def _run_kmeans(pool: list[dict], provider, n_clusters: int) -> list[dict]:
     import numpy as np
-    from sentence_transformers import SentenceTransformer
     from sklearn.cluster import KMeans
     from sklearn.preprocessing import normalize
+    from src.generalized.embeddings import EMB_TASK_CLUSTER, get_embedding_provider
 
     texts = [s.get("text", "")[:KMEANS_SEG_CHARS] for s in pool]
     print(f"KMeans: {len(texts)} Segmente, {n_clusters} Cluster", flush=True)
 
-    print("  Lade Embedding-Modell…", flush=True)
-    emb_model  = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-    embeddings = emb_model.encode(texts, show_progress_bar=False)
-    emb_norm   = normalize(embeddings)
+    emb_norm = normalize(get_embedding_provider(EMB_TASK_CLUSTER).encode(texts))
     print(f"  Embeddings: {emb_norm.shape}", flush=True)
 
     print("  KMeans…", flush=True)

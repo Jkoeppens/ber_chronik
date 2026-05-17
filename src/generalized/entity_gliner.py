@@ -46,8 +46,6 @@ _LABEL_TO_TYPE: dict[str, str] = {
 # Modell-Cache: einmal laden, für alle Aufrufe wiederverwenden
 _gliner_model      = None
 _gliner_model_name: str | None = None
-_emb_model         = None
-_emb_model_name:   str | None = None
 
 
 def _load_gliner(model_name: str):
@@ -65,25 +63,6 @@ def _load_gliner(model_name: str):
     print("GLiNER: Modell geladen")
     return _gliner_model
 
-
-def _load_emb_model(model_name: str):
-    global _emb_model, _emb_model_name
-    if _emb_model is not None and _emb_model_name == model_name:
-        return _emb_model
-    try:
-        from sentence_transformers import SentenceTransformer
-    except ImportError:
-        print(
-            "FEHLER: sentence-transformers nicht installiert.\n"
-            "  pip install sentence-transformers",
-            file=sys.stderr,
-        )
-        raise
-    print(f"Embeddings: {model_name} wird geladen …")
-    _emb_model      = SentenceTransformer(model_name)
-    _emb_model_name = model_name
-    print("Embeddings: Modell geladen")
-    return _emb_model
 
 
 def _chunk(text: str, max_chars: int = GLINER_MAX_CHARS) -> list[str]:
@@ -130,12 +109,10 @@ def _embedding_cluster(entities: list[dict], threshold: float) -> list[dict]:
     Score: Maximum aus dem Cluster.
     """
     import numpy as np
-
-    emb_model = _load_emb_model("paraphrase-multilingual-MiniLM-L12-v2")
+    from src.generalized.embeddings import EMB_TASK_CLUSTER, get_embedding_provider
 
     texts = [e.get("normalform", "") for e in entities]
-    embs  = emb_model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
-    embs  = np.array(embs, dtype=np.float32)
+    embs  = get_embedding_provider(EMB_TASK_CLUSTER).encode(texts)
 
     n      = len(entities)
     parent = list(range(n))
