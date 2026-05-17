@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "pip install -r requirements-api.txt"
 
 [deploy]
-startCommand = "uvicorn src.api_server:app --host 0.0.0.0 --port ${PORT:-8000}"
+startCommand = "PYTHONPATH=. uvicorn src.generalized.dev_server:app --host 0.0.0.0 --port ${PORT:-8001}"
 restartPolicyType = "on_failure"
 
 [variables]
