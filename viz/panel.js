@@ -81,7 +81,7 @@ function formatDate(p) {
 // Renders a single paragraph card. `id` and `anchor` are mutually exclusive:
 //   id     → sets DOM id attribute (used for chat source cards, linked by AI answer text)
 //   anchor → sets data-anchor attribute (used for timeline/entity cards, supports highlight sync)
-const PARA_COLLAPSE_CHARS = 800;
+const PARA_COLLAPSE_CHARS = 1500;
 
 function renderParaCard(p, { id = null, anchor = null, highlightFn = highlightEntities } = {}) {
   const et    = p.event_type || "?";

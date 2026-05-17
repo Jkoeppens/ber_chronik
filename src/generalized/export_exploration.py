@@ -122,6 +122,53 @@ def build_entries(anchors: list[dict], cls_map: dict[str, dict]) -> list[dict]:
     return entries
 
 
+# ── Artikel-Gruppierung (presseartikel) ───────────────────────────────────────
+
+def group_by_article(entries: list[dict]) -> list[dict]:
+    """Fasst Segmente desselben Artikels zu einem Eintrag zusammen.
+
+    Gruppierungsschlüssel: (source_name, url).
+    Kategorie: häufigste unter den Segmenten (mode).
+    Text: alle Segmente mit '\\n\\n' verbunden.
+    Actors: Union aller Segmente.
+    Datierung: erstes Segment (zeitlich frühestes Vorkommen).
+    Reihenfolge: Erscheinungsreihenfolge des ersten Segments beibehalten.
+    """
+    from collections import defaultdict
+
+    seen: dict[tuple, int] = {}       # key → index in result
+    groups: list[list[dict]] = []
+
+    for e in entries:
+        key = (e.get("source_name") or "", e.get("url") or "")
+        if key not in seen:
+            seen[key] = len(groups)
+            groups.append([])
+        groups[seen[key]].append(e)
+
+    result = []
+    for i, segs in enumerate(groups, start=1):
+        first = segs[0]
+        cats  = [s["event_type"] for s in segs if s.get("event_type")]
+        # mode: häufigste Kategorie; bei Gleichstand erste
+        if cats:
+            from collections import Counter
+            event_type = Counter(cats).most_common(1)[0][0]
+        else:
+            event_type = None
+        actors = list(dict.fromkeys(
+            a for s in segs for a in (s.get("actors") or [])
+        ))
+        result.append({
+            **first,
+            "id":         i,
+            "text":       "\n\n".join(s["text"] for s in segs if s.get("text")),
+            "event_type": event_type,
+            "actors":     actors,
+        })
+    return result
+
+
 # ── entities_seed.csv ──────────────────────────────────────────────────────────
 
 def build_entities_csv(entities: list[dict]) -> str:
@@ -313,6 +360,13 @@ def main() -> None:
 
     # ── data.json ──────────────────────────────────────────────────────────────
     entries = build_entries(all_anchors, all_cls_map)
+
+    # Presseartikel: Segmente pro Artikel zusammenfassen
+    doc_type = config.get("doc_type", "buchnotizen")
+    if doc_type == "presseartikel":
+        before = len(entries)
+        entries = group_by_article(entries)
+        print(f"→ Artikel-Gruppierung: {before} Segmente → {len(entries)} Artikel")
 
     # D-P2: event_type jedes Eintrags gegen kanonische Taxonomie normalisieren
     valid_names = [c["name"] for c in taxonomy if c.get("name")]
