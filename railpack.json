@@ -3,14 +3,14 @@
     "python": "3.11",
     "node": "18"
   },
-  "steps": [
-    {
+  "steps": {
+    "install": {
       "commands": [
         "pip install -r requirements-api.txt",
         "npm install"
       ]
     }
-  ],
+  },
   "deploy": {
     "startCommand": "PYTHONPATH=. uvicorn src.generalized.dev_server:app --host 0.0.0.0 --port $PORT"
   }
