@@ -33,24 +33,26 @@ Promise.all([
   const _entryDate = e => e.date_js ? new Date(e.date_js) :
                           e.year != null ? new Date(e.year + "-01-01") : null;
 
-  const dateParsed = entries.map(_entryDate).filter(Boolean);
-  let [dMin, dMax] = d3.extent(dateParsed);
-  if (!dMin) {
-    // Fallback wenn weder date_js noch year: aus meta / Hardcoded
-    const y0 = (meta && meta.year_min) || 1989;
-    const y1 = (meta && meta.year_max) || 2017;
-    dMin = new Date(y0 + "-01-01");
-    dMax = new Date(y1 + "-12-31");
+  // dMin/dMax aus config.json (via project_meta.json year_min/year_max);
+  // Fallback: extent der tatsächlichen Entry-Daten, dann hardcoded.
+  let dMin, dMax;
+  if (meta && meta.year_min != null && meta.year_max != null) {
+    dMin = new Date(meta.year_min, 0, 1);
+    dMax = new Date(meta.year_max, 11, 31);
+  } else {
+    const dateParsed = entries.map(_entryDate).filter(Boolean);
+    [dMin, dMax] = d3.extent(dateParsed);
+    if (!dMin) { dMin = new Date(1989, 0, 1); dMax = new Date(2017, 11, 31); }
   }
 
-  // Automatische Bin-Größe nach Zeitspanne
-  const MS_6M = 183 * 24 * 3600 * 1000;   // ~6 Monate
-  const MS_3Y = 3 * 365 * 24 * 3600 * 1000; // 3 Jahre
+  // Automatische Bin-Größe nach Zeitspanne in Tagen
+  const MS_DAY = 24 * 3600 * 1000;
   const spanMs = dMax - dMin;
   let binInterval;
-  if      (spanMs < MS_6M) binInterval = d3.timeDay;
-  else if (spanMs < MS_3Y) binInterval = d3.timeMonth;
-  else                     binInterval = d3.timeYear;
+  if      (spanMs <=   50 * MS_DAY) binInterval = d3.timeDay;
+  else if (spanMs <=  350 * MS_DAY) binInterval = d3.timeWeek;
+  else if (spanMs <= 1500 * MS_DAY) binInterval = d3.timeMonth;
+  else                              binInterval = d3.timeYear;
   window._binInterval = binInterval;
 
   const binThresholds = binInterval.range(dMin, dMax);

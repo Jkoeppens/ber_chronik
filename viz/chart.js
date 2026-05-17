@@ -9,6 +9,7 @@ function getContiguousSegments(timestamps) {
   const bi  = window._binInterval;
   const gap = bi === d3.timeYear  ? 366 * 24 * 3600 * 1000 :
               bi === d3.timeMonth ?  32 * 24 * 3600 * 1000 :
+              bi === d3.timeWeek  ?   8 * 24 * 3600 * 1000 :
                                       2 * 24 * 3600 * 1000;
   const sorted = [...timestamps].sort((a, b) => a - b);
   const segs = [];
@@ -26,6 +27,7 @@ function _fmtBinDate(d) {
   const bi = window._binInterval;
   if (bi === d3.timeYear)  return d3.timeFormat("%Y")(d);
   if (bi === d3.timeMonth) return d3.timeFormat("%b %Y")(d);
+  if (bi === d3.timeWeek)  return d3.timeFormat("%d.%m.")(d);
   return d3.timeFormat("%d.%m.")(d);
 }
 
