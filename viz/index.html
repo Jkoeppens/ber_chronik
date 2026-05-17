@@ -124,17 +124,20 @@
     actEl.style.display = "none";
   }
 
-  // ── Zotero Sync ──
+  // ── Obsidian Sync ──
   paZoteroSync.addEventListener("click", async (e) => {
     e.preventDefault();
     if (!currentProject) return;
     paZoteroWrap.style.display = "";
-    paZoteroLog.textContent = "Verbinde mit Zotero …";
+    paZoteroLog.textContent = "Verbinde mit Obsidian …";
     paZoteroReload.style.display = "none";
     paZoteroSync.style.opacity = "0.5";
     paZoteroSync.style.pointerEvents = "none";
     try {
-      const res = await fetch(`${DEV_API}/api/projects/${currentProject}/obsidian/sync`, { method: "POST" });
+      const tokRes = await fetch(`${DEV_API}/api/projects/${currentProject}/token`);
+      if (!tokRes.ok) { paZoteroLog.textContent = "✗ Token konnte nicht geladen werden (" + tokRes.status + ")"; paZoteroSync.style.opacity = ""; paZoteroSync.style.pointerEvents = ""; return; }
+      const { token } = await tokRes.json();
+      const res = await fetch(`${DEV_API}/api/projects/${currentProject}/obsidian/sync`, { method: "POST", headers: { "X-Project-Token": token } });
       if (!res.ok || !res.body) { paZoteroLog.textContent += "\n✗ Server-Fehler " + res.status; return; }
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
       while (true) {
@@ -145,7 +148,7 @@
           if (!line.startsWith("data: ")) continue;
           const msg = line.slice(6);
           if (msg === "__done__") {
-            paZoteroLog.textContent += "\n✓ Sync abgeschlossen";
+            paZoteroLog.textContent += "\n✓ Obsidian-Sync abgeschlossen";
             paZoteroReload.style.display = "";
             paZoteroSync.style.opacity = ""; paZoteroSync.style.pointerEvents = "";
             return;
