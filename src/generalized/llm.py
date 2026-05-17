@@ -164,7 +164,16 @@ def get_provider(
     task   – TASK_CLASSIFY / TASK_ANALYZE / TASK_EXTRACT; bestimmt das Modell.
     model  – Expliziter Modell-Override; hat Vorrang vor task.
     """
-    provider_name = (name or os.environ.get("LLM_PROVIDER", "ollama")).lower()
+    if name:
+        provider_name = name.lower()
+    elif "LLM_PROVIDER" in os.environ:
+        provider_name = os.environ["LLM_PROVIDER"].lower()
+    elif os.environ.get("RAILWAY_ENVIRONMENT"):
+        raise ValueError(
+            "LLM_PROVIDER muss auf Railway explizit gesetzt sein (anthropic|ollama)"
+        )
+    else:
+        provider_name = "ollama"
 
     if provider_name == "anthropic":
         if model:
