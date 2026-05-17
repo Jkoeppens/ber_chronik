@@ -22,7 +22,7 @@
           <div id="project-actions" style="border-top:1px solid #e5e2dc; padding:4px 0;">
             <a id="pa-edit"       href="#" style="display:block;padding:7px 14px;font-size:12px;color:#374151;text-decoration:none;white-space:nowrap;">Daten bearbeiten →</a>
             <a id="pa-add-source" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#374151;text-decoration:none;white-space:nowrap;">Dokument hinzufügen →</a>
-            <a id="pa-zotero-sync" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#059669;text-decoration:none;white-space:nowrap;">Zotero aktualisieren ↻</a>
+            <a id="pa-zotero-sync" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#059669;text-decoration:none;white-space:nowrap;">Obsidian aktualisieren ↻</a>
             <div id="pa-zotero-progress" style="display:none;padding:6px 14px 2px;border-top:1px solid #d1fae5;">
               <pre id="pa-zotero-log" style="font-size:10px;font-family:monospace;max-height:120px;overflow-y:auto;margin:0;white-space:pre-wrap;color:#374151;background:#f0fdf4;padding:6px 8px;border-radius:4px;"></pre>
               <button id="pa-zotero-reload" style="display:none;margin-top:6px;padding:4px 10px;font-size:11px;background:#059669;color:#fff;border:none;border-radius:4px;cursor:pointer;">Viz neu laden</button>
@@ -134,7 +134,7 @@
     paZoteroSync.style.opacity = "0.5";
     paZoteroSync.style.pointerEvents = "none";
     try {
-      const res = await fetch(`${DEV_API}/api/projects/${currentProject}/zotero/sync`, { method: "POST" });
+      const res = await fetch(`${DEV_API}/api/projects/${currentProject}/obsidian/sync`, { method: "POST" });
       if (!res.ok || !res.body) { paZoteroLog.textContent += "\n✗ Server-Fehler " + res.status; return; }
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
       while (true) {
