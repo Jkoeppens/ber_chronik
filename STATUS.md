@@ -429,23 +429,21 @@ Analysiert 2026-05-17. Noch kein Fix implementiert.
 
 ### BLOCKER
 
-#### R1 — BGE-M3 (~2,5 GB) im Container
+#### R1 — BGE-M3 (~2,5 GB) im Container ✓ behoben (2026-05-17)
 
-`BGEProvider` lädt `BAAI/bge-m3` lazy beim ersten Request (`embeddings.py`). Modell-Gewichte (~2,5 GB) müssen entweder im Image liegen (Build schlägt fehl oder dauert 10+ Minuten) oder bei jedem Container-Start neu heruntergeladen werden. Kein Preload-Mechanismus. Erster Request triggert 60–120s Ladezeit → Railway-HTTP-Timeout.
+~~`BGEProvider` lädt `BAAI/bge-m3` lazy beim ersten Request.~~ Auf Railway wird `EMBEDDING_PROVIDER=voyage` gesetzt (`railway.toml [variables]`) — BGE-M3 wird nie geladen. MiniLM (120 MB) bleibt für Entity-Clustering lokal.
 
-Bei `EMBEDDING_PROVIDER=voyage` entfällt dieses Problem vollständig.
+**Hinweis:** `classify_segments.py --method bge` funktioniert auf Railway nicht (BGE-M3 fehlt). Der Default-Pfad (`--method llm`) ist unberührt. Der `bge`-Pfad ist ausschließlich für lokale Experimente vorgesehen.
 
-#### R2 — `data/` + `projects.db` ephemeral
+#### R2 — `data/` + `projects.db` ephemeral ✓ behoben (2026-05-17)
 
-Railway-Container haben kein persistentes Filesystem. Bei jedem Restart verloren:
+~~Railway-Container haben kein persistentes Filesystem.~~ Gelöst via Railway Volume:
 
-- `data/projects.db` — alle Projekte, Dokument-Metadaten, Auth-Tokens
-- `data/projects/{id}/config.json` — Taxonomie, Entity-Liste, Zeitraum
-- `data/projects/{id}/documents/*/` — Segmente, Klassifizierungen, Embedding-Cache
-- `data/dropbox_tokens.json` — Dropbox OAuth Refresh Token
-- `data/projects/{id}/obsidian_checkpoint.json` — Stand des letzten Syncs
+- `railway.toml`: `volumeMounts = [{ mountPath = "/data", name = "ber-data" }]`
+- `DATA_ROOT=/data` als Variable gesetzt
+- Volume `ber-data` muss einmalig manuell im Railway-Dashboard angelegt werden (siehe Deployment-Anleitung)
 
-`config.py` unterstützt bereits `DATA_ROOT` als Env-Var — auf ein Railway Volume zeigend würde es funktionieren. Volume ist aber nicht konfiguriert.
+Alle Schreibpfade (`projects.db`, `config.json`, `dropbox_tokens.json`, Pipeline-Outputs) landen auf dem Volume und überleben Restarts.
 
 #### R3 — `LLM_PROVIDER=ollama` als Default — Connection refused auf Railway
 

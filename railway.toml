@@ -5,6 +5,9 @@ buildCommand = "pip install -r requirements-api.txt && npm install"
 [deploy]
 startCommand = "PYTHONPATH=. uvicorn src.generalized.dev_server:app --host 0.0.0.0 --port ${PORT:-8001}"
 restartPolicyType = "on_failure"
+volumeMounts = [{ mountPath = "/data", name = "ber-data" }]
 
 [variables]
 LLM_PROVIDER = "anthropic"
+EMBEDDING_PROVIDER = "voyage"
+DATA_ROOT = "/data"
