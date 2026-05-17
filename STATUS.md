@@ -354,6 +354,19 @@ Liest config.json jetzt direkt vor dem Schreiben frisch von Disk, damit kein ver
 
 ---
 
+### I26 — `generate_entity_summaries` läuft beim Obsidian-Sync immer vollständig neu [MITTEL]
+
+`export_exploration.py` ruft `build_summaries()` für alle Entities neu auf, jedes Mal wenn der Obsidian-Sync läuft. Das ist bei größeren Entity-Listen teuer (LLM-Calls pro Entity) und ignoriert bereits generierte Summaries.
+
+Soll-Verhalten:
+- Summaries nur generieren wenn das Feature beim letzten Export aktiv war (kein `--no-summaries`)
+- Bei Aktualisierung: nur Entities neu zusammenfassen, die in neu ingested Segmenten vorkommen
+- Bestehende Summary als Kontext mitgeben: „hier alte Zusammenfassung, ergänze um neue Informationen"
+
+Aktuell kein Workaround — `--no-summaries`-Flag ist vorhanden und kann manuell gesetzt werden, wird beim Sync aber nicht durchgereicht.
+
+---
+
 ## Audit-Befunde (2026-04-30)
 
 ### Kritisch (Deployment-Blocker)
