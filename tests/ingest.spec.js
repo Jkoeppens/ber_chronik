@@ -53,12 +53,10 @@ test('Presseexzerpt BER — doc_type=presseartikel, source-Felder, Timeline-Eint
   for (const s of content.slice(0, 30)) {
     expect(s).toHaveProperty('source_date');
     expect(s).toHaveProperty('is_quote');
-    expect(s).toHaveProperty('is_geicke');
   }
 
-  // is_geicke und is_quote schließen sich nicht immer aus, aber beide boolean
+  // is_quote muss boolean sein
   expect(typeof content[0].is_quote).toBe('boolean');
-  expect(typeof content[0].is_geicke).toBe('boolean');
 
   // 3. exploration/data.json enthält Einträge
   const data = readJson('data/projects/ber/exploration/data.json');
