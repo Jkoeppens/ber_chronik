@@ -60,6 +60,9 @@ DROPBOX_REDIRECT_URL = os.environ.get(
 PIPELINE = [
     "src/generalized/detect_anchors.py",
     "src/generalized/interpolate_anchors.py",
+    "src/generalized/classify_segments.py",
+    "src/generalized/match_entities.py",
+    "src/generalized/export_exploration.py",
 ]
 
 
