@@ -467,6 +467,12 @@ Railway nutzt bei Nixpacks-Build `railway.toml` — `Dockerfile` wird ignoriert.
 
 Railway setzt `PORT` automatisch und erwartet, dass der Server darauf hört. `dev_server.py` hat keinen `PORT`-Env-Var-Support — `uvicorn` würde hardcoded auf 8001 starten. Der Healthcheck schlägt fehl, Railway sieht den Service als nicht bereit.
 
+#### R9 — Dropbox OAuth nicht Multi-User-fähig [HOCH]
+
+`dropbox_tokens.json` speichert alle OAuth-Token in einer einzigen globalen Datei ohne Nutzer- oder Projekt-Trennung. Bei mehreren Nutzern oder Projekten überschreiben die OAuth-Callbacks sich gegenseitig — der zuletzt authentifizierte Nutzer gewinnt, alle anderen verlieren den Sync-Zugang.
+
+**Lösung:** Token pro Projekt in `config.json["obsidian"]["tokens"]` speichern statt global in `dropbox_tokens.json`. OAuth-Callback schreibt Token in das jeweilige Projekt anhand der `project_id` aus dem OAuth-State.
+
 ---
 
 ### MITTEL
