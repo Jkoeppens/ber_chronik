@@ -103,7 +103,7 @@ def _list_md_files(dbx, folder_path: str) -> list:
     """Listet alle .md-Dateien im Dropbox-Ordner."""
     import dropbox.files
     try:
-        result = dbx.files_list_folder(folder_path)
+        result = dbx.files_list_folder(folder_path, recursive=True)
     except Exception as exc:
         print(f"Fehler beim Auflisten von {folder_path}: {exc}", file=sys.stderr)
         sys.exit(1)
