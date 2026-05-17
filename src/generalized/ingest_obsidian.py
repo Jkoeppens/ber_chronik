@@ -278,8 +278,10 @@ def main() -> None:
 
     # ── 2. Checkpoint ─────────────────────────────────────────────────────────
     cp = _load_checkpoint(cp_path)
-    done_set = set(cp.get("done", []))
-    new_indices = [i for i, k in enumerate(file_keys) if k not in done_set]
+    # Normalisierung auf Dateiname: verträgt alte Einträge (nur Name) und neue
+    # Dropbox-Einträge (absoluter path_display wie /Ordner/Artikel.md).
+    done_set = {Path(k).name for k in cp.get("done", [])}
+    new_indices = [i for i, k in enumerate(file_keys) if Path(k).name not in done_set]
     print(f"{len(new_indices)} neue Dateien (bereits verarbeitet: {len(done_set)})")
 
     if not new_indices:
