@@ -315,3 +315,85 @@ Ergänzung zu `data.json` geladen:
 `year_min` und `year_max` stehen nicht in `data.json` sondern werden von
 `export_exploration.py` direkt in `config.json` auf Projektebene zurückgeschrieben
 und von `GET /api/projects/{id}` geliefert.
+
+---
+
+## Visualisierung
+
+Die Viz besteht aus neun JavaScript-Dateien, die in `viz/index.html` in fester Reihenfolge geladen werden. Globale Variablen (`allEntries`, `netNodes`, `hlState` usw.) dienen als Kommunikationskanal zwischen den Dateien — kein Modul-System, kein State-Manager.
+
+### `config.js`
+
+Setzt `API_URL = window.location.origin`. Wird als erstes geladen, damit alle folgenden Dateien wissen wohin API-Requests gehen. Auf Railway und lokal gleich korrekt.
+
+### `highlight.js`
+
+Zentrales Daten- und Hilfsfunktions-Modul — lädt als zweites, weil alle anderen Dateien auf seinen globalen Variablen aufbauen.
+
+Setzt `PAGE_PROJECT` (aus `?project=`-URL-Parameter) und `DATA_BASE` (relativer Pfad zu `exploration/`). Definiert `COLOR`, `NODE_COLOR` und `EVENT_TYPES` zunächst als Fallback-Werte; `initColors(meta)` überschreibt sie sobald `project_meta.json` geladen ist. Baut den `aliasMap` aus `entities_seed.csv` auf (`buildAliasMap()`), der für das Entity-Highlighting im gesamten Panel genutzt wird. Stellt `highlightEntities()` und `highlightWithKeywords()` bereit — beide rendern Text als HTML mit `<span class="entity">` für bekannte Akteure und `<mark class="kw-hit">` für Suchtreffer. Enthält auch `setHighlight()` und `_applyHighlight()`, die bei jeder Highlight-Änderung Timeline, Netzwerk und Chart synchron aktualisieren.
+
+**Liest:** `entities_seed.csv` (indirekt, über `buildAliasMap()` in `boot.js`), `project_meta.json` (über `initColors()` in `boot.js`).
+
+### `highlight-state.js`
+
+Deklariert den globalen `hlState` (`{ mode, anchors, active, focusEntity }`) und die zugehörigen D3-Selektionen (`chartDotSelection`, `netNodeSelection`, `netNeighbors`). Enthält `_applyTimelineHighlight()` und `_applyNetworkHighlight()`. Wird vor `panel.js`, `chart.js` und `network.js` geladen, damit diese Funktionen beim ersten Aufruf bereits existieren.
+
+Drei Highlight-Modi: `"none"` (Ruhezustand), `"answer"` (Menge hervorgehobener Ankerpunkte, z.B. aus KI-Antwort oder Entity-Selektion), `"single"` (ein einzelner Absatz explizit fokussiert). `focusEntity` kann zusätzlich einen Akteur benennen, der in allen drei Ansichten optisch hervorgehoben wird.
+
+### `panel.js`
+
+Verwaltet den rechten Panel als Zustandsmaschine mit einem `viewStack`. Drei exklusive Ansichten: `view-chat`, `view-timeline`, `view-entity`. `showView()` legt die aktuelle Ansicht auf den Stack, `goBack()` holt sie zurück, `goHome()` setzt alles zurück.
+
+Stellt die Rendering-Helfer bereit, die von allen anderen Dateien genutzt werden: `renderParaCard()` erzeugt eine einzelne Quellkarte mit Datum, Kategoriefarbpunkt, Entity-Highlighting und Quelle-Link; `renderParaList()` hängt eine Liste davon zusammen; `renderEntityView()` kombiniert KI-Zusammenfassung aus `entities_summary.json` mit der Absatzliste eines Akteurs. Event-Delegation auf `#panel-content` behandelt „weiterlesen"-Klapp-Toggle, `src-ref`-Anker-Scrolling, Entity-Span-Klicks und Absatzkarten-Klicks.
+
+**Liest:** `entities_summary.json` (indirekt über `summaryMap`, befüllt in `boot.js`).
+
+### `tabs.js`
+
+Schaltet zwischen Timeline- und Netzwerk-Tab um (`switchTab()`). Deklariert die geteilten Globals `netNodes`, `netLinks`, `entriesByActor`, `entriesByAnchor`, damit `boot.js` sie befüllen und `network.js` sie lesen kann. Zeichnet das Netzwerk lazy beim ersten Tab-Klick (`networkDrawn`-Flag).
+
+### `boot.js`
+
+Einstiegspunkt. Lädt alle vier Datendateien parallel per `Promise.all`:
+
+| Datei | Pflicht | Fehler |
+|---|---|---|
+| `data.json` | ja | bricht alles ab |
+| `entities_seed.csv` | nein | leerer String |
+| `entities_summary.json` | nein | leeres Objekt |
+| `project_meta.json` | nein | null |
+
+Nach dem Laden: ruft `initColors(meta)` auf (überschreibt Fallback-Farben), befüllt `allEntries`, `entriesByAnchor`, `actorsByAnchor`. Berechnet `dMin`/`dMax` aus `meta.year_min`/`year_max` (Fallback: Extent der Rohdaten). Wählt die Bin-Granularität nach Zeitspanne (täglich / wöchentlich / monatlich / jährlich). Binnt die Einträge per `d3.bin()`, baut die `series`-Struktur pro Kategorie und ruft `drawChart()` auf. Baut parallel `netNodes` und `netLinks` für das Netzwerk auf (Kanten nur wenn Koauftreten ≥ `LINK_MIN_COUNT = 2`).
+
+**Liest:** `data.json`, `entities_seed.csv`, `entities_summary.json`, `project_meta.json`.  
+**Schreibt in:** globale Variablen aus `tabs.js`, `highlight.js`, `highlight-state.js`, `search.js`.
+
+### `chart.js`
+
+Zeichnet die Timeline-Heatmap als D3-SVG. `drawChart(series, binDates)` wird von `boot.js` aufgerufen und bei jedem Resize neu gezeichnet. Jede Kategorie erhält eine Linie + Flächenfüllung + Kreispunkte; Klick auf einen Bin öffnet die zugehörigen Absätze im Panel (`showView("timeline", ...)`). Die X-Achse ist zoombar (D3 Zoom, Faktor 1–20); beim Zoomen werden Achse, Linien, Punkte und Highlight-Clips synchron neu positioniert.
+
+`_applyChartEntityHighlight()` reagiert auf `hlState`-Änderungen: hebt die Zeitabschnitte eines Akteurs durch farbige Clip-Paths hervor und dimmt nicht-relevante Linien.
+
+**Abhängigkeiten:** `highlight.js` (COLOR, setHighlight), `highlight-state.js` (hlState, DIM), `panel.js` (showView, renderParaList).
+
+### `network.js`
+
+Zeichnet den Akteursgraphen als D3-Force-Simulation. Lädt `network_layout.json` vorab (eagerly beim Skript-Start), damit die vorberechneten Positionen sofort verfügbar sind wenn der Tab geöffnet wird. Knoten deren Position im Layout fehlt, werden zufällig platziert.
+
+Vier Filter-Dimensionen: Knotentyp (Person/Org/…), Ereignistyp der Kanten, Minimum-Knotengrad, Ego-Graph-Modus. `applyNetworkState()` implementiert eine Prioritätshierarchie: Ego-Graph > Kantenfokus > KI-Subgraph > Ruhezustand. Klick auf einen Knoten ruft `selectEntity()` in `panel.js` auf und wechselt den Panel auf die Entity-Ansicht.
+
+**Liest:** `network_layout.json` (direkt per fetch).  
+**Abhängigkeiten:** `highlight.js`, `highlight-state.js`, `tabs.js` (netNodes, netLinks), `panel.js` (selectEntity, renderParaList).
+
+### `search.js`
+
+Steuert das Chat-Eingabefeld. `isAiMode()` entscheidet anhand Länge und Fragezeichen ob ein Request an `POST /chat/stream` geht oder eine lokale Volltextsuche (`fulltextSearch()`) läuft. Der SSE-Stream wird token-weise in `#stream-target` geschrieben; nach dem `done`-Event ruft `renderChatAnswer()` auf `panel.js` zurück. Bei API-Fehler automatischer Fallback auf Volltextsuche. Schützt `[doc_anchor]`-Referenzen im Markdown vor dem `marked`-Parser durch Platzhalter-Substitution.
+
+**Liest:** `allEntries` (global aus `boot.js`).  
+**Abhängigkeiten:** `highlight.js` (setHighlight, entriesByAnchor), `panel.js` (renderParaCard, showView).
+
+### `tutorial.js`
+
+Schrittweises Einführungs-Tutorial mit 10 Schritten, ausgelöst durch den `?`-Button im Header. Positioniert einen Overlay-Tooltip relativ zum `target`-Element jedes Schritts und führt optional automatische Aktionen aus (z.B. eine Beispielfrage absenden, in den Netzwerk-Tab wechseln). Kein eigener State außer dem aktuellen Schritt-Index.
+
+---
