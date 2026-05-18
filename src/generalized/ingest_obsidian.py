@@ -254,10 +254,7 @@ def main() -> None:
         doc_type_cfg = oc.get("doc_type", args.doc_type)
         args.doc_type = doc_type_cfg
 
-        if not DROPBOX_TOKENS_PATH.exists():
-            print("Fehler: Dropbox nicht verbunden — zuerst OAuth durchführen", file=sys.stderr)
-            sys.exit(1)
-        tokens = json.loads(DROPBOX_TOKENS_PATH.read_text(encoding="utf-8"))
+        tokens = (oc.get("tokens") or {})
         if not tokens.get("refresh_token"):
             print("Fehler: Dropbox nicht verbunden — zuerst OAuth durchführen", file=sys.stderr)
             sys.exit(1)

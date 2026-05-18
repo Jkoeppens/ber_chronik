@@ -664,6 +664,7 @@ buildDots();
     try {
       const _oauthP = new URLSearchParams();
       const _inv = window._INVITE_LIVE || _INVITE; if (_inv) _oauthP.set('invite', _inv);
+      if (state.project) _oauthP.set('project_id', state.project);
       const res = await fetch('/api/obsidian/oauth/start?' + _oauthP.toString());
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
@@ -1813,6 +1814,7 @@ async function loadProjectList() {
         try {
           const _oauthP2 = new URLSearchParams();
           const _inv2 = window._INVITE_LIVE || _INVITE; if (_inv2) _oauthP2.set('invite', _inv2);
+          if (state.project) _oauthP2.set('project_id', state.project);
           const res = await fetch('/api/obsidian/oauth/start?' + _oauthP2.toString());
           const data = await res.json();
           if (!data.ok) throw new Error(data.error);
