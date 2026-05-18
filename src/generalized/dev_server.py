@@ -148,6 +148,20 @@ def _require_admin_key(request: Request) -> JSONResponse | None:
     return None
 
 
+def _require_admin_or_invite(request: Request) -> JSONResponse | None:
+    """ADMIN_KEY ODER gültiger invite-Token reicht. Ohne ADMIN_KEY: immer erlaubt."""
+    admin_key = os.environ.get("ADMIN_KEY")
+    if not admin_key:
+        return None
+    auth = request.headers.get("Authorization", "")
+    provided = auth.removeprefix("Bearer ").strip() or request.query_params.get("admin_key", "")
+    if provided == admin_key:
+        return None
+    if invite_valid(_get_invite(request)):
+        return None
+    return JSONResponse({"ok": False, "error": "Admin-Key oder Einladungstoken erforderlich"}, status_code=403)
+
+
 async def _require_token(request: Request, project: str | None = None) -> JSONResponse | None:
     """
     Liest Token aus ?token= oder X-Project-Token Header.
@@ -957,7 +971,7 @@ async def _get_latest_doc_id(project_id: str) -> str | None:
 
 @app.post("/api/projects")
 async def create_project_endpoint(request: Request):
-    if err := _require_admin_key(request): return err
+    if err := _require_admin_or_invite(request): return err
     body = await request.json()
     title = (body.get("title") or "").strip()
     if not title:
@@ -1060,6 +1074,8 @@ async def update_project_endpoint(project_id: str, request: Request):
 
 @app.delete("/api/projects/{project_id}")
 async def delete_project_endpoint(project_id: str, request: Request):
+    if project_id == "ber":
+        return JSONResponse({"ok": False, "error": "Das BER-Demoprojekt kann nicht gelöscht werden"}, status_code=403)
     body = await request.json()
     if not body.get("confirm"):
         return JSONResponse({"ok": False, "error": "confirm: true erforderlich"}, status_code=400)
