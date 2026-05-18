@@ -3,9 +3,12 @@ invite_auth.py — Einladungstoken-Verwaltung.
 
 Wenn invites.json nicht existiert (lokaler Dev-Modus): alle Anfragen erlaubt.
 Wenn invites.json existiert und Einträge hat: Token-Prüfung aktiv.
+
+Auf Railway: INVITES_JSON-Env-Var als Fallback wenn invites.json fehlt.
 """
 
 import json
+import os
 import secrets
 from pathlib import Path
 
@@ -15,12 +18,18 @@ INVITES_PATH = ROOT / "invites.json"
 
 
 def _load() -> dict:
-    if not INVITES_PATH.exists():
-        return {}
-    try:
-        return json.loads(INVITES_PATH.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return {}
+    if INVITES_PATH.exists():
+        try:
+            return json.loads(INVITES_PATH.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return {}
+    env = os.environ.get("INVITES_JSON", "").strip()
+    if env:
+        try:
+            return json.loads(env)
+        except json.JSONDecodeError:
+            return {}
+    return {}
 
 
 def invite_required() -> bool:
