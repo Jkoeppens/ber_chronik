@@ -1,0 +1,261 @@
+{
+  "width": 1100,
+  "height": 600,
+  "nodes": [
+    {
+      "id": "Berlin",
+      "x": 233.7,
+      "y": 286.19
+    },
+    {
+      "id": "Brandenburg",
+      "x": 608.69,
+      "y": 385.3
+    },
+    {
+      "id": "Rainer Schwarz",
+      "x": 721.39,
+      "y": 102.09
+    },
+    {
+      "id": "Eberhard Diepgen",
+      "x": 918.5,
+      "y": 158.35
+    },
+    {
+      "id": "Abgeordnetenhaus von Berlin",
+      "x": 1095.13,
+      "y": 110.91
+    },
+    {
+      "id": "die tageszeitung",
+      "x": 802.59,
+      "y": 193.95
+    },
+    {
+      "id": "Sozialdemokratische Partei Deutschlands",
+      "x": 545.49,
+      "y": -16.55
+    },
+    {
+      "id": "Flughafen Berlin-Tegel",
+      "x": 857.32,
+      "y": -78.44
+    },
+    {
+      "id": "Der Spiegel",
+      "x": 746.23,
+      "y": 9.14
+    },
+    {
+      "id": "Deutschland",
+      "x": 725.46,
+      "y": -71.82
+    },
+    {
+      "id": "Schönefeld",
+      "x": 356.19,
+      "y": 38.08
+    },
+    {
+      "id": "Der Tagesspiegel",
+      "x": 239.74,
+      "y": 154.31
+    },
+    {
+      "id": "Flughafen Berlin-Tempelhof",
+      "x": 701.41,
+      "y": 477.83
+    },
+    {
+      "id": "Manfred Stolpe",
+      "x": 528.95,
+      "y": 365.47
+    },
+    {
+      "id": "Potsdam",
+      "x": 700.31,
+      "y": 357.84
+    },
+    {
+      "id": "Sperenberg",
+      "x": 829.93,
+      "y": 444.93
+    },
+    {
+      "id": "Deutsche Lufthansa AG",
+      "x": 387.44,
+      "y": -183.93
+    },
+    {
+      "id": "Christlich Demokratische Union Deutschlands",
+      "x": 1011.28,
+      "y": 355.96
+    },
+    {
+      "id": "Frankfurter Rundschau",
+      "x": 1036.99,
+      "y": 582.24
+    },
+    {
+      "id": "Frankfurt am Main",
+      "x": 147.34,
+      "y": 431.91
+    },
+    {
+      "id": "Berliner Flughafengesellschaft BBF",
+      "x": 349.3,
+      "y": 435.37
+    },
+    {
+      "id": "Matthias Platzeck",
+      "x": 955.05,
+      "y": 41.7
+    },
+    {
+      "id": "Jüterbog",
+      "x": 399.65,
+      "y": 284.89
+    },
+    {
+      "id": "Flughafengesellschaft Berlin Schönefeld",
+      "x": 203.86,
+      "y": -35.67
+    },
+    {
+      "id": "Handelsblatt",
+      "x": 354.48,
+      "y": 121.91
+    },
+    {
+      "id": "Die Zeit",
+      "x": 364.58,
+      "y": -25.67
+    },
+    {
+      "id": "Berliner Zeitung",
+      "x": 786.41,
+      "y": 327.53
+    },
+    {
+      "id": "Diepensee",
+      "x": 354.41,
+      "y": -90.19
+    },
+    {
+      "id": "Air Berlin PLC & Co. Luftverkehrs KG",
+      "x": 923.46,
+      "y": 762.62
+    },
+    {
+      "id": "Bundesrepublik Deutschland (Bund als Anteilseigner)",
+      "x": 523.63,
+      "y": 726.5
+    },
+    {
+      "id": "Süddeutsche Zeitung",
+      "x": 832.5,
+      "y": 73.05
+    },
+    {
+      "id": "München",
+      "x": 530.81,
+      "y": 151.65
+    },
+    {
+      "id": "Leipzig",
+      "x": 993.75,
+      "y": 169.42
+    },
+    {
+      "id": "IVG Immobilien AG",
+      "x": 455.62,
+      "y": 183.52
+    },
+    {
+      "id": "Siemens AG",
+      "x": 146.26,
+      "y": 113.68
+    },
+    {
+      "id": "Flughafen Berlin Brandenburg",
+      "x": 629.1,
+      "y": 239.37
+    },
+    {
+      "id": "Michael Müller",
+      "x": 272.43,
+      "y": 670.76
+    },
+    {
+      "id": "PPS (Projektsteuerung BER)",
+      "x": 877.19,
+      "y": 567.4
+    },
+    {
+      "id": "HOCHTIEF AG",
+      "x": 465.67,
+      "y": 300.74
+    },
+    {
+      "id": "Klaus Wowereit",
+      "x": 542.92,
+      "y": 465.56
+    },
+    {
+      "id": "Untersuchungsausschuss BER",
+      "x": 707.18,
+      "y": -205.86
+    },
+    {
+      "id": "Berliner Morgenpost",
+      "x": 185.14,
+      "y": 571.43
+    },
+    {
+      "id": "Bundesverwaltungsgericht",
+      "x": 290.97,
+      "y": 883.49
+    },
+    {
+      "id": "Flughafen Berlin Brandenburg GmbH",
+      "x": 54.43,
+      "y": 256.93
+    },
+    {
+      "id": "Manfred Körtgen",
+      "x": 776.19,
+      "y": 715.18
+    },
+    {
+      "id": "Hartmut Mehdorn",
+      "x": 333.75,
+      "y": 238.96
+    },
+    {
+      "id": "Horst Amann",
+      "x": 281.13,
+      "y": 761.8
+    },
+    {
+      "id": "Dietmar Woidke",
+      "x": 749.68,
+      "y": 621.47
+    },
+    {
+      "id": "Jörg Marks",
+      "x": 322.02,
+      "y": 596.2
+    },
+    {
+      "id": "Karsten Mühlenfeld",
+      "x": 40.75,
+      "y": 523.21
+    },
+    {
+      "id": "Engelbert Lütke Daldrup",
+      "x": 147.4,
+      "y": 731.29
+    }
+  ]
+}
