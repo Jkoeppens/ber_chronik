@@ -108,6 +108,13 @@ async def invite_gate_middleware(request: Request, call_next):
 @app.on_event("startup")
 async def startup():
     await init_db()
+    try:
+        from src.generalized.entity_gliner import _load_gliner
+        from src.generalized.config import GLINER_MODEL
+        import asyncio
+        await asyncio.get_event_loop().run_in_executor(None, _load_gliner, GLINER_MODEL)
+    except Exception as exc:
+        print(f"[startup] GLiNER konnte nicht geladen werden: {exc}", file=__import__("sys").stderr)
 
 
 # ── Invite-Token Validation ────────────────────────────────────────────────────
