@@ -101,7 +101,7 @@
   const actEl    = document.getElementById("project-actions");
   const newProj  = document.getElementById("project-new");
 
-  newProj.href = `${DEV_API}/ingest`;
+  newProj.href = `${API_URL}/ingest`;
 
   // Actions (only meaningful with a current project)
   const paEdit         = document.getElementById("pa-edit");
@@ -117,8 +117,8 @@
   const paDelete  = document.getElementById("pa-delete");
 
   if (currentProject) {
-    paEdit.href   = `${DEV_API}/ingest?project=${currentProject}&step=4`;
-    paAddSrc.href = `${DEV_API}/ingest?add_to=${currentProject}`;
+    paEdit.href   = `${API_URL}/ingest?project=${currentProject}&step=4`;
+    paAddSrc.href = `${API_URL}/ingest?add_to=${currentProject}`;
     actEl.style.display = "";
   } else {
     actEl.style.display = "none";
@@ -134,10 +134,10 @@
     paZoteroSync.style.opacity = "0.5";
     paZoteroSync.style.pointerEvents = "none";
     try {
-      const tokRes = await fetch(`${DEV_API}/api/projects/${currentProject}/token`);
+      const tokRes = await fetch(`${API_URL}/api/projects/${currentProject}/token`);
       if (!tokRes.ok) { paZoteroLog.textContent = "✗ Token konnte nicht geladen werden (" + tokRes.status + ")"; paZoteroSync.style.opacity = ""; paZoteroSync.style.pointerEvents = ""; return; }
       const { token } = await tokRes.json();
-      const res = await fetch(`${DEV_API}/api/projects/${currentProject}/obsidian/sync`, { method: "POST", headers: { "X-Project-Token": token } });
+      const res = await fetch(`${API_URL}/api/projects/${currentProject}/obsidian/sync`, { method: "POST", headers: { "X-Project-Token": token } });
       if (!res.ok || !res.body) { paZoteroLog.textContent += "\n✗ Server-Fehler " + res.status; return; }
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
       while (true) {
@@ -189,7 +189,7 @@
     e.preventDefault();
     const newTitle = paRenIn.value.trim();
     if (!newTitle || !currentProject) return;
-    const res = await fetch(`${DEV_API}/api/projects/${currentProject}`, {
+    const res = await fetch(`${API_URL}/api/projects/${currentProject}`, {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: newTitle }),
     });
@@ -208,7 +208,7 @@
     if (!currentProject) return;
     const name = document.getElementById("project-title-text").textContent;
     if (!confirm(`Projekt „${name}" wirklich löschen?\nDieser Vorgang kann nicht rückgängig gemacht werden.`)) return;
-    const res = await fetch(`${DEV_API}/api/projects/${currentProject}`, {
+    const res = await fetch(`${API_URL}/api/projects/${currentProject}`, {
       method: "DELETE", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ confirm: true }),
     });
@@ -221,7 +221,7 @@
 
   function loadProjects() {
     listEl.innerHTML = '<div style="padding:8px 14px;font-size:12px;color:#888;">Lade…</div>';
-    fetch(`${DEV_API}/api/projects`)
+    fetch(`${API_URL}/api/projects`)
       .then(r => r.json())
       .then(projects => {
         listEl.innerHTML = "";
