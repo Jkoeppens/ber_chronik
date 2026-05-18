@@ -1350,13 +1350,8 @@ async def obsidian_sync(project_id: str, request: Request):
 
 # ── Chat ──────────────────────────────────────────────────────────────────────
 
-_CHAT_PROMPT = """\
-Du beantwortest eine Frage auf Basis von Auszügen aus dem vorliegenden Quellmaterial.
-
-Frage: {question}
-
-Gefundene Auszüge ({count} gesamt):
-{paragraphs}
+_CHAT_SYSTEM = """\
+Du beantwortest Fragen auf Basis von Auszügen aus historischem Quellmaterial.
 
 Antworte auf Deutsch. Gliedere deine Antwort nach relevanten thematischen Kategorien \
 die sich aus den Auszügen ergeben. Nenne konkrete Daten, Personen und Beschlüsse. \
@@ -1371,6 +1366,13 @@ Zitierregeln (strikt einzuhalten):
 - Mehrere Quellen: [main-s0048][main-s0059] direkt hintereinander, kein Komma.
 
 Antworte mit Fließtext und kurzen Überschriften (##), keine JSON-Ausgabe.\
+"""
+
+_CHAT_USER = """\
+Frage: {question}
+
+Auszüge ({count} gesamt):
+{paragraphs}\
 """
 
 _CHAT_STOPWORDS = {
@@ -1440,12 +1442,12 @@ async def chat_stream(request: Request):
         f"[{e['doc_anchor']}] {e.get('year', '?')}: {e.get('text', '')}"
         for e in hits
     )
-    prompt = _CHAT_PROMPT.format(question=question, count=len(hits), paragraphs=para_block)
+    user_prompt = _CHAT_USER.format(question=question, count=len(hits), paragraphs=para_block)
 
     def generate():
         try:
             provider = get_provider(task=TASK_CHAT)
-            for token in provider.stream_complete(prompt):
+            for token in provider.stream_complete(user_prompt, system=_CHAT_SYSTEM):
                 yield f"data: {json.dumps(token)}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'sources': sources, 'keywords': keywords})}\n\n"
         except Exception as exc:
