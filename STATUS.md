@@ -381,6 +381,28 @@ API-Alternative (für Deployment ohne lokale Modelle):
 
 Vergleichsergebnis (2026-05-17): MiniLM beste Qualität für kurze Entity-Strings; BGE-M3 ungeeignet für Entity-Clustering; Voyage-4 funktioniert mit angepasstem Threshold.
 
+### I28 — year_min/year_max beim ersten Obsidian-Sync nicht gesetzt [MITTEL]
+
+`runObsidianSync()` ruft nach `__done__` den Endpoint `doc_status?document=main` ab. Neue Dokumente liegen aber unter einer frischen `doc_id` (z.B. `626583c4`), nicht unter `main`. Der Abruf gibt `year_min: null` zurück, `state.time_config` bleibt auf `{year_min: 1800, year_max: 1920}`.
+
+Fix: Sync-Response enthält die neue `doc_id`; `runObsidianSync()` liest sie aus dem SSE-`__done__`-Payload oder aus `state.document` nach dem Sync.
+
+### I29 — Schritt 5 für neue Obsidian-Projekte übersprungen [MITTEL]
+
+`state.isExistingProject = true` wird im neuen Obsidian-Flow gesetzt, weil das Projekt beim Weiter-Klick bereits in der DB angelegt wird. `btnNext`-Handler springt bei `isExistingProject` von Schritt 4 direkt zu Schritt 6 — Zeitkonfiguration (Schritt 5) wird übersprungen.
+
+Fix: Eigenes Flag `state.isFullyConfigured` statt `isExistingProject` für die Schritt-4→5/6-Entscheidung. Neue Projekte (Obsidian wie File) setzen es erst wenn Zeitkonfiguration gespeichert wurde.
+
+### I30 — saveTimeConfig nie aufgerufen beim Obsidian-Flow [GERING]
+
+Folge von I29: Schritt 5 nie betreten, `saveTimeConfig()` nie aufgerufen, `year_min`/`year_max` landen nie in `config.json`. Die Werte werden erst beim nächsten Reload aus den Ankern neu berechnet (wenn überhaupt, s. I28).
+
+### I31 — Timeline-Tick-Schritt hardkodiert auf 10 Jahre [GERING]
+
+`export_preview.py` generiert Timeline-Ticks mit festem `step=10`: `range(YEAR_MIN, YEAR_MAX + 1, 10)`. Bei Obsidian-Pressesammlungen mit Tages-Granularität und kurzer Zeitspanne (z.B. 2020–2025) entstehen nutzlose oder fehlende Ticks. Wizard-Schritt-5 berechnet den Schritt korrekt dynamisch (`Math.ceil(span / 5 / 10) * 10`), `export_preview.py` macht das nicht.
+
+Fix: Schritt analog zu Wizard-Logik dynamisch berechnen, Mindest-Schritt 1 Jahr.
+
 ---
 
 ## Audit-Befunde (2026-04-30)

@@ -1016,6 +1016,7 @@ async def get_project_endpoint(project_id: str):
         "id":       proj["id"],
         "title":    proj["title"],
         "doc_type": proj["doc_type"],
+        "doc_id":   cfg.get("doc_id"),
         "year_min": cfg.get("year_min"),
         "year_max": cfg.get("year_max"),
         "events":   cfg.get("events") or [],
