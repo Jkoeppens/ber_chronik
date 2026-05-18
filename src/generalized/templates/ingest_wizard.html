@@ -660,11 +660,16 @@ buildDots();
   });
 
   npObsConnect.addEventListener('click', async () => {
+    if (!npObsProjId) {
+      npObsConnSt.textContent = '✗ Zuerst "Weiter" klicken um Projekt anzulegen';
+      npObsConnSt.style.color = '#dc2626';
+      return;
+    }
     npObsConnSt.textContent = 'Öffne Dropbox-Auth …'; npObsConnSt.style.color = '';
     try {
       const _oauthP = new URLSearchParams();
       const _inv = window._INVITE_LIVE || _INVITE; if (_inv) _oauthP.set('invite', _inv);
-      if (state.project) _oauthP.set('project_id', state.project);
+      _oauthP.set('project_id', npObsProjId);
       const res = await fetch('/api/obsidian/oauth/start?' + _oauthP.toString());
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
