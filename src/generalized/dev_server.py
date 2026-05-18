@@ -1364,9 +1364,10 @@ Halte dich strikt an die Auszüge, erfinde keine Fakten. \
 Falls die Auszüge nicht genug Information enthalten, sage das kurz.
 
 Zitierregeln:
-- Zitiere Quellen ausschließlich im Format [pXXX] (z.B. [p59], [p134]).
-- Jede sachliche Behauptung muss unmittelbar mit [pXXX] belegt sein.
-- Mehrere Quellen: [p12][p34] direkt hintereinander.
+- Jeder Auszug beginnt mit [doc_anchor] — nutze exakt diesen Wert als Quellenangabe.
+- Beispiele: [main-s0048], [626583c4-s0001]. Erfinde keine IDs.
+- Jede sachliche Behauptung muss unmittelbar mit [doc_anchor] belegt sein.
+- Mehrere Quellen: [main-s0048][main-s0059] direkt hintereinander.
 
 Antworte mit Fließtext und kurzen Überschriften (##), keine JSON-Ausgabe.\
 """
@@ -1435,7 +1436,7 @@ async def chat_stream(request: Request):
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     para_block = "\n\n".join(
-        f"[{e['doc_anchor']}, {e.get('year', '?')}] {e.get('text', '')}"
+        f"[{e['doc_anchor']}] {e.get('year', '?')}: {e.get('text', '')}"
         for e in hits
     )
     prompt = _CHAT_PROMPT.format(question=question, count=len(hits), paragraphs=para_block)
