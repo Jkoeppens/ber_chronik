@@ -47,7 +47,7 @@ function renderChatAnswer(viewEl, question, mode, content) {
     // Replace them with unique placeholders before parsing, restore after.
     const srcRefMap = new Map();
     let refIdx = 0;
-    const protectedAnswer = data.answer.replace(/\[([\w][\w\-]*)\]/g, (match, anchor) => {
+    const protectedAnswer = data.answer.replace(/\[(?:source:\s*)?\[?([\w][\w\-]*)\]?\]/g, (match, anchor) => {
       const key = `\x02SRCREF${refIdx++}\x03`;
       srcRefMap.set(key, `<a href="#src-${anchor}" class="src-ref">[${anchor}]</a>`);
       return key;

@@ -1363,11 +1363,12 @@ die sich aus den Auszügen ergeben. Nenne konkrete Daten, Personen und Beschlüs
 Halte dich strikt an die Auszüge, erfinde keine Fakten. \
 Falls die Auszüge nicht genug Information enthalten, sage das kurz.
 
-Zitierregeln:
-- Jeder Auszug beginnt mit [doc_anchor] — nutze exakt diesen Wert als Quellenangabe.
-- Beispiele: [main-s0048], [626583c4-s0001]. Erfinde keine IDs.
-- Jede sachliche Behauptung muss unmittelbar mit [doc_anchor] belegt sein.
-- Mehrere Quellen: [main-s0048][main-s0059] direkt hintereinander.
+Zitierregeln (strikt einzuhalten):
+- Zitiere NUR im Format [doc_anchor], z.B. [main-s0048] oder [626583c4-s0001].
+- Nutze exakt den doc_anchor-Wert aus dem Auszug-Kopf — erfinde keine IDs.
+- Kein "source:", keine doppelten Klammern [[...]], kein Zusatztext in den Klammern.
+- Jede sachliche Behauptung unmittelbar mit [doc_anchor] belegen.
+- Mehrere Quellen: [main-s0048][main-s0059] direkt hintereinander, kein Komma.
 
 Antworte mit Fließtext und kurzen Überschriften (##), keine JSON-Ausgabe.\
 """
