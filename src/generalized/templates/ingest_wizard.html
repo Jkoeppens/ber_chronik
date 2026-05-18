@@ -501,6 +501,7 @@ const state = {
   project: null,
   project_title: '',
   isExistingProject: false,
+  isFullyConfigured: false, // true wenn Zeitkonfiguration (Schritt 5) bereits gespeichert
   obsidian_source: null,   // 'dropbox' wenn Obsidian-Flow aktiv
   obsidian_folder: null,   // gespeicherter Ordnerpfad für btnNext step 2
 };
@@ -783,6 +784,7 @@ loadProjectList().then(() => {
     state.project_title   = cfg.title || proj;
     state.doc_type        = cfg.doc_type || state.doc_type;
     state.isExistingProject = true;
+    state.isFullyConfigured = (cfg.year_min != null);
     if (cfg.obsidian?.dropbox_folder) state.obsidian_source = 'dropbox';
     state.time_config   = {
       year_min: cfg.year_min ?? 1800,
@@ -863,7 +865,7 @@ btnNext.addEventListener('click', async () => {
     gotoStep(4);
   } else if (currentStep === 4) {
     if (taxData.length > 0) markTaxDirty();
-    saveTaxonomy().then(() => gotoStep(state.isExistingProject ? 6 : 5));
+    saveTaxonomy().then(() => gotoStep(state.isFullyConfigured ? 6 : 5));
   } else if (currentStep === 5) {
     btnNext.disabled = true;
     const ok = await runAnchorPipeline();
@@ -1353,6 +1355,7 @@ document.getElementById('btn-calc-anchors').addEventListener('click', async () =
 
 function saveTimeConfig() {
   if (!state.project || !state.token) return;
+  state.isFullyConfigured = true;
   fetch('/ingest/save_config' + _aq(), {
     method: 'POST', headers: authHeaders(),
     body: JSON.stringify({
@@ -2004,6 +2007,7 @@ async function openExistingProject(id, title, docType) {
       year_max: cfg.year_max ?? 1920,
       events:   (cfg.events || []).map((e, i) => ({ ...e, id: evNextId++, color: EVENT_COLORS[i % EVENT_COLORS.length] })),
     };
+    state.isFullyConfigured = (cfg.year_min != null);
     if (cfg.obsidian?.dropbox_folder && !tokenData.doc_id) {
       state.obsidian_source   = 'dropbox';
       state.obsidian_folder   = cfg.obsidian.dropbox_folder;
