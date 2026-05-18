@@ -162,6 +162,15 @@ def _require_admin_or_invite(request: Request) -> JSONResponse | None:
     return JSONResponse({"ok": False, "error": "Admin-Key oder Einladungstoken erforderlich"}, status_code=403)
 
 
+def _is_admin(request: Request) -> bool:
+    admin_key = os.environ.get("ADMIN_KEY")
+    if not admin_key:
+        return True
+    auth = request.headers.get("Authorization", "")
+    provided = auth.removeprefix("Bearer ").strip() or request.query_params.get("admin_key", "")
+    return provided == admin_key
+
+
 async def _require_token(request: Request, project: str | None = None) -> JSONResponse | None:
     """
     Liest Token aus ?token= oder X-Project-Token Header.
@@ -181,7 +190,8 @@ async def _require_token(request: Request, project: str | None = None) -> JSONRe
     if not token_valid(db_proj, token):
         return JSONResponse({"ok": False, "error": "Token ungültig oder abgelaufen"}, status_code=403)
     owner = db_proj.get("owner_token")
-    if owner and owner != _get_invite(request):
+    is_public = db_proj.get("is_public", 0)
+    if owner and not is_public and not _is_admin(request) and owner != _get_invite(request):
         return JSONResponse({"ok": False, "error": "Kein Zugriff auf dieses Projekt"}, status_code=403)
     return None
 
@@ -1148,7 +1158,8 @@ async def get_project_token(project_id: str, request: Request):
     if not proj:
         return JSONResponse({"ok": False, "error": "Projekt nicht gefunden"}, status_code=404)
     owner = proj.get("owner_token")
-    if owner and owner != _get_invite(request):
+    is_public = proj.get("is_public", 0)
+    if owner and not is_public and not _is_admin(request) and owner != _get_invite(request):
         return JSONResponse({"ok": False, "error": "Kein Zugriff auf dieses Projekt"}, status_code=403)
     doc_id = await _get_latest_doc_id(project_id)
     return JSONResponse({"ok": True, "id": proj["id"], "token": proj["token"],
