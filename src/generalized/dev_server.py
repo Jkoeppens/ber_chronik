@@ -108,6 +108,8 @@ async def invite_gate_middleware(request: Request, call_next):
 @app.on_event("startup")
 async def startup():
     await init_db()
+    from src.generalized.seed_ber import seed_ber
+    await seed_ber()
     try:
         from src.generalized.entity_gliner import _load_gliner
         from src.generalized.config import GLINER_MODEL
