@@ -57,7 +57,12 @@ DROPBOX_REDIRECT_URL = os.environ.get(
     "http://localhost:8001/api/obsidian/oauth/callback",
 )
 
-PIPELINE = [
+PIPELINE_SETUP = [
+    "src/generalized/detect_anchors.py",
+    "src/generalized/interpolate_anchors.py",
+]
+
+PIPELINE_UPDATE = [
     "src/generalized/detect_anchors.py",
     "src/generalized/interpolate_anchors.py",
     "src/generalized/classify_segments.py",
@@ -358,7 +363,11 @@ def main() -> None:
     cfg["doc_type"] = args.doc_type
     cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    for script in PIPELINE:
+    taxonomy = cfg.get("taxonomy", [])
+    pipeline = PIPELINE_UPDATE if taxonomy else PIPELINE_SETUP
+    print(f"\nPipeline: {'UPDATE' if taxonomy else 'SETUP'} ({len(pipeline)} Schritte)")
+
+    for script in pipeline:
         args_for_script = p_args if script.endswith("export_exploration.py") else d_args
         if not _run(script, args_for_script):
             print("Pipeline abgebrochen.", file=sys.stderr)
