@@ -423,8 +423,17 @@ def build_html(segments: list[dict], initial_overrides: list[dict],
         source_opts += f'<option value="{escape(src)}">{escape(short)}</option>'
 
     # ── Timeline tick HTML (rendered by JS, but axis labels in HTML) ──────────
+    _span = max(YEAR_MAX - YEAR_MIN, 1)
+    _raw = _span / 6  # Ziel: ~6 Ticks
+    if _raw <= 1:   _tick_step = 1
+    elif _raw <= 2: _tick_step = 2
+    elif _raw <= 5: _tick_step = 5
+    elif _raw <= 10: _tick_step = 10
+    elif _raw <= 20: _tick_step = 20
+    elif _raw <= 50: _tick_step = 50
+    else:            _tick_step = 100
     tick_labels = ""
-    for yr in range(YEAR_MIN, YEAR_MAX + 1, 10):
+    for yr in range(YEAR_MIN, YEAR_MAX + 1, _tick_step):
         pct = (yr - YEAR_MIN) / (YEAR_MAX - YEAR_MIN) * 100
         tick_labels += (
             f'<div class="tick" style="top:{pct:.2f}%" data-year="{yr}">'
