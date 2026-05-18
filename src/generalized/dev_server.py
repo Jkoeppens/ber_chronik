@@ -1157,8 +1157,6 @@ async def obsidian_dropbox_status():
 
 @app.get("/api/obsidian/oauth/start")
 async def obsidian_oauth_start(request: Request, project_id: str = ""):
-    if not project_id:
-        return JSONResponse({"ok": False, "error": "project_id fehlt"}, status_code=400)
     if not _dropbox_env_ok():
         return JSONResponse({"ok": False, "error": "DROPBOX_APP_KEY / DROPBOX_APP_SECRET fehlen in .env"}, status_code=500)
     import src.generalized.ingest_obsidian as _obs
@@ -1205,6 +1203,8 @@ async def obsidian_oauth_callback(code: str = "", state: str = ""):
             cfg = read_json_safe(cfg_path)
             cfg.setdefault("obsidian", {})["tokens"] = tokens
             cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    else:
+        _obsidian_oauth_states["pending"] = tokens
     return HTMLResponse(
         "<html><head><title>Dropbox verbunden</title></head>"
         "<body style='font-family:sans-serif;text-align:center;padding:40px'>"
@@ -1212,6 +1212,12 @@ async def obsidian_oauth_callback(code: str = "", state: str = ""):
         "<p>Dieses Fenster schlie&szlig;t sich automatisch&hellip;</p>"
         "<script>window.close();</script></body></html>"
     )
+
+
+@app.get("/api/obsidian/oauth/pending")
+async def obsidian_oauth_pending():
+    pending = _obsidian_oauth_states.get("pending")
+    return JSONResponse({"connected": bool(pending), "has_pending": bool(pending)})
 
 
 @app.post("/api/projects/{project_id}/obsidian/config")
@@ -1229,6 +1235,9 @@ async def save_obsidian_config(project_id: str, request: Request):
         oc = cfg.get("obsidian") or {}
         oc["dropbox_folder"] = folder
         oc["doc_type"]       = body.get("doc_type", "presseartikel")
+        pending = _obsidian_oauth_states.pop("pending", None)
+        if pending and not oc.get("tokens", {}).get("refresh_token"):
+            oc["tokens"] = pending
         cfg["obsidian"] = oc
         cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     return JSONResponse({"ok": True})

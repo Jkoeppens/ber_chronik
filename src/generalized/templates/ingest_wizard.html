@@ -592,7 +592,9 @@ buildDots();
 
   async function checkDropboxStatus() {
     try {
-      const res = await fetch('/api/obsidian/dropbox/status');
+      const _p = new URLSearchParams();
+      const _inv = window._INVITE_LIVE || _INVITE; if (_inv) _p.set('invite', _inv);
+      const res = await fetch('/api/obsidian/oauth/pending?' + _p.toString());
       const data = await res.json();
       npObsConnected = !!data.connected;
     } catch (_) { npObsConnected = false; }
@@ -660,16 +662,10 @@ buildDots();
   });
 
   npObsConnect.addEventListener('click', async () => {
-    if (!npObsProjId) {
-      npObsConnSt.textContent = '✗ Zuerst "Weiter" klicken um Projekt anzulegen';
-      npObsConnSt.style.color = '#dc2626';
-      return;
-    }
     npObsConnSt.textContent = 'Öffne Dropbox-Auth …'; npObsConnSt.style.color = '';
     try {
       const _oauthP = new URLSearchParams();
       const _inv = window._INVITE_LIVE || _INVITE; if (_inv) _oauthP.set('invite', _inv);
-      _oauthP.set('project_id', npObsProjId);
       const res = await fetch('/api/obsidian/oauth/start?' + _oauthP.toString());
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
