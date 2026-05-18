@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import List
 from urllib.parse import urlencode
 
-from src.generalized.llm import get_provider, TASK_ANALYZE
+from src.generalized.llm import get_provider, TASK_ANALYZE, TASK_CHAT
 import shutil
 
 from src.generalized.db import (
@@ -1346,6 +1346,111 @@ async def obsidian_sync(project_id: str, request: Request):
                 break
         yield "data: __done__\n\n"
     return sse_response(gen())
+
+
+# ── Chat ──────────────────────────────────────────────────────────────────────
+
+_CHAT_PROMPT = """\
+Du beantwortest eine Frage auf Basis von Auszügen aus dem vorliegenden Quellmaterial.
+
+Frage: {question}
+
+Gefundene Auszüge ({count} gesamt):
+{paragraphs}
+
+Antworte auf Deutsch. Gliedere deine Antwort nach relevanten thematischen Kategorien \
+die sich aus den Auszügen ergeben. Nenne konkrete Daten, Personen und Beschlüsse. \
+Halte dich strikt an die Auszüge, erfinde keine Fakten. \
+Falls die Auszüge nicht genug Information enthalten, sage das kurz.
+
+Zitierregeln:
+- Zitiere Quellen ausschließlich im Format [pXXX] (z.B. [p59], [p134]).
+- Jede sachliche Behauptung muss unmittelbar mit [pXXX] belegt sein.
+- Mehrere Quellen: [p12][p34] direkt hintereinander.
+
+Antworte mit Fließtext und kurzen Überschriften (##), keine JSON-Ausgabe.\
+"""
+
+_CHAT_STOPWORDS = {
+    "aber", "alle", "allem", "allen", "aller", "alles", "also", "als", "am",
+    "an", "auch", "auf", "aus", "bei", "beim", "bin", "bis", "bitte", "da",
+    "damit", "dann", "dass", "dem", "den", "denn", "der", "des", "die", "dies",
+    "dieser", "dieses", "doch", "dort", "durch", "ein", "eine", "einem", "einen",
+    "einer", "eines", "er", "es", "etwa", "gibt", "haben", "hatte", "hier",
+    "ihm", "ihn", "ihnen", "ihr", "ihre", "im", "immer", "ist", "kann", "kein",
+    "keine", "mal", "man", "mehr", "mich", "mir", "mit", "nach", "nicht", "noch",
+    "nun", "nur", "oder", "ohne", "sehr", "sein", "sich", "sie", "sind", "soll",
+    "sowie", "über", "um", "und", "unter", "uns", "vom", "von", "vor", "war",
+    "waren", "warum", "was", "weil", "wenn", "wer", "werden", "wie", "wird",
+    "wir", "wann", "worden", "wurde", "wurden", "zu", "zum", "zur", "zwischen",
+}
+
+
+def _chat_keywords(question: str, max_kw: int = 6) -> list[str]:
+    tokens = re.findall(r"[A-Za-zÄÖÜäöüß]+", question)
+    return [t.lower() for t in tokens
+            if len(t) >= 4 and t.lower() not in _CHAT_STOPWORDS][:max_kw]
+
+
+def _chat_search(entries: list[dict], keywords: list[str], top_n: int = 20) -> list[dict]:
+    if not keywords:
+        return []
+    hits = []
+    for e in entries:
+        score = sum(1 for kw in keywords if kw in (e.get("text") or "").lower())
+        if score > 0:
+            hits.append((score, e))
+    hits.sort(key=lambda x: -x[0])
+    return [e for _, e in hits[:top_n]]
+
+
+@app.post("/chat/stream")
+async def chat_stream(request: Request):
+    body       = await request.json()
+    question   = (body.get("question") or "").strip()
+    project_id = body.get("project_id") or body.get("project") or ""
+    if not question:
+        return JSONResponse({"error": "question darf nicht leer sein"}, status_code=400)
+
+    # Daten laden
+    if project_id:
+        data_path = PROJECTS_DIR / project_id / "exploration" / "data.json"
+    else:
+        data_path = ROOT / "viz" / "data.json"
+    if not data_path.exists():
+        return JSONResponse({"error": f"data.json nicht gefunden: {data_path}"}, status_code=404)
+    entries = read_json_safe(data_path, default={}).get("entries", [])
+
+    keywords = _chat_keywords(question)
+    hits     = _chat_search(entries, keywords)
+    sources  = [e["doc_anchor"] for e in hits if e.get("doc_anchor")]
+
+    def no_hits_gen():
+        msg = "Zu dieser Frage wurden keine passenden Einträge im Material gefunden."
+        yield f"data: {json.dumps(msg)}\n\n"
+        yield f"data: {json.dumps({'type': 'done', 'sources': [], 'keywords': keywords})}\n\n"
+
+    if not hits:
+        return StreamingResponse(no_hits_gen(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+    para_block = "\n\n".join(
+        f"[{e['doc_anchor']}, {e.get('year', '?')}] {e.get('text', '')}"
+        for e in hits
+    )
+    prompt = _CHAT_PROMPT.format(question=question, count=len(hits), paragraphs=para_block)
+
+    def generate():
+        try:
+            provider = get_provider(task=TASK_CHAT)
+            for token in provider.stream_complete(prompt):
+                yield f"data: {json.dumps(token)}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'sources': sources, 'keywords': keywords})}\n\n"
+        except Exception as exc:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(exc)})}\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @app.get("/ingest")

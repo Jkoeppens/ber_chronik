@@ -44,17 +44,20 @@ from src.generalized.config import ROOT
 TASK_CLASSIFY = "classify"   # schnell, viele Requests → Haiku / llama3.1:8b
 TASK_ANALYZE  = "analyze"    # Qualität wichtig       → Sonnet / llama3.1:8b
 TASK_EXTRACT  = "extract"    # Qualität wichtig       → Sonnet / llama3.1:8b
+TASK_CHAT     = "chat"       # Chat-Streaming         → Haiku / llama3.1:8b
 
 _ANTHROPIC_DEFAULTS: dict[str, str] = {
     TASK_CLASSIFY: "claude-haiku-4-5-20251001",
     TASK_ANALYZE:  "claude-sonnet-4-6",
     TASK_EXTRACT:  "claude-sonnet-4-6",
+    TASK_CHAT:     "claude-haiku-4-5-20251001",
 }
 
 _OLLAMA_DEFAULTS: dict[str, str] = {
     TASK_CLASSIFY: "llama3.1:8b",
     TASK_ANALYZE:  "llama3.1:8b",
     TASK_EXTRACT:  "llama3.1:8b",
+    TASK_CHAT:     "llama3.1:8b",
 }
 
 
@@ -90,6 +93,10 @@ class LLMProvider:
         raw = self.complete(prompt, system=system)
         return _extract_json(raw)
 
+    def stream_complete(self, prompt: str, system: str = None):
+        """Yields response tokens one by one. Default: single yield of complete()."""
+        yield self.complete(prompt, system=system)
+
 
 class AnthropicProvider(LLMProvider):
     """Ruft die Anthropic Messages API auf (synchron)."""
@@ -114,6 +121,17 @@ class AnthropicProvider(LLMProvider):
             kwargs["system"] = system
         msg = self._client.messages.create(**kwargs)
         return msg.content[0].text.strip()
+
+    def stream_complete(self, prompt: str, system: str = None):
+        kwargs = dict(
+            model=self.model,
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        if system:
+            kwargs["system"] = system
+        with self._client.messages.stream(**kwargs) as stream:
+            yield from stream.text_stream
 
 
 class OllamaProvider(LLMProvider):
