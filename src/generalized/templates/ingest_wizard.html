@@ -220,6 +220,9 @@ body.wide-step #ent-editor-frame{flex:1;width:100%;height:0;min-height:0;border:
 .proj-card-open{font-size:11px;color:var(--c-primary);font-weight:600;flex-shrink:0}
 .proj-card-edit{font-size:11px;color:var(--c-text-3);font-weight:500;flex-shrink:0;text-decoration:none}
 .proj-card-edit:hover{color:var(--c-primary)}
+.proj-card-viz{font-size:11px;color:var(--c-primary);font-weight:600;flex-shrink:0;text-decoration:none}
+.proj-card-viz:hover{text-decoration:underline}
+.proj-card-viz--disabled{opacity:0.4;cursor:default;pointer-events:none}
 .proj-card-add{font-size:11px;font-weight:600;flex-shrink:0;padding:3px 8px;border:1px solid var(--c-primary);border-radius:4px;background:var(--c-primary-bg);color:var(--c-primary);cursor:pointer;line-height:1.4}
 .proj-card-add:hover{background:var(--c-primary);color:#fff}
 /* inline add-document panel */
@@ -1697,6 +1700,9 @@ async function loadProjectList() {
           <div class="proj-card-title">${escHtml(p.title)}</div>
           <div class="proj-card-meta">${escHtml(p.doc_type||'—')}${p.entry_count ? ' · ' + p.entry_count + ' Einträge' : ''}</div>
           ${p.doc_id ? `<a class="proj-card-edit" href="/ingest?project=${encodeURIComponent(p.id)}&document=${encodeURIComponent(p.doc_id)}&step=4">Bearbeiten</a>` : ''}
+          ${p.entry_count > 0
+            ? `<a class="proj-card-viz" href="/viz/?project=${encodeURIComponent(p.id)}">Viz öffnen ↗</a>`
+            : `<span class="proj-card-viz proj-card-viz--disabled">Viz öffnen ↗</span>`}
           <button class="proj-card-obsidian${p.obsidian ? ' configured' : ''}">Obsidian${p.obsidian?.connected ? ' ●' : ''}</button>
           <button class="proj-card-add">+ Dokument</button>
           <span class="proj-card-open">öffnen →</span>
