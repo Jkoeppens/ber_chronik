@@ -66,6 +66,7 @@ CLASSIFY_SCRIPT            = ROOT / "src" / "generalized" / "classify_segments.p
 EXPORT_SCRIPT              = ROOT / "src" / "generalized" / "export_preview.py"
 EXPORT_EXPLORATION_SCRIPT  = ROOT / "src" / "generalized" / "export_exploration.py"
 PROPOSE_SCRIPT             = ROOT / "src" / "generalized" / "propose_taxonomy.py"
+PROPOSE_PIPELINE_SCRIPT    = ROOT / "src" / "generalized" / "propose_taxonomy_pipeline.py"
 EXTRACT_ENTITIES_SCRIPT    = ROOT / "src" / "generalized" / "extract_entities_v2.py"
 MATCH_ENTITIES_SCRIPT      = ROOT / "src" / "generalized" / "match_entities.py"
 INGEST_OBSIDIAN_SCRIPT     = ROOT / "src" / "generalized" / "ingest_obsidian.py"
@@ -571,12 +572,19 @@ async def ingest_propose_taxonomy(request: Request):
         return JSONResponse({"error": "method muss 'llm', 'kmeans' oder 'bge' sein"}, status_code=400)
     if err := await _require_token(request, project): return err
     async def gen():
-        args = ["--project", project, "--document", doc_id, "--method", method]
-        if method == "kmeans" and n_clusters:
-            args += ["--n-clusters", n_clusters]
-        elif method == "bge" and n_clusters:
-            args += ["--n-clusters", n_clusters]
-        async for chunk in run_script_sse(PROPOSE_SCRIPT, args):
+        if method == "bge":
+            # Produktionspfad: propose_taxonomy_pipeline.py
+            args  = ["--project", project, "--document", doc_id]
+            if n_clusters:
+                args += ["--n-clusters", n_clusters]
+            script = PROPOSE_PIPELINE_SCRIPT
+        else:
+            # Legacy-Pfad: propose_taxonomy.py (llm / kmeans)
+            args  = ["--project", project, "--document", doc_id, "--method", method]
+            if method == "kmeans" and n_clusters:
+                args += ["--n-clusters", n_clusters]
+            script = PROPOSE_SCRIPT
+        async for chunk in run_script_sse(script, args):
             if chunk == "data: __ok__\n\n":
                 break
             yield chunk
