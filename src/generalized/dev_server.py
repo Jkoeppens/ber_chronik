@@ -1018,14 +1018,8 @@ async def create_project_endpoint(request: Request):
         return JSONResponse({"ok": False, "error": "title erforderlich"}, status_code=400)
     doc_type   = body.get("doc_type", "buchnotizen")
     project_id = _slugify(title)
-    proj_dir   = PROJECTS_DIR / project_id
-    proj_dir.mkdir(parents=True, exist_ok=True)
-    cfg_path = proj_dir / "config.json"
-    async with _project_lock(project_id):
-        if not cfg_path.exists():
-            cfg_path.write_text(json.dumps({"title": title, "doc_type": doc_type},
-                                           ensure_ascii=False, indent=2), encoding="utf-8")
     invite_tok = _get_invite(request)
+    # DB zuerst — wenn das fehlschlägt, entsteht kein Zombie-Verzeichnis im FS
     db_proj = await get_project(project_id)
     if db_proj is None:
         db_proj = await create_project(
@@ -1033,6 +1027,13 @@ async def create_project_endpoint(request: Request):
             owner_token=invite_tok or None,
         )
         db_proj = await get_project(project_id)
+    proj_dir = PROJECTS_DIR / project_id
+    proj_dir.mkdir(parents=True, exist_ok=True)
+    cfg_path = proj_dir / "config.json"
+    async with _project_lock(project_id):
+        if not cfg_path.exists():
+            cfg_path.write_text(json.dumps({"title": title, "doc_type": doc_type},
+                                           ensure_ascii=False, indent=2), encoding="utf-8")
     return JSONResponse({"ok": True, "id": project_id, "token": db_proj["token"]})
 
 
