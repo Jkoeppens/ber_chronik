@@ -48,9 +48,7 @@ _STOPWORDS = {
     "beim", "am", "zum", "zur", "januar", "februar", "märz", "april",
     "mai", "juni", "juli", "august", "september", "oktober", "november", "dezember",
 }
-# Englische Stoppwörter (sklearn)
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS as _EN_SW
-_STOPWORDS = _STOPWORDS | set(_EN_SW) | {
+_STOPWORDS_EXTRA = {
     "osm", "arab", "the", "and", "was", "were",
     "with", "that", "this", "from", "have", "not",
     "al", "ibn", "abu", "bin",
@@ -186,7 +184,8 @@ def _compute_tfidf_keywords(
     top_k: int = TOP_K_KW,
 ) -> dict[int, list[str]]:
     """TF-IDF-Keywords pro Cluster aus aktueller Segment-Zusammensetzung."""
-    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.feature_extraction.text import TfidfVectorizer, ENGLISH_STOP_WORDS as _EN_SW
+    stopwords = _STOPWORDS | set(_EN_SW) | _STOPWORDS_EXTRA
     vec = TfidfVectorizer(
         max_features=8000, min_df=2, sublinear_tf=True,
         token_pattern=r"(?u)\b[a-zA-ZäöüÄÖÜß]{3,}\b",
@@ -202,7 +201,7 @@ def _compute_tfidf_keywords(
         mean_scores = np.asarray(X[idx].mean(axis=0)).flatten()
         ranked      = mean_scores.argsort()[::-1]
         result[cid] = [names[i] for i in ranked
-                       if names[i].lower() not in _STOPWORDS][:top_k]
+                       if names[i].lower() not in stopwords][:top_k]
     return result
 
 

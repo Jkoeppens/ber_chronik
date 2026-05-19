@@ -247,53 +247,63 @@ def main() -> None:
         print("Keine geeigneten Segmente gefunden.", file=sys.stderr)
         sys.exit(1)
 
+    emb_provider_name = os.environ.get("EMBEDDING_PROVIDER", "local").lower()
+
     # ── BGE-Pfad ──────────────────────────────────────────────────────────────
+    # Bei nicht-lokalem Embedding-Provider (z.B. voyage): kmeans-Pfad nutzen,
+    # der intern get_embedding_provider() aufruft.
     if args.method == "bge":
-        import src.generalized.test_tfidf_anchor_taxonomy as _bge
+        if emb_provider_name != "local":
+            print(f"Methode: BGE → KMeans (EMBEDDING_PROVIDER={emb_provider_name})", flush=True)
+            taxonomy = _run_kmeans(pool, provider, args.n_clusters)
+            if not taxonomy:
+                print("KMeans ergab keine Kategorien.", file=sys.stderr)
+                sys.exit(1)
+        else:
+            import src.generalized.test_tfidf_anchor_taxonomy as _bge
 
-        cache_path = doc_dir / "bge_embeddings.npy"
-        texts, _   = _bge.load_segments(input_path)
+            cache_path = doc_dir / "bge_embeddings.npy"
+            texts, _   = _bge.load_segments(input_path)
 
-        cfg_existing = read_json_safe(config_path)
-        prev_tax     = cfg_existing.get("taxonomy") or None
+            cfg_existing = read_json_safe(config_path)
+            prev_tax     = cfg_existing.get("taxonomy") or None
 
-        # n_clusters: aus bestehender Taxonomie ableiten oder CLI-Default
-        n_clusters = len(prev_tax) if prev_tax else args.n_clusters
+            n_clusters = len(prev_tax) if prev_tax else args.n_clusters
 
-        if prev_tax:
-            print(f"Warm-Start: {len(prev_tax)} bestehende Kategorien → n_clusters={n_clusters}", flush=True)
-        print(f"Methode: BGE  |  Modell: {_bge.MODEL_ANTHROPIC}  |  Cluster: {n_clusters}", flush=True)
+            if prev_tax:
+                print(f"Warm-Start: {len(prev_tax)} bestehende Kategorien → n_clusters={n_clusters}", flush=True)
+            print(f"Methode: BGE  |  Modell: {_bge.MODEL_ANTHROPIC}  |  Cluster: {n_clusters}", flush=True)
 
-        bge      = _bge._load_bge()
-        seg_embs = _bge._compute_segment_embeddings(bge, texts, cache_path)
-        seg_embs = _bge._neighbor_aggregate(seg_embs, texts)
+            bge      = _bge._load_bge()
+            seg_embs = _bge._compute_segment_embeddings(bge, texts, cache_path)
+            seg_embs = _bge._neighbor_aggregate(seg_embs, texts)
 
-        result = _bge._run_tfidf_anchor(
-            bge, seg_embs, texts,
-            n_clusters=n_clusters,
-            previous_taxonomy=prev_tax,
-        )
-        result = _bge._eval(result, seg_embs)
+            result = _bge._run_tfidf_anchor(
+                bge, seg_embs, texts,
+                n_clusters=n_clusters,
+                previous_taxonomy=prev_tax,
+            )
+            result = _bge._eval(result, seg_embs)
 
-        kw_map      = result["kw_map"]
-        logs        = result.get("iteration_logs", [])
-        last_parsed = logs[-1].get("parsed", []) if logs else []
+            kw_map      = result["kw_map"]
+            logs        = result.get("iteration_logs", [])
+            last_parsed = logs[-1].get("parsed", []) if logs else []
 
-        taxonomy = []
-        for cid in range(n_clusters):
-            if cid < len(last_parsed) and last_parsed[cid] is not None:
-                title, body = last_parsed[cid]
-            else:
-                s = result["summaries"][cid]
-                title, body = (s.split(". ", 1) if ". " in s else (s, ""))
-            taxonomy.append({
-                "name":        title,
-                "description": body,
-                "keywords":    kw_map.get(cid, [])[:5],
-            })
+            taxonomy = []
+            for cid in range(n_clusters):
+                if cid < len(last_parsed) and last_parsed[cid] is not None:
+                    title, body = last_parsed[cid]
+                else:
+                    s = result["summaries"][cid]
+                    title, body = (s.split(". ", 1) if ". " in s else (s, ""))
+                taxonomy.append({
+                    "name":        title,
+                    "description": body,
+                    "keywords":    kw_map.get(cid, [])[:5],
+                })
 
-        print(f"\nBGE: {n_clusters} Cluster → {len(taxonomy)} Kategorien  "
-              f"|  Ø Delta {result['avg_delta']:+.4f}  |  ${result['cost_usd']:.4f}", flush=True)
+            print(f"\nBGE: {n_clusters} Cluster → {len(taxonomy)} Kategorien  "
+                  f"|  Ø Delta {result['avg_delta']:+.4f}  |  ${result['cost_usd']:.4f}", flush=True)
 
     # ── KMeans-Pfad ───────────────────────────────────────────────────────────
     elif args.method == "kmeans":
