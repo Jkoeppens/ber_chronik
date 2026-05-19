@@ -30,6 +30,7 @@ data/projects/ber/documents/main/centroid_trajectory/
 
 # Secrets
 .env
+.env.railway
 invites.json
 
 # Logs

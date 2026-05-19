@@ -52,6 +52,8 @@ from fastapi.staticfiles import StaticFiles
 
 from src.generalized.config import ROOT, DATA_ROOT
 load_dotenv(ROOT / ".env")
+if os.environ.get("RAILWAY_SIM") == "1":
+    load_dotenv(ROOT / ".env.railway", override=True)
 PROJECTS_DIR          = DATA_ROOT / "projects"
 RAW_DIR               = DATA_ROOT / "raw"
 DROPBOX_TOKENS_PATH   = DATA_ROOT / "dropbox_tokens.json"
