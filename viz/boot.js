@@ -1,11 +1,12 @@
 // ── Boot ──────────────────────────────────────────────────────────────────────
+const _v = `v=${Date.now()}`;
 Promise.all([
-  fetch(`${DATA_BASE}data.json`).then(r => r.json()),
-  fetch(`${DATA_BASE}entities_seed.csv`).then(r => r.text())
+  fetch(`${DATA_BASE}data.json?${_v}`).then(r => r.json()),
+  fetch(`${DATA_BASE}entities_seed.csv?${_v}`).then(r => r.text())
     .catch(() => ""),
-  fetch(`${DATA_BASE}entities_summary.json`).then(r => r.json())
+  fetch(`${DATA_BASE}entities_summary.json?${_v}`).then(r => r.json())
     .catch(() => ({})),
-  fetch(`${DATA_BASE}project_meta.json`).then(r => r.json())
+  fetch(`${DATA_BASE}project_meta.json?${_v}`).then(r => r.json())
     .catch(() => null),
 ]).then(([{ entries }, csvText, summaries, meta]) => {
 

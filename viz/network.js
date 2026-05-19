@@ -18,7 +18,7 @@ function pairKey(a, b) {
 let _lastVisibleIds = new Set();  // updated by drawNetwork; read by applyNetworkState
 // Fetch precomputed layout eagerly so it's ready before first tab-open
 let _networkLayout = null;
-fetch(`${DATA_BASE}network_layout.json`).then(r => r.json()).then(l => { _networkLayout = l; }).catch(() => {});
+fetch(`${DATA_BASE}network_layout.json?v=${Date.now()}`).then(r => r.json()).then(l => { _networkLayout = l; }).catch(() => {});
 
 // ── Unified network state machine ─────────────────────────────────────────────
 // Priority order (highest wins):
