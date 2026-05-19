@@ -108,6 +108,7 @@ async def invite_gate_middleware(request: Request, call_next):
 @app.on_event("startup")
 async def startup():
     await init_db()
+    _migrate_invites()
     from src.generalized.seed_ber import seed_ber
     await seed_ber()
     try:
@@ -117,6 +118,25 @@ async def startup():
         await asyncio.get_event_loop().run_in_executor(None, _load_gliner, GLINER_MODEL)
     except Exception as exc:
         print(f"[startup] GLiNER konnte nicht geladen werden: {exc}", file=__import__("sys").stderr)
+
+
+def _migrate_invites() -> None:
+    """Schreibt INVITES_JSON-Env-Var einmalig in DATA_ROOT/invites.json."""
+    import sys
+    from src.generalized.invite_auth import INVITES_PATH
+    if INVITES_PATH.exists():
+        return
+    env = os.environ.get("INVITES_JSON", "").strip()
+    if not env:
+        return
+    try:
+        data = json.loads(env)
+    except json.JSONDecodeError:
+        print("[startup] INVITES_JSON ist kein gültiges JSON — übersprungen", file=sys.stderr)
+        return
+    INVITES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    INVITES_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[startup] invites.json aus INVITES_JSON migriert → {INVITES_PATH} ({len(data)} Tokens)")
 
 
 # ── Invite-Token Validation ────────────────────────────────────────────────────
