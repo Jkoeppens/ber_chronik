@@ -1,6 +1,6 @@
 # STATUS — Aktueller Stand des Projekts
 
-Stand: 2026-05-15 | Branch: feature/flexible-timeline-bins | D-P1–D-P8 umgesetzt
+Stand: 2026-05-19 | Branch: main | D-P1–D-P8, Railway-Deployment umgesetzt
 
 ---
 
@@ -167,6 +167,22 @@ Im Presseartikel-Modus: wenn kein Heading-Jahr aktiv, wird `seg["date"]` als Ank
 | > 1500 Tage | jährlich (`d3.timeYear`) |
 
 `viz/chart.js`: `_fmtBinDate` und `getContiguousSegments` um `d3.timeWeek`-Fall ergänzt. BER (1989–2017, ~10 200 Tage) greift weiterhin auf jährliche Bins.
+
+### Bugfixes & Robustheit (2026-05-19)
+
+- **`invite_auth.py` — DATA_ROOT-Migration**: `INVITES_PATH` zeigt jetzt auf `DATA_ROOT/invites.json`. Beim Server-Start: wenn `INVITES_JSON`-Env-Var gesetzt und Datei noch nicht existiert → einmalige Migration. Keine Dual-Source-Logik mehr.
+
+- **`dev_server.py` — `_is_admin()` + `is_public`-Bypass**: `GET /api/projects/{id}/token` und `_require_token` prüfen jetzt `is_public` und Admin-Key vor der Owner-Token-Prüfung — Invite-Nutzer auf öffentlichen Projekten wurden fälschlich mit 403 abgewiesen.
+
+- **`dev_server.py` — `POST /api/projects` DB vor FS**: DB-Insert läuft vor `mkdir`. Crash zwischen beiden Operationen erzeugt keine Zombie-Verzeichnisse mehr. 5 bestehende Zombie-Dirs bereinigt.
+
+- **`export_exploration.py` — `cfg_live` an `build_meta()`**: `year_min`/`year_max` in `project_meta.json` wurden aus dem veralteten `config`-Dict befüllt statt aus `cfg_live` (mit frisch berechneten Jahres-Extremwerten). `cfg_live` wird jetzt immer vor dem `if years:`-Block initialisiert.
+
+- **`propose_taxonomy.py` — bge→kmeans Redirect**: `--method bge` leitet bei `EMBEDDING_PROVIDER!=local` automatisch auf `kmeans` um (nutzt Voyage statt BGE-M3). Kein NameError mehr auf Railway durch fehlendes `import os` (ebenfalls behoben).
+
+- **`test_tfidf_anchor_taxonomy.py` — sklearn Lazy Import**: Top-Level `from sklearn import ...` crashte beim Modulimport wenn sklearn fehlt. Import in `_compute_tfidf_keywords()` verschoben. `scikit-learn` zu `requirements.txt` ergänzt.
+
+- **`viz/boot.js`, `viz/network.js` — Cache-Busters**: Alle Datei-Fetches (`data.json`, `project_meta.json`, `entities_seed.csv`, `entities_summary.json`, `network_layout.json`) haben `?v={timestamp}` — stale Browser-Caches nach einem Export werden zuverlässig invalidiert.
 
 ---
 
@@ -342,15 +358,15 @@ Liest config.json jetzt direkt vor dem Schreiben frisch von Disk, damit kein ver
 
 **Lösung:** OAuth-State in einer temporären Datei oder SQLite-Tabelle persistieren. Kurzfristig: `--reload-exclude dev_server.py` in Entwicklungsanleitung dokumentieren. (Quelle: REVIEW_15_05.md §2)
 
-### I24 — DB und Filesystem können divergieren [GERING]
+### I24 — DB und Filesystem können divergieren [TEILW. BEHOBEN]
 
-`create_project` in SQLite und das Anlegen von `config.json` auf dem Filesystem sind zwei separate Operationen ohne gemeinsame Transaktion. Bei Serverabsturz zwischen beiden Operationen existiert das Verzeichnis ohne DB-Eintrag (oder umgekehrt). `list_projects_endpoint` zeigt das Projekt danach nicht, das Verzeichnis bleibt.
+~~`create_project` in SQLite und das Anlegen von `config.json` auf dem Filesystem sind zwei separate Operationen ohne gemeinsame Transaktion. Bei Serverabsturz zwischen beiden Operationen existiert das Verzeichnis ohne DB-Eintrag (oder umgekehrt). `list_projects_endpoint` zeigt das Projekt danach nicht, das Verzeichnis bleibt.~~ (2026-05-19): DB-Insert läuft jetzt vor `mkdir` in `POST /api/projects` — neue Zombie-Verzeichnisse können nicht mehr entstehen. 5 bestehende Zombie-Dirs manuell bereinigt.
 
-**Lösung (Backlog):** Reconcile-Schritt beim Serverstart — Projekte in DB aber nicht im FS als `orphan` markieren. Kein Auto-Delete. (Quelle: REVIEW_15_05.md §4)
+**Noch offen (Backlog):** Reconcile-Schritt beim Serverstart — Projekte mit FS aber ohne DB-Eintrag erkennen und als `orphan` markieren. Kein Auto-Delete. (Quelle: REVIEW_15_05.md §4)
 
-### I25 — `export_preview.py` wird bei Taxonomie-Update nicht neu generiert [Hinweis]
+### I25 — `export_preview.py` wird bei Taxonomie-Update nicht neu generiert [BY DESIGN]
 
-`ingest_run` schaltet `export_preview.py` nur dann ein, wenn `has_anchors` zuvor `false` war (Z. 624–625). Wenn Anchors bereits existieren und die Pipeline neu läuft (z.B. nach Taxonomie-Änderung in Schritt 4), bleibt `preview.html` veraltet. Designentscheidung oder Lücke — nirgends dokumentiert. (Quelle: REVIEW_15_05.md §5)
+`ingest_run` schaltet `export_preview.py` nur dann ein, wenn `has_anchors` zuvor `false` war. Wenn Anchors bereits existieren und die Pipeline neu läuft (z.B. nach Taxonomie-Änderung in Schritt 4), bleibt `preview.html` veraltet. **Designentscheidung:** `preview.html` ist nur für die Zeitkorrektur in Schritt 3 relevant; ab Schritt 4 wird ausschließlich die Exploration-Viz genutzt. Kein Bug — geschlossen.
 
 ---
 
@@ -483,7 +499,7 @@ Fix: Schritt analog zu Wizard-Logik dynamisch berechnen, Mindest-Schritt 1 Jahr.
 
 ## Railway Deployment
 
-Analysiert 2026-05-17. Noch kein Fix implementiert.
+Analysiert 2026-05-17. Deployment-Blocker R1–R7, R10, R11 behoben (2026-05-19).
 
 ### BLOCKER
 
@@ -503,27 +519,25 @@ Analysiert 2026-05-17. Noch kein Fix implementiert.
 
 Alle Schreibpfade (`projects.db`, `config.json`, `dropbox_tokens.json`, Pipeline-Outputs) landen auf dem Volume und überleben Restarts.
 
-#### R3 — `LLM_PROVIDER=ollama` als Default — Connection refused auf Railway
+#### ~~R3 — `LLM_PROVIDER=ollama` als Default — Connection refused auf Railway~~ ✓ behoben (2026-05-19)
 
-`get_provider()` in `llm.py` defaultet auf `ollama` wenn `LLM_PROVIDER` nicht gesetzt. Ollama läuft nicht auf Railway → erster LLM-Call gibt `RuntimeError: Ollama nicht erreichbar (http://localhost:11434)`. Betrifft alle Pipeline-Schritte die LLM nutzen (Klassifizierung, Entity-Extraktion, Taxonomie-Vorschlag, Summaries).
+`LLM_PROVIDER=anthropic` und `ANTHROPIC_API_KEY` via `railway variables set` gesetzt und in `railway.toml [variables]` eingetragen.
 
-#### R4 — `railway.toml` und `Dockerfile` starten verschiedene Apps
+#### ~~R4 — `railway.toml` und `Dockerfile` starten verschiedene Apps~~ ✓ behoben (2026-05-19)
 
-`railway.toml` startet `src.api_server:app` (leichte Chat-Only-API, kein Wizard).
-`Dockerfile` startet `src.generalized.dev_server:app` (vollständiger Wizard-Server).
-Railway nutzt bei Nixpacks-Build `railway.toml` — `Dockerfile` wird ignoriert. Der Wizard ist damit auf Railway nie erreichbar.
+`railpack.json` mit `startCommand: "python src/generalized/seed_ber.py && uvicorn src.generalized.dev_server:app --host 0.0.0.0 --port $PORT"` und `installCommand: "pip install -r requirements.txt && npm install"` angelegt. Railway nutzt Railpack — Wizard-Server wird korrekt gestartet.
 
 ---
 
 ### HOCH
 
-#### R5 — Node.js fehlt für `precompute_network.js`
+#### ~~R5 — Node.js fehlt für `precompute_network.js`~~ ✓ behoben (2026-05-19)
 
-`export_exploration.py` ruft `node src/precompute_network.js` via `subprocess.run` auf. Node.js ist weder im `Dockerfile` noch in `railway.toml` (`requirements-api.txt`) als Dependency deklariert. Das Netzwerk-Layout wird stumm übersprungen oder wirft einen Fehler.
+`railpack.json` `installCommand` ruft `npm install` auf. `package.json` mit d3-Dependencies (d3-force, d3-array) angelegt. Node.js ist auf dem Railway-Image verfügbar.
 
-#### R6 — `PORT`-Env-Var wird ignoriert in `dev_server.py`
+#### ~~R6 — `PORT`-Env-Var wird ignoriert in `dev_server.py`~~ ✓ behoben (2026-05-19)
 
-Railway setzt `PORT` automatisch und erwartet, dass der Server darauf hört. `dev_server.py` hat keinen `PORT`-Env-Var-Support — `uvicorn` würde hardcoded auf 8001 starten. Der Healthcheck schlägt fehl, Railway sieht den Service als nicht bereit.
+`railpack.json` `startCommand` nutzt `$PORT`. Railway-Healthcheck erkennt den Service korrekt.
 
 #### R9 — Dropbox OAuth nicht Multi-User-fähig [HOCH]
 
@@ -537,45 +551,24 @@ Was für echte Multi-User-Nutzung fehlt:
 
 **Lösung:** OAuth-State um `project_id` erweitern. Token-Speicherung pro Projekt in `config.json`. Bestehende `DROPBOX_TOKENS_PATH`-Referenzen in `dev_server.py` und `ingest_obsidian.py` auf projekt-lokale Pfade umstellen.
 
-#### R10 — `DROPBOX_REDIRECT_URL` auf Railway nicht konfiguriert [HOCH]
+#### ~~R10 — `DROPBOX_REDIRECT_URL` auf Railway nicht konfiguriert~~ ✓ behoben (2026-05-19)
 
-`ingest_obsidian.py:55–58` liest `DROPBOX_REDIRECT_URL` aus `os.environ`, Default: `http://localhost:8001/api/obsidian/oauth/callback`. Auf Railway ist die URL `https://{service}.railway.app/api/obsidian/oauth/callback`. Dropbox lehnt den OAuth-Flow ab wenn `redirect_uri` nicht mit dem in der Dropbox-App registrierten Wert übereinstimmt — der Callback erhält keinen `code`, `flow.finish()` schlägt fehl, der Wizard zeigt einen JSON-Parse-Fehler.
+`DROPBOX_REDIRECT_URL=https://berchronik-production.up.railway.app/api/obsidian/oauth/callback` via `railway variables set` und in `railway.toml [variables]` eingetragen. URL in der Dropbox-App unter "Redirect URIs" registriert.
 
-`DROPBOX_APP_KEY`/`SECRET` werden korrekt aus Railway-Env-Vars gelesen (via `os.environ.get()` nach `load_dotenv()`).
+#### ~~R11 — BER Demo-Daten auf Railway Volume nicht vorhanden~~ ✓ behoben (2026-05-19)
 
-**Lösung:** `DROPBOX_REDIRECT_URL=https://{service}.railway.app/api/obsidian/oauth/callback` als Railway-Variable setzen. Zusätzlich diese URL in der Dropbox-App-Konfiguration unter "Redirect URIs" eintragen.
-
-#### R11 — BER Demo-Daten auf Railway Volume nicht vorhanden [MITTEL]
-
-Mit `DATA_ROOT=/data` liest der Server vom Railway Volume. Committed `data/projects/ber/`-Dateien liegen im Container-Dateisystem unter `/app/data/`, aber der Server liest von `/data/` (Volume) — die Demo-Daten sind nicht sichtbar.
-
-Optionen:
-- **(a) Seed-Script beim Start:** Prüft ob `/data/projects/ber/` leer ist und kopiert Daten aus `/app/data/projects/ber/`. Einmalig, idempotent, reproduzierbar. Empfohlen.
-- **(b) Manuell via Railway Volume:** Nicht reproduzierbar, entfällt bei Volume-Reset.
-- **(c) Nur `exploration/data.json` committen + statisch ausliefern:** Funktioniert für Read-Only-Demo ohne Wizard, umgeht das Volume-Problem.
-
-**Lösung (Backlog):** `startCommand` um Seed-Script erweitern: `python src/generalized/seed_demo.py && uvicorn ...`. Script kopiert `/app/data/projects/ber/` nach `/data/projects/ber/` wenn Zielverzeichnis leer.
+`src/generalized/seed_ber.py` implementiert: prüft ob `/data/projects/ber/` (leer oder fehlend) und kopiert Demo-Daten aus `/app/data/projects/ber/`. Idempotent — überschreibt keine bestehenden Dateien. Im `railpack.json` `startCommand` vor `uvicorn` eingebaut.
 
 ---
 
 ### MITTEL
 
-#### R7 — Keine `.env.example` / Deployment-Dokumentation
+#### ~~R7 — Keine `.env.example` / Deployment-Dokumentation~~ ✓ behoben (2026-05-19)
 
-Benötigte Env-Vars für Railway sind nirgends dokumentiert. Erforderlich (je nach Konfiguration):
+`.env.example` mit drei Kategorien angelegt und committed: Secrets (API-Keys, nie committen), Konfiguration (Provider-Wahl, lokal vs. Railway), Laufzeit-Daten (DATA_ROOT, Volume-Pfad). `.env.railway` für lokale Railway-Simulation (gitignored, lädt mit `RAILWAY_SIM=1`).
 
-| Variable | Erforderlich wenn | Default |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | `LLM_PROVIDER=anthropic` | — |
-| `LLM_PROVIDER` | immer | `ollama` (→ R3) |
-| `EMBEDDING_PROVIDER` | immer | `local` (→ R1) |
-| `VOYAGE_API_KEY` | `EMBEDDING_PROVIDER=voyage` | — |
-| `DROPBOX_APP_KEY` / `DROPBOX_APP_SECRET` | Obsidian-Sync | `""` |
-| `DATA_ROOT` | persistentes Volume | `./data` |
-| `ADMIN_KEY` | Admin-Bypass | — |
-
-Kein `.env.example`, kein README-Abschnitt zu Railway.
-
-#### R8 — Kein Request-Timeout für BGE/GLiNER-Loads beim ersten Aufruf
+#### R8 — Kein Request-Timeout für Pipeline-Subprozesse [MITTEL, teilw. mitigiert]
 
 `asyncio.create_subprocess_exec` in `dev_server.py` hat kein Timeout. Läuft ein Pipeline-Script das BGE-M3 oder GLiNER erstmalig lädt, hängt der SSE-Stream bis Railway den Container terminiert (default: 60s). Für den Client sieht das wie ein Silent Failure aus.
+
+**Mitigation (2026-05-19):** GLiNER wird beim Server-Start preloaded (`@app.on_event("startup")`), nicht lazy beim ersten Request. BGE-M3 nicht auf Railway verfügbar (EMBEDDING_PROVIDER=voyage). Verbleibende Lücke: LLM-Calls ohne Timeout wenn Anthropic API hängt.
