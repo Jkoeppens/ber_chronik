@@ -380,8 +380,8 @@ def main() -> None:
     # durch einen anderen Endpoint (taxonomy/save, entities/save) geänderter Stand
     # mit dem veralteten config-Objekt von oben überschrieben wird.
     years = [e["year"] for e in entries if e.get("year")]
+    cfg_live = read_json_safe(config_path) or dict(config)
     if years:
-        cfg_live = read_json_safe(config_path) or dict(config)
         cfg_live["year_min"] = min(years)
         cfg_live["year_max"] = max(years)
         config_path.write_text(json.dumps(cfg_live, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -413,7 +413,7 @@ def main() -> None:
         print(f"→ entities_summary.json übersprungen ({reason})")
 
     # ── project_meta.json ──────────────────────────────────────────────────────
-    meta = build_meta(config, taxonomy, entities)
+    meta = build_meta(cfg_live, taxonomy, entities)
     meta_out.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"→ {meta_out}")
 
