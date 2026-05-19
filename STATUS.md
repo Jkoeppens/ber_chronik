@@ -405,6 +405,42 @@ Fix: Schritt analog zu Wizard-Logik dynamisch berechnen, Mindest-Schritt 1 Jahr.
 
 ---
 
+## Konzeptuelle Vermischungen (Audit 19.05)
+
+### KRITISCH
+
+- **C1 — `import os` fehlt in `propose_taxonomy.py`** ✓ behoben (2026-05-19)
+  `propose_taxonomy.py:250` nutzt `os.environ.get()` ohne `import os`. NameError bei jedem `--method bge`-Aufruf — betrifft Railway und alle Umgebungen mit `EMBEDDING_PROVIDER!=local`.
+
+### HOCH
+
+- **C2 — `--method bge` kodiert stillschweigend Environment-Logik** [OFFEN]
+  `--method bge` in `propose_taxonomy.py` bedeutet: „BGE-M3 + TF-IDF-Anchor wenn `EMBEDDING_PROVIDER=local`, sonst stillschweigend `kmeans`". Der Methodenname verspricht einen Algorithmus, liefert aber je nach Umgebungskonfiguration einen anderen. `dev_server.py` leitet `method=bge` blind weiter ohne zu wissen, dass ein zweites Env-Var das tatsächliche Verhalten bestimmt.
+
+- **C3 — BGE-Cosine-Thresholds hardcoded in `_classify_bge`, Provider ist dynamisch** [OFFEN]
+  `classify_segments.py:179`: `"high" if best_sim > 0.5 else ("medium" if best_sim > 0.35 else "low")`. Diese Werte sind BGE-M3-kalibriert (laut `embeddings.py` Docstring). `_classify_bge` ruft aber `get_embedding_provider(EMB_TASK_CLASSIFY)` auf — gibt bei `EMBEDDING_PROVIDER=voyage` einen `VoyageProvider` zurück (Voyage-Threshold laut Docstring: ~0.82). Confidence-Werte wären systematisch falsch kalibriert.
+
+### MITTEL
+
+- **C4 — `bge` und `kmeans` als `--method`-Werte auf verschiedenen Abstraktionsebenen** [OFFEN]
+  Beide Pfade: Embedding → K-Means → LLM-Labeling. `kmeans` ist nach dem Algorithmus benannt, `bge` nach dem Modell. Kein analoges `--method minilm` für den `kmeans`-Pfad.
+
+- **C5 — `bge_embeddings.npy` Cache stale bei Provider-Wechsel** [OFFEN]
+  `classify_segments.py:146` und `propose_taxonomy.py:265` schreiben in `bge_embeddings.npy`. Bei `EMBEDDING_PROVIDER=voyage` enthält die Datei Voyage-Vektoren. Der Cache-Check prüft nur `shape[0] == n` (Segmentanzahl), nicht Modell-Herkunft oder Embedding-Dimension. Provider-Wechsel führt zu stale Cache ohne Warnung.
+
+- **C6 — `CLUSTER_SYSTEM`-Prompt domänenspezifisch in `src/generalized/`** [OFFEN]
+  `propose_taxonomy.py:77`: `"Du analysierst Forschungsnotizen zur osmanischen Geschichte."` — hart verdrahtet in einem Modul das explizit als generalisiert deklariert ist. Betrifft nur `--method kmeans`.
+
+### NIEDRIG
+
+- **C7 — `TASK_CLASSIFY` doppelt in `llm.py` und `embeddings.py`** [OFFEN]
+  Beide definieren `"classify"` als String-Konstante für verschiedene Konzepte (LLM-Task-Routing vs. Embedding-Modell-Routing). Kein Bug-Risiko, aber konzeptuelle Doppelung.
+
+- **C8 — `NER_BACKEND` vermischt Inhaltsdimension mit Infrastruktur** [OFFEN]
+  Keys: `"presseartikel"`, `"buchnotizen"` (Dokumenttypen). Values: `"gliner"`, `"llm"`, `"spacy"` (NLP-Tools). Aktuell harmlos (beide → `"gliner"`), aber das Muster verwirrend wenn ein dritter Dokumenttyp hinzukommt.
+
+---
+
 ## Audit-Befunde (2026-04-30)
 
 ### Kritisch (Deployment-Blocker)
