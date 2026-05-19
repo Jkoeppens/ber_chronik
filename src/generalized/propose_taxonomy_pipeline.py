@@ -72,6 +72,7 @@ def _parse_taxonomy(text: str) -> list[dict]:
             if current and current.get("name"):
                 results.append(current)
             name = re.sub(r"\*+", "", line.lstrip("#").strip())
+            name = re.sub(r"^Gruppe\s+\d+[:\.\-–]\s*", "", name).strip()
             current = {"name": name, "description": "", "keywords": []}
         elif current is not None:
             if line.lower().startswith("keywords:"):
