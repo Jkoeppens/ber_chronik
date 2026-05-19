@@ -397,21 +397,17 @@ API-Alternative (für Deployment ohne lokale Modelle):
 
 Vergleichsergebnis (2026-05-17): MiniLM beste Qualität für kurze Entity-Strings; BGE-M3 ungeeignet für Entity-Clustering; Voyage-4 funktioniert mit angepasstem Threshold.
 
-### I28 — year_min/year_max beim ersten Obsidian-Sync nicht gesetzt [MITTEL]
+### ~~I28 — year_min/year_max beim ersten Obsidian-Sync nicht gesetzt~~ ✓ behoben
 
-`runObsidianSync()` ruft nach `__done__` den Endpoint `doc_status?document=main` ab. Neue Dokumente liegen aber unter einer frischen `doc_id` (z.B. `626583c4`), nicht unter `main`. Der Abruf gibt `year_min: null` zurück, `state.time_config` bleibt auf `{year_min: 1800, year_max: 1920}`.
+`runObsidianSync()` liest nach `__done__` `cfgData.doc_id` aus `config.json` (ingest_obsidian schreibt sie nach Sync), setzt `state.document`, ruft dann `doc_status` mit der korrekten `doc_id` auf und schreibt `year_min`/`year_max` in `state.time_config`.
 
-Fix: Sync-Response enthält die neue `doc_id`; `runObsidianSync()` liest sie aus dem SSE-`__done__`-Payload oder aus `state.document` nach dem Sync.
+### ~~I29 — Schritt 5 für neue Obsidian-Projekte übersprungen~~ ✓ behoben
 
-### I29 — Schritt 5 für neue Obsidian-Projekte übersprungen [MITTEL]
+`state.isFullyConfigured` existiert; nach `saveTaxonomy()` springt `btnNext` auf `gotoStep(state.isFullyConfigured ? 6 : 5)` — neue Projekte landen in Schritt 5, nicht direkt in 6.
 
-`state.isExistingProject = true` wird im neuen Obsidian-Flow gesetzt, weil das Projekt beim Weiter-Klick bereits in der DB angelegt wird. `btnNext`-Handler springt bei `isExistingProject` von Schritt 4 direkt zu Schritt 6 — Zeitkonfiguration (Schritt 5) wird übersprungen.
+### ~~I30 — saveTimeConfig nie aufgerufen beim Obsidian-Flow~~ ✓ behoben (Folge von I29)
 
-Fix: Eigenes Flag `state.isFullyConfigured` statt `isExistingProject` für die Schritt-4→5/6-Entscheidung. Neue Projekte (Obsidian wie File) setzen es erst wenn Zeitkonfiguration gespeichert wurde.
-
-### I30 — saveTimeConfig nie aufgerufen beim Obsidian-Flow [GERING]
-
-Folge von I29: Schritt 5 nie betreten, `saveTimeConfig()` nie aufgerufen, `year_min`/`year_max` landen nie in `config.json`. Die Werte werden erst beim nächsten Reload aus den Ankern neu berechnet (wenn überhaupt, s. I28).
+Schritt 5 wird nicht mehr übersprungen; `state.isFullyConfigured = true` wird nach erfolgreichem `saveTimeConfig()` gesetzt.
 
 ### I31 — Timeline-Tick-Schritt hardkodiert auf 10 Jahre [GERING]
 
