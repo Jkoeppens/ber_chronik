@@ -535,17 +535,11 @@ Alle Schreibpfade (`projects.db`, `config.json`, `dropbox_tokens.json`, Pipeline
 
 `railpack.json` `startCommand` nutzt `$PORT`. Railway-Healthcheck erkennt den Service korrekt.
 
-#### R9 — Dropbox OAuth nicht Multi-User-fähig [HOCH]
+#### R9 — Dropbox OAuth pro Projekt implementiert [ausreichend für aktuellen Use-Case]
 
-`dropbox_tokens.json` speichert alle OAuth-Token in einer einzigen globalen Datei ohne Nutzer- oder Projekt-Trennung. Bei mehreren Nutzern oder Projekten überschreiben die OAuth-Callbacks sich gegenseitig — der zuletzt authentifizierte Nutzer gewinnt, alle anderen verlieren den Sync-Zugang.
+Token-Speicherung läuft bereits pro Projekt: `/oauth/start` empfängt `project_id`, Callback schreibt Token direkt in `config.json["obsidian"]["tokens"]` des Projekts. Globale `dropbox_tokens.json` ist nur noch Fallback für den alten Flow ohne `project_id`. Kein Überschreiben zwischen Projekten möglich.
 
-Was für echte Multi-User-Nutzung fehlt:
-1. `/api/obsidian/oauth/start` muss `project_id` empfangen und im OAuth-State mitführen
-2. `_obsidian_oauth_states` muss `project_id` speichern, damit der Callback weiß wohin
-3. Callback schreibt Token in `config.json["obsidian"]["tokens"]` des jeweiligen Projekts (statt globale `dropbox_tokens.json`)
-4. `_obsidian_oauth_states` muss persistent sein (SQLite, I23) — bei Restart gehen laufende OAuth-Flows verloren
-
-**Lösung:** OAuth-State um `project_id` erweitern. Token-Speicherung pro Projekt in `config.json`. Bestehende `DROPBOX_TOKENS_PATH`-Referenzen in `dev_server.py` und `ingest_obsidian.py` auf projekt-lokale Pfade umstellen.
+Verbleibend (nicht akut): `_obsidian_oauth_states` ist in-memory — bei Serverrestart gehen laufende OAuth-Flows verloren (I23, Entwicklungsbetrieb). Kein Handlungsbedarf für Single-Operator-Betrieb.
 
 #### ~~R10 — `DROPBOX_REDIRECT_URL` auf Railway nicht konfiguriert~~ ✓ behoben (2026-05-19)
 
