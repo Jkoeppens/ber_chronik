@@ -12,6 +12,7 @@ data/raw/
 
 # Laufzeit-Daten (auf Railway im Volume, lokal nicht committen)
 data/projects.db
+data/neu.db
 data/dropbox_tokens.json
 *.npy
 
