@@ -90,3 +90,28 @@ class EinheitenListe(BaseModel):
         default=None, description="Der angewandte Filter, oder null für ungefiltert"
     )
     einheiten: list[Einheit]
+
+
+# ── Ingest ────────────────────────────────────────────────────────────────────
+
+Quellformat = Literal["literaturexzerpt", "presseexzerpt", "pressesammlung"]
+
+
+class QuelleAnlegen(BaseModel):
+    """Rumpf von POST /api/projekt/{id}/quelle."""
+
+    pfad: str = Field(description="Pfad unterhalb von data/raw/, z.B. 'Notizen.docx'")
+    quellformat: Quellformat
+
+
+class IngestAntwort(BaseModel):
+    projekt_id: str
+    quelle_id: str
+    quellformat: Quellformat
+    pfad: str
+    lauf_id: int
+    begonnen_am: str
+    beendet_am: str
+    status: str
+    anzahl_einheiten: int
+    anzahl_je_typ: dict[str, int]

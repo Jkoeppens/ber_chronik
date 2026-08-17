@@ -6,7 +6,8 @@ Läuft ohne Server: TestClient ruft die App im Prozess auf.
 Ausführen:
   python3 -m pytest tests/test_neu_server.py -v
 
-Braucht data/neu.db. Fehlt sie: python3 import_damaskus.py
+Braucht data/neu.db. Fehlt sie:
+  python3 -m src.neu.ingest.cli --projekt damaskus --titel Damaskus --anlegen --pfad "data/raw/Damakus Notizen.docx" --quellformat literaturexzerpt
 """
 
 import sqlite3
@@ -24,7 +25,7 @@ from src.neu.server import app          # noqa: E402
 
 pytestmark = pytest.mark.skipif(
     not db_pfad().exists(),
-    reason=f"{db_pfad()} fehlt — erst 'python3 import_damaskus.py' laufen lassen",
+    reason=f"{db_pfad()} fehlt — erst src.neu.ingest.cli laufen lassen",
 )
 
 
@@ -84,7 +85,10 @@ def test_projekt_einzeln(client: TestClient) -> None:
     body = r.json()
     assert body["id"] == "damaskus"
     assert body["titel"] == "Damaskus"
-    assert body["angelegt_am"].startswith("2026-04-12")
+    # Kein fester Wert mehr: angelegt_am entsteht beim Anlegen des Projekts,
+    # seit es nicht mehr aus projects.db übertragen wird.
+    from datetime import datetime
+    datetime.fromisoformat(body["angelegt_am"])
 
 
 def test_projekt_unbekannt_gibt_404_in_fehlergestalt(client: TestClient) -> None:
@@ -173,6 +177,41 @@ def test_ungueltiger_typ_nutzt_dieselbe_fehlergestalt(client: TestClient) -> Non
     assert "detail" not in r.json()
     fehler = fehlergestalt_pruefen(r.json(), 422)
     assert fehler["code"] == "ungueltiger_parameter"
+
+
+# ── POST /api/projekt/{id}/quelle ─────────────────────────────────────────────
+
+def test_quelle_pfad_ausbruch_wird_abgewiesen(client: TestClient) -> None:
+    """Ein Pfad aus dem Netz darf nicht aus data/raw/ herauszeigen."""
+    for pfad in ("../../etc/passwd", "/etc/passwd", "unterordner/../../geheim"):
+        r = client.post(
+            "/api/projekt/damaskus/quelle",
+            json={"pfad": pfad, "quellformat": "literaturexzerpt"},
+        )
+        assert r.status_code == 422, pfad
+        fehler = fehlergestalt_pruefen(r.json(), 422)
+        assert fehler["code"] == "pfad_unzulaessig", pfad
+
+
+def test_quelle_unbekanntes_quellformat(client: TestClient) -> None:
+    """buchnotizen ist der alte interne Wert und wird nicht durchgereicht."""
+    r = client.post(
+        "/api/projekt/damaskus/quelle",
+        json={"pfad": "egal.docx", "quellformat": "buchnotizen"},
+    )
+    assert r.status_code == 422
+    assert "detail" not in r.json()
+    fehlergestalt_pruefen(r.json(), 422)
+
+
+def test_quelle_unbekanntes_projekt(client: TestClient) -> None:
+    r = client.post(
+        "/api/projekt/gibtsnicht/quelle",
+        json={"pfad": "Damakus Notizen.docx", "quellformat": "literaturexzerpt"},
+    )
+    assert r.status_code == 404
+    fehler = fehlergestalt_pruefen(r.json(), 404)
+    assert fehler["code"] == "projekt_nicht_gefunden"
 
 
 # ── Nur lesend ────────────────────────────────────────────────────────────────

@@ -1,8 +1,12 @@
 """
-db.py — Nur-Lese-Zugriff auf data/neu.db
+db.py — Zugriff auf data/neu.db
 
-Die Verbindung wird ausschließlich mit mode=ro geöffnet. Ein Schreibversuch
-scheitert damit an SQLite selbst, nicht an einer Zusage im Code.
+Zwei Verbindungsarten, ausdrücklich getrennt:
+
+  verbindung()             mode=ro. Ein Schreibversuch scheitert an SQLite
+                           selbst, nicht an einer Zusage im Code. Alles
+                           Lesende benutzt diese.
+  verbindung_schreibend()  schreibfähig. Nur der Ingest benutzt sie.
 
 data/projects.db wird von diesem Modul nie angefasst.
 """
@@ -25,9 +29,22 @@ def verbindung() -> sqlite3.Connection:
     pfad = db_pfad()
     if not pfad.exists():
         raise FileNotFoundError(
-            f"{pfad} fehlt. Erzeugen mit: python3 import_damaskus.py"
+            f"{pfad} fehlt. Anlegen mit: python3 -m src.neu.ingest.cli --anlegen …"
         )
     con = sqlite3.connect(f"file:{pfad}?mode=ro", uri=True)
+    con.row_factory = sqlite3.Row
+    con.execute("PRAGMA foreign_keys = ON")
+    return con
+
+
+def verbindung_schreibend() -> sqlite3.Connection:
+    """Schreibfähige Verbindung. Nur für den Ingest."""
+    pfad = db_pfad()
+    if not pfad.exists():
+        raise FileNotFoundError(
+            f"{pfad} fehlt. Anlegen mit: python3 -m src.neu.ingest.cli --anlegen …"
+        )
+    con = sqlite3.connect(pfad)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")
     return con

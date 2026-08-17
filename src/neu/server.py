@@ -22,15 +22,18 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
-from src.neu.db import verbindung
+from src.neu.db import verbindung, verbindung_schreibend
+from src.neu.ingest.dienst import IngestFehler, einlesen
 from src.neu.modelle import (
     Einheit,
     EinheitTyp,
     EinheitenListe,
     Fehler,
     FehlerAntwort,
+    IngestAntwort,
     Projekt,
     ProjektListe,
+    QuelleAnlegen,
 )
 
 # Alle Fehlerantworten tragen dieselbe Gestalt — auch in der OpenAPI-Ausgabe.
@@ -88,6 +91,33 @@ async def db_fehler(_: Request, exc: sqlite3.Error) -> JSONResponse:
 
 def nicht_gefunden(code: str, meldung: str) -> HTTPException:
     return HTTPException(status_code=404, detail=(code, meldung))
+
+
+# ── Pfade aus dem Netz ────────────────────────────────────────────────────────
+
+ROHDATEN = Path(__file__).resolve().parent.parent.parent / "data" / "raw"
+
+
+def _pfad_in_rohdaten(angabe: str) -> Path:
+    """Bindet einen Pfad aus dem Rumpf an data/raw/.
+
+    Ein Pfad aus einem HTTP-Aufruf darf nicht ins übrige Dateisystem zeigen.
+    Absolute Angaben und '..' werden abgewiesen, nicht bereinigt.
+    """
+    kandidat = Path(angabe)
+    if kandidat.is_absolute() or ".." in kandidat.parts:
+        raise HTTPException(
+            status_code=422,
+            detail=("pfad_unzulaessig",
+                    "pfad muss relativ zu data/raw/ sein und darf kein '..' enthalten."),
+        )
+    ziel = (ROHDATEN / kandidat).resolve()
+    if not str(ziel).startswith(str(ROHDATEN.resolve())):
+        raise HTTPException(
+            status_code=422,
+            detail=("pfad_unzulaessig", "pfad zeigt aus data/raw/ heraus."),
+        )
+    return ziel
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -176,6 +206,32 @@ def einheiten(
     return EinheitenListe(
         projekt_id=projekt_id, anzahl=len(liste), typ_filter=typ, einheiten=liste
     )
+
+
+@app.post(
+    "/api/projekt/{projekt_id}/quelle",
+    response_model=IngestAntwort,
+    responses=FEHLER_ANTWORTEN,
+    status_code=201,
+)
+def quelle_anlegen(projekt_id: str, rumpf: QuelleAnlegen) -> IngestAntwort:
+    """Liest eine Quelle ein und legt quelle, einheit und lauf an."""
+    pfad = _pfad_in_rohdaten(rumpf.pfad)
+
+    con = verbindung_schreibend()
+    try:
+        ergebnis = einlesen(
+            con, projekt_id=projekt_id, pfad=pfad, quellformat=rumpf.quellformat
+        )
+    except IngestFehler as exc:
+        status = 404 if exc.code in (
+            "projekt_nicht_gefunden", "datei_nicht_gefunden", "ordner_nicht_gefunden"
+        ) else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return IngestAntwort(**vars(ergebnis))
 
 
 # ── Die Seite ─────────────────────────────────────────────────────────────────

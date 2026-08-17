@@ -129,9 +129,22 @@ CREATE TABLE einheit_akteur (
     PRIMARY KEY (einheit_id, akteur_id)
 );
 
+-- ── lauf ──────────────────────────────────────────────────────────────────────
+-- Ein Verarbeitungsschritt, der gelaufen ist. Was womit erzeugt wurde.
+CREATE TABLE lauf (
+    id          INTEGER NOT NULL PRIMARY KEY,
+    projekt_id  TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
+    schritt     TEXT    NOT NULL,   -- ingest | datierung | klassifikation | …
+    begonnen_am TEXT    NOT NULL,
+    beendet_am  TEXT,               -- NULL, solange der Lauf läuft
+    parameter   TEXT,               -- JSON: womit er aufgerufen wurde
+    status      TEXT    NOT NULL    -- laeuft | erfolg | fehler
+);
+
 -- ── Indizes ───────────────────────────────────────────────────────────────────
 CREATE INDEX idx_einheit_quelle_pos ON einheit (quelle_id, position);
 CREATE INDEX idx_einheit_jahr       ON einheit (jahr_von);
 CREATE INDEX idx_einheit_kategorie  ON einheit (kategorie_id);
 CREATE INDEX idx_anker_einheit      ON anker (einheit_id);
 CREATE INDEX idx_ea_akteur          ON einheit_akteur (akteur_id);
+CREATE INDEX idx_lauf_projekt       ON lauf (projekt_id, begonnen_am);
