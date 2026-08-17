@@ -151,6 +151,40 @@ class ZuordnungAntwort(BaseModel):
     kategorie_lauf_id: int | None
 
 
+class TaxonomieVorschlagRumpf(BaseModel):
+    """Rumpf von POST /api/projekt/{id}/taxonomie/vorschlagen."""
+
+    warm_start: bool = Field(
+        default=False,
+        description=("false = neu vorschlagen, ohne Ausgangspunkt; "
+                     "true = die vorhandenen Kategorien verfeinern"),
+    )
+    n_clusters: int | None = Field(
+        default=None, ge=2, le=20,
+        description="Anzahl Kategorien; nur ohne warm_start erlaubt (Vorgabe 7)",
+    )
+
+
+class TaxonomieAntwort(BaseModel):
+    projekt_id: str
+    warm_start: bool
+    lauf_id: int
+    begonnen_am: str
+    beendet_am: str
+    status: str
+    n_clusters: int
+    kategorien: list[dict]
+    llm_runden: int
+    fruehzeitig_beendet: bool
+    eingefroren: list[int]
+    in_tokens: int
+    out_tokens: int
+    kosten_usd: float
+    embedding_modell: str
+    llm_modell: str
+    trajektorie: list[dict]
+
+
 class IngestAntwort(BaseModel):
     projekt_id: str
     quelle_id: str

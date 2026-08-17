@@ -29,6 +29,8 @@ from src.neu.kategorien.dienst import (
     klassifizieren,
     zuordnung_setzen,
 )
+from src.neu.taxonomie.anbieter import AnbieterFehler
+from src.neu.taxonomie.dienst import TaxonomieFehler, vorschlagen
 from src.neu.modelle import (
     Einheit,
     EinheitTyp,
@@ -41,6 +43,8 @@ from src.neu.modelle import (
     Projekt,
     ProjektListe,
     QuelleAnlegen,
+    TaxonomieAntwort,
+    TaxonomieVorschlagRumpf,
     ZuordnungAntwort,
     ZuordnungRumpf,
 )
@@ -50,6 +54,7 @@ FEHLER_ANTWORTEN = {
     404: {"model": FehlerAntwort, "description": "Nicht gefunden"},
     422: {"model": FehlerAntwort, "description": "Ungültiger Parameter"},
     500: {"model": FehlerAntwort, "description": "Serverfehler"},
+    503: {"model": FehlerAntwort, "description": "Anbieter nicht verfügbar"},
 }
 
 app = FastAPI(
@@ -288,6 +293,37 @@ def kategorie_von_hand_setzen(einheit_id: int, rumpf: ZuordnungRumpf) -> Zuordnu
         con.close()
 
     return ZuordnungAntwort(**ergebnis)
+
+
+@app.post(
+    "/api/projekt/{projekt_id}/taxonomie/vorschlagen",
+    response_model=TaxonomieAntwort,
+    responses=FEHLER_ANTWORTEN,
+)
+def taxonomie_vorschlagen(
+    projekt_id: str, rumpf: TaxonomieVorschlagRumpf
+) -> TaxonomieAntwort:
+    """Schlägt eine Taxonomie vor — von null oder aus den vorhandenen Kategorien.
+
+    warm_start=false: neu vorschlagen, n_clusters wählbar.
+    warm_start=true : verfeinern, n_clusters ist die Anzahl der vorhandenen.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = vorschlagen(
+            con, projekt_id=projekt_id,
+            warm_start=rumpf.warm_start, n_clusters=rumpf.n_clusters,
+        )
+    except TaxonomieFehler as exc:
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    except AnbieterFehler as exc:
+        # Fehlender Schlüssel oder Anbieter: keine stille Ersatzwahl.
+        raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return TaxonomieAntwort(**vars(ergebnis))
 
 
 # ── Die Seite ─────────────────────────────────────────────────────────────────
