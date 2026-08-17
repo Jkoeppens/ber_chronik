@@ -86,13 +86,17 @@ def einheiten_lesen(pfad: Path, quellformat: str) -> list[Einheit]:
             raise IngestFehler(f"Keine Datei: {pfad}", "datei_nicht_gefunden")
         return kern.aus_absaetzen(_absaetze_aus_docx(pfad))
 
+    if quellformat == "presseexzerpt":
+        if not pfad.is_file():
+            raise IngestFehler(f"Keine Datei: {pfad}", "datei_nicht_gefunden")
+        return kern.aus_chronik_absaetzen(_absaetze_aus_docx(pfad))
+
     if quellformat == "pressesammlung":
         if not pfad.is_dir():
             raise IngestFehler(f"Kein Ordner: {pfad}", "ordner_nicht_gefunden")
         return kern.aus_dateien(_dateien_aus_ordner(pfad))
 
-    # presseexzerpt: die Vorlage parse_document.parse_presseartikel() ist seit
-    # 2026-05-15 nicht lauffähig (SyntaxError). Sie wird nicht blind übernommen.
+    # Unerreichbar, solange QUELLFORMATE und diese Verzweigung übereinstimmen.
     raise IngestFehler(
         f"Quellformat '{quellformat}' ist noch nicht implementiert.",
         "quellformat_nicht_implementiert",

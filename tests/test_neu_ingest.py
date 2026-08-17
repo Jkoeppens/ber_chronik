@@ -116,6 +116,59 @@ def test_deckungsgleich_mit_der_alten_pipeline(con: sqlite3.Connection) -> None:
     assert abweichungen == []
 
 
+BER_DOCX = ROOT / "data" / "raw" / "Flh Bln Chronik 1989 - 2017 bis 13.dez.docx"
+BER_SEGMENTS = ROOT / "data" / "projects" / "ber" / "documents" / "main" / "segments.json"
+
+CHRONIK_FELDER = ("position", "typ", "text", "publikation", "publikationsdatum",
+                  "ist_zitat", "seite", "ebene", "chronologie_gruppe")
+
+
+@pytest.mark.skipif(not BER_DOCX.exists(), reason=f"{BER_DOCX} fehlt")
+def test_ber_chronik_ergibt_978_einheiten(con: sqlite3.Connection) -> None:
+    ergebnis = einlesen(con, "damaskus", BER_DOCX, "presseexzerpt")
+
+    assert ergebnis.anzahl_einheiten == 978
+    assert ergebnis.anzahl_je_typ["content"] == 949
+    assert ergebnis.anzahl_je_typ["heading"] == 29
+    assert ergebnis.status == "erfolg"
+
+
+@pytest.mark.skipif(
+    not BER_DOCX.exists() or not BER_SEGMENTS.exists(),
+    reason="DOCX oder segments.json fehlt",
+)
+def test_chronik_deckungsgleich_mit_der_alten_pipeline(con: sqlite3.Connection) -> None:
+    """Feld für Feld gegen ber/documents/main/segments.json.
+
+    Die Vorlage parse_presseartikel() trug zusätzlich is_geicke und
+    ingest_source; beide sind laut SCHEMA.md ersatzlos entfallen und werden
+    deshalb nicht verglichen.
+    """
+    einlesen(con, "damaskus", BER_DOCX, "presseexzerpt")
+    felder = ", ".join(CHRONIK_FELDER)
+    neu = con.execute(f"SELECT {felder} FROM einheit ORDER BY position").fetchall()
+
+    segmente = json.loads(BER_SEGMENTS.read_text(encoding="utf-8"))
+    alt = [
+        (
+            i,
+            s["type"],
+            s["text"],
+            s.get("source"),
+            s.get("source_date"),
+            None if s.get("is_quote") is None else int(s["is_quote"]),
+            s.get("page"),
+            None,          # ebene: die Chronik ist flach
+            None,          # chronologie_gruppe: durchgehende Zeitachse
+        )
+        for i, s in enumerate(segmente, start=1)
+    ]
+
+    assert len(neu) == len(alt) == 978
+    abweichungen = [(i + 1, a, b) for i, (a, b) in enumerate(zip(neu, alt)) if a != b]
+    assert abweichungen == []
+
+
 # ── position ──────────────────────────────────────────────────────────────────
 
 @pytest.mark.skipif(not DAMASKUS_DOCX.exists(), reason=f"{DAMASKUS_DOCX} fehlt")
@@ -186,14 +239,24 @@ def test_quellformat_wird_nicht_durchgereicht(con: sqlite3.Connection) -> None:
         einlesen(con, "damaskus", DAMASKUS_DOCX, "buchnotizen")
 
 
-def test_presseexzerpt_ist_noch_nicht_implementiert(
-    con: sqlite3.Connection, tmp_path: Path
-) -> None:
-    datei = tmp_path / "chronik.docx"
-    datei.write_bytes(b"egal")
-    with pytest.raises(IngestFehler) as exc:
-        einlesen(con, "damaskus", datei, "presseexzerpt")
-    assert exc.value.code == "quellformat_nicht_implementiert"
+def test_jedes_quellformat_wird_bedient(con: sqlite3.Connection, tmp_path: Path) -> None:
+    """Kein Wert des Vorrats läuft mehr in 'nicht implementiert'.
+
+    Geprüft wird über einen absichtlich unlesbaren Gegenstand: entscheidend
+    ist, dass die Verzweigung greift und nicht am Quellformat scheitert.
+    """
+    from src.neu.ingest.kern import QUELLFORMATE
+
+    datei = tmp_path / "kaputt.docx"
+    datei.write_bytes(b"kein gueltiges DOCX")
+    ordner = tmp_path / "leerer_ordner"
+    ordner.mkdir()
+
+    for quellformat in QUELLFORMATE:
+        ziel = ordner if quellformat == "pressesammlung" else datei
+        with pytest.raises(IngestFehler) as exc:
+            einlesen(con, "damaskus", ziel, quellformat)
+        assert exc.value.code != "quellformat_nicht_implementiert", quellformat
 
 
 def test_fehlende_datei(con: sqlite3.Connection, tmp_path: Path) -> None:

@@ -22,6 +22,7 @@ from src.neu.ingest.kern import (  # noqa: E402
     RohDatei,
     UnbekanntesQuellformat,
     aus_absaetzen,
+    aus_chronik_absaetzen,
     aus_dateien,
     datum_lesen,
     frontmatter_lesen,
@@ -108,6 +109,81 @@ def test_chronologie_gruppe_ist_das_werk() -> None:
 
 def test_leere_eingabe_ergibt_leere_liste() -> None:
     assert aus_absaetzen([]) == []
+
+
+# ── presseexzerpt ─────────────────────────────────────────────────────────────
+
+def _chronik() -> list[RohAbsatz]:
+    return [
+        RohAbsatz("1989", "Normal"),                       # Jahres-Überschrift
+        RohAbsatz("Der Senat beschließt den Ausbau. Tsp, 01.01.1989", "Normal"),
+        RohAbsatz("„Ein wörtliches Zitat aus der Debatte", "Normal"),
+        RohAbsatz("Ohne jede Quellenangabe", "Normal"),
+        RohAbsatz("", "Normal"),                            # leer → verschwindet
+        RohAbsatz("Doppelt belegt. BerlZtg, 3.12.89 und Tsp, 4.12.89", "Normal"),
+    ]
+
+
+def test_jahresueberschrift_wird_heading() -> None:
+    e = aus_chronik_absaetzen(_chronik())
+    assert e[0].typ == "heading"
+    assert e[0].text == "1989"
+    assert e[0].publikation is None
+    assert e[0].seite is None
+
+
+def test_jahresueberschrift_nur_bei_kurzen_reinen_ziffern() -> None:
+    e = aus_chronik_absaetzen([
+        RohAbsatz("1989", "Normal"),           # ja
+        RohAbsatz("1989 1990", "Normal"),      # ja: Ziffern und Leerzeichen, < 10
+        RohAbsatz("1989 1990 1991", "Normal"), # nein: 14 Zeichen
+        RohAbsatz("1989er", "Normal"),         # nein: Buchstabe
+    ])
+    assert [x.typ for x in e] == ["heading", "heading", "content", "content"]
+
+
+def test_quellenangabe_wird_zerlegt() -> None:
+    e = aus_chronik_absaetzen(_chronik())
+    eintrag = e[1]
+    assert eintrag.typ == "content"
+    assert eintrag.publikation == "Tsp"
+    assert eintrag.publikationsdatum == "01.01.1989"
+    # Rohform bleibt Text, datum bleibt leer
+    assert eintrag.datum is None
+
+
+def test_mehrere_treffer_werden_verkettet() -> None:
+    """Wie in der Vorlage: mit ';' aneinandergehängt, nicht aufgetrennt."""
+    e = aus_chronik_absaetzen(_chronik())
+    letzter = e[-1]
+    assert letzter.publikation == "BerlZtg;Tsp"
+    assert letzter.publikationsdatum == "3.12.89;4.12.89"
+
+
+def test_ist_zitat_aus_dem_ersten_zeichen() -> None:
+    e = aus_chronik_absaetzen(_chronik())
+    assert e[2].ist_zitat is True
+    assert e[1].ist_zitat is False
+    assert e[3].ist_zitat is False
+
+
+def test_ohne_quellenangabe_bleibt_publikation_leer() -> None:
+    e = aus_chronik_absaetzen(_chronik())
+    assert e[3].publikation is None
+    assert e[3].publikationsdatum is None
+
+
+def test_chronik_hat_weder_ebene_noch_seite_noch_gruppe() -> None:
+    for einheit in aus_chronik_absaetzen(_chronik()):
+        assert einheit.ebene is None
+        assert einheit.seite is None
+        # Eine Chronik ist eine durchgehende Zeitachse, keine Gruppen
+        assert einheit.chronologie_gruppe is None
+
+
+def test_chronik_position_ist_lueckenlos() -> None:
+    e = aus_chronik_absaetzen(_chronik())
+    assert [x.position for x in e] == [1, 2, 3, 4, 5]
 
 
 # ── Bausteine pressesammlung ──────────────────────────────────────────────────

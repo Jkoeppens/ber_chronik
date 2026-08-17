@@ -196,6 +196,73 @@ def aus_absaetzen(absaetze: Iterable[RohAbsatz]) -> list[Einheit]:
     return einheiten
 
 
+# ── presseexzerpt ─────────────────────────────────────────────────────────────
+# Unverändert aus parse_document.parse_presseartikel() übernommen, und zwar aus
+# der letzten lauffähigen Fassung (0d0be37f, 14.05.2026). Die Fassung ab
+# 2026-05-15 lässt sich nicht übersetzen; ihr Defekt saß im Segment-Literal,
+# das hier ohnehin durch das Schreiben in die Datenbank ersetzt wird.
+
+# Reine Jahres-Überschrift: kürzer als 10 Zeichen, nur Ziffern und Leerzeichen
+JAHRES_UEBERSCHRIFT = re.compile(r"^\d[\d\s]{0,8}$")
+
+# Quellenangabe im Geicke-DOCX: "BZ, 01.01.1989" oder "Taz, 3.12.89)" etc.
+SOURCE_RE = re.compile(r"\b([A-Za-zÄÖÜäöüß/.-]{2,20}),\s*(\d{1,2}\.\d{1,2}\.\d{2,4})\)?")
+
+# Erstes Zeichen eines Zitats. Wörtlich übernommen — das doppelte '„' stand so
+# in der Vorlage.
+ZITAT_ZEICHEN = ('"', '„', '“', '„', '‚', "'")
+
+
+def aus_chronik_absaetzen(absaetze: Iterable[RohAbsatz]) -> list[Einheit]:
+    """Presseexzerpt: flache Chronik, ein Eintrag je Absatz.
+
+    Keine Hierarchie, keine Seitenzahl. Reine Jahres-Überschriften werden zu
+    typ 'heading' und setzen später den Jahreskontext; alle übrigen zu
+    'content' mit Quellenangabe aus SOURCE_RE.
+
+    Mehrere Treffer werden mit ';' verkettet, und publikationsdatum bleibt die
+    Rohform ("01.01.1989") — beides wie in der Vorlage.
+    """
+    einheiten: list[Einheit] = []
+    position = 0
+
+    for absatz in absaetze:
+        text = absatz.text.strip()
+        if not text:
+            continue
+
+        if len(text) < 10 and JAHRES_UEBERSCHRIFT.match(text):
+            position += 1
+            einheiten.append(Einheit(
+                position=position,
+                typ="heading",
+                text=text,
+                publikation=None,
+                seite=None,
+            ))
+            continue
+
+        treffer = SOURCE_RE.findall(text)
+        quelle = ";".join(m[0].strip() for m in treffer) if treffer else None
+        datum_roh = ";".join(m[1].strip() for m in treffer) if treffer else None
+
+        position += 1
+        einheiten.append(Einheit(
+            position=position,
+            typ="content",
+            text=text,
+            publikation=quelle,
+            # Eine Chronik ist eine durchgehende Zeitachse; die Zeitung ist
+            # keine Interpolationsgruppe (SCHEMA.md).
+            chronologie_gruppe=None,
+            publikationsdatum=datum_roh,
+            ist_zitat=text[:1] in ZITAT_ZEICHEN,
+            seite=None,
+        ))
+
+    return einheiten
+
+
 # ── pressesammlung ────────────────────────────────────────────────────────────
 # Unverändert aus ingest_obsidian.py übernommen.
 
