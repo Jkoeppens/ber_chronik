@@ -64,6 +64,20 @@ def test_projekte_liefert_damaskus(client: TestClient) -> None:
 
 # ── GET /api/projekt/{id} ─────────────────────────────────────────────────────
 
+def test_leere_datenbank_gibt_200_mit_leerer_liste(tmp_path, monkeypatch) -> None:
+    """Kein Projekt in der Datenbank ist ein gültiges leeres Ergebnis."""
+    leere_db = tmp_path / "leer.db"
+    con = sqlite3.connect(leere_db)
+    con.executescript((ROOT / "schema.sql").read_text(encoding="utf-8"))
+    con.close()
+
+    monkeypatch.setenv("NEU_DB", str(leere_db))
+    r = TestClient(app).get("/api/projekte")
+
+    assert r.status_code == 200
+    assert r.json() == {"anzahl": 0, "projekte": []}
+
+
 def test_projekt_einzeln(client: TestClient) -> None:
     r = client.get("/api/projekt/damaskus")
     assert r.status_code == 200

@@ -15,10 +15,12 @@ keine Pipeline. data/projects.db und dev_server.py bleiben unberührt.
 """
 
 import sqlite3
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.neu.db import verbindung
 from src.neu.modelle import (
@@ -103,9 +105,8 @@ def projekte() -> ProjektListe:
     finally:
         con.close()
 
-    if not zeilen:
-        raise nicht_gefunden("keine_projekte", "Die Datenbank enthält kein Projekt.")
-
+    # Eine leere Datenbank ist ein gültiges leeres Ergebnis, kein fehlender
+    # Gegenstand. 404 gibt es nur für einen benannten, nicht existierenden.
     liste = [Projekt(**dict(z)) for z in zeilen]
     return ProjektListe(anzahl=len(liste), projekte=liste)
 
@@ -175,3 +176,22 @@ def einheiten(
     return EinheitenListe(
         projekt_id=projekt_id, anzahl=len(liste), typ_filter=typ, einheiten=liste
     )
+
+
+# ── Die Seite ─────────────────────────────────────────────────────────────────
+# Zuletzt montiert: die /api-Routen oben werden zuerst geprüft, der Mount auf "/"
+# fängt nur ab, was übrig bleibt. Ein Ursprung für Seite und Daten, kein CORS.
+
+BUILD_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "build"
+
+if BUILD_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=BUILD_DIR, html=True), name="seite")
+else:
+
+    @app.get("/", include_in_schema=False)
+    def kein_build() -> PlainTextResponse:
+        return PlainTextResponse(
+            f"Kein Frontend-Build unter {BUILD_DIR}.\n"
+            "Erzeugen mit:  cd frontend && npm install && npm run build\n",
+            status_code=503,
+        )
