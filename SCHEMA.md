@@ -87,6 +87,9 @@ CREATE TABLE einheit (
     -- Ergebnis der Klassifikation
     kategorie_id       INTEGER REFERENCES kategorie(id) ON DELETE SET NULL,
     konfidenz          TEXT,               -- high | medium | low
+    kategorie_herkunft TEXT,               -- llm | bge | manuell
+                                           -- NULL = nie klassifiziert
+    kategorie_lauf_id  INTEGER REFERENCES lauf(id) ON DELETE SET NULL,
 
     UNIQUE (quelle_id, position)
 );
@@ -108,6 +111,7 @@ CREATE TABLE kategorie (
     name         TEXT    NOT NULL,
     beschreibung TEXT    NOT NULL DEFAULT '',
     schlagworte  TEXT    NOT NULL DEFAULT '',
+    herkunft     TEXT    NOT NULL,   -- vorschlag | manuell
     UNIQUE (projekt_id, name)
 );
 
@@ -239,6 +243,21 @@ ein zweiter Sync dieselben Artikel erneut ein.
 Presseexzerpten; der Vorgabewert `0` hätte für jedes Literaturexzerpt „geprüft, kein
 Zitat" behauptet. `NULL` heißt nicht erhoben, `0` heißt geprüft.
 
+**Ergänzt:** `kategorie_herkunft` und `kategorie_lauf_id`. Heute steht einer
+Zuordnung nicht an, wie sie zustande kam: `confidence` bedeutet im LLM-Pfad die
+Selbsteinschätzung des Modells und im BGE-Pfad einen Schwellwert auf der
+Kosinusähnlichkeit — zwei verschiedene Größen in einer Spalte, ununterscheidbar.
+`kategorie_herkunft` trennt sie und hält zugleich die Handkorrektur fest;
+`kategorie_lauf_id` verweist auf den Lauf, der die Zuordnung geschrieben hat.
+
+`NULL` heißt nie klassifiziert und ist zugleich die Wiederaufnahme-Bedingung: ein
+Lauf nimmt sich `WHERE kategorie_herkunft IS NULL`. Damit braucht es keine
+Resume-Datei mehr — der Zustand steht an der Einheit.
+
+`manuell` ist gegen Neuläufe geschützt, auch gegen `--force`. Eine Handkorrektur zu
+überschreiben verlangt einen eigenen, ausdrücklichen Wert; sonst löscht der Knopf
+„Neu klassifizieren" die Arbeit des Historikers unbemerkt.
+
 ### `anker`
 
 **Ergänzt:** `quellennotation` als Herkunft. Die BER-Chronik trägt 577 tagesgenaue
@@ -248,6 +267,11 @@ Erscheinungsdaten in der Quellennotation, die heute geparst und nie gelesen werd
 
 **Entfernt:** `position` — existierte nur, um Farben abzuleiten. Farben werden in der
 Oberfläche vergeben.
+
+**Ergänzt:** `herkunft` — `vorschlag` für eine Kategorie aus dem Clustering-Lauf,
+`manuell` für eine, die der Historiker angelegt oder überarbeitet hat. Ohne die
+Spalte ist einem Namen nicht anzusehen, ob je ein Mensch ihn geprüft hat.
+Kein Vorgabewert: der Erzeuger muss sich äußern.
 
 ### `akteur`
 

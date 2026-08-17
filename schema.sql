@@ -69,6 +69,9 @@ CREATE TABLE einheit (
     -- Ergebnis der Klassifikation
     kategorie_id       INTEGER REFERENCES kategorie(id) ON DELETE SET NULL,
     konfidenz          TEXT,               -- high | medium | low
+    kategorie_herkunft TEXT,               -- llm | bge | manuell
+                                           -- NULL = nie klassifiziert
+    kategorie_lauf_id  INTEGER REFERENCES lauf(id) ON DELETE SET NULL,
 
     UNIQUE (quelle_id, position)
 );
@@ -90,6 +93,7 @@ CREATE TABLE kategorie (
     name         TEXT    NOT NULL,
     beschreibung TEXT    NOT NULL DEFAULT '',
     schlagworte  TEXT    NOT NULL DEFAULT '',
+    herkunft     TEXT    NOT NULL,   -- vorschlag | manuell
     UNIQUE (projekt_id, name)
 );
 

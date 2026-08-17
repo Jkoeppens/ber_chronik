@@ -104,6 +104,53 @@ class QuelleAnlegen(BaseModel):
     quellformat: Quellformat
 
 
+Verfahren = Literal["bge", "llm"]
+Umfang = Literal["offen", "alle", "auch_manuell"]
+
+
+class KlassifizierenRumpf(BaseModel):
+    """Rumpf von POST /api/projekt/{id}/klassifizieren."""
+
+    verfahren: Verfahren = Field(default="bge", description="bge = lokal, llm = API")
+    umfang: Umfang = Field(
+        default="offen",
+        description=(
+            "offen = nur nie klassifizierte; alle = auch maschinelle erneut, "
+            "Handkorrekturen bleiben; auch_manuell = auch Handkorrekturen überschreiben"
+        ),
+    )
+
+
+class KlassifikationAntwort(BaseModel):
+    projekt_id: str
+    verfahren: Verfahren
+    umfang: Umfang
+    lauf_id: int
+    begonnen_am: str
+    beendet_am: str
+    status: str
+    anzahl_einheiten: int
+    anzahl_ohne_kategorie: int
+    anzahl_je_konfidenz: dict[str, int]
+    anzahl_je_kategorie: dict[str, int]
+
+
+class ZuordnungRumpf(BaseModel):
+    """Rumpf von PATCH /api/einheit/{id}/kategorie."""
+
+    kategorie_id: int | None = Field(
+        description="Kennung der Kategorie, oder null für 'keine Kategorie'"
+    )
+
+
+class ZuordnungAntwort(BaseModel):
+    einheit_id: int
+    kategorie_id: int | None
+    konfidenz: str | None
+    kategorie_herkunft: str
+    kategorie_lauf_id: int | None
+
+
 class IngestAntwort(BaseModel):
     projekt_id: str
     quelle_id: str

@@ -24,6 +24,11 @@ from fastapi.staticfiles import StaticFiles
 
 from src.neu.db import verbindung, verbindung_schreibend
 from src.neu.ingest.dienst import IngestFehler, einlesen
+from src.neu.kategorien.dienst import (
+    KlassifikationFehler,
+    klassifizieren,
+    zuordnung_setzen,
+)
 from src.neu.modelle import (
     Einheit,
     EinheitTyp,
@@ -31,9 +36,13 @@ from src.neu.modelle import (
     Fehler,
     FehlerAntwort,
     IngestAntwort,
+    KlassifikationAntwort,
+    KlassifizierenRumpf,
     Projekt,
     ProjektListe,
     QuelleAnlegen,
+    ZuordnungAntwort,
+    ZuordnungRumpf,
 )
 
 # Alle Fehlerantworten tragen dieselbe Gestalt — auch in der OpenAPI-Ausgabe.
@@ -232,6 +241,53 @@ def quelle_anlegen(projekt_id: str, rumpf: QuelleAnlegen) -> IngestAntwort:
         con.close()
 
     return IngestAntwort(**vars(ergebnis))
+
+
+@app.post(
+    "/api/projekt/{projekt_id}/klassifizieren",
+    response_model=KlassifikationAntwort,
+    responses=FEHLER_ANTWORTEN,
+)
+def projekt_klassifizieren(
+    projekt_id: str, rumpf: KlassifizierenRumpf
+) -> KlassifikationAntwort:
+    """Ordnet den offenen Einheiten eines Projekts Kategorien zu."""
+    con = verbindung_schreibend()
+    try:
+        ergebnis = klassifizieren(
+            con, projekt_id=projekt_id,
+            verfahren=rumpf.verfahren, umfang=rumpf.umfang,
+        )
+    except KlassifikationFehler as exc:
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return KlassifikationAntwort(**vars(ergebnis))
+
+
+@app.patch(
+    "/api/einheit/{einheit_id}/kategorie",
+    response_model=ZuordnungAntwort,
+    responses=FEHLER_ANTWORTEN,
+)
+def kategorie_von_hand_setzen(einheit_id: int, rumpf: ZuordnungRumpf) -> ZuordnungAntwort:
+    """Setzt die Kategorie einer Einheit von Hand.
+
+    Die Zuordnung gilt danach als 'manuell' und bleibt bei Neuläufen unberührt;
+    die Konfidenz wird geleert, weil sie ein maschinelles Urteil beschrieb.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = zuordnung_setzen(con, einheit_id, rumpf.kategorie_id)
+    except KlassifikationFehler as exc:
+        status = 404 if exc.code.endswith("nicht_gefunden") else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return ZuordnungAntwort(**ergebnis)
 
 
 # ── Die Seite ─────────────────────────────────────────────────────────────────
