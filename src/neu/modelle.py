@@ -77,6 +77,8 @@ class Einheit(BaseModel):
     jahr_von: int | None = None
     jahr_bis: int | None = None
     praezision: str | None = None
+    datierung_herkunft: str | None = None
+    datierung_lauf_id: int | None = None
 
     # Ergebnis der Klassifikation
     kategorie_id: int | None = None
@@ -183,6 +185,60 @@ class TaxonomieAntwort(BaseModel):
     embedding_modell: str
     llm_modell: str
     trajektorie: list[dict]
+
+
+Praezision = Literal["tag", "monat", "jahr", "spanne", "keine"]
+DatierungHerkunft = Literal["text", "ueberschrift", "frontmatter", "quellennotation",
+                            "ereignis", "interpoliert", "manuell"]
+DatierungUmfang = Literal["offen", "alle", "auch_manuell"]
+
+
+class DatierenRumpf(BaseModel):
+    """Rumpf von POST /api/projekt/{id}/datieren."""
+
+    umfang: DatierungUmfang = Field(
+        default="offen",
+        description=("offen = nur nie datierte; alle = auch maschinelle erneut, "
+                     "Handkorrekturen bleiben; auch_manuell = auch diese"),
+    )
+
+
+class DatierungAntwort(BaseModel):
+    projekt_id: str
+    quellformat: str
+    umfang: DatierungUmfang
+    lauf_id: int
+    begonnen_am: str
+    beendet_am: str
+    status: str
+    anzahl_einheiten: int
+    anzahl_datiert: int
+    anzahl_ohne_datum: int
+    anzahl_anker: int
+    anzahl_je_praezision: dict[str, int]
+    anzahl_je_herkunft: dict[str, int]
+    warnungen: list[str] = Field(
+        default_factory=list,
+        description="z.B. Handkorrekturen, die auf eine nicht vorhandene Einheit zeigen",
+    )
+
+
+class DatierungRumpf(BaseModel):
+    """Rumpf von PATCH /api/einheit/{id}/datierung."""
+
+    jahr_von: int | None = Field(description="null bedeutet: undatierbar")
+    jahr_bis: int | None = Field(default=None, description="nur bei einer Spanne")
+    datum: str | None = Field(default=None, description="genauer als das Jahr, ISO")
+
+
+class DatierungZeileAntwort(BaseModel):
+    einheit_id: int
+    datum: str | None
+    jahr_von: int | None
+    jahr_bis: int | None
+    praezision: Praezision
+    datierung_herkunft: str
+    datierung_lauf_id: int | None
 
 
 class IngestAntwort(BaseModel):

@@ -29,6 +29,11 @@ from src.neu.kategorien.dienst import (
     klassifizieren,
     zuordnung_setzen,
 )
+from src.neu.datierung.dienst import (
+    DatierungFehler,
+    datieren,
+    datierung_setzen,
+)
 from src.neu.taxonomie.anbieter import AnbieterFehler
 from src.neu.taxonomie.dienst import TaxonomieFehler, vorschlagen
 from src.neu.modelle import (
@@ -37,6 +42,10 @@ from src.neu.modelle import (
     EinheitenListe,
     Fehler,
     FehlerAntwort,
+    DatierenRumpf,
+    DatierungAntwort,
+    DatierungRumpf,
+    DatierungZeileAntwort,
     IngestAntwort,
     KlassifikationAntwort,
     KlassifizierenRumpf,
@@ -324,6 +333,57 @@ def taxonomie_vorschlagen(
         con.close()
 
     return TaxonomieAntwort(**vars(ergebnis))
+
+
+@app.post(
+    "/api/projekt/{projekt_id}/datieren",
+    response_model=DatierungAntwort,
+    responses=FEHLER_ANTWORTEN,
+)
+def projekt_datieren(projekt_id: str, rumpf: DatierenRumpf) -> DatierungAntwort:
+    """Datiert die Einheiten eines Projekts, Quelle für Quelle.
+
+    Handkorrekturen bleiben bei 'offen' und 'alle' unberührt; 'auch_manuell'
+    überschreibt sie. Zeigt eine Handkorrektur ins Leere, steht das als
+    Warnung in der Antwort — nicht stillschweigend nichts.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = datieren(con, projekt_id=projekt_id, umfang=rumpf.umfang)
+    except DatierungFehler as exc:
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return DatierungAntwort(**vars(ergebnis))
+
+
+@app.patch(
+    "/api/einheit/{einheit_id}/datierung",
+    response_model=DatierungZeileAntwort,
+    responses=FEHLER_ANTWORTEN,
+)
+def datierung_von_hand_setzen(
+    einheit_id: int, rumpf: DatierungRumpf
+) -> DatierungZeileAntwort:
+    """Setzt die Datierung einer Einheit von Hand.
+
+    jahr_von=null heißt undatierbar. Die Korrektur wird eine anker-Zeile mit
+    herkunft='manuell' und überlebt jeden Neulauf außer 'auch_manuell'.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = datierung_setzen(
+            con, einheit_id, rumpf.jahr_von, rumpf.jahr_bis, rumpf.datum
+        )
+    except DatierungFehler as exc:
+        status = 404 if exc.code.endswith("nicht_gefunden") else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return DatierungZeileAntwort(**ergebnis)
 
 
 # ── Die Seite ─────────────────────────────────────────────────────────────────

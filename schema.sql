@@ -63,8 +63,14 @@ CREATE TABLE einheit (
     datum              TEXT,               -- "1989" | "1989-06" | "1989-06-15"
     jahr_von           INTEGER,            -- nur bei echten Spannen
     jahr_bis           INTEGER,
-    praezision         TEXT,               -- exakt | ueberschrift | ereignis
-                                           -- | jahrzehnt | interpoliert | manuell
+    praezision         TEXT,               -- Granularität:
+                                           -- tag | monat | jahr | spanne | keine
+    datierung_herkunft TEXT,               -- wie zustande gekommen: text
+                                           -- | ueberschrift | frontmatter
+                                           -- | quellennotation | ereignis
+                                           -- | interpoliert | manuell
+                                           -- NULL = nie datiert
+    datierung_lauf_id  INTEGER REFERENCES lauf(id) ON DELETE SET NULL,
 
     -- Ergebnis der Klassifikation
     kategorie_id       INTEGER REFERENCES kategorie(id) ON DELETE SET NULL,

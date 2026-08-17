@@ -81,8 +81,14 @@ CREATE TABLE einheit (
     datum              TEXT,               -- "1989" | "1989-06" | "1989-06-15"
     jahr_von           INTEGER,            -- nur bei echten Spannen
     jahr_bis           INTEGER,
-    praezision         TEXT,               -- exakt | ueberschrift | ereignis
-                                           -- | jahrzehnt | interpoliert | manuell
+    praezision         TEXT,               -- Granularität:
+                                           -- tag | monat | jahr | spanne | keine
+    datierung_herkunft TEXT,               -- wie zustande gekommen: text
+                                           -- | ueberschrift | frontmatter
+                                           -- | quellennotation | ereignis
+                                           -- | interpoliert | manuell
+                                           -- NULL = nie datiert
+    datierung_lauf_id  INTEGER REFERENCES lauf(id) ON DELETE SET NULL,
 
     -- Ergebnis der Klassifikation
     kategorie_id       INTEGER REFERENCES kategorie(id) ON DELETE SET NULL,
@@ -236,8 +242,22 @@ was die Gruppe ist; die Interpolation liest nur noch die Spalte.
 ein zweiter Sync dieselben Artikel erneut ein.
 
 **Geändert:** die Zeitangaben. `datum` nimmt die genaueste bekannte Form auf —
-`"1989"`, `"1989-06"` oder `"1989-06-15"` —, `praezision` sagt, wie sie zustande kam.
-`jahr_von`/`jahr_bis` bleiben für echte Spannen: Jahrzehnte, „zwischen 1908 und 1912".
+`"1989"`, `"1989-06"` oder `"1989-06-15"`. `jahr_von`/`jahr_bis` bleiben für echte
+Spannen: Jahrzehnte, „zwischen 1908 und 1912".
+
+**Getrennt:** `praezision` und `datierung_herkunft`. Heute vermischt ein einziges
+`precision`-Feld beides — `exact`, `heading`, `event`, `decade`, `interpolated`,
+`manual` beantworten teils *wie genau*, teils *woher*. Ein Frontmatter-Datum und
+eine Jahresüberschrift stehen dort beide als „exact", obwohl das eine tagesgenau
+ist und das andere aufs Jahr. `praezision` sagt jetzt nur noch, wie fein die
+Angabe ist (`tag | monat | jahr | spanne | keine`), `datierung_herkunft` nur noch,
+woher sie kommt.
+
+`datierung_herkunft = NULL` heißt nie datiert und ist zugleich die
+Wiederaufnahme-Bedingung. `manuell` ist gegen Neuläufe geschützt, wie
+`kategorie_herkunft`.
+
+**Ergänzt:** `datierung_lauf_id` — welcher Lauf die Datierung geschrieben hat.
 
 **Geändert:** `ist_zitat` ist nullable. `parse_document` erhebt das Merkmal nur bei
 Presseexzerpten; der Vorgabewert `0` hätte für jedes Literaturexzerpt „geprüft, kein
