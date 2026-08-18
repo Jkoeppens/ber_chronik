@@ -241,6 +241,103 @@ class DatierungZeileAntwort(BaseModel):
     datierung_lauf_id: int | None
 
 
+# ── Akteure ───────────────────────────────────────────────────────────────────
+
+AkteurTyp = Literal["Person", "Organisation", "Ort", "Konzept"]
+AkteurStatus = Literal["aktiv", "abgelehnt"]
+AkteurHerkunft = Literal["gliner", "manuell"]
+KandidatGrund = Literal["alias", "schreibweise", "aehnlichkeit"]
+
+
+class AkteureErkennenRumpf(BaseModel):
+    """Rumpf von POST /api/projekt/{id}/akteure/erkennen.
+
+    Leer: der Lauf nimmt sich immer alles außer den Handkorrekturen.
+    """
+
+
+class AkteurErkennungAntwort(BaseModel):
+    projekt_id: str
+    lauf_id: int
+    begonnen_am: str
+    beendet_am: str
+    status: str
+    embedding_modell: str
+    gliner_modell: str
+    schwelle: float
+    anzahl_einheiten: int
+    anzahl_funde: int
+    anzahl_vor_gruppierung: int
+    anzahl_neu: int
+    anzahl_manuell: int
+    anzahl_abgelehnt: int
+    anzahl_zuordnungen: int
+    anzahl_einheiten_mit_akteur: int
+    anzahl_je_typ: dict[str, int]
+    anzahl_kandidaten_je_grund: dict[str, int]
+    unbekannte_labels: dict[str, int] = Field(
+        default_factory=dict,
+        description="GLiNER-Label ohne Abbildung; die Funde bleiben ohne Typ",
+    )
+    verdraengt_von_manuell: list[str] = Field(
+        default_factory=list,
+        description="Funde, die auf einen von Hand gepflegten Namen fielen",
+    )
+
+
+class AkteurAendernRumpf(BaseModel):
+    """Rumpf von PATCH /api/akteur/{id}. Nur was gesetzt ist, wird geändert."""
+
+    normalform: str | None = None
+    typ: AkteurTyp | None = Field(
+        default=None, description="null lässt den Typ, wie er ist"
+    )
+    status: AkteurStatus | None = None
+    aliase: list[str] | None = Field(
+        default=None, description="Ersetzt die Aliasliste vollständig"
+    )
+
+
+class AkteurAntwort(BaseModel):
+    id: int
+    projekt_id: str
+    normalform: str
+    typ: AkteurTyp | None
+    status: AkteurStatus
+    herkunft: AkteurHerkunft
+    aliase: list[str]
+    anzahl_fundstellen: int
+    aufgeloeste_akteure: list[int] = Field(
+        default_factory=list, description="Beim Verschmelzen entfallene Kennungen"
+    )
+
+
+class VerschmelzenRumpf(BaseModel):
+    """Rumpf von POST /api/akteure/verschmelzen."""
+
+    ids: list[int] = Field(min_length=2, description="Mindestens zwei Akteure")
+    behalten_id: int = Field(description="Dessen Normalform bleibt stehen")
+
+
+class Kandidat(BaseModel):
+    id: int
+    akteur_a_id: int
+    akteur_a: str
+    akteur_b_id: int
+    akteur_b: str
+    grund: KandidatGrund
+    mass: float | None = Field(
+        description="Kosinusähnlichkeit bzw. Editierabstand; null bei 'alias'"
+    )
+    berechnet_am: str
+
+
+class KandidatenListe(BaseModel):
+    projekt_id: str
+    anzahl: int
+    kandidaten: list[Kandidat]
+
+
 class IngestAntwort(BaseModel):
     projekt_id: str
     quelle_id: str

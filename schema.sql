@@ -105,14 +105,16 @@ CREATE TABLE kategorie (
 
 -- ── akteur ────────────────────────────────────────────────────────────────────
 CREATE TABLE akteur (
-    id              INTEGER NOT NULL PRIMARY KEY,
-    projekt_id      TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
-    normalform      TEXT    NOT NULL,
-    typ             TEXT,
-    status          TEXT    NOT NULL,
-                            -- vorgeschlagen | bestaetigt | abgelehnt
-                            -- kein Vorgabewert: der Erzeuger muss sich äußern
-    zusammenfassung TEXT,
+    id         INTEGER NOT NULL PRIMARY KEY,
+    projekt_id TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
+    normalform TEXT    NOT NULL,
+    typ        TEXT    CHECK (typ IN ('Person', 'Organisation', 'Ort', 'Konzept')),
+                       -- NULL nur, wenn der Erkenner den Typ nicht bestimmen konnte
+    status     TEXT    NOT NULL CHECK (status IN ('aktiv', 'abgelehnt')),
+                       -- abgelehnt heißt nicht gelöscht: die Zeile bleibt, damit
+                       -- der nächste Lauf den Fehlfund überspringt
+    herkunft   TEXT    NOT NULL CHECK (herkunft IN ('gliner', 'manuell')),
+                       -- manuell ist gegen Neuläufe geschützt
     UNIQUE (projekt_id, normalform)
 );
 
@@ -121,6 +123,22 @@ CREATE TABLE akteur_alias (
     akteur_id INTEGER NOT NULL REFERENCES akteur(id) ON DELETE CASCADE,
     alias     TEXT    NOT NULL,
     UNIQUE (akteur_id, alias)
+);
+
+-- Vom Server berechnete Verschmelzungsvorschläge. Ein Erzeugnis des Laufs,
+-- kein Zustand: ein Neulauf ersetzt sie vollständig.
+CREATE TABLE verschmelzungskandidat (
+    id           INTEGER NOT NULL PRIMARY KEY,
+    projekt_id   TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
+    akteur_a_id  INTEGER NOT NULL REFERENCES akteur(id) ON DELETE CASCADE,
+    akteur_b_id  INTEGER NOT NULL REFERENCES akteur(id) ON DELETE CASCADE,
+                          -- a < b, damit jedes Paar genau einmal vorkommt
+    grund        TEXT    NOT NULL
+                          CHECK (grund IN ('alias', 'schreibweise', 'aehnlichkeit')),
+    mass         REAL,     -- Kosinusähnlichkeit bzw. Editierabstand; NULL bei 'alias'
+    berechnet_am TEXT    NOT NULL,
+    CHECK (akteur_a_id < akteur_b_id),
+    UNIQUE (akteur_a_id, akteur_b_id)
 );
 
 -- ── periode ───────────────────────────────────────────────────────────────────
@@ -133,10 +151,15 @@ CREATE TABLE periode (
 );
 
 -- ── einheit_akteur ────────────────────────────────────────────────────────────
+-- Eine Zeile je Vorkommen, nicht je Einheit: start und ende zeigen auf die
+-- Fundstelle im Text der Einheit (Zeichen-Offsets, ende ausschließlich).
 CREATE TABLE einheit_akteur (
+    id         INTEGER NOT NULL PRIMARY KEY,
     einheit_id INTEGER NOT NULL REFERENCES einheit(id) ON DELETE CASCADE,
     akteur_id  INTEGER NOT NULL REFERENCES akteur(id)  ON DELETE CASCADE,
-    PRIMARY KEY (einheit_id, akteur_id)
+    start      INTEGER NOT NULL,
+    ende       INTEGER NOT NULL,
+    UNIQUE (einheit_id, akteur_id, start)
 );
 
 -- ── lauf ──────────────────────────────────────────────────────────────────────
@@ -157,4 +180,7 @@ CREATE INDEX idx_einheit_jahr       ON einheit (jahr_von);
 CREATE INDEX idx_einheit_kategorie  ON einheit (kategorie_id);
 CREATE INDEX idx_anker_einheit      ON anker (einheit_id);
 CREATE INDEX idx_ea_akteur          ON einheit_akteur (akteur_id);
+CREATE INDEX idx_ea_einheit         ON einheit_akteur (einheit_id);
+CREATE INDEX idx_akteur_projekt     ON akteur (projekt_id, status);
+CREATE INDEX idx_kandidat_projekt   ON verschmelzungskandidat (projekt_id);
 CREATE INDEX idx_lauf_projekt       ON lauf (projekt_id, begonnen_am);

@@ -214,6 +214,83 @@ def test_quelle_unbekanntes_projekt(client: TestClient) -> None:
     assert fehler["code"] == "projekt_nicht_gefunden"
 
 
+# ── Akteure ───────────────────────────────────────────────────────────────────
+
+def test_akteure_erkennen_unbekanntes_projekt(client: TestClient) -> None:
+    r = client.post("/api/projekt/gibtsnicht/akteure/erkennen", json={})
+    assert r.status_code == 404
+    fehler = fehlergestalt_pruefen(r.json(), 404)
+    assert fehler["code"] == "projekt_nicht_gefunden"
+
+
+def test_akteure_erkennen_ohne_anbieter_gibt_503(client: TestClient, monkeypatch) -> None:
+    """Fehlt EMBEDDING_PROVIDER, bricht der Lauf ab — kein stiller Rückfall."""
+    monkeypatch.delenv("EMBEDDING_PROVIDER", raising=False)
+    r = client.post("/api/projekt/damaskus/akteure/erkennen", json={})
+    assert r.status_code == 503
+    fehler = fehlergestalt_pruefen(r.json(), 503)
+    assert fehler["code"] == "embedding_anbieter_fehlt"
+
+
+def test_akteure_erkennen_unbekannter_anbieter_gibt_503(
+    client: TestClient, monkeypatch
+) -> None:
+    monkeypatch.setenv("EMBEDDING_PROVIDER", "openai")
+    r = client.post("/api/projekt/damaskus/akteure/erkennen", json={})
+    assert r.status_code == 503
+    fehler = fehlergestalt_pruefen(r.json(), 503)
+    assert fehler["code"] == "embedding_anbieter_unbekannt"
+
+
+def test_duplikatskandidaten_unbekanntes_projekt(client: TestClient) -> None:
+    r = client.get("/api/projekt/gibtsnicht/akteure/duplikatskandidaten")
+    assert r.status_code == 404
+    fehler = fehlergestalt_pruefen(r.json(), 404)
+    assert fehler["code"] == "projekt_nicht_gefunden"
+
+
+def test_duplikatskandidaten_liefert_die_liste(client: TestClient) -> None:
+    r = client.get("/api/projekt/damaskus/akteure/duplikatskandidaten")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["projekt_id"] == "damaskus"
+    assert body["anzahl"] == len(body["kandidaten"])
+    for k in body["kandidaten"]:
+        assert k["grund"] in ("alias", "schreibweise", "aehnlichkeit")
+        assert k["akteur_a_id"] < k["akteur_b_id"]
+
+
+def test_akteur_patch_unbekannt(client: TestClient) -> None:
+    r = client.patch("/api/akteur/999999", json={"typ": "Person"})
+    assert r.status_code == 404
+    fehler = fehlergestalt_pruefen(r.json(), 404)
+    assert fehler["code"] == "akteur_nicht_gefunden"
+
+
+def test_akteur_patch_unbekannter_typ(client: TestClient) -> None:
+    """Werk steht nicht im Wertevorrat — die Validierung fängt es ab."""
+    r = client.patch("/api/akteur/1", json={"typ": "Werk"})
+    assert r.status_code == 422
+    assert "detail" not in r.json()
+    fehlergestalt_pruefen(r.json(), 422)
+
+
+def test_verschmelzen_braucht_zwei_ids(client: TestClient) -> None:
+    r = client.post("/api/akteure/verschmelzen", json={"ids": [1], "behalten_id": 1})
+    assert r.status_code == 422
+    fehlergestalt_pruefen(r.json(), 422)
+
+
+def test_verschmelzen_unbekannter_akteur(client: TestClient) -> None:
+    r = client.post(
+        "/api/akteure/verschmelzen",
+        json={"ids": [999998, 999999], "behalten_id": 999998},
+    )
+    assert r.status_code == 404
+    fehler = fehlergestalt_pruefen(r.json(), 404)
+    assert fehler["code"] == "akteur_nicht_gefunden"
+
+
 # ── Nur lesend ────────────────────────────────────────────────────────────────
 
 def test_verbindung_ist_schreibgeschuetzt() -> None:

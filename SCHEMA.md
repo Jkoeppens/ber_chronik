@@ -123,14 +123,16 @@ CREATE TABLE kategorie (
 
 -- ── akteur ────────────────────────────────────────────────────────────────────
 CREATE TABLE akteur (
-    id              INTEGER NOT NULL PRIMARY KEY,
-    projekt_id      TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
-    normalform      TEXT    NOT NULL,
-    typ             TEXT,
-    status          TEXT    NOT NULL,
-                            -- vorgeschlagen | bestaetigt | abgelehnt
-                            -- kein Vorgabewert: der Erzeuger muss sich äußern
-    zusammenfassung TEXT,
+    id         INTEGER NOT NULL PRIMARY KEY,
+    projekt_id TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
+    normalform TEXT    NOT NULL,
+    typ        TEXT    CHECK (typ IN ('Person', 'Organisation', 'Ort', 'Konzept')),
+                       -- NULL nur, wenn der Erkenner den Typ nicht bestimmen konnte
+    status     TEXT    NOT NULL CHECK (status IN ('aktiv', 'abgelehnt')),
+                       -- abgelehnt heißt nicht gelöscht: die Zeile bleibt, damit
+                       -- der nächste Lauf den Fehlfund überspringt
+    herkunft   TEXT    NOT NULL CHECK (herkunft IN ('gliner', 'manuell')),
+                       -- manuell ist gegen Neuläufe geschützt
     UNIQUE (projekt_id, normalform)
 );
 
@@ -139,6 +141,22 @@ CREATE TABLE akteur_alias (
     akteur_id INTEGER NOT NULL REFERENCES akteur(id) ON DELETE CASCADE,
     alias     TEXT    NOT NULL,
     UNIQUE (akteur_id, alias)
+);
+
+-- Vom Server berechnete Verschmelzungsvorschläge. Ein Erzeugnis des Laufs,
+-- kein Zustand: ein Neulauf ersetzt sie vollständig.
+CREATE TABLE verschmelzungskandidat (
+    id           INTEGER NOT NULL PRIMARY KEY,
+    projekt_id   TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
+    akteur_a_id  INTEGER NOT NULL REFERENCES akteur(id) ON DELETE CASCADE,
+    akteur_b_id  INTEGER NOT NULL REFERENCES akteur(id) ON DELETE CASCADE,
+                          -- a < b, damit jedes Paar genau einmal vorkommt
+    grund        TEXT    NOT NULL
+                          CHECK (grund IN ('alias', 'schreibweise', 'aehnlichkeit')),
+    mass         REAL,     -- Kosinusähnlichkeit bzw. Editierabstand; NULL bei 'alias'
+    berechnet_am TEXT    NOT NULL,
+    CHECK (akteur_a_id < akteur_b_id),
+    UNIQUE (akteur_a_id, akteur_b_id)
 );
 
 -- ── periode ───────────────────────────────────────────────────────────────────
@@ -151,10 +169,15 @@ CREATE TABLE periode (
 );
 
 -- ── einheit_akteur ────────────────────────────────────────────────────────────
+-- Eine Zeile je Vorkommen, nicht je Einheit: start und ende zeigen auf die
+-- Fundstelle im Text der Einheit (Zeichen-Offsets, ende ausschließlich).
 CREATE TABLE einheit_akteur (
+    id         INTEGER NOT NULL PRIMARY KEY,
     einheit_id INTEGER NOT NULL REFERENCES einheit(id) ON DELETE CASCADE,
     akteur_id  INTEGER NOT NULL REFERENCES akteur(id)  ON DELETE CASCADE,
-    PRIMARY KEY (einheit_id, akteur_id)
+    start      INTEGER NOT NULL,
+    ende       INTEGER NOT NULL,
+    UNIQUE (einheit_id, akteur_id, start)
 );
 
 -- ── lauf ──────────────────────────────────────────────────────────────────────
@@ -175,6 +198,9 @@ CREATE INDEX idx_einheit_jahr       ON einheit (jahr_von);
 CREATE INDEX idx_einheit_kategorie  ON einheit (kategorie_id);
 CREATE INDEX idx_anker_einheit      ON anker (einheit_id);
 CREATE INDEX idx_ea_akteur          ON einheit_akteur (akteur_id);
+CREATE INDEX idx_ea_einheit         ON einheit_akteur (einheit_id);
+CREATE INDEX idx_akteur_projekt     ON akteur (projekt_id, status);
+CREATE INDEX idx_kandidat_projekt   ON verschmelzungskandidat (projekt_id);
 CREATE INDEX idx_lauf_projekt       ON lauf (projekt_id, begonnen_am);
 ```
 
@@ -295,20 +321,42 @@ Kein Vorgabewert: der Erzeuger muss sich äußern.
 
 ### `akteur`
 
-**Ergänzt:** `status` mit drei Werten. Ablehnungen liegen heute in
-`entities_rejected.json`, also getrennt von den Entitäten, auf die sie sich beziehen.
-`abgelehnt` heißt dabei nicht gelöscht: die Zeile bleibt, damit der nächste
-Extraktionslauf den Fehlfund überspringt.
+**Ergänzt:** `status` mit zwei Werten, projektweit. Ablehnungen liegen heute in
+`entities_rejected.json` — je Dokument, getrennt von den Entitäten, auf die sie sich
+beziehen. `abgelehnt` heißt nicht gelöscht: die Zeile bleibt, damit der nächste
+Erkennungslauf den Fehlfund überspringt.
 
-Kein Vorgabewert. `vorgeschlagen` ist der Zustand, in dem GLiNER einen Fund ablegt,
-`bestaetigt` setzt nur ein Mensch im Entity-Editor. Welcher von beiden gilt, weiß
-allein der Erzeuger — die Datenbank rät nicht für ihn.
+Drei Werte wären zwei zu viel. `vorgeschlagen` und `bestaetigt` ließen sich nicht
+unterscheiden, weil es keinen Schritt gibt, an dem ein Mensch bestätigt — heute
+täuscht der Editor das mit einem `_status:"confirmed"` vor, das er beim Speichern
+wieder wegwirft. Was ein Mensch angefasst hat, steht jetzt in `herkunft`.
 
-**Geändert:** `typ` ist nullable. Der Vorgabewert `Konzept` war eine Behauptung über
-Funde, deren Art der Extraktor nicht bestimmen konnte.
+**Ergänzt:** `herkunft` — `gliner` oder `manuell`, wie bei `kategorie` und
+`einheit.datierung_herkunft`. Ein Neulauf ersetzt die `gliner`-Zeilen und lässt die
+`manuell`-Zeilen stehen. Heute überschreibt jeder Lauf `config.json["entities"]`
+vollständig; von Hand gepflegte Aliase und korrigierte Namen sind danach weg.
 
-**Ergänzt:** `zusammenfassung` — optionaler Zwischenspeicher für die
-KI-Zusammenfassungen. Wird nur für wenige Akteure erzeugt, bleibt sonst leer.
+**Geändert:** `typ` ist nullable und auf vier Werte festgelegt. `NULL` steht für
+einen Fund, dessen Label die Abbildung nicht kennt — heute wird der still zu
+`Konzept`. Der Wertevorrat schließt aus, was in `ber` steht: `Werk`.
+
+**Entfernt:** `zusammenfassung`. Erzeugt wird sie von
+`generate_entity_summaries.py` nach `exploration/entities_summary.json` — für
+Akteure ab drei Nennungen, aus höchstens 30 gesampelten Absätzen. Das ist ein
+Erzeugnis des Exports, kein Merkmal des Akteurs.
+
+### `verschmelzungskandidat`
+
+**Neu.** Heute gibt es zwei Quellen für Duplikatsvorschläge, die einander
+widersprechen: der Server rechnet Embeddings im Band 0,80–0,91, der Browser rechnet
+bei jedem Tastendruck Levenshtein und Alias-Überschneidung über alle Paare. Ein Badge
+aus der einen Quelle verweist auf einen Reiter, der aus der anderen gespeist wird.
+
+Jetzt eine Quelle, drei Regeln, ein Ergebnis in der Datenbank. `grund` sagt, welche
+Regel angeschlagen hat, `mass` mit welchem Wert.
+
+Die Tabelle ist ein Erzeugnis des Laufs, kein Zustand: sie hält keine Entscheidungen
+fest, sondern nur, was zu prüfen wäre. Ein Neulauf ersetzt sie.
 
 ### `periode`
 
@@ -320,7 +368,13 @@ erfinden oder die Periode verwerfen.
 
 ### `einheit_akteur`
 
-Unverändert. Zwei Spalten, eine Zeile je Nennung.
+**Ergänzt:** `start` und `ende` — die Fundstelle im Text der Einheit. Damit wird aus
+der Tabelle eine Zeile je *Vorkommen* statt je Einheit, und der Schlüssel ein
+eigener: `UNIQUE (einheit_id, akteur_id, start)`.
+
+GLiNER liefert diese Offsets ohnehin, der heutige Code wirft sie weg; die Zuordnung
+wird danach per Wortgrenz-Regex neu gesucht — einmal beim Erzeugen und noch einmal
+im Browser, um die Namen einzufärben. Mit den Offsets entfällt die zweite Suche.
 
 ### `lauf`
 
@@ -366,10 +420,17 @@ solcher Anker weiß mehr — 1890 bis 1899. Vor einer Änderung sollte gezählt 
 wie oft der Fall in `osmanisch` und `nahda` tatsächlich vorkommt; bei `damaskus` war
 es genau einer.
 
-**Fundstellen bei Akteuren.** `einheit_akteur` hält heute nur das Paar. Speicherte man
-zusätzlich die Position im Text, entfiele die zweite Suche in `highlight.js`, die
-dieselben Aliase im Browser noch einmal durchgeht. Preis: eine Zeile je Vorkommen
-statt je Einheit.
+**Herkunft des Akteurs-Namens.** `akteur.herkunft` sagt, ob ein Mensch die Zeile
+angefasst hat, aber nicht, welcher Lauf sie erzeugt hat — anders als bei
+`einheit.datierung_lauf_id` und `kategorie_lauf_id`. Solange ein Neulauf die
+`gliner`-Zeilen ohnehin vollständig ersetzt, trüge eine `lauf_id` nichts bei; sobald
+Läufe nur noch ergänzen, fehlt sie.
+
+**Fundstellen und Aliase.** Die Offsets in `einheit_akteur` stammen aus dem
+Wortgrenz-Regex über Normalform und Aliase, nicht aus GLiNER. Das findet mehr als
+der Erkenner — und auch Falsches: der Alias `fatat` trifft jedes Vorkommen des
+Wortes. Solange die Zuordnung so entsteht, ist ein zu kurzer Alias ein Fehler mit
+Breitenwirkung, und es gibt nichts, was ihn abfängt.
 
 **Verwalterrolle.** `zugang.rolle` unterscheidet `verwalter` und `nutzer`. Wie weit
 die Verwalterrechte reichen — alle Projekte sehen, alle bearbeiten, Zugänge anlegen —

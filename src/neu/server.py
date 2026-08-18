@@ -34,10 +34,24 @@ from src.neu.datierung.dienst import (
     datieren,
     datierung_setzen,
 )
+from src.neu.akteure.dienst import (
+    UNGESETZT,
+    AkteurFehler,
+    akteur_aendern,
+    akteure_verschmelzen,
+    duplikatskandidaten,
+    erkennen,
+)
 from src.neu.taxonomie.anbieter import AnbieterFehler
 from src.neu.taxonomie.dienst import TaxonomieFehler, vorschlagen
 from src.neu.modelle import (
+    AkteurAendernRumpf,
+    AkteurAntwort,
+    AkteurErkennungAntwort,
+    AkteureErkennenRumpf,
     Einheit,
+    KandidatenListe,
+    VerschmelzenRumpf,
     EinheitTyp,
     EinheitenListe,
     Fehler,
@@ -384,6 +398,111 @@ def datierung_von_hand_setzen(
         con.close()
 
     return DatierungZeileAntwort(**ergebnis)
+
+
+@app.post(
+    "/api/projekt/{projekt_id}/akteure/erkennen",
+    response_model=AkteurErkennungAntwort,
+    responses=FEHLER_ANTWORTEN,
+)
+def akteure_erkennen(
+    projekt_id: str, rumpf: AkteureErkennenRumpf | None = None
+) -> AkteurErkennungAntwort:
+    """Erkennt die Akteure eines Projekts und ordnet sie den Einheiten zu.
+
+    Akteure mit herkunft='manuell' bleiben unberührt, abgelehnte filtern den
+    Fehlfund erneut heraus. Verschmelzungskandidaten werden dabei neu berechnet.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = erkennen(con, projekt_id=projekt_id)
+    except AkteurFehler as exc:
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    except AnbieterFehler as exc:
+        # Fehlender Schlüssel oder Anbieter: keine stille Ersatzwahl.
+        raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return AkteurErkennungAntwort(**vars(ergebnis))
+
+
+@app.patch(
+    "/api/akteur/{akteur_id}", response_model=AkteurAntwort, responses=FEHLER_ANTWORTEN
+)
+def akteur_von_hand_aendern(akteur_id: int, rumpf: AkteurAendernRumpf) -> AkteurAntwort:
+    """Ändert einen Akteur von Hand.
+
+    Der Akteur gilt danach als 'manuell' und bleibt bei Neuläufen unberührt.
+    Ändern sich Normalform oder Aliase, werden die Fundstellen sofort neu
+    abgeleitet — nicht erst beim nächsten Lauf.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = akteur_aendern(
+            con, akteur_id,
+            normalform=rumpf.normalform,
+            typ=rumpf.typ if "typ" in rumpf.model_fields_set else UNGESETZT,
+            status=rumpf.status,
+            aliase=rumpf.aliase,
+        )
+    except AkteurFehler as exc:
+        status = 404 if exc.code.endswith("nicht_gefunden") else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return AkteurAntwort(**ergebnis)
+
+
+@app.post(
+    "/api/akteure/verschmelzen",
+    response_model=AkteurAntwort,
+    responses=FEHLER_ANTWORTEN,
+)
+def akteure_zusammenlegen(rumpf: VerschmelzenRumpf) -> AkteurAntwort:
+    """Führt beliebige Akteure zu einem zusammen.
+
+    behalten_id bestimmt, welche Normalform stehen bleibt; alle übrigen Namen
+    werden zu Aliasen. Ein vorgeschlagenes Paar muss es nicht sein.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = akteure_verschmelzen(con, rumpf.ids, rumpf.behalten_id)
+    except AkteurFehler as exc:
+        status = 404 if exc.code.endswith("nicht_gefunden") else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return AkteurAntwort(**ergebnis)
+
+
+@app.get(
+    "/api/projekt/{projekt_id}/akteure/duplikatskandidaten",
+    response_model=KandidatenListe,
+    responses=FEHLER_ANTWORTEN,
+)
+def akteure_duplikatskandidaten(projekt_id: str) -> KandidatenListe:
+    """Die gespeicherten Verschmelzungskandidaten eines Projekts.
+
+    Gelesen, nicht gerechnet: berechnet werden sie beim Erkennungslauf, aus
+    einer Quelle mit drei Regeln — Alias-Überschneidung, Schreibweise,
+    Ähnlichkeit im Band unterhalb der Schwelle.
+    """
+    con = verbindung()
+    try:
+        kandidaten = duplikatskandidaten(con, projekt_id)
+    except AkteurFehler as exc:
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return KandidatenListe(
+        projekt_id=projekt_id, anzahl=len(kandidaten), kandidaten=kandidaten
+    )
 
 
 # ── Die Seite ─────────────────────────────────────────────────────────────────
