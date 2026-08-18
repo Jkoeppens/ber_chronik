@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT))
 from src.neu import konfiguration  # noqa: E402
 from src.neu.taxonomie.anbieter import (  # noqa: E402
     AnbieterFehler,
-    OLLAMA_FRIST,
+    OLLAMA_STILLE,
     llm_funktion,
     ollama_frist,
 )
@@ -149,7 +149,7 @@ def test_protokoll_sagt_was_fehlt(leere_umgebung):
 # ── Ollama-Frist ──────────────────────────────────────────────────────────────
 
 def test_frist_vorgabe(leere_umgebung):
-    assert ollama_frist() == OLLAMA_FRIST == 120
+    assert ollama_frist() == OLLAMA_STILLE == 120
 
 
 @pytest.mark.parametrize("wert,erwartet", [
@@ -160,15 +160,17 @@ def test_frist_aus_der_umgebung(leere_umgebung, monkeypatch, wert, erwartet):
     assert ollama_frist() == erwartet
 
 
-def test_zeitueberschreitung_nennt_den_anbieter(leere_umgebung, monkeypatch):
-    """Statt in die 300-Sekunden-Wand zu laufen: saubere Meldung."""
+def test_stille_wird_als_lesefrist_gesetzt(leere_umgebung, monkeypatch):
+    """Die Frist gilt der Lücke zwischen zwei Bruchstücken, nicht der Gesamtdauer."""
     import requests
 
     monkeypatch.setenv("LLM_PROVIDER", "ollama")
     monkeypatch.setenv("OLLAMA_TIMEOUT", "7")
+    gesehen = {}
 
     def wirft(*args, **kwargs):
-        assert kwargs["timeout"] == 7
+        gesehen["timeout"] = kwargs["timeout"]
+        gesehen["stream"] = kwargs["stream"]
         raise requests.Timeout("zu lang")
 
     monkeypatch.setattr(requests, "post", wirft)
@@ -176,11 +178,87 @@ def test_zeitueberschreitung_nennt_den_anbieter(leere_umgebung, monkeypatch):
 
     with pytest.raises(AnbieterFehler) as exc:
         frage("Was?", "System")
+    assert gesehen["timeout"] == (10, 7)      # (Verbinden, Stille)
+    assert gesehen["stream"] is True
     assert exc.value.code == "ollama_zeitueberschreitung"
     assert "Ollama" in str(exc.value)
     assert modell in str(exc.value)
-    assert "7 s" in str(exc.value)
+    assert "7 s still" in str(exc.value)
+    assert "es kam nie ein Zeichen an" in str(exc.value)
     assert "OLLAMA_TIMEOUT" in str(exc.value)
+
+
+class _Antwort:
+    """Attrappe für eine Strom-Antwort von Ollama."""
+
+    def __init__(self, zeilen):
+        self._zeilen = zeilen
+        self.ok = True
+
+    def __enter__(self): return self
+    def __exit__(self, *_): return False
+    def raise_for_status(self): pass
+    def iter_lines(self, decode_unicode=False): return iter(self._zeilen)
+
+
+def _strom(monkeypatch, zeilen):
+    import requests
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _Antwort(zeilen))
+    return llm_funktion()
+
+
+def test_strom_wird_zusammengesetzt(leere_umgebung, monkeypatch):
+    import json as _json
+    frage, _ = _strom(monkeypatch, [
+        _json.dumps({"response": "## Gruppe 1\n"}),
+        "",                                        # Leerzeilen werden übergangen
+        _json.dumps({"response": "Titel\n"}),
+        _json.dumps({"response": "Beschreibung"}),
+        _json.dumps({"done": True, "prompt_eval_count": 6100, "eval_count": 420}),
+    ])
+    antwort, ein, aus = frage("Prompt", "System")
+    assert antwort == "## Gruppe 1\nTitel\nBeschreibung"
+    # Die Vorlage gab (text, 0, 0) zurück; der Strom nennt die Zahlen.
+    assert (ein, aus) == (6100, 420)
+
+
+def test_fehlerfeld_im_strom_wird_gemeldet(leere_umgebung, monkeypatch):
+    import json as _json
+    frage, _ = _strom(monkeypatch, [_json.dumps({"error": "model not found"})])
+    with pytest.raises(AnbieterFehler) as exc:
+        frage("Prompt", "System")
+    assert exc.value.code == "ollama_fehler"
+    assert "model not found" in str(exc.value)
+
+
+def test_unlesbare_zeile_wird_gemeldet(leere_umgebung, monkeypatch):
+    frage, _ = _strom(monkeypatch, ["kein json"])
+    with pytest.raises(AnbieterFehler) as exc:
+        frage("Prompt", "System")
+    assert exc.value.code == "ollama_antwort_ungueltig"
+
+
+def test_strom_ohne_text_ist_ein_fehler(leere_umgebung, monkeypatch):
+    import json as _json
+    frage, _ = _strom(monkeypatch, [_json.dumps({"done": True})])
+    with pytest.raises(AnbieterFehler) as exc:
+        frage("Prompt", "System")
+    assert exc.value.code == "ollama_antwort_leer"
+
+
+def test_lage_meldet_einen_nicht_laufenden_dienst(leere_umgebung, monkeypatch):
+    import requests
+    from src.neu.taxonomie.anbieter import ollama_lage
+
+    def wirft(*a, **k):
+        raise requests.ConnectionError("kein Anschluss")
+
+    monkeypatch.setattr(requests, "get", wirft)
+    lage = ollama_lage("http://localhost:11434")
+    assert lage["erreichbar"] is False
+    assert "ConnectionError" in lage["fehler"]
+    assert lage["modelle"] == [] and lage["geladen"] == []
 
 
 def test_ollama_nicht_erreichbar(leere_umgebung, monkeypatch):
