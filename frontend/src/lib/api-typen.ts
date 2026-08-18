@@ -46,9 +46,43 @@ export interface paths {
         };
         /**
          * Projekte
-         * @description Alle Projekte, nach Anlagedatum.
+         * @description Alle Projekte mit ihren Zahlen, nach Anlagedatum.
+         *
+         *     anzahl_einheiten ist COUNT(*), der Zeitraum MIN/MAX über die Einheiten —
+         *     beides gerechnet, nichts aus einer Konfigurationsdatei.
          */
         get: operations["projekte_api_projekte_get"];
+        put?: never;
+        /**
+         * Projekt Anlegen
+         * @description Legt ein leeres Projekt an.
+         *
+         *     Eigentümer ist der lokale Zugang (siehe src/neu/projekte.py). Sobald es
+         *     eine Anmeldung gibt, wird daraus ein echter — die Zeilen hängen dann nur
+         *     umzuhängen.
+         */
+        post: operations["projekt_anlegen_api_projekte_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/kennzahlen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Projekt Kennzahlen
+         * @description Was in der Datenbank steht: Einheiten, Datierung, Kategorien, Akteure.
+         *
+         *     Alles gerechnet. Dazu die letzten zwanzig Läufe, damit sichtbar ist, was
+         *     schon gelaufen ist und was noch nicht.
+         */
+        get: operations["projekt_kennzahlen_api_projekt__projekt_id__kennzahlen_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -351,6 +385,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projekt/{projekt_id}/quelle/datei": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Quelle Hochladen
+         * @description Nimmt eine Datei aus dem Browser entgegen, legt sie in data/raw/ ab und
+         *     liest sie ein.
+         *
+         *     Der Dateiname kommt vom Client und wird nicht geglaubt: nur der Basisname
+         *     zählt, und der muss unterhalb von data/raw/ landen. Eine vorhandene Datei
+         *     wird nicht überschrieben — sonst könnte ein Upload eine fremde Quelle
+         *     austauschen, an der schon ein Projekt hängt.
+         *
+         *     Für Obsidian bleibt es ein Ordnerpfad: dafür ist POST …/quelle da.
+         */
+        post: operations["quelle_hochladen_api_projekt__projekt_id__quelle_datei_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -501,6 +563,20 @@ export interface components {
              * @description Was fehlt, in einem Satz
              */
             hinweis?: string | null;
+        };
+        /** Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post */
+        Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post: {
+            /**
+             * Quellformat
+             * @description literaturexzerpt | presseexzerpt
+             * @enum {string}
+             */
+            quellformat: "literaturexzerpt" | "presseexzerpt" | "pressesammlung";
+            /**
+             * Datei
+             * @description Die DOCX-Datei
+             */
+            datei: string;
         };
         /**
          * DatierenRumpf
@@ -835,6 +911,51 @@ export interface components {
              */
             keywords?: string[];
         };
+        /**
+         * Kennzahlen
+         * @description Was ein Projekt in der Datenbank stehen hat — alles gerechnet.
+         */
+        Kennzahlen: {
+            /** Projekt Id */
+            projekt_id: string;
+            /** Titel */
+            titel: string;
+            /** Quellformate */
+            quellformate: ("literaturexzerpt" | "presseexzerpt" | "pressesammlung")[];
+            /** Anzahl Quellen */
+            anzahl_quellen: number;
+            /** Anzahl Einheiten */
+            anzahl_einheiten: number;
+            /** Anzahl Je Typ */
+            anzahl_je_typ: {
+                [key: string]: number;
+            };
+            /** Anzahl Datiert */
+            anzahl_datiert: number;
+            /** Anzahl Ohne Datum */
+            anzahl_ohne_datum: number;
+            /** Anzahl Kategorien */
+            anzahl_kategorien: number;
+            /** Anzahl Klassifiziert */
+            anzahl_klassifiziert: number;
+            /** Anzahl Akteure */
+            anzahl_akteure: number;
+            /** Anzahl Fundstellen */
+            anzahl_fundstellen: number;
+            /** Anzahl Perioden */
+            anzahl_perioden: number;
+            /** Jahr Von */
+            jahr_von: number | null;
+            /** Jahr Bis */
+            jahr_bis: number | null;
+            /** Hat Export */
+            hat_export: boolean;
+            /**
+             * Laeufe
+             * @description Die letzten Läufe, neueste zuerst
+             */
+            laeufe: components["schemas"]["Lauf"][];
+        };
         /** KlassifikationAntwort */
         KlassifikationAntwort: {
             /** Projekt Id */
@@ -919,6 +1040,19 @@ export interface components {
              */
             ollama_frist_sekunden: number | null;
         };
+        /** Lauf */
+        Lauf: {
+            /** Id */
+            id: number;
+            /** Schritt */
+            schritt: string;
+            /** Status */
+            status: string;
+            /** Begonnen Am */
+            begonnen_am: string;
+            /** Beendet Am */
+            beendet_am: string | null;
+        };
         /** Projekt */
         Projekt: {
             /** Id */
@@ -934,12 +1068,76 @@ export interface components {
             /** Dropbox Ordner */
             dropbox_ordner?: string | null;
         };
+        /**
+         * ProjektAnlegenRumpf
+         * @description Rumpf von POST /api/projekte.
+         */
+        ProjektAnlegenRumpf: {
+            /**
+             * Titel
+             * @description Anzeigename, z.B. 'Damaskus'
+             */
+            titel: string;
+            /**
+             * Id
+             * @description Kennung; ohne Angabe aus dem Titel abgeleitet
+             */
+            id?: string | null;
+        };
         /** ProjektListe */
         ProjektListe: {
             /** Anzahl */
             anzahl: number;
             /** Projekte */
-            projekte: components["schemas"]["Projekt"][];
+            projekte: components["schemas"]["ProjektZeile"][];
+        };
+        /**
+         * ProjektZeile
+         * @description Ein Projekt mit den Zahlen, die die Übersicht zeigt.
+         *
+         *     Alle Werte sind gerechnet, keiner steht in einer Konfigurationsdatei:
+         *     anzahl_einheiten ist COUNT(*), der Zeitraum MIN/MAX über die Einheiten.
+         */
+        ProjektZeile: {
+            /** Id */
+            id: string;
+            /** Titel */
+            titel: string;
+            /** Eigentuemer Id */
+            eigentuemer_id: number;
+            /** Angelegt Am */
+            angelegt_am: string;
+            /** Oeffentlich */
+            oeffentlich: boolean;
+            /** Dropbox Ordner */
+            dropbox_ordner?: string | null;
+            /**
+             * Quellformate
+             * @description Je Quelle eines; meist genau eines. Leer, solange keine Quelle da ist
+             */
+            quellformate: ("literaturexzerpt" | "presseexzerpt" | "pressesammlung")[];
+            /** Anzahl Quellen */
+            anzahl_quellen: number;
+            /**
+             * Anzahl Einheiten
+             * @description content-Einheiten, COUNT(*)
+             */
+            anzahl_einheiten: number;
+            /**
+             * Jahr Von
+             * @description MIN(einheit.jahr_von), abgeleitet
+             */
+            jahr_von: number | null;
+            /**
+             * Jahr Bis
+             * @description MAX(einheit.jahr_bis), abgeleitet
+             */
+            jahr_bis: number | null;
+            /**
+             * Hat Export
+             * @description Ob exploration/data.json vorliegt — nur dann führt der Viz-Link irgendwohin
+             */
+            hat_export: boolean;
         };
         /**
          * QuelleAnlegen
@@ -1169,6 +1367,124 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjektListe"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    projekt_anlegen_api_projekte_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjektAnlegenRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjektZeile"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    projekt_kennzahlen_api_projekt__projekt_id__kennzahlen_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Kennzahlen"];
                 };
             };
             /** @description Nicht gefunden */
@@ -1964,6 +2280,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExportAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    quelle_hochladen_api_projekt__projekt_id__quelle_datei_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestAntwort"];
                 };
             };
             /** @description Nicht gefunden */

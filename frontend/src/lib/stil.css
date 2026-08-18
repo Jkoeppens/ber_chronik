@@ -1,0 +1,341 @@
+/*
+ * stil.css — die Gestalt der alten Oberfläche, hierher abgeschrieben.
+ *
+ * Quelle: src/generalized/templates/app.css und die Projektkarten aus
+ * ingest_wizard.html. Abgeschrieben, nicht eingebunden: src/generalized/ bleibt
+ * unangetastet, und die alte Fläche soll sich nicht ändern, wenn hier etwas
+ * angepasst wird. Der Preis ist eine Kopie — der Gewinn, dass die beiden
+ * Flächen unabhängig voneinander leben können, solange beide existieren.
+ */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html {
+	font-size: 13px;
+}
+
+:root {
+	--c-bg: #f4f3f0;
+	--c-surface: #fff;
+	--c-border: #e5e2dc;
+	--c-border-ui: #e0ddd8;
+	--c-text: #1a1a1a;
+	--c-text-2: #555;
+	--c-text-3: #888;
+	--c-text-4: #aaa;
+	--c-primary: #6d28d9;
+	--c-primary-h: #5b21b6;
+	--c-primary-tint: #ede9fe;
+	--c-primary-bg: #faf5ff;
+	--c-primary-ring: #c4b5fd;
+	--c-success: #16a34a;
+	--c-danger: #dc2626;
+	--c-danger-bg: #fef2f2;
+	--c-danger-border: #fca5a5;
+	--c-code-bg: #f8fafc;
+	--c-code-border: #e2e8f0;
+}
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	background: var(--c-bg);
+	color: var(--c-text);
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+/* ── Kopfzeile ───────────────────────────────────────────────────────────── */
+
+.app-header {
+	background: var(--c-surface);
+	border-bottom: 1px solid var(--c-border-ui);
+	padding: 11px 24px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	flex-wrap: wrap;
+}
+
+.app-header h1 {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--c-text);
+	flex: 1;
+	margin-right: auto;
+}
+
+.app-header a {
+	color: var(--c-text-3);
+	text-decoration: none;
+	font-size: 11px;
+}
+
+.app-header a:hover {
+	color: var(--c-primary);
+}
+
+.app-status {
+	font-size: 11px;
+	color: var(--c-text-3);
+}
+
+/* ── Knöpfe ──────────────────────────────────────────────────────────────── */
+
+.btn {
+	padding: 5px 12px;
+	border-radius: 4px;
+	font-size: 12px;
+	cursor: pointer;
+	border: 1px solid var(--c-border);
+	background: var(--c-surface);
+	color: var(--c-text-2);
+	transition:
+		background 0.15s,
+		color 0.15s,
+		border-color 0.15s;
+	white-space: nowrap;
+	font-family: inherit;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+}
+
+.btn:hover:not(:disabled) {
+	background: #f3f4f6;
+}
+
+.btn:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.btn-primary {
+	background: var(--c-primary);
+	border-color: var(--c-primary);
+	color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+	background: var(--c-primary-h);
+	border-color: var(--c-primary-h);
+}
+
+.btn-outline {
+	border-color: var(--c-primary);
+	color: var(--c-primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+	background: var(--c-primary);
+	color: #fff;
+}
+
+.btn-dashed {
+	border: 1px dashed var(--c-primary-ring);
+	background: var(--c-primary-bg);
+	color: var(--c-primary);
+}
+
+.btn-dashed:hover:not(:disabled) {
+	background: var(--c-primary-tint);
+}
+
+.btn-sm {
+	padding: 3px 9px;
+	font-size: 11px;
+	border-radius: 3px;
+}
+
+/* ── Flächen ─────────────────────────────────────────────────────────────── */
+
+.card {
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+}
+
+.input,
+select.input {
+	padding: 4px 8px;
+	border: 1px solid #d1d5db;
+	border-radius: 3px;
+	font-size: 12px;
+	font-family: inherit;
+	background: var(--c-surface);
+	color: var(--c-text);
+}
+
+.input:hover:not(:focus) {
+	border-color: #9ca3af;
+}
+
+.input:focus {
+	border-color: var(--c-primary);
+	outline: none;
+	background: var(--c-primary-bg);
+}
+
+.section-label {
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--c-text-3);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.log-box {
+	font-size: 11px;
+	font-family: ui-monospace, monospace;
+	white-space: pre-wrap;
+	background: var(--c-code-bg);
+	border: 1px solid var(--c-code-border);
+	border-radius: 4px;
+	padding: 8px 12px;
+	max-height: 320px;
+	overflow-y: auto;
+}
+
+.log-box.error {
+	background: var(--c-danger-bg);
+	border-color: var(--c-danger-border);
+	color: var(--c-danger);
+}
+
+/* ── Projektkarten ───────────────────────────────────────────────────────── */
+
+.proj-card {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 14px;
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+	text-decoration: none;
+	color: inherit;
+	transition:
+		border-color 0.15s,
+		background 0.15s;
+}
+
+.proj-card:hover {
+	border-color: var(--c-primary);
+	background: var(--c-primary-bg);
+}
+
+.proj-card-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--c-text);
+	flex: 1;
+}
+
+.proj-card-meta {
+	font-size: 11px;
+	color: var(--c-text-3);
+}
+
+.proj-card-viz {
+	font-size: 11px;
+	color: var(--c-primary);
+	font-weight: 600;
+	flex-shrink: 0;
+	text-decoration: none;
+}
+
+.proj-card-viz:hover {
+	text-decoration: underline;
+}
+
+.proj-card-viz--disabled {
+	opacity: 0.4;
+	cursor: default;
+	pointer-events: none;
+}
+
+.proj-card-open {
+	font-size: 11px;
+	color: var(--c-primary);
+	font-weight: 600;
+	flex-shrink: 0;
+}
+
+/* ── Rumpf ───────────────────────────────────────────────────────────────── */
+
+.inhalt {
+	max-width: 900px;
+	width: 100%;
+	margin: 0 auto;
+	padding: 20px 24px 48px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.zeilen {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.leer {
+	font-size: 11px;
+	color: var(--c-text-3);
+}
+
+.fehler {
+	background: var(--c-danger-bg);
+	border: 1px solid var(--c-danger-border);
+	color: var(--c-danger);
+	border-radius: 4px;
+	padding: 8px 12px;
+	font-size: 12px;
+}
+
+/* ── Kennzahlen ──────────────────────────────────────────────────────────── */
+
+.zahlen {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 1px;
+	background: var(--c-border);
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.zahl {
+	background: var(--c-surface);
+	padding: 10px 14px;
+}
+
+.zahl dt {
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--c-text-3);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	margin-bottom: 3px;
+}
+
+.zahl dd {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--c-text);
+}
+
+.zahl dd small {
+	font-size: 11px;
+	font-weight: 400;
+	color: var(--c-text-3);
+}

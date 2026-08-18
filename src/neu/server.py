@@ -26,10 +26,11 @@ import sqlite3
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.neu.konfiguration import env_laden, lage, protokollzeilen
 
@@ -59,6 +60,8 @@ from src.neu.akteure.dienst import (  # noqa: E402
     erkennen,
 )
 from src.neu.export.dienst import ExportFehler, exportieren  # noqa: E402
+from src.neu import projekte as projekt_dienst  # noqa: E402
+from src.neu.projekte import ProjektFehler  # noqa: E402
 from src.neu.taxonomie.anbieter import AnbieterFehler  # noqa: E402
 from src.neu.taxonomie.dienst import TaxonomieFehler, vorschlagen  # noqa: E402
 from src.neu.modelle import (  # noqa: E402
@@ -68,6 +71,8 @@ from src.neu.modelle import (  # noqa: E402
     AkteureErkennenRumpf,
     Einheit,
     ExportAntwort,
+    Kennzahlen,
+    ProjektAnlegenRumpf,
     ExportierenRumpf,
     KandidatenListe,
     KonfigurationAntwort,
@@ -85,7 +90,9 @@ from src.neu.modelle import (  # noqa: E402
     KlassifizierenRumpf,
     Projekt,
     ProjektListe,
+    ProjektZeile,
     QuelleAnlegen,
+    Quellformat,
     TaxonomieAntwort,
     TaxonomieVorschlagRumpf,
     ZuordnungAntwort,
@@ -227,21 +234,67 @@ def konfiguration() -> KonfigurationAntwort:
 
 @app.get("/api/projekte", response_model=ProjektListe, responses=FEHLER_ANTWORTEN)
 def projekte() -> ProjektListe:
-    """Alle Projekte, nach Anlagedatum."""
+    """Alle Projekte mit ihren Zahlen, nach Anlagedatum.
+
+    anzahl_einheiten ist COUNT(*), der Zeitraum MIN/MAX über die Einheiten —
+    beides gerechnet, nichts aus einer Konfigurationsdatei.
+    """
     con = verbindung()
     try:
-        zeilen = con.execute(
-            "SELECT id, titel, eigentuemer_id, angelegt_am, "
-            "       oeffentlich, dropbox_ordner "
-            "FROM projekt ORDER BY angelegt_am, id"
-        ).fetchall()
+        zeilen = projekt_dienst.liste(con)
     finally:
         con.close()
 
     # Eine leere Datenbank ist ein gültiges leeres Ergebnis, kein fehlender
     # Gegenstand. 404 gibt es nur für einen benannten, nicht existierenden.
-    liste = [Projekt(**dict(z)) for z in zeilen]
-    return ProjektListe(anzahl=len(liste), projekte=liste)
+    return ProjektListe(anzahl=len(zeilen), projekte=zeilen)
+
+
+@app.post(
+    "/api/projekte",
+    response_model=ProjektZeile,
+    responses=FEHLER_ANTWORTEN,
+    status_code=201,
+)
+def projekt_anlegen(rumpf: ProjektAnlegenRumpf) -> ProjektZeile:
+    """Legt ein leeres Projekt an.
+
+    Eigentümer ist der lokale Zugang (siehe src/neu/projekte.py). Sobald es
+    eine Anmeldung gibt, wird daraus ein echter — die Zeilen hängen dann nur
+    umzuhängen.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = projekt_dienst.anlegen(con, titel=rumpf.titel, kennung=rumpf.id)
+    except ProjektFehler as exc:
+        status = 409 if exc.code == "projekt_gibt_es_schon" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return ProjektZeile(**ergebnis)
+
+
+@app.get(
+    "/api/projekt/{projekt_id}/kennzahlen",
+    response_model=Kennzahlen,
+    responses=FEHLER_ANTWORTEN,
+)
+def projekt_kennzahlen(projekt_id: str) -> Kennzahlen:
+    """Was in der Datenbank steht: Einheiten, Datierung, Kategorien, Akteure.
+
+    Alles gerechnet. Dazu die letzten zwanzig Läufe, damit sichtbar ist, was
+    schon gelaufen ist und was noch nicht.
+    """
+    con = verbindung()
+    try:
+        werte = projekt_dienst.kennzahlen(con, projekt_id)
+    except ProjektFehler as exc:
+        raise HTTPException(status_code=404, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return Kennzahlen(**werte)
 
 
 @app.get("/api/projekt/{projekt_id}", response_model=Projekt, responses=FEHLER_ANTWORTEN)
@@ -601,6 +654,101 @@ def projekt_exportieren(
     return ExportAntwort(**vars(ergebnis))
 
 
+@app.post(
+    "/api/projekt/{projekt_id}/quelle/datei",
+    response_model=IngestAntwort,
+    responses=FEHLER_ANTWORTEN,
+    status_code=201,
+)
+async def quelle_hochladen(
+    projekt_id: str,
+    quellformat: Quellformat = Form(description="literaturexzerpt | presseexzerpt"),
+    datei: UploadFile = File(description="Die DOCX-Datei"),
+) -> IngestAntwort:
+    """Nimmt eine Datei aus dem Browser entgegen, legt sie in data/raw/ ab und
+    liest sie ein.
+
+    Der Dateiname kommt vom Client und wird nicht geglaubt: nur der Basisname
+    zählt, und der muss unterhalb von data/raw/ landen. Eine vorhandene Datei
+    wird nicht überschrieben — sonst könnte ein Upload eine fremde Quelle
+    austauschen, an der schon ein Projekt hängt.
+
+    Für Obsidian bleibt es ein Ordnerpfad: dafür ist POST …/quelle da.
+    """
+    name = Path(datei.filename or "").name
+    if not name:
+        raise HTTPException(
+            status_code=422, detail=("dateiname_fehlt", "Die Datei hat keinen Namen.")
+        )
+    ziel = _pfad_in_rohdaten(name)
+    inhalt = await datei.read()
+
+    if ziel.exists():
+        # Gleicher Name, gleicher Inhalt: kein Konflikt, die Datei ist schon da.
+        # Gleicher Name, anderer Inhalt: nicht überschreiben — daran hängen
+        # womöglich Quellen anderer Projekte, deren Einheiten dann nicht mehr
+        # zu ihrem Ursprung passen.
+        if ziel.read_bytes() != inhalt:
+            raise HTTPException(
+                status_code=409,
+                detail=("datei_gibt_es_schon",
+                        f"In data/raw/ liegt schon eine andere Datei namens '{name}'. "
+                        "Bitte umbenennen — eine vorhandene Quelle wird nicht ersetzt."),
+            )
+    else:
+        ziel.parent.mkdir(parents=True, exist_ok=True)
+        ziel.write_bytes(inhalt)
+
+    con = verbindung_schreibend()
+    try:
+        ergebnis = einlesen(
+            con, projekt_id=projekt_id, pfad=ziel, quellformat=quellformat
+        )
+    except IngestFehler as exc:
+        # Die Datei bleibt liegen: sie ist angekommen, und ein zweiter Versuch
+        # mit richtigem Quellformat soll sie nicht erneut hochladen müssen.
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return IngestAntwort(**vars(ergebnis))
+
+
+# ── Die Visualisierung ────────────────────────────────────────────────────────
+# viz/ wird unverändert ausgeliefert. Von den Projektdaten geht nur das
+# Exportverzeichnis über die Leitung, und dort nur die fünf Dateien, die viz/
+# lädt — data/ enthält auch Datenbanken und Rohdokumente.
+
+VIZ_DIR = Path(__file__).resolve().parent.parent.parent / "viz"
+PROJEKT_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "projects"
+EXPORT_DATEIEN = {
+    "data.json", "project_meta.json", "entities_seed.csv",
+    "entities_summary.json", "network_layout.json",
+}
+
+
+@app.get("/data/projects/{projekt_id}/exploration/{datei}", include_in_schema=False)
+def exportdatei(projekt_id: str, datei: str) -> FileResponse:
+    """Eine der fünf Exportdateien. Alles andere gibt es hier nicht."""
+    if datei not in EXPORT_DATEIEN:
+        raise nicht_gefunden(
+            "datei_nicht_ausgeliefert",
+            f"'{datei}' gehört nicht zu den Dateien, die die Visualisierung lädt.",
+        )
+    pfad = PROJEKT_DIR / Path(projekt_id).name / "exploration" / datei
+    if not pfad.is_file():
+        raise nicht_gefunden(
+            "exportdatei_fehlt",
+            f"'{datei}' gibt es für '{projekt_id}' nicht — schon exportiert?",
+        )
+    return FileResponse(pfad)
+
+
+if VIZ_DIR.is_dir():
+    app.mount("/viz", StaticFiles(directory=VIZ_DIR, html=True), name="viz")
+
+
 # ── Die Seite ─────────────────────────────────────────────────────────────────
 # Zuletzt montiert: die /api-Routen oben werden zuerst geprüft, der Mount auf "/"
 # fängt nur ab, was übrig bleibt. Ein Ursprung für Seite und Daten, kein CORS.
@@ -608,7 +756,27 @@ def projekt_exportieren(
 BUILD_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "build"
 
 if BUILD_DIR.is_dir():
-    app.mount("/", StaticFiles(directory=BUILD_DIR, html=True), name="seite")
+    AUSWEICHSEITE = BUILD_DIR / "200.html"
+
+    class SeiteMitAusweich(StaticFiles):
+        """Liefert 200.html für alles, was keine Datei ist.
+
+        Die Route /projekt/{id} gibt es nicht als Datei — es gibt beliebig viele
+        Kennungen. SvelteKit erzeugt dafür eine Ausweichseite, die im Browser
+        entscheidet, was sie lädt. Ohne diesen Griff bekäme jeder Neuladen einer
+        Projektseite ein 404.
+        """
+
+        async def get_response(self, path: str, scope):
+            try:
+                return await super().get_response(path, scope)
+            except StarletteHTTPException as exc:
+                # StaticFiles wirft 404, es gibt keine Antwort zum Prüfen.
+                if exc.status_code == 404 and AUSWEICHSEITE.is_file():
+                    return FileResponse(AUSWEICHSEITE)
+                raise
+
+    app.mount("/", SeiteMitAusweich(directory=BUILD_DIR, html=True), name="seite")
 else:
 
     @app.get("/", include_in_schema=False)

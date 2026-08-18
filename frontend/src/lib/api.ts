@@ -9,7 +9,7 @@
  *
  * Die Gestalten kommen aus api-typen.ts, das aus dem OpenAPI-Schema des Servers
  * erzeugt wird (`npm run typen`). Hier steht keine von Hand geschriebene
- * Antwortgestalt mehr: eine Umbenennung in src/neu/modelle.py soll den Build
+ * Antwortgestalt: eine Umbenennung in src/neu/modelle.py soll den Build
  * scheitern lassen und nicht erst im Browser auffallen.
  */
 
@@ -18,7 +18,13 @@ import type { components, paths } from './api-typen';
 /** Kurznamen für die Gestalten, die diese Anwendung benutzt. */
 export type Einheit = components['schemas']['Einheit'];
 export type EinheitenListe = components['schemas']['EinheitenListe'];
-export type EinheitTyp = NonNullable<EinheitenListe['typ_filter']>;
+export type ProjektZeile = components['schemas']['ProjektZeile'];
+export type ProjektListe = components['schemas']['ProjektListe'];
+export type Kennzahlen = components['schemas']['Kennzahlen'];
+export type Lauf = components['schemas']['Lauf'];
+export type IngestAntwort = components['schemas']['IngestAntwort'];
+export type ExportAntwort = components['schemas']['ExportAntwort'];
+export type Quellformat = components['schemas']['QuelleAnlegen']['quellformat'];
 
 /** Die eine Fehlergestalt des Servers — auch sie kommt aus dem Schema. */
 type ServerFehler = components['schemas']['FehlerAntwort'];
@@ -43,10 +49,11 @@ export class ApiFehler extends Error {
 	}
 }
 
-async function hole<T>(pfad: string): Promise<T> {
+/** Ein Aufruf. Wirft bei jedem Fehlschlag einen ApiFehler mit lesbarer Meldung. */
+async function ruf<T>(pfad: string, optionen?: RequestInit): Promise<T> {
 	let antwort: Response;
 	try {
-		antwort = await fetch(pfad);
+		antwort = await fetch(pfad, optionen);
 	} catch {
 		// Server aus, Netz weg, DNS kaputt — fetch wirft ohne Status.
 		throw new ApiFehler(
@@ -74,11 +81,76 @@ async function hole<T>(pfad: string): Promise<T> {
 	return (await antwort.json()) as T;
 }
 
+const alsJson = (rumpf: unknown): RequestInit => ({
+	method: 'POST',
+	headers: { 'Content-Type': 'application/json' },
+	body: JSON.stringify(rumpf)
+});
+
+// ── Projekte ────────────────────────────────────────────────────────────────
+
+/** Alle Projekte mit ihren gerechneten Zahlen. */
+export function ladeProjekte(): Promise<ProjektListe> {
+	return ruf<ProjektListe>('/api/projekte');
+}
+
+/** Legt ein leeres Projekt an. Die Kennung entsteht aus dem Titel. */
+export function legeProjektAn(titel: string, id?: string): Promise<ProjektZeile> {
+	return ruf<ProjektZeile>('/api/projekte', alsJson(id ? { titel, id } : { titel }));
+}
+
+/** Die Kennzahlen eines Projekts, alles aus der Datenbank gerechnet. */
+export function ladeKennzahlen(projektId: string): Promise<Kennzahlen> {
+	return ruf<Kennzahlen>(`/api/projekt/${encodeURIComponent(projektId)}/kennzahlen`);
+}
+
+// ── Schritte ────────────────────────────────────────────────────────────────
+
+/** Lädt eine Datei hoch und liest sie ein. */
+export function leseDateiEin(
+	projektId: string,
+	datei: File,
+	quellformat: Quellformat
+): Promise<IngestAntwort> {
+	const daten = new FormData();
+	daten.append('datei', datei);
+	daten.append('quellformat', quellformat);
+	return ruf<IngestAntwort>(`/api/projekt/${encodeURIComponent(projektId)}/quelle/datei`, {
+		method: 'POST',
+		body: daten
+	});
+}
+
+/** Liest einen Pfad unterhalb von data/raw/ ein — Datei oder Obsidian-Ordner. */
+export function lesePfadEin(
+	projektId: string,
+	pfad: string,
+	quellformat: Quellformat
+): Promise<IngestAntwort> {
+	return ruf<IngestAntwort>(
+		`/api/projekt/${encodeURIComponent(projektId)}/quelle`,
+		alsJson({ pfad, quellformat })
+	);
+}
+
+/** Erzeugt die Dateien, die die Visualisierung liest. */
+export function exportiere(projektId: string): Promise<ExportAntwort> {
+	return ruf<ExportAntwort>(
+		`/api/projekt/${encodeURIComponent(projektId)}/exportieren`,
+		alsJson({ zusammenfassungen: false })
+	);
+}
+
 /** Die Einheiten eines Projekts, nach Quelle und Position sortiert. */
 export function ladeEinheiten(
 	projektId: string,
 	typ?: EinheitenAbfrage['typ']
 ): Promise<EinheitenListe> {
 	const abfrage = typ ? `?typ=${encodeURIComponent(typ)}` : '';
-	return hole<EinheitenListe>(`/api/projekt/${encodeURIComponent(projektId)}/einheiten${abfrage}`);
+	return ruf<EinheitenListe>(`/api/projekt/${encodeURIComponent(projektId)}/einheiten${abfrage}`);
+}
+
+/** Wohin die Visualisierung eines Projekts zeigt. */
+export function vizAdresse(projektId: string): string {
+	return `/viz/?project=${encodeURIComponent(projektId)}`;
 }
