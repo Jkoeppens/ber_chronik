@@ -165,6 +165,43 @@ class TaxonomieVorschlagRumpf(BaseModel):
     )
 
 
+class Kategorie(BaseModel):
+    """Ein Taxonomie-Vorschlag, wie kern.verfeinern ihn baut.
+
+    Name und Beschreibung entstehen durch Aufteilen der Modellantwort am ersten
+    '. '; fehlt der Punkt, bleibt description leer.
+    """
+
+    name: str
+    description: str = Field(
+        default="", description="Leer, wenn die Antwort keinen Satzteil dahinter hatte"
+    )
+    keywords: list[str] = Field(
+        default_factory=list, description="Höchstens drei, aus den TF-IDF-Schlagworten"
+    )
+
+
+class TrajektorieRunde(BaseModel):
+    """Was in einer LLM-Runde geschah — eine Zeile der Trajektorie.
+
+    Die Schlüssel von label_sim, delta und titel sind Clusternummern als
+    Zeichenketten: JSON kennt keine Zahlen als Schlüssel.
+    """
+
+    llm_runde: int
+    km_iter: int
+    aenderungsanteil: float
+    eingefroren_gesamt: int
+    neu_eingefroren: list[int]
+    label_sim: dict[str, float | None] = Field(
+        description="Je Cluster die Ähnlichkeit zum vorigen Label; null in Runde 1"
+    )
+    delta: dict[str, float | None] = Field(
+        description="Je Cluster die Veränderung dieser Ähnlichkeit"
+    )
+    titel: dict[str, str]
+
+
 class TaxonomieAntwort(BaseModel):
     projekt_id: str
     warm_start: bool
@@ -173,7 +210,7 @@ class TaxonomieAntwort(BaseModel):
     beendet_am: str
     status: str
     n_clusters: int
-    kategorien: list[dict]
+    kategorien: list[Kategorie]
     llm_runden: int
     fruehzeitig_beendet: bool
     eingefroren: list[int]
@@ -182,7 +219,7 @@ class TaxonomieAntwort(BaseModel):
     kosten_usd: float
     embedding_modell: str
     llm_modell: str
-    trajektorie: list[dict]
+    trajektorie: list[TrajektorieRunde]
 
 
 Praezision = Literal["tag", "monat", "jahr", "spanne", "keine"]

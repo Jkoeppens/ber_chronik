@@ -813,6 +813,28 @@ export interface components {
             /** Kandidaten */
             kandidaten: components["schemas"]["Kandidat"][];
         };
+        /**
+         * Kategorie
+         * @description Ein Taxonomie-Vorschlag, wie kern.verfeinern ihn baut.
+         *
+         *     Name und Beschreibung entstehen durch Aufteilen der Modellantwort am ersten
+         *     '. '; fehlt der Punkt, bleibt description leer.
+         */
+        Kategorie: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @description Leer, wenn die Antwort keinen Satzteil dahinter hatte
+             * @default
+             */
+            description: string;
+            /**
+             * Keywords
+             * @description Höchstens drei, aus den TF-IDF-Schlagworten
+             */
+            keywords?: string[];
+        };
         /** KlassifikationAntwort */
         KlassifikationAntwort: {
             /** Projekt Id */
@@ -952,9 +974,7 @@ export interface components {
             /** N Clusters */
             n_clusters: number;
             /** Kategorien */
-            kategorien: {
-                [key: string]: unknown;
-            }[];
+            kategorien: components["schemas"]["Kategorie"][];
             /** Llm Runden */
             llm_runden: number;
             /** Fruehzeitig Beendet */
@@ -972,9 +992,7 @@ export interface components {
             /** Llm Modell */
             llm_modell: string;
             /** Trajektorie */
-            trajektorie: {
-                [key: string]: unknown;
-            }[];
+            trajektorie: components["schemas"]["TrajektorieRunde"][];
         };
         /**
          * TaxonomieVorschlagRumpf
@@ -992,6 +1010,43 @@ export interface components {
              * @description Anzahl Kategorien; nur ohne warm_start erlaubt (Vorgabe 7)
              */
             n_clusters?: number | null;
+        };
+        /**
+         * TrajektorieRunde
+         * @description Was in einer LLM-Runde geschah — eine Zeile der Trajektorie.
+         *
+         *     Die Schlüssel von label_sim, delta und titel sind Clusternummern als
+         *     Zeichenketten: JSON kennt keine Zahlen als Schlüssel.
+         */
+        TrajektorieRunde: {
+            /** Llm Runde */
+            llm_runde: number;
+            /** Km Iter */
+            km_iter: number;
+            /** Aenderungsanteil */
+            aenderungsanteil: number;
+            /** Eingefroren Gesamt */
+            eingefroren_gesamt: number;
+            /** Neu Eingefroren */
+            neu_eingefroren: number[];
+            /**
+             * Label Sim
+             * @description Je Cluster die Ähnlichkeit zum vorigen Label; null in Runde 1
+             */
+            label_sim: {
+                [key: string]: number | null;
+            };
+            /**
+             * Delta
+             * @description Je Cluster die Veränderung dieser Ähnlichkeit
+             */
+            delta: {
+                [key: string]: number | null;
+            };
+            /** Titel */
+            titel: {
+                [key: string]: string;
+            };
         };
         /**
          * VerschmelzenRumpf
