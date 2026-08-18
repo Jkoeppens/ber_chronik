@@ -214,6 +214,59 @@ def test_quelle_unbekanntes_projekt(client: TestClient) -> None:
     assert fehler["code"] == "projekt_nicht_gefunden"
 
 
+# ── GET /api/konfiguration ────────────────────────────────────────────────────
+
+def test_konfiguration_liefert_die_lage(client: TestClient) -> None:
+    r = client.get("/api/konfiguration")
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body) == {
+        "env_datei", "embedding", "llm", "schwelle_akteure", "band_akteure",
+        "schwellen_kategorien", "ollama_frist_sekunden",
+    }
+    for teil in ("embedding", "llm"):
+        assert set(body[teil]) == {
+            "anbieter", "bekannt", "modell", "schluessel_name",
+            "schluessel_vorhanden", "einsatzbereit", "hinweis",
+        }
+
+
+def test_konfiguration_verraet_keine_schluessel(client: TestClient, monkeypatch) -> None:
+    """Nur ob ein Schlüssel gesetzt ist — nie sein Wert."""
+    monkeypatch.setenv("EMBEDDING_PROVIDER", "voyage")
+    monkeypatch.setenv("VOYAGE_API_KEY", "pa-streng-geheim-1234")
+    monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-streng-geheim-5678")
+
+    roh = client.get("/api/konfiguration").text
+    assert "pa-streng-geheim-1234" not in roh
+    assert "sk-ant-streng-geheim-5678" not in roh
+    assert "dropbox_token" not in roh
+
+    body = client.get("/api/konfiguration").json()
+    assert body["embedding"]["schluessel_vorhanden"] is True
+    assert body["llm"]["schluessel_vorhanden"] is True
+
+
+def test_konfiguration_schwelle_folgt_dem_anbieter(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setenv("EMBEDDING_PROVIDER", "local")
+    body = client.get("/api/konfiguration").json()
+    assert body["schwelle_akteure"] == 0.92
+    assert body["band_akteure"] == [0.79, 0.91]
+
+    monkeypatch.setenv("EMBEDDING_PROVIDER", "voyage")
+    body = client.get("/api/konfiguration").json()
+    assert body["schwelle_akteure"] == 0.78
+    assert body["band_akteure"] == [0.65, 0.77]
+
+
+def test_konfiguration_meldet_fehlenden_anbieter(client: TestClient, monkeypatch) -> None:
+    monkeypatch.delenv("EMBEDDING_PROVIDER", raising=False)
+    body = client.get("/api/konfiguration").json()
+    assert body["embedding"]["einsatzbereit"] is False
+    assert "EMBEDDING_PROVIDER" in body["embedding"]["hinweis"]
+
+
 # ── Akteure ───────────────────────────────────────────────────────────────────
 
 def test_akteure_erkennen_unbekanntes_projekt(client: TestClient) -> None:

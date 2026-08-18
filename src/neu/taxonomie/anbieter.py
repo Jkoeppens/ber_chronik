@@ -36,6 +36,24 @@ MODELL_ANTHROPIC = "claude-haiku-4-5-20251001"
 MODELL_OLLAMA = "llama3.2:3b"
 OLLAMA_BASIS = "http://localhost:11434"
 
+# Frist je Modellaufruf. Die Vorlage stand auf 300 Sekunden — lang genug, dass
+# ein hängender Aufruf wie ein arbeitender aussieht. Fünf Minuten je Cluster
+# und Runde summieren sich in einem Taxonomielauf zu einer halben Stunde, in
+# der nichts passiert und niemand es merkt.
+OLLAMA_FRIST = 120
+
+
+def ollama_frist() -> int:
+    """Frist je Ollama-Aufruf in Sekunden, aus OLLAMA_TIMEOUT oder Vorgabe."""
+    roh = (os.environ.get("OLLAMA_TIMEOUT") or "").strip()
+    if not roh:
+        return OLLAMA_FRIST
+    try:
+        wert = int(float(roh))
+    except ValueError:
+        return OLLAMA_FRIST
+    return wert if wert > 0 else OLLAMA_FRIST
+
 
 class AnbieterFehler(RuntimeError):
     def __init__(self, meldung: str, code: str = "anbieter_fehler"):
@@ -129,13 +147,28 @@ def llm_funktion(
     m = modell or os.environ.get("OLLAMA_MODEL") or MODELL_OLLAMA
     basis = os.environ.get("OLLAMA_BASE_URL") or OLLAMA_BASIS
 
+    frist = ollama_frist()
+
     def frage_ollama(prompt: str, system: str) -> tuple[str, int, int]:
-        r = requests.post(
-            f"{basis}/api/generate",
-            json={"model": m, "prompt": prompt, "stream": False, "system": system,
-                  "options": {"num_ctx": 8192, "temperature": 0}},
-            timeout=300,
-        )
+        try:
+            r = requests.post(
+                f"{basis}/api/generate",
+                json={"model": m, "prompt": prompt, "stream": False, "system": system,
+                      "options": {"num_ctx": 8192, "temperature": 0}},
+                timeout=frist,
+            )
+        except requests.Timeout as exc:
+            raise AnbieterFehler(
+                f"Ollama ({m} auf {basis}) hat innerhalb von {frist} s nicht "
+                "geantwortet. Frist über OLLAMA_TIMEOUT ändern, oder ein "
+                "kleineres Modell wählen.",
+                "ollama_zeitueberschreitung",
+            ) from exc
+        except requests.ConnectionError as exc:
+            raise AnbieterFehler(
+                f"Ollama ist unter {basis} nicht erreichbar. Läuft der Dienst?",
+                "ollama_nicht_erreichbar",
+            ) from exc
         r.raise_for_status()
         daten = r.json()
         if "response" not in daten:

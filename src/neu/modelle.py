@@ -338,6 +338,40 @@ class KandidatenListe(BaseModel):
     kandidaten: list[Kandidat]
 
 
+# ── Konfiguration ─────────────────────────────────────────────────────────────
+
+class AnbieterLage(BaseModel):
+    """Was für einen Anbieter eingestellt ist. Nie ein Schlüssel, nie ein Token."""
+
+    anbieter: str | None = Field(description="null heißt: nicht gesetzt")
+    bekannt: bool = Field(description="steht im Wertevorrat")
+    modell: str | None
+    schluessel_name: str | None = Field(
+        description="Welche Variable gebraucht wird; null bei lokalen Anbietern"
+    )
+    schluessel_vorhanden: bool | None = Field(
+        description="Ob sie gesetzt ist — nicht ihr Wert. null: wird keine gebraucht"
+    )
+    einsatzbereit: bool
+    hinweis: str | None = Field(default=None, description="Was fehlt, in einem Satz")
+
+
+class KonfigurationAntwort(BaseModel):
+    env_datei: str | None
+    embedding: AnbieterLage
+    llm: AnbieterLage
+    schwelle_akteure: float | None = Field(
+        description="Ab hier werden Akteure zusammengeführt; hängt am Modell"
+    )
+    band_akteure: tuple[float, float] | None = Field(
+        description="Der Streifen darunter, aus dem Vorschläge kommen"
+    )
+    schwellen_kategorien: dict[str, float]
+    ollama_frist_sekunden: int | None = Field(
+        description="Frist je Modellaufruf; null, wenn Ollama nicht aktiv ist"
+    )
+
+
 class IngestAntwort(BaseModel):
     projekt_id: str
     quelle_id: str

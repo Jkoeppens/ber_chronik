@@ -2,19 +2,28 @@
 server.py — Leseserver auf data/neu.db
 
 Endpoints:
+  GET /api/konfiguration            welche Anbieter, Modelle und Schwellen gelten
   GET /api/projekte                 alle Projekte
   GET /api/projekt/{id}             ein Projekt
   GET /api/projekt/{id}/einheiten   seine Einheiten, nach Quelle und Position
                                     sortiert, Filter ?typ=content
+  dazu die Schritte: quelle, klassifizieren, taxonomie, datieren, akteure
 
 Starten:
   uvicorn src.neu.server:app --port 8002 --reload
 
-Liest ausschließlich data/neu.db. Kein Schreiben, keine Auth, kein SSE,
-keine Pipeline. data/projects.db und dev_server.py bleiben unberührt.
+Beim Hochfahren wird .env geladen (ohne override — was in der Umgebung steht,
+gewinnt) und eine Zeile protokolliert, welche Anbieter aktiv sind und was
+fehlt. Ein fehlender Anbieter bricht den Start nicht ab; nur die Schritte, die
+ihn brauchen, antworten dann mit 503.
+
+Liest und schreibt ausschließlich data/neu.db. data/projects.db und
+dev_server.py bleiben unberührt.
 """
 
+import logging
 import sqlite3
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -22,19 +31,26 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
-from src.neu.db import verbindung, verbindung_schreibend
-from src.neu.ingest.dienst import IngestFehler, einlesen
-from src.neu.kategorien.dienst import (
+from src.neu.konfiguration import env_laden, lage, protokollzeilen
+
+# Vor allem anderen: die Anbieterwahl steht in der Umgebung, und die Module
+# darunter lesen sie beim Import. override=False — was schon in der Umgebung
+# steht (Railway), gewinnt gegen die Datei.
+env_laden()
+
+from src.neu.db import verbindung, verbindung_schreibend  # noqa: E402
+from src.neu.ingest.dienst import IngestFehler, einlesen  # noqa: E402
+from src.neu.kategorien.dienst import (  # noqa: E402
     KlassifikationFehler,
     klassifizieren,
     zuordnung_setzen,
 )
-from src.neu.datierung.dienst import (
+from src.neu.datierung.dienst import (  # noqa: E402
     DatierungFehler,
     datieren,
     datierung_setzen,
 )
-from src.neu.akteure.dienst import (
+from src.neu.akteure.dienst import (  # noqa: E402
     UNGESETZT,
     AkteurFehler,
     akteur_aendern,
@@ -42,15 +58,16 @@ from src.neu.akteure.dienst import (
     duplikatskandidaten,
     erkennen,
 )
-from src.neu.taxonomie.anbieter import AnbieterFehler
-from src.neu.taxonomie.dienst import TaxonomieFehler, vorschlagen
-from src.neu.modelle import (
+from src.neu.taxonomie.anbieter import AnbieterFehler  # noqa: E402
+from src.neu.taxonomie.dienst import TaxonomieFehler, vorschlagen  # noqa: E402
+from src.neu.modelle import (  # noqa: E402
     AkteurAendernRumpf,
     AkteurAntwort,
     AkteurErkennungAntwort,
     AkteureErkennenRumpf,
     Einheit,
     KandidatenListe,
+    KonfigurationAntwort,
     VerschmelzenRumpf,
     EinheitTyp,
     EinheitenListe,
@@ -80,10 +97,33 @@ FEHLER_ANTWORTEN = {
     503: {"model": FehlerAntwort, "description": "Anbieter nicht verfügbar"},
 }
 
+protokoll = logging.getLogger("ber.neu")
+
+
+def anbieter_melden() -> None:
+    """Sagt beim Hochfahren, womit gerechnet wird und was fehlt.
+
+    Kein Abbruch: ein fehlender Schlüssel legt nicht den ganzen Server lahm,
+    sondern nur die Schritte, die ihn brauchen. Sichtbar soll es trotzdem
+    sein — beim Hochfahren, nicht erst beim ersten Klick.
+    """
+    z = lage()
+    vollstaendig = z.embedding.einsatzbereit and z.llm.einsatzbereit
+    for zeile in protokollzeilen(z):
+        protokoll.info(zeile) if vollstaendig else protokoll.warning(zeile)
+
+
+@asynccontextmanager
+async def lebenszyklus(_: FastAPI):
+    anbieter_melden()
+    yield
+
+
 app = FastAPI(
     title="BER Chronik — Leseserver",
     description="Liest data/neu.db. Nur lesend.",
     version="0.1.0",
+    lifespan=lebenszyklus,
 )
 
 
@@ -158,6 +198,29 @@ def _pfad_in_rohdaten(angabe: str) -> Path:
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
+@app.get(
+    "/api/konfiguration",
+    response_model=KonfigurationAntwort,
+    responses=FEHLER_ANTWORTEN,
+)
+def konfiguration() -> KonfigurationAntwort:
+    """Was gerade eingestellt ist: Anbieter, Modelle, Schwellen.
+
+    Dieselbe Auskunft wie beim Hochfahren, nur abrufbar. Von Schlüsseln steht
+    hier nur, ob sie gesetzt sind — nie ihr Wert, und keine Projekt-Token.
+    """
+    z = lage()
+    return KonfigurationAntwort(
+        env_datei=z.env_datei,
+        embedding=vars(z.embedding),
+        llm=vars(z.llm),
+        schwelle_akteure=z.schwelle_akteure,
+        band_akteure=z.band_akteure,
+        schwellen_kategorien=z.schwellen_kategorien,
+        ollama_frist_sekunden=z.ollama_frist_sekunden,
+    )
+
 
 @app.get("/api/projekte", response_model=ProjektListe, responses=FEHLER_ANTWORTEN)
 def projekte() -> ProjektListe:
