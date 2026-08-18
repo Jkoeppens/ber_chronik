@@ -6,28 +6,30 @@
  *
  * Die Seite wird vom selben Server ausgeliefert wie die API, deshalb sind die
  * Pfade relativ — ein Ursprung, kein CORS.
+ *
+ * Die Gestalten kommen aus api-typen.ts, das aus dem OpenAPI-Schema des Servers
+ * erzeugt wird (`npm run typen`). Hier steht keine von Hand geschriebene
+ * Antwortgestalt mehr: eine Umbenennung in src/neu/modelle.py soll den Build
+ * scheitern lassen und nicht erst im Browser auffallen.
  */
 
-/** Antwortgestalt des Servers, siehe src/neu/modelle.py */
-export interface Einheit {
-	id: number;
-	quelle_id: string;
-	position: number;
-	typ: string;
-	text: string;
-}
+import type { components, paths } from './api-typen';
 
-export interface EinheitenListe {
-	projekt_id: string;
-	anzahl: number;
-	typ_filter: string | null;
-	einheiten: Einheit[];
-}
+/** Kurznamen für die Gestalten, die diese Anwendung benutzt. */
+export type Einheit = components['schemas']['Einheit'];
+export type EinheitenListe = components['schemas']['EinheitenListe'];
+export type EinheitTyp = NonNullable<EinheitenListe['typ_filter']>;
 
-/** Die eine Fehlergestalt des Servers. */
-interface ServerFehler {
-	fehler: { code: string; meldung: string; status: number };
-}
+/** Die eine Fehlergestalt des Servers — auch sie kommt aus dem Schema. */
+type ServerFehler = components['schemas']['FehlerAntwort'];
+
+/**
+ * Der Abfrageparameter von GET …/einheiten, direkt aus dem Pfad gelesen.
+ * Ändert der Server den Namen, bricht es hier.
+ */
+type EinheitenAbfrage = NonNullable<
+	paths['/api/projekt/{projekt_id}/einheiten']['get']['parameters']['query']
+>;
 
 /** Was diese Datei nach außen wirft. Immer mit einer Meldung, die man anzeigen kann. */
 export class ApiFehler extends Error {
@@ -73,7 +75,10 @@ async function hole<T>(pfad: string): Promise<T> {
 }
 
 /** Die Einheiten eines Projekts, nach Quelle und Position sortiert. */
-export function ladeEinheiten(projektId: string, typ?: string): Promise<EinheitenListe> {
+export function ladeEinheiten(
+	projektId: string,
+	typ?: EinheitenAbfrage['typ']
+): Promise<EinheitenListe> {
 	const abfrage = typ ? `?typ=${encodeURIComponent(typ)}` : '';
 	return hole<EinheitenListe>(`/api/projekt/${encodeURIComponent(projektId)}/einheiten${abfrage}`);
 }
