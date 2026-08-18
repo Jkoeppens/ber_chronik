@@ -58,6 +58,7 @@ from src.neu.akteure.dienst import (  # noqa: E402
     duplikatskandidaten,
     erkennen,
 )
+from src.neu.export.dienst import ExportFehler, exportieren  # noqa: E402
 from src.neu.taxonomie.anbieter import AnbieterFehler  # noqa: E402
 from src.neu.taxonomie.dienst import TaxonomieFehler, vorschlagen  # noqa: E402
 from src.neu.modelle import (  # noqa: E402
@@ -66,6 +67,8 @@ from src.neu.modelle import (  # noqa: E402
     AkteurErkennungAntwort,
     AkteureErkennenRumpf,
     Einheit,
+    ExportAntwort,
+    ExportierenRumpf,
     KandidatenListe,
     KonfigurationAntwort,
     VerschmelzenRumpf,
@@ -228,7 +231,7 @@ def projekte() -> ProjektListe:
     con = verbindung()
     try:
         zeilen = con.execute(
-            "SELECT id, titel, eigentuemer_id, angelegt_am, jahr_von, jahr_bis, "
+            "SELECT id, titel, eigentuemer_id, angelegt_am, "
             "       oeffentlich, dropbox_ordner "
             "FROM projekt ORDER BY angelegt_am, id"
         ).fetchall()
@@ -247,7 +250,7 @@ def projekt(projekt_id: str) -> Projekt:
     con = verbindung()
     try:
         zeile = con.execute(
-            "SELECT id, titel, eigentuemer_id, angelegt_am, jahr_von, jahr_bis, "
+            "SELECT id, titel, eigentuemer_id, angelegt_am, "
             "       oeffentlich, dropbox_ordner "
             "FROM projekt WHERE id = ?",
             (projekt_id,),
@@ -566,6 +569,36 @@ def akteure_duplikatskandidaten(projekt_id: str) -> KandidatenListe:
     return KandidatenListe(
         projekt_id=projekt_id, anzahl=len(kandidaten), kandidaten=kandidaten
     )
+
+
+@app.post(
+    "/api/projekt/{projekt_id}/exportieren",
+    response_model=ExportAntwort,
+    responses=FEHLER_ANTWORTEN,
+)
+def projekt_exportieren(
+    projekt_id: str, rumpf: ExportierenRumpf | None = None
+) -> ExportAntwort:
+    """Erzeugt die Dateien, die viz/ liest — gleiche Namen, gleiches Format.
+
+    Der Zeitraum in project_meta.json ist MIN(jahr_von) bis MAX(jahr_bis) über
+    die Einheiten, keine gespeicherte Angabe. Undatierte Einheiten stehen in
+    data.json und fehlen nur auf der Zeitachse; wie viele es sind, sagt
+    anzahl_ohne_datum.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = exportieren(
+            con, projekt_id=projekt_id,
+            zusammenfassungen=bool(rumpf and rumpf.zusammenfassungen),
+        )
+    except ExportFehler as exc:
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return ExportAntwort(**vars(ergebnis))
 
 
 # ── Die Seite ─────────────────────────────────────────────────────────────────

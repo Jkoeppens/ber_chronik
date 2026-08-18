@@ -1,13 +1,13 @@
 PRAGMA foreign_keys = ON;
 
 -- ── projekt ───────────────────────────────────────────────────────────────────
+-- Kein jahr_von/jahr_bis: der Zeitraum eines Projekts ist MIN(jahr_von) und
+-- MAX(jahr_bis) über seine Einheiten. Abgeleitet, nicht abgelegt.
 CREATE TABLE projekt (
     id              TEXT    NOT NULL PRIMARY KEY,
     titel           TEXT    NOT NULL DEFAULT '',
     eigentuemer_id  INTEGER NOT NULL REFERENCES zugang(id),
     angelegt_am     TEXT    NOT NULL,
-    jahr_von        INTEGER,
-    jahr_bis        INTEGER,
     oeffentlich     INTEGER NOT NULL DEFAULT 0,
     dropbox_ordner  TEXT,
     dropbox_token   TEXT
@@ -115,6 +115,9 @@ CREATE TABLE akteur (
                        -- der nächste Lauf den Fehlfund überspringt
     herkunft   TEXT    NOT NULL CHECK (herkunft IN ('gliner', 'manuell')),
                        -- manuell ist gegen Neuläufe geschützt
+    zusammenfassung TEXT,   -- KI-Zusammenfassung; hier steht sie, nicht in
+                            -- der Exportdatei. entities_summary.json ist die
+                            -- Ausgabe, nicht die Wahrheit.
     UNIQUE (projekt_id, normalform)
 );
 

@@ -19,13 +19,13 @@ Acht Tabellen. Grundsätze, die in allen gelten:
 PRAGMA foreign_keys = ON;
 
 -- ── projekt ───────────────────────────────────────────────────────────────────
+-- Kein jahr_von/jahr_bis: der Zeitraum eines Projekts ist MIN(jahr_von) und
+-- MAX(jahr_bis) über seine Einheiten. Abgeleitet, nicht abgelegt.
 CREATE TABLE projekt (
     id              TEXT    NOT NULL PRIMARY KEY,
     titel           TEXT    NOT NULL DEFAULT '',
     eigentuemer_id  INTEGER NOT NULL REFERENCES zugang(id),
     angelegt_am     TEXT    NOT NULL,
-    jahr_von        INTEGER,
-    jahr_bis        INTEGER,
     oeffentlich     INTEGER NOT NULL DEFAULT 0,
     dropbox_ordner  TEXT,
     dropbox_token   TEXT
@@ -133,6 +133,9 @@ CREATE TABLE akteur (
                        -- der nächste Lauf den Fehlfund überspringt
     herkunft   TEXT    NOT NULL CHECK (herkunft IN ('gliner', 'manuell')),
                        -- manuell ist gegen Neuläufe geschützt
+    zusammenfassung TEXT,   -- KI-Zusammenfassung; hier steht sie, nicht in
+                            -- der Exportdatei. entities_summary.json ist die
+                            -- Ausgabe, nicht die Wahrheit.
     UNIQUE (projekt_id, normalform)
 );
 
@@ -215,6 +218,15 @@ Obsidian-Sammlungen gleichzeitig tragen; ein Typ auf Projektebene widerspricht d
 und ist einer der vier heutigen Ablageorte von `doc_type`.
 
 **Entfernt:** `status` — wird heute geschrieben und von niemandem gelesen.
+
+**Entfernt:** `jahr_von` und `jahr_bis`. Der Zeitraum ist `MIN(einheit.jahr_von)`
+bis `MAX(einheit.jahr_bis)` — eine Ableitung, keine Angabe. Als gespeicherter Wert
+war er die Hauptursache für unsichtbares Material: bei Literaturexzerpten schätzte
+ein Sprachmodell die Spanne aus zehn Textausschnitten, der Wert landete in
+`config.json`, und `d3.bin()` verwarf im Browser stillschweigend alles außerhalb.
+Bei `damaskus` standen dort 1895–1918, während das Material von 1780 bis 1995
+reicht: 159 von 672 Einheiten waren auf der Zeitachse nicht vorhanden — mehr als
+alle undatierten zusammen.
 
 **Ergänzt:** `dropbox_ordner`, `dropbox_token` — die Obsidian-Anbindung hängt am
 Projekt, nicht an einer globalen Datei. Heute liegen alle Zugangsdaten in einer
@@ -340,10 +352,11 @@ vollständig; von Hand gepflegte Aliase und korrigierte Namen sind danach weg.
 einen Fund, dessen Label die Abbildung nicht kennt — heute wird der still zu
 `Konzept`. Der Wertevorrat schließt aus, was in `ber` steht: `Werk`.
 
-**Entfernt:** `zusammenfassung`. Erzeugt wird sie von
-`generate_entity_summaries.py` nach `exploration/entities_summary.json` — für
-Akteure ab drei Nennungen, aus höchstens 30 gesampelten Absätzen. Das ist ein
-Erzeugnis des Exports, kein Merkmal des Akteurs.
+**Behalten:** `zusammenfassung`. Heute erzeugt `generate_entity_summaries.py`
+sie direkt nach `exploration/entities_summary.json` — die Datei ist dort zugleich
+Speicher und Ausgabe, und ein Neuexport verliert sie oder erzeugt sie neu auf
+Kosten von API-Aufrufen. Hier steht sie an der Zeile, zu der sie gehört; die
+Exportdatei ist nur noch eine Ableitung.
 
 ### `verschmelzungskandidat`
 

@@ -39,8 +39,6 @@ class Projekt(BaseModel):
     titel: str
     eigentuemer_id: int
     angelegt_am: str
-    jahr_von: int | None = None
-    jahr_bis: int | None = None
     oeffentlich: bool
     dropbox_ordner: str | None = None
     # dropbox_token wird bewusst nicht ausgeliefert.
@@ -336,6 +334,43 @@ class KandidatenListe(BaseModel):
     projekt_id: str
     anzahl: int
     kandidaten: list[Kandidat]
+
+
+# ── Export ────────────────────────────────────────────────────────────────────
+
+class ExportierenRumpf(BaseModel):
+    """Rumpf von POST /api/projekt/{id}/exportieren."""
+
+    zusammenfassungen: bool = Field(
+        default=False,
+        description=("entities_summary.json aus akteur.zusammenfassung schreiben. "
+                     "Vorgabe aus — gilt auf jedem Weg gleich"),
+    )
+
+
+class ExportAntwort(BaseModel):
+    projekt_id: str
+    ziel: str
+    lauf_id: int
+    begonnen_am: str
+    beendet_am: str
+    status: str
+    dateien: list[str]
+    anzahl_einheiten: int
+    anzahl_mit_datum: int
+    anzahl_ohne_datum: int = Field(
+        description="Fehlen auf der Zeitachse — die Zahl steht hier, nicht nur im Bild"
+    )
+    anzahl_ohne_kategorie: int
+    anzahl_mit_akteur: int
+    anzahl_akteure: int
+    anzahl_knoten: int
+    anzahl_kanten: int
+    anzahl_perioden: int
+    anzahl_je_kategorie: dict[str, int]
+    jahr_min: int | None = Field(description="MIN(einheit.jahr_von), abgeleitet")
+    jahr_max: int | None = Field(description="MAX(einheit.jahr_bis), abgeleitet")
+    zusammenfassungen: int
 
 
 # ── Konfiguration ─────────────────────────────────────────────────────────────
