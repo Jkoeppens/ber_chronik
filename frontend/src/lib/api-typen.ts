@@ -109,7 +109,7 @@ export interface paths {
          * Projekt Loeschen
          * @description Löscht ein Projekt samt allem, was daran hängt.
          *
-         *     Quellen, Einheiten, Kategorien, Akteure, Perioden und Läufe gehen über
+         *     Quellen, Einheiten, Kategorien, Akteure und Läufe gehen über
          *     ON DELETE CASCADE mit. Die Exportdateien unter data/projects/ bleiben
          *     liegen — sie sind ein Erzeugnis, kein Bestandteil des Projekts, und
          *     Dateien zu löschen ist nicht Sache dieses Endpoints.
@@ -307,10 +307,61 @@ export interface paths {
          * Datierung Von Hand Setzen
          * @description Setzt die Datierung einer Einheit von Hand.
          *
-         *     jahr_von=null heißt undatierbar. Die Korrektur wird eine anker-Zeile mit
-         *     herkunft='manuell' und überlebt jeden Neulauf außer 'auch_manuell'.
+         *     datum_von leer heißt undatierbar, datum_bis leer heißt Zeitpunkt. Die
+         *     Korrektur wird eine anker-Zeile mit herkunft='manuell' und überlebt jeden
+         *     Neulauf außer 'auch_manuell' — samt ihrer Genauigkeit und ihrer Begründung.
          */
         patch: operations["datierung_von_hand_setzen_api_einheit__einheit_id__datierung_patch"];
+        trace?: never;
+    };
+    "/api/einheit/{einheit_id}/text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Einheit Text Setzen
+         * @description Ändert den Wortlaut einer Einheit und räumt auf, was daran hing.
+         *
+         *     Die Akteursfundstellen dieser Einheit werden gelöscht — ihre Zeichen-
+         *     positionen zeigten danach auf andere Wörter, und eine falsche Markierung
+         *     ist schlimmer als eine fehlende. Der nächste Akteurslauf legt sie neu an.
+         *     Die Anker werden neu abgeleitet, indem die Datierung noch einmal läuft
+         *     (Umfang 'alle', Handkorrekturen bleiben).
+         */
+        patch: operations["einheit_text_setzen_api_einheit__einheit_id__text_patch"];
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/datierung": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Datierung Verteilung
+         * @description Woher die Daten kommen, wo die Ausreißer sitzen, und die Belege je Einheit.
+         *
+         *     Die Belege sind der Unterschied zur alten Vorschau: dort stand das
+         *     Ergebnis, hier steht, was es ausgelöst hat. Ein Datum 3012 ist damit als
+         *     Zifferndreher in der Quellennotation erkennbar und nicht als Rechenfehler.
+         */
+        get: operations["datierung_verteilung_api_projekt__projekt_id__datierung_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/projekt/{projekt_id}/akteure/erkennen": {
@@ -794,6 +845,18 @@ export interface components {
              */
             hinweis?: string | null;
         };
+        /** Anker */
+        Anker: {
+            /** Jahr */
+            jahr: number | null;
+            /** Herkunft */
+            herkunft: string;
+            /**
+             * Fundstelle
+             * @description Was den Anker ausgelöst hat, bei 'manuell' die Begründung
+             */
+            fundstelle: string;
+        };
         /** AnmeldungBeginn */
         AnmeldungBeginn: {
             /**
@@ -805,6 +868,20 @@ export interface components {
             csrf: string;
             /** Projekt Id */
             projekt_id: string | null;
+        };
+        /** Ausreisser */
+        Ausreisser: {
+            /** Projekt Id */
+            projekt_id: string;
+            /**
+             * Unten
+             * @description Untere Grenze Q1 − 3·IQR; null, wenn nicht bestimmbar
+             */
+            unten: number | null;
+            /** Oben */
+            oben: number | null;
+            /** Einheiten */
+            einheiten: number[];
         };
         /** Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post */
         Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post: {
@@ -872,28 +949,65 @@ export interface components {
              * Warnungen
              * @description z.B. Handkorrekturen, die auf eine nicht vorhandene Einheit zeigen
              */
-            warnungen?: string[];
+            warnungen: string[];
         };
         /**
          * DatierungRumpf
          * @description Rumpf von PATCH /api/einheit/{id}/datierung.
+         *
+         *     Zwei Felder mit freier Genauigkeit statt einer Vorschrift, wie genau man
+         *     sein darf: '2012', '2012-07' oder '2012-07-30'. Die Präzision folgt aus
+         *     dem, was dasteht, und wird nicht mitgeschickt.
          */
         DatierungRumpf: {
             /**
-             * Jahr Von
-             * @description null bedeutet: undatierbar
+             * Datum Von
+             * @description '2012' | '2012-07' | '2012-07-30'. null oder leer: undatierbar
              */
-            jahr_von: number | null;
+            datum_von: string | null;
             /**
-             * Jahr Bis
-             * @description nur bei einer Spanne
+             * Datum Bis
+             * @description Leer heißt Zeitpunkt statt Zeitraum
              */
-            jahr_bis?: number | null;
+            datum_bis?: string | null;
             /**
-             * Datum
-             * @description genauer als das Jahr, ISO
+             * Begruendung
+             * @description Warum. Landet in anker.fundstelle — dort, wo bei einem maschinellen Anker die auslösende Zeichenfolge steht
+             * @default
              */
-            datum?: string | null;
+            begruendung: string;
+        };
+        /**
+         * DatierungVerteilung
+         * @description Woher die Daten kommen. 'interpoliert' heißt geraten.
+         */
+        DatierungVerteilung: {
+            /** Projekt Id */
+            projekt_id: string;
+            /** Anzahl */
+            anzahl: number;
+            /** Je Herkunft */
+            je_herkunft: {
+                [key: string]: number;
+            };
+            /** Je Praezision */
+            je_praezision: {
+                [key: string]: number;
+            };
+            /** Anzahl Interpoliert */
+            anzahl_interpoliert: number;
+            /** Anzahl Manuell */
+            anzahl_manuell: number;
+            /** Anzahl Undatiert */
+            anzahl_undatiert: number;
+            ausreisser: components["schemas"]["Ausreisser"];
+            /**
+             * Anker
+             * @description Die Belege je Einheit, Schlüssel ist die einheit_id als Text
+             */
+            anker: {
+                [key: string]: components["schemas"]["Anker"][];
+            };
         };
         /** DatierungZeileAntwort */
         DatierungZeileAntwort: {
@@ -914,6 +1028,8 @@ export interface components {
             datierung_herkunft: string;
             /** Datierung Lauf Id */
             datierung_lauf_id: number | null;
+            /** Begruendung */
+            begruendung: string;
         };
         /**
          * DropboxOrdnerListe
@@ -1062,8 +1178,6 @@ export interface components {
             anzahl_knoten: number;
             /** Anzahl Kanten */
             anzahl_kanten: number;
-            /** Anzahl Perioden */
-            anzahl_perioden: number;
             /** Anzahl Je Kategorie */
             anzahl_je_kategorie: {
                 [key: string]: number;
@@ -1348,8 +1462,6 @@ export interface components {
             anzahl_akteure: number;
             /** Anzahl Fundstellen */
             anzahl_fundstellen: number;
-            /** Anzahl Perioden */
-            anzahl_perioden: number;
             /** Jahr Von */
             jahr_von: number | null;
             /** Jahr Bis */
@@ -1590,6 +1702,35 @@ export interface components {
              * @description Anzahl Kategorien; nur ohne warm_start erlaubt (Vorgabe 7)
              */
             n_clusters?: number | null;
+        };
+        /** TextAntwort */
+        TextAntwort: {
+            /** Einheit Id */
+            einheit_id: number;
+            /** Projekt Id */
+            projekt_id: string;
+            /** Text */
+            text: string;
+            /** Geaendert */
+            geaendert: boolean;
+            /**
+             * Fundstellen Geloescht
+             * @description Akteursfundstellen dieser Einheit — gelöscht, nicht umgerechnet. Veraltete Zeichenpositionen markieren sonst still die falschen Wörter
+             */
+            fundstellen_geloescht: number;
+            /**
+             * Datierung Neu
+             * @description Einheiten des Projekts, deren Datierung sich dadurch geändert hat — die Nachbarn hängen über die Interpolation mit dran
+             */
+            datierung_neu: number;
+        };
+        /**
+         * TextRumpf
+         * @description Rumpf von PATCH /api/einheit/{id}/text.
+         */
+        TextRumpf: {
+            /** Text */
+            text: string;
         };
         /**
          * VerschmelzenRumpf
@@ -2673,6 +2814,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DatierungZeileAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    einheit_text_setzen_api_einheit__einheit_id__text_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                einheit_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TextRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    datierung_verteilung_api_projekt__projekt_id__datierung_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatierungVerteilung"];
                 };
             };
             /** @description Nicht gefunden */

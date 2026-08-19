@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Sequence
 
 # ── Wertevorräte ──────────────────────────────────────────────────────────────
@@ -158,10 +159,80 @@ class Datierung:
 
 @dataclass
 class Override:
+    """Eine Handkorrektur, vollständig genug, um sie wiederherzustellen.
+
+    datum, praezision und fundstelle kommen mit, weil ein Neulauf sonst
+    gröber zurückkäme als die Korrektur war: aus '2012-07-30' würde beim
+    Wiederanwenden '2012', und die Begründung wäre weg. Eine Handkorrektur,
+    die einen Neulauf nicht unverändert übersteht, ist keine.
+    """
+
     einheit_id: int
     aktion: str                 # anker_setzen | undatierbar
     jahr_von: int | None = None
     jahr_bis: int | None = None
+    datum: str | None = None
+    praezision: str | None = None
+    fundstelle: str = ""
+
+
+# ── Datum von Hand ────────────────────────────────────────────────────────────
+
+class UnlesbaresDatum(ValueError):
+    pass
+
+
+def datum_teile(roh: str) -> tuple[str, int, str]:
+    """'2012' | '2012-07' | '2012-07-30' → (normiert, jahr, granularität).
+
+    Ein Feld, drei Genauigkeiten — statt einer Regel, die vorschreibt, wie
+    genau der Historiker sein darf. Was er schreibt, bestimmt die Präzision.
+    """
+    s = (roh or "").strip()
+    if m := _ISO_TAG.match(s):
+        tag = s[:10]
+        try:
+            datetime.strptime(tag, "%Y-%m-%d")
+        except ValueError:
+            raise UnlesbaresDatum(f"'{roh}' ist kein gültiger Tag.")
+        return tag, int(m.group(1)), "tag"
+    if m := _ISO_MONAT.match(s):
+        if not 1 <= int(m.group(2)) <= 12:
+            raise UnlesbaresDatum(f"'{roh}' hat keinen gültigen Monat.")
+        return s[:7], int(m.group(1)), "monat"
+    if m := _ISO_JAHR.match(s):
+        return s[:4], int(m.group(1)), "jahr"
+    raise UnlesbaresDatum(
+        f"'{roh}' ist kein Datum. Erlaubt: 2012, 2012-07 oder 2012-07-30."
+    )
+
+
+def handdatierung(datum_von: str | None, datum_bis: str | None = None
+                  ) -> tuple[str | None, int | None, int | None, str]:
+    """(datum, jahr_von, jahr_bis, praezision) aus zwei Feldern.
+
+    datum_von leer heißt undatierbar. datum_bis leer heißt Zeitpunkt — dann
+    ist die Präzision die Genauigkeit des Feldes selbst.
+
+    Bei einer Spanne, deren Enden feiner als ein Jahr sind, steht in `datum`
+    das ISO-Intervall '2012-07-30/2013-02-01'. Die Spalte trägt sonst nur den
+    Anfang, und das Ende wäre auf das Jahr eingedampft, ohne dass es jemand
+    merkt. Wer `datum` liest, bekommt damit eher mehr als vorher; der Export
+    fällt für alles, was kein reines Jahr und kein reiner Tag ist, ohnehin auf
+    jahr_von zurück (src/neu/export/kern.py:_datum_js).
+    """
+    if not (datum_von or "").strip():
+        return None, None, None, "keine"
+
+    dv, jahr_von, granular = datum_teile(datum_von)
+    if not (datum_bis or "").strip() or (datum_bis or "").strip() == dv:
+        return dv, jahr_von, jahr_von, granular
+
+    db, jahr_bis, _ = datum_teile(datum_bis)
+    if jahr_bis < jahr_von or (jahr_bis == jahr_von and db < dv):
+        raise UnlesbaresDatum(f"'{db}' liegt vor '{dv}'.")
+    datum = dv if (len(dv) == 4 and len(db) == 4) else f"{dv}/{db}"
+    return datum, jahr_von, jahr_bis, "spanne"
 
 
 # ── Text zerlegen ─────────────────────────────────────────────────────────────
@@ -382,21 +453,37 @@ def overrides_anwenden(
             von, bis = o.jahr_von, o.jahr_bis
             if von is not None and bis is None:
                 bis = von
-            praez = "keine" if von is None else ("jahr" if von == bis else "spanne")
+            # Was die Korrektur mitbringt, gilt: sonst käme sie beim
+            # Wiederanwenden gröber zurück, als sie gesetzt wurde.
+            praez = o.praezision or (
+                "keine" if von is None else ("jahr" if von == bis else "spanne")
+            )
+            datum = o.datum if o.datum is not None else (
+                None if von is None else str(von)
+            )
+            fundstelle = o.fundstelle or (
+                f"{von}–{bis}" if von != bis else str(von)
+            )
             ergebnis.append(Datierung(
                 d.einheit_id,
-                datum=None if von is None else str(von),
+                datum=datum,
                 jahr_von=von, jahr_bis=bis, praezision=praez,
                 herkunft="manuell",
                 # Die Handkorrektur wird eine echte anker-Zeile.
-                anker=[Anker(d.einheit_id, von, "manuell",
-                             f"{von}–{bis}" if von != bis else str(von))]
+                anker=[Anker(d.einheit_id, von, "manuell", fundstelle)]
                 if von is not None else [],
             ))
         elif o.aktion == "undatierbar":
             undatierbar.add(d.einheit_id)
-            ergebnis.append(Datierung(d.einheit_id, None, None, None,
-                                      "keine", "manuell", []))
+            # Auch 'undatierbar' bekommt eine anker-Zeile, wenn eine Begründung
+            # dabei ist: sie ist der einzige Ort, an dem sie stehen kann, und
+            # ohne sie wäre nach dem nächsten Lauf nicht mehr zu sehen, warum
+            # hier nichts steht. jahr bleibt NULL — die Spalte erlaubt es.
+            ergebnis.append(Datierung(
+                d.einheit_id, None, None, None, "keine", "manuell",
+                [Anker(d.einheit_id, None, "manuell", o.fundstelle)]
+                if o.fundstelle else [],
+            ))
         else:
             ergebnis.append(d)
 

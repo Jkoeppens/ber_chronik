@@ -208,9 +208,6 @@ def kennzahlen(con: sqlite3.Connection, projekt_id: str) -> dict:
             "SELECT COUNT(*) FROM einheit_akteur ea JOIN akteur a ON a.id = ea.akteur_id "
             "WHERE a.projekt_id = ?", (projekt_id,)
         ).fetchone()[0],
-        "anzahl_perioden": con.execute(
-            "SELECT COUNT(*) FROM periode WHERE projekt_id = ?", (projekt_id,)
-        ).fetchone()[0],
         "jahr_von": grund["jahr_von"],
         "jahr_bis": grund["jahr_bis"],
         "hat_export": grund["hat_export"],

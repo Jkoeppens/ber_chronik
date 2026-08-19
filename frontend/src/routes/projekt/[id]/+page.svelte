@@ -133,6 +133,9 @@
 	<div style="display:flex;align-items:center;gap:10px">
 		<a href="/" class="btn btn-sm">← Projekte</a>
 		<span class="section-label" style="flex:1">{zahlen?.titel ?? data.projektId}</span>
+		<a class="btn btn-sm" href="/projekt/{encodeURIComponent(data.projektId)}/datierung">
+			Datierung →
+		</a>
 		<a
 			class="btn btn-sm"
 			href="/projekt/{encodeURIComponent(data.projektId)}/taxonomie"
@@ -176,12 +179,6 @@
 				<dt>Akteure</dt>
 				<dd>{zahlen.anzahl_akteure} <small>/ {zahlen.anzahl_fundstellen} Fundstellen</small></dd>
 			</div>
-			{#if zahlen.anzahl_perioden > 0}
-				<div class="zahl">
-					<dt>Perioden</dt>
-					<dd>{zahlen.anzahl_perioden}</dd>
-				</div>
-			{/if}
 		</dl>
 
 		<div style="display:flex;align-items:center;gap:10px">
@@ -202,7 +199,6 @@
 {bericht.anzahl_ohne_kategorie} ohne Kategorie, {bericht.anzahl_mit_akteur} mit mindestens einem Akteur
 Zeitraum: {spanne(bericht.jahr_min, bericht.jahr_max)}
 Netzwerk: {bericht.anzahl_knoten} Knoten, {bericht.anzahl_kanten} Kanten
-Perioden: {bericht.anzahl_perioden}
 Dateien: {bericht.dateien.join(', ')}
 Lauf {bericht.lauf_id}: {bericht.status}</div>
 		{/if}

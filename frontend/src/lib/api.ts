@@ -34,6 +34,12 @@ export type KategorieZeile = components['schemas']['KategorieZeile'];
 export type KategorienListe = components['schemas']['KategorienListe'];
 export type KategorieEintrag = components['schemas']['KategorieEintrag'];
 export type KategorienGespeichert = components['schemas']['KategorienGespeichert'];
+export type DatierungVerteilung = components['schemas']['DatierungVerteilung'];
+export type DatierungAntwort = components['schemas']['DatierungAntwort'];
+export type DatierungZeile = components['schemas']['DatierungZeileAntwort'];
+export type TextGeaendert = components['schemas']['TextAntwort'];
+export type Anker = components['schemas']['Anker'];
+export type Umfang = components['schemas']['DatierenRumpf']['umfang'];
 export type Konfiguration = components['schemas']['KonfigurationAntwort'];
 
 /** Die eine Fehlergestalt des Servers — auch sie kommt aus dem Schema. */
@@ -266,6 +272,53 @@ export function setzeEinheitKategorie(
 		method: 'PATCH',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ kategorie_id: kategorieId })
+	});
+}
+
+// ── Datierung ───────────────────────────────────────────────────────────────
+
+/** Woher die Daten kommen, die Ausreißer, und die Belege je Einheit. */
+export function ladeDatierung(projektId: string): Promise<DatierungVerteilung> {
+	return ruf<DatierungVerteilung>(
+		`/api/projekt/${encodeURIComponent(projektId)}/datierung`
+	);
+}
+
+/**
+ * Datiert das Projekt neu. Reine Regexe, kein Modell — bei 949 Einheiten
+ * gemessen 0,01 s. Deshalb ein gewöhnlicher Aufruf und kein Lauf.
+ */
+export function datiere(projektId: string, umfang: Umfang = 'alle'): Promise<DatierungAntwort> {
+	return ruf<DatierungAntwort>(
+		`/api/projekt/${encodeURIComponent(projektId)}/datieren`,
+		alsJson({ umfang })
+	);
+}
+
+/**
+ * Setzt die Datierung einer Einheit von Hand. Zwei Felder mit freier
+ * Genauigkeit: '2012', '2012-07' oder '2012-07-30'. `datumBis` leer heißt
+ * Zeitpunkt, `datumVon` leer heißt undatierbar.
+ */
+export function setzeDatierung(
+	einheitId: number,
+	datumVon: string | null,
+	datumBis: string | null,
+	begruendung: string
+): Promise<DatierungZeile> {
+	return ruf<DatierungZeile>(`/api/einheit/${einheitId}/datierung`, {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ datum_von: datumVon, datum_bis: datumBis, begruendung })
+	});
+}
+
+/** Ändert den Wortlaut. Löscht die Akteursfundstellen und datiert neu. */
+export function setzeEinheitText(einheitId: number, text: string): Promise<TextGeaendert> {
+	return ruf<TextGeaendert>(`/api/einheit/${einheitId}/text`, {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ text })
 	});
 }
 

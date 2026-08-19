@@ -50,6 +50,7 @@ from src.neu.kategorien.dienst import (  # noqa: E402
     klassifizieren,
     zuordnung_setzen,
 )
+from src.neu.datierung import dienst as datierung_dienst  # noqa: E402
 from src.neu.datierung.dienst import (  # noqa: E402
     DatierungFehler,
     datieren,
@@ -103,7 +104,10 @@ from src.neu.modelle import (  # noqa: E402
     DatierenRumpf,
     DatierungAntwort,
     DatierungRumpf,
+    DatierungVerteilung,
     DatierungZeileAntwort,
+    TextAntwort,
+    TextRumpf,
     IngestAntwort,
     KlassifikationAntwort,
     KlassifizierenRumpf,
@@ -597,13 +601,14 @@ def datierung_von_hand_setzen(
 ) -> DatierungZeileAntwort:
     """Setzt die Datierung einer Einheit von Hand.
 
-    jahr_von=null heißt undatierbar. Die Korrektur wird eine anker-Zeile mit
-    herkunft='manuell' und überlebt jeden Neulauf außer 'auch_manuell'.
+    datum_von leer heißt undatierbar, datum_bis leer heißt Zeitpunkt. Die
+    Korrektur wird eine anker-Zeile mit herkunft='manuell' und überlebt jeden
+    Neulauf außer 'auch_manuell' — samt ihrer Genauigkeit und ihrer Begründung.
     """
     con = verbindung_schreibend()
     try:
         ergebnis = datierung_setzen(
-            con, einheit_id, rumpf.jahr_von, rumpf.jahr_bis, rumpf.datum
+            con, einheit_id, rumpf.datum_von, rumpf.datum_bis, rumpf.begruendung
         )
     except DatierungFehler as exc:
         status = 404 if exc.code.endswith("nicht_gefunden") else 422
@@ -612,6 +617,58 @@ def datierung_von_hand_setzen(
         con.close()
 
     return DatierungZeileAntwort(**ergebnis)
+
+
+@app.patch(
+    "/api/einheit/{einheit_id}/text",
+    response_model=TextAntwort,
+    responses=FEHLER_ANTWORTEN,
+)
+def einheit_text_setzen(einheit_id: int, rumpf: TextRumpf) -> TextAntwort:
+    """Ändert den Wortlaut einer Einheit und räumt auf, was daran hing.
+
+    Die Akteursfundstellen dieser Einheit werden gelöscht — ihre Zeichen-
+    positionen zeigten danach auf andere Wörter, und eine falsche Markierung
+    ist schlimmer als eine fehlende. Der nächste Akteurslauf legt sie neu an.
+    Die Anker werden neu abgeleitet, indem die Datierung noch einmal läuft
+    (Umfang 'alle', Handkorrekturen bleiben).
+    """
+    con = verbindung_schreibend()
+    try:
+        return TextAntwort(**datierung_dienst.text_setzen(con, einheit_id, rumpf.text))
+    except DatierungFehler as exc:
+        status = 404 if exc.code.endswith("nicht_gefunden") else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.get(
+    "/api/projekt/{projekt_id}/datierung",
+    response_model=DatierungVerteilung,
+    responses=FEHLER_ANTWORTEN,
+)
+def datierung_verteilung(projekt_id: str) -> DatierungVerteilung:
+    """Woher die Daten kommen, wo die Ausreißer sitzen, und die Belege je Einheit.
+
+    Die Belege sind der Unterschied zur alten Vorschau: dort stand das
+    Ergebnis, hier steht, was es ausgelöst hat. Ein Datum 3012 ist damit als
+    Zifferndreher in der Quellennotation erkennbar und nicht als Rechenfehler.
+    """
+    con = verbindung()
+    try:
+        if con.execute("SELECT 1 FROM projekt WHERE id = ?",
+                       (projekt_id,)).fetchone() is None:
+            raise nicht_gefunden(
+                "projekt_nicht_gefunden", f"Kein Projekt mit der Kennung '{projekt_id}'."
+            )
+        stand = datierung_dienst.verteilung(con, projekt_id)
+        stand["anker"] = {
+            str(k): v for k, v in datierung_dienst.anker_je_einheit(con, projekt_id).items()
+        }
+        return DatierungVerteilung(**stand)
+    finally:
+        con.close()
 
 
 @app.post(
@@ -972,7 +1029,7 @@ def kategorie_loeschen(kategorie_id: int) -> dict:
 def projekt_loeschen(projekt_id: str) -> dict:
     """Löscht ein Projekt samt allem, was daran hängt.
 
-    Quellen, Einheiten, Kategorien, Akteure, Perioden und Läufe gehen über
+    Quellen, Einheiten, Kategorien, Akteure und Läufe gehen über
     ON DELETE CASCADE mit. Die Exportdateien unter data/projects/ bleiben
     liegen — sie sind ein Erzeugnis, kein Bestandteil des Projekts, und
     Dateien zu löschen ist nicht Sache dieses Endpoints.

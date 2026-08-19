@@ -22,6 +22,9 @@ from src.neu.datierung.kern import (  # noqa: E402
     Einheit,
     Override,
     UnbekanntesQuellformat,
+    UnlesbaresDatum,
+    datum_teile,
+    handdatierung,
     anker_erkennen,
     anker_im_text,
     datieren,
@@ -323,3 +326,79 @@ def test_kern_kennt_weder_datenbank_noch_datei_noch_ausgabe() -> None:
             namen = [a.name for a in k.names]
             for verboten in ("sqlite3", "requests", "anthropic"):
                 assert verboten not in modul and verboten not in namen
+
+
+# ── Datum von Hand: ein Feld, drei Genauigkeiten ──────────────────────────────
+
+@pytest.mark.parametrize("roh,erwartet", [
+    ("2012",       ("2012", 2012, "jahr")),
+    ("2012-07",    ("2012-07", 2012, "monat")),
+    ("2012-07-30", ("2012-07-30", 2012, "tag")),
+    ("  2012-07-30  ", ("2012-07-30", 2012, "tag")),
+])
+def test_datum_teile(roh, erwartet) -> None:
+    assert datum_teile(roh) == erwartet
+
+
+@pytest.mark.parametrize("roh", ["", "30.07.2012", "2012-13", "2012-02-30", "zwölf"])
+def test_unlesbares_datum_wirft(roh) -> None:
+    with pytest.raises(UnlesbaresDatum):
+        datum_teile(roh)
+
+
+def test_zeitpunkt_erbt_die_genauigkeit_des_feldes() -> None:
+    assert handdatierung("2012-07-30") == ("2012-07-30", 2012, 2012, "tag")
+    assert handdatierung("2012-07") == ("2012-07", 2012, 2012, "monat")
+    assert handdatierung("2012") == ("2012", 2012, 2012, "jahr")
+
+
+def test_leeres_von_heisst_undatierbar() -> None:
+    assert handdatierung(None) == (None, None, None, "keine")
+    assert handdatierung("  ") == (None, None, None, "keine")
+
+
+def test_zwei_jahre_bleiben_zwei_jahre() -> None:
+    assert handdatierung("1989", "2017") == ("1989", 1989, 2017, "spanne")
+
+
+def test_feine_spanne_behaelt_beide_enden() -> None:
+    """Sonst wäre das Ende auf das Jahr eingedampft, ohne dass es jemand merkt."""
+    assert handdatierung("2012-07-30", "2013-02-01") == (
+        "2012-07-30/2013-02-01", 2012, 2013, "spanne")
+
+
+def test_gleiches_bis_ist_ein_zeitpunkt() -> None:
+    assert handdatierung("2012-07", "2012-07") == ("2012-07", 2012, 2012, "monat")
+
+
+def test_verkehrte_spanne_wird_abgewiesen() -> None:
+    with pytest.raises(UnlesbaresDatum):
+        handdatierung("2013", "2012")
+    with pytest.raises(UnlesbaresDatum):
+        handdatierung("2012-07-30", "2012-07-01")
+
+
+# ── Eine Handkorrektur übersteht den Neulauf unverändert ─────────────────────
+
+def test_handkorrektur_behaelt_genauigkeit_und_begruendung() -> None:
+    """Ohne das käme aus '2012-07-30' beim Wiederanwenden '2012'."""
+    d, _, _ = overrides_anwenden([_leer(1)], [Override(
+        1, "anker_setzen", 2012, 2012,
+        datum="2012-07-30", praezision="tag", fundstelle="Zifferndreher, war 3012")])
+    assert d[0].datum == "2012-07-30"
+    assert d[0].praezision == "tag"
+    assert d[0].anker[0].fundstelle == "Zifferndreher, war 3012"
+
+
+def test_undatierbar_haelt_seine_begruendung_fest() -> None:
+    d, undat, _ = overrides_anwenden(
+        [_fest(1, 1908)], [Override(1, "undatierbar", fundstelle="kein Datum im Text")])
+    assert d[0].jahr_von is None and undat == {1}
+    assert len(d[0].anker) == 1
+    assert d[0].anker[0].jahr is None
+    assert d[0].anker[0].fundstelle == "kein Datum im Text"
+
+
+def test_undatierbar_ohne_begruendung_bleibt_ohne_anker() -> None:
+    d, _, _ = overrides_anwenden([_fest(1, 1908)], [Override(1, "undatierbar")])
+    assert d[0].anker == []

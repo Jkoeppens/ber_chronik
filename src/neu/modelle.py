@@ -104,7 +104,6 @@ class Kennzahlen(BaseModel):
     anzahl_klassifiziert: int
     anzahl_akteure: int
     anzahl_fundstellen: int
-    anzahl_perioden: int
     jahr_von: int | None
     jahr_bis: int | None
     hat_export: bool
@@ -325,17 +324,29 @@ class DatierungAntwort(BaseModel):
     anzahl_je_praezision: dict[str, int]
     anzahl_je_herkunft: dict[str, int]
     warnungen: list[str] = Field(
-        default_factory=list,
-        description="z.B. Handkorrekturen, die auf eine nicht vorhandene Einheit zeigen",
+        description="z.B. Handkorrekturen, die auf eine nicht vorhandene Einheit zeigen"
     )
 
 
 class DatierungRumpf(BaseModel):
-    """Rumpf von PATCH /api/einheit/{id}/datierung."""
+    """Rumpf von PATCH /api/einheit/{id}/datierung.
 
-    jahr_von: int | None = Field(description="null bedeutet: undatierbar")
-    jahr_bis: int | None = Field(default=None, description="nur bei einer Spanne")
-    datum: str | None = Field(default=None, description="genauer als das Jahr, ISO")
+    Zwei Felder mit freier Genauigkeit statt einer Vorschrift, wie genau man
+    sein darf: '2012', '2012-07' oder '2012-07-30'. Die Präzision folgt aus
+    dem, was dasteht, und wird nicht mitgeschickt.
+    """
+
+    datum_von: str | None = Field(
+        description="'2012' | '2012-07' | '2012-07-30'. null oder leer: undatierbar"
+    )
+    datum_bis: str | None = Field(
+        default=None, description="Leer heißt Zeitpunkt statt Zeitraum"
+    )
+    begruendung: str = Field(
+        default="",
+        description="Warum. Landet in anker.fundstelle — dort, wo bei einem "
+                    "maschinellen Anker die auslösende Zeichenfolge steht",
+    )
 
 
 class DatierungZeileAntwort(BaseModel):
@@ -346,6 +357,60 @@ class DatierungZeileAntwort(BaseModel):
     praezision: Praezision
     datierung_herkunft: str
     datierung_lauf_id: int | None
+    begruendung: str
+
+
+class TextRumpf(BaseModel):
+    """Rumpf von PATCH /api/einheit/{id}/text."""
+
+    text: str = Field(min_length=1)
+
+
+class TextAntwort(BaseModel):
+    einheit_id: int
+    projekt_id: str
+    text: str
+    geaendert: bool
+    fundstellen_geloescht: int = Field(
+        description="Akteursfundstellen dieser Einheit — gelöscht, nicht "
+                    "umgerechnet. Veraltete Zeichenpositionen markieren sonst "
+                    "still die falschen Wörter"
+    )
+    datierung_neu: int = Field(
+        description="Einheiten des Projekts, deren Datierung sich dadurch "
+                    "geändert hat — die Nachbarn hängen über die Interpolation mit dran"
+    )
+
+
+class Anker(BaseModel):
+    jahr: int | None
+    herkunft: str
+    fundstelle: str = Field(
+        description="Was den Anker ausgelöst hat, bei 'manuell' die Begründung"
+    )
+
+
+class Ausreisser(BaseModel):
+    projekt_id: str
+    unten: int | None = Field(description="Untere Grenze Q1 − 3·IQR; null, wenn nicht bestimmbar")
+    oben: int | None
+    einheiten: list[int]
+
+
+class DatierungVerteilung(BaseModel):
+    """Woher die Daten kommen. 'interpoliert' heißt geraten."""
+
+    projekt_id: str
+    anzahl: int
+    je_herkunft: dict[str, int]
+    je_praezision: dict[str, int]
+    anzahl_interpoliert: int
+    anzahl_manuell: int
+    anzahl_undatiert: int
+    ausreisser: Ausreisser
+    anker: dict[str, list[Anker]] = Field(
+        description="Die Belege je Einheit, Schlüssel ist die einheit_id als Text"
+    )
 
 
 # ── Akteure ───────────────────────────────────────────────────────────────────
@@ -588,7 +653,6 @@ class ExportAntwort(BaseModel):
     anzahl_akteure: int
     anzahl_knoten: int
     anzahl_kanten: int
-    anzahl_perioden: int
     anzahl_je_kategorie: dict[str, int]
     jahr_min: int | None = Field(description="MIN(einheit.jahr_von), abgeleitet")
     jahr_max: int | None = Field(description="MAX(einheit.jahr_bis), abgeleitet")

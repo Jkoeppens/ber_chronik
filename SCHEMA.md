@@ -2,7 +2,7 @@
 
 Stand nach der Durchsprache. Ersetzt Abschnitt 2 von `DATENMODELL.md`.
 
-Fünfzehn Tabellen. Grundsätze, die in allen gelten:
+Vierzehn Tabellen. Grundsätze, die in allen gelten:
 
 - **Ein Sachverhalt, eine Stelle.** Kein Wert steht zweimal. Die einzige
   Ausnahme ist `einheit_embedding`, und sie ist keine: dort steht kein
@@ -167,15 +167,6 @@ CREATE TABLE verschmelzungskandidat (
     berechnet_am TEXT    NOT NULL,
     CHECK (akteur_a_id < akteur_b_id),
     UNIQUE (akteur_a_id, akteur_b_id)
-);
-
--- ── periode ───────────────────────────────────────────────────────────────────
-CREATE TABLE periode (
-    id         INTEGER NOT NULL PRIMARY KEY,
-    projekt_id TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
-    name       TEXT    NOT NULL,
-    jahr_von   INTEGER,
-    jahr_bis   INTEGER
 );
 
 -- ── einheit_akteur ────────────────────────────────────────────────────────────
@@ -463,14 +454,6 @@ Regel angeschlagen hat, `mass` mit welchem Wert.
 Die Tabelle ist ein Erzeugnis des Laufs, kein Zustand: sie hält keine Entscheidungen
 fest, sondern nur, was zu prüfen wäre. Ein Neulauf ersetzt sie.
 
-### `periode`
-
-**Entfernt:** `farbe` — Darstellung.
-
-**Geändert:** `jahr_von` und `jahr_bis` sind nullable. Die LLM-Analyse liefert
-Perioden nicht immer mit Jahreszahlen; unter `NOT NULL` müsste der Erzeuger welche
-erfinden oder die Periode verwerfen.
-
 ### `einheit_akteur`
 
 **Ergänzt:** `start` und `ende` — die Fundstelle im Text der Einheit. Damit wird aus
@@ -496,6 +479,20 @@ erkennbar unvollständige Zeile statt gar keiner.
 ---
 
 ## Was ersatzlos wegfällt
+
+### `periode`
+
+Die Tabelle ist entfallen. Sie hielt Zeitabschnitte, die das Sprachmodell in
+Wizard-Schritt 3 aus einer Stichprobe von 30 Absätzen vorschlug und die der
+Historiker in Schritt 5 nachbessern konnte. Gelesen hat sie nie jemand: die
+Datierung nimmt ihre Ereignisse aus einer fest verdrahteten Liste
+(`src/neu/datierung/kern.py:EREIGNISSE`), und `viz/` kennt das Feld `events`
+nicht. Die sieben Zeilen, die je darin standen, waren die Vorschläge für
+damaskus, einmal beim Anlegen der Fixture übernommen.
+
+Damit fällt auch `events` aus `project_meta.json` weg.
+
+
 
 | Feld | wo heute | warum |
 |---|---|---|

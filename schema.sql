@@ -149,15 +149,6 @@ CREATE TABLE verschmelzungskandidat (
     UNIQUE (akteur_a_id, akteur_b_id)
 );
 
--- ── periode ───────────────────────────────────────────────────────────────────
-CREATE TABLE periode (
-    id         INTEGER NOT NULL PRIMARY KEY,
-    projekt_id TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
-    name       TEXT    NOT NULL,
-    jahr_von   INTEGER,
-    jahr_bis   INTEGER
-);
-
 -- ── einheit_akteur ────────────────────────────────────────────────────────────
 -- Eine Zeile je Vorkommen, nicht je Einheit: start und ende zeigen auf die
 -- Fundstelle im Text der Einheit (Zeichen-Offsets, ende ausschließlich).

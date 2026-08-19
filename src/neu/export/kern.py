@@ -96,14 +96,6 @@ class Akteur:
     zusammenfassung: str | None = None
 
 
-@dataclass(frozen=True)
-class Periode:
-    id: int
-    name: str
-    jahr_von: int | None
-    jahr_bis: int | None
-
-
 @dataclass
 class Zaehlung:
     """Was hineinging und was davon wo ankommt."""
@@ -228,9 +220,8 @@ def metadaten(
     taxonomie: Sequence[dict],
     akteure: Sequence[Akteur],
     einheiten: Sequence[Einheit],
-    perioden: Sequence[Periode] = (),
 ) -> dict:
-    """project_meta.json — Titel, Taxonomie, Farben, Zeitraum, Perioden."""
+    """project_meta.json — Titel, Taxonomie, Farben, Zeitraum."""
     namen = [c["name"] for c in taxonomie if c.get("name")]
     typen = sorted({a.typ for a in akteure if a.typ})
     jahr_min, jahr_max = spanne(einheiten)
@@ -240,13 +231,6 @@ def metadaten(
         "taxonomy": list(taxonomie),
         "color_map": farbzuordnung(namen, CAT_PALETTE),
         "node_color_map": farbzuordnung(typen, NODE_PALETTE),
-        # Perioden hatten bisher keinen Verbraucher: das Sprachmodell erzeugte
-        # sie in Schritt 1, der Wizard zeigte sie, der Export ließ sie liegen.
-        "events": [
-            {"id": p.id, "name": p.name,
-             "year_from": p.jahr_von, "year_to": p.jahr_bis}
-            for p in perioden
-        ],
     }
     if jahr_min is not None:
         meta["year_min"] = jahr_min

@@ -51,7 +51,6 @@ def main() -> int:
     print(f"  Zeitraum: {ergebnis.jahr_min} – {ergebnis.jahr_max}")
     print(f"  Netzwerk: {ergebnis.anzahl_knoten} Knoten, {ergebnis.anzahl_kanten} Kanten "
           f"(aus {ergebnis.anzahl_akteure} Akteuren)")
-    print(f"  Perioden: {ergebnis.anzahl_perioden}")
     if ergebnis.zusammenfassungen:
         print(f"  Zusammenfassungen: {ergebnis.zusammenfassungen}")
     print("  Kategorien:")

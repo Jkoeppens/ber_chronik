@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Callable, Sequence
 
 from src.neu.export import kern
-from src.neu.export.kern import Akteur, Einheit, Periode
+from src.neu.export.kern import Akteur, Einheit
 
 WURZEL = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -52,7 +52,6 @@ class ExportErgebnis:
     anzahl_akteure: int = 0
     anzahl_knoten: int = 0
     anzahl_kanten: int = 0
-    anzahl_perioden: int = 0
     anzahl_je_kategorie: dict[str, int] = field(default_factory=dict)
     jahr_min: int | None = None
     jahr_max: int | None = None
@@ -143,13 +142,6 @@ def _akteure(con: sqlite3.Connection, projekt_id: str) -> list[Akteur]:
                    zusammenfassung=z[3]) for z in zeilen]
 
 
-def _perioden(con: sqlite3.Connection, projekt_id: str) -> list[Periode]:
-    return [Periode(id=z[0], name=z[1], jahr_von=z[2], jahr_bis=z[3])
-            for z in con.execute(
-                "SELECT id, name, jahr_von, jahr_bis FROM periode "
-                "WHERE projekt_id = ? ORDER BY jahr_von IS NULL, jahr_von, id",
-                (projekt_id,))]
-
 
 # ── Schreiben ─────────────────────────────────────────────────────────────────
 
@@ -194,12 +186,11 @@ def exportieren(
             )
         taxonomie = _taxonomie(con, projekt_id)
         akteure = _akteure(con, projekt_id)
-        perioden = _perioden(con, projekt_id)
 
         namen = [c["name"] for c in taxonomie if c.get("name")]
         liste = kern.eintraege(einheiten, namen)
         knoten, kanten = kern.netz(liste)
-        meta = kern.metadaten(titel, taxonomie, akteure, einheiten, perioden)
+        meta = kern.metadaten(titel, taxonomie, akteure, einheiten)
         z = kern.zaehlung(liste, knoten, kanten, akteure)
 
         with con:
@@ -284,7 +275,6 @@ def exportieren(
         anzahl_akteure=z.akteure,
         anzahl_knoten=z.knoten,
         anzahl_kanten=z.kanten,
-        anzahl_perioden=len(perioden),
         anzahl_je_kategorie=z.je_kategorie,
         jahr_min=meta.get("year_min"),
         jahr_max=meta.get("year_max"),

@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.neu.export import kern  # noqa: E402
-from src.neu.export.kern import Akteur, Einheit, Periode  # noqa: E402
+from src.neu.export.kern import Akteur, Einheit  # noqa: E402
 
 
 def _e(**kw) -> Einheit:
@@ -164,16 +164,6 @@ def test_metadaten_gestalt():
     assert "entity_types" not in meta
 
 
-def test_perioden_werden_mitexportiert():
-    perioden = [Periode(id=3, name="Tanzimat", jahr_von=1839, jahr_bis=1876)]
-    meta = kern.metadaten("T", [], [], [_e(jahr_von=1850)], perioden)
-    assert meta["events"] == [
-        {"id": 3, "name": "Tanzimat", "year_from": 1839, "year_to": 1876}
-    ]
-
-
-def test_ohne_perioden_bleibt_die_liste_leer():
-    assert kern.metadaten("T", [], [], [_e(jahr_von=1850)])["events"] == []
 
 
 def test_akteur_ohne_typ_taucht_nicht_in_der_farbtabelle_auf():

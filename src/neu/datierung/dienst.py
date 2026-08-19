@@ -84,15 +84,21 @@ def _overrides(con: sqlite3.Connection, quelle_id: str) -> list[Override]:
     """Handkorrekturen sind Einheiten mit datierung_herkunft='manuell'.
 
     Es gibt keine overrides.json mehr — der Zustand steht an der Einheit.
+    Mitgelesen werden datum, praezision und die Begründung aus der
+    manuell-anker-Zeile: ohne sie käme die Korrektur beim nächsten Lauf
+    gröber zurück, als sie gesetzt wurde, und die Begründung wäre weg.
     """
     zeilen = con.execute(
-        "SELECT id, jahr_von, jahr_bis FROM einheit "
-        "WHERE quelle_id = ? AND datierung_herkunft = 'manuell'",
+        "SELECT e.id, e.jahr_von, e.jahr_bis, e.datum, e.praezision, "
+        "       (SELECT a.fundstelle FROM anker a "
+        "        WHERE a.einheit_id = e.id AND a.herkunft = 'manuell' LIMIT 1) "
+        "FROM einheit e WHERE e.quelle_id = ? AND e.datierung_herkunft = 'manuell'",
         (quelle_id,),
     ).fetchall()
     return [Override(einheit_id=z[0],
                      aktion="undatierbar" if z[1] is None else "anker_setzen",
-                     jahr_von=z[1], jahr_bis=z[2])
+                     jahr_von=z[1], jahr_bis=z[2],
+                     datum=z[3], praezision=z[4], fundstelle=z[5] or "")
             for z in zeilen]
 
 
@@ -253,14 +259,21 @@ def datieren(
 def datierung_setzen(
     con: sqlite3.Connection,
     einheit_id: int,
-    jahr_von: int | None,
-    jahr_bis: int | None = None,
-    datum: str | None = None,
+    datum_von: str | None,
+    datum_bis: str | None = None,
+    begruendung: str = "",
 ) -> dict:
     """Setzt die Datierung einer Einheit von Hand.
 
-    jahr_von=None heißt 'undatierbar'. Die Korrektur wird eine echte
-    anker-Zeile mit herkunft='manuell' und ist gegen Neuläufe geschützt.
+    Zwei Felder mit freier Genauigkeit: '2012', '2012-07' oder '2012-07-30'.
+    datum_bis leer heißt Zeitpunkt, datum_von leer heißt undatierbar. Die
+    Präzision folgt daraus, sie wird nicht angegeben.
+
+    Die Korrektur wird eine echte anker-Zeile mit herkunft='manuell'. Die
+    Begründung steht in deren fundstelle — dort, wo bei einem maschinellen
+    Anker steht, welche Zeichenfolge ihn ausgelöst hat. Beides beantwortet
+    dieselbe Frage: woher kommt dieses Datum. Eine eigene Spalte dafür wäre
+    dieselbe Auskunft an einer zweiten Stelle.
     """
     zeile = con.execute("SELECT id FROM einheit WHERE id = ?", (einheit_id,)).fetchone()
     if zeile is None:
@@ -268,38 +281,181 @@ def datierung_setzen(
             f"Keine Einheit mit der Kennung {einheit_id}.", "einheit_nicht_gefunden"
         )
 
-    if jahr_von is None:
-        praez, bis, dat = "keine", None, None
-    else:
-        bis = jahr_bis if jahr_bis is not None else jahr_von
-        if bis < jahr_von:
-            raise DatierungFehler(
-                f"jahr_bis ({bis}) liegt vor jahr_von ({jahr_von}).", "spanne_verkehrt"
-            )
-        praez = "jahr" if jahr_von == bis else "spanne"
-        dat = datum or str(jahr_von)
+    try:
+        dat, von, bis, praez = kern.handdatierung(datum_von, datum_bis)
+    except kern.UnlesbaresDatum as exc:
+        raise DatierungFehler(str(exc), "datum_unlesbar")
+
+    begruendung = (begruendung or "").strip()
+    fundstelle = begruendung or (
+        "" if von is None else (str(von) if von == bis else f"{von}–{bis}")
+    )
 
     with con:
         con.execute("DELETE FROM anker WHERE einheit_id = ?", (einheit_id,))
         con.execute(
             "UPDATE einheit SET datum = ?, jahr_von = ?, jahr_bis = ?, praezision = ?, "
             "datierung_herkunft = 'manuell', datierung_lauf_id = NULL WHERE id = ?",
-            (dat, jahr_von, bis, praez, einheit_id),
+            (dat, von, bis, praez, einheit_id),
         )
-        if jahr_von is not None:
+        if von is not None or fundstelle:
             con.execute(
                 "INSERT INTO anker (einheit_id, jahr, herkunft, fundstelle) "
                 "VALUES (?, ?, 'manuell', ?)",
-                (einheit_id, jahr_von,
-                 str(jahr_von) if jahr_von == bis else f"{jahr_von}–{bis}"),
+                (einheit_id, von, fundstelle),
             )
 
     return {
         "einheit_id": einheit_id,
         "datum": dat,
-        "jahr_von": jahr_von,
+        "jahr_von": von,
         "jahr_bis": bis,
         "praezision": praez,
         "datierung_herkunft": "manuell",
         "datierung_lauf_id": None,
+        "begruendung": fundstelle,
     }
+
+
+def text_setzen(con: sqlite3.Connection, einheit_id: int, text: str) -> dict:
+    """Ändert den Text einer Einheit und räumt auf, was daran hing.
+
+    Zwei Dinge hängen am Wortlaut:
+
+    Die Akteursfundstellen (`einheit_akteur.start`/`ende`) sind Zeichen-
+    positionen. Nach einer Textänderung zeigen sie auf andere Wörter — nicht
+    auf nichts, sondern auf falsche. Sie werden deshalb **gelöscht**, nicht
+    stehengelassen; beim nächsten Akteurslauf entstehen sie neu. Eine falsche
+    Markierung ist schlimmer als eine fehlende, weil sie wie ein Befund
+    aussieht.
+
+    Die Anker leiten sich aus dem Text ab. Sie werden neu abgeleitet, indem
+    die Datierung der Quelle noch einmal läuft (Umfang 'alle', also mit
+    geschützten Handkorrekturen). Nicht nur für diese Einheit: die
+    Interpolation der Nachbarn hängt an ihr mit, und eine Einheit, die ihr
+    Jahr verliert, verschiebt die Datierung der Absätze um sie herum.
+    """
+    zeile = con.execute(
+        "SELECT e.text, q.projekt_id FROM einheit e JOIN quelle q ON q.id = e.quelle_id "
+        "WHERE e.id = ?", (einheit_id,)
+    ).fetchone()
+    if zeile is None:
+        raise DatierungFehler(
+            f"Keine Einheit mit der Kennung {einheit_id}.", "einheit_nicht_gefunden"
+        )
+    alt, projekt_id = zeile[0], zeile[1]
+    text = text if text is not None else ""
+    if not text.strip():
+        raise DatierungFehler("Der Text darf nicht leer sein.", "text_leer")
+
+    if text == alt:
+        return {"einheit_id": einheit_id, "text": text, "geaendert": False,
+                "fundstellen_geloescht": 0, "datierung_neu": 0, "projekt_id": projekt_id}
+
+    vorher = _datierungsstand(con, projekt_id)
+    with con:
+        fundstellen = con.execute(
+            "SELECT COUNT(*) FROM einheit_akteur WHERE einheit_id = ?", (einheit_id,)
+        ).fetchone()[0]
+        con.execute("DELETE FROM einheit_akteur WHERE einheit_id = ?", (einheit_id,))
+        con.execute("UPDATE einheit SET text = ? WHERE id = ?", (text, einheit_id))
+
+    datieren(con, projekt_id=projekt_id, umfang="alle")
+    nachher = _datierungsstand(con, projekt_id)
+    geaendert = sum(1 for k, v in nachher.items() if vorher.get(k) != v)
+
+    return {"einheit_id": einheit_id, "text": text, "geaendert": True,
+            "fundstellen_geloescht": fundstellen, "datierung_neu": geaendert,
+            "projekt_id": projekt_id}
+
+
+# Was als Jahreszahl überhaupt in Frage kommt. Kein statistischer Wert, sondern
+# eine Aussage über das Material dieses Systems: Presseartikel und Exzerpte zur
+# Geschichte des 18. bis 21. Jahrhunderts. Ein Projekt über die Antike müsste
+# die Untergrenze senken — dann ist es eine Einstellung, heute ist es eine
+# Feststellung.
+JAHR_UNTERGRENZE = 1400
+
+
+def ausreisser(con: sqlite3.Connection, projekt_id: str) -> dict:
+    """Einheiten mit einem Jahr, das es nicht geben kann.
+
+    Der Zeitraum eines Projekts ist MIN/MAX über seine Einheiten. Zwei
+    Zifferndreher in der Quelle ziehen ihn deshalb über Jahrhunderte — bei ber
+    auf 1201–3012, obwohl das Material 1989–2017 abdeckt. Ohne eine Stelle,
+    die das benennt, findet man die beiden Sätze nur durch Blättern.
+
+    Die Regel ist ein festes Fenster: nichts vor 1400, nichts in der Zukunft.
+    Der naheliegende statistische Weg — Quartilsabstand — ist daran
+    gescheitert, dass er das Falsche misst. Gemessen an vier Projekten meldete
+    er bei ber richtig zwei, bei damaskus aber 62 und bei osmanisch 40
+    Einheiten, die alle in Ordnung sind: ein Werk über das 19. Jahrhundert
+    streut nun einmal breit, und eine Warnung, die bei jedem zehnten Absatz
+    anschlägt, ist keine. Ein Faktor, der alle vier zufriedenstellt, wäre an
+    genau diese vier angepasst.
+
+    Was einen Zifferndreher ausmacht, ist nicht Abstand vom Mittel, sondern
+    Unmöglichkeit. 3012 ist keine ungewöhnliche Datierung, sondern gar keine.
+    """
+    heute = datetime.now(timezone.utc).year
+    ids = [z[0] for z in con.execute(
+        "SELECT e.id FROM einheit e JOIN quelle q ON q.id = e.quelle_id "
+        "WHERE q.projekt_id = ? AND e.typ = 'content' AND e.jahr_von IS NOT NULL "
+        "AND (e.jahr_von < ? OR e.jahr_von > ? OR e.jahr_bis > ?) "
+        "ORDER BY e.jahr_von",
+        (projekt_id, JAHR_UNTERGRENZE, heute, heute))]
+    return {"projekt_id": projekt_id, "unten": JAHR_UNTERGRENZE,
+            "oben": heute, "einheiten": ids}
+
+
+def verteilung(con: sqlite3.Connection, projekt_id: str) -> dict:
+    """Woher die Daten kommen — je Herkunft und je Präzision.
+
+    'interpoliert' heißt geraten: zwischen zwei bekannten Ankern gemittelt.
+    Bei damaskus sind das 392 von 672 Einheiten, und das soll man sehen, ohne
+    danach zu suchen.
+    """
+    def zaehle(spalte: str) -> dict[str, int]:
+        return {(z[0] or "undatiert"): z[1] for z in con.execute(
+            f"SELECT e.{spalte}, COUNT(*) FROM einheit e "
+            "JOIN quelle q ON q.id = e.quelle_id "
+            "WHERE q.projekt_id = ? AND e.typ = 'content' "
+            f"GROUP BY e.{spalte}", (projekt_id,))}
+
+    je_herkunft = zaehle("datierung_herkunft")
+    je_praezision = zaehle("praezision")
+    gesamt = sum(je_herkunft.values())
+    return {
+        "projekt_id": projekt_id,
+        "anzahl": gesamt,
+        "je_herkunft": je_herkunft,
+        "je_praezision": je_praezision,
+        "anzahl_interpoliert": je_herkunft.get("interpoliert", 0),
+        "anzahl_manuell": je_herkunft.get("manuell", 0),
+        "anzahl_undatiert": je_herkunft.get("undatiert", 0),
+        "ausreisser": ausreisser(con, projekt_id),
+    }
+
+
+def anker_je_einheit(con: sqlite3.Connection, projekt_id: str) -> dict[int, list[dict]]:
+    """Die Belege je Einheit — welche Fundstelle welches Jahr geliefert hat.
+
+    Die alte Vorschau zeigte nur das Ergebnis. Eine falsche Datierung war
+    damit nicht aufzuklären: man sah, dass 3012 dasteht, aber nicht, dass es
+    aus '30.07.3012' in der Quellennotation kommt und kein Rechenfehler ist.
+    """
+    ergebnis: dict[int, list[dict]] = {}
+    for z in con.execute(
+        "SELECT a.einheit_id, a.jahr, a.herkunft, a.fundstelle FROM anker a "
+        "JOIN einheit e ON e.id = a.einheit_id JOIN quelle q ON q.id = e.quelle_id "
+        "WHERE q.projekt_id = ? ORDER BY a.einheit_id, a.id", (projekt_id,)
+    ):
+        ergebnis.setdefault(z[0], []).append(
+            {"jahr": z[1], "herkunft": z[2], "fundstelle": z[3]})
+    return ergebnis
+
+
+def _datierungsstand(con: sqlite3.Connection, projekt_id: str) -> dict[int, tuple]:
+    return {z[0]: (z[1], z[2], z[3]) for z in con.execute(
+        "SELECT e.id, e.datum, e.jahr_von, e.jahr_bis FROM einheit e "
+        "JOIN quelle q ON q.id = e.quelle_id WHERE q.projekt_id = ?", (projekt_id,))}
