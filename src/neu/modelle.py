@@ -285,6 +285,14 @@ class TaxonomieAntwort(BaseModel):
     embedding_modell: str
     llm_modell: str
     trajektorie: list[TrajektorieRunde]
+    anzahl_zugeordnet: int = Field(
+        description="Einheiten, die der Lauf zugeordnet hat — die Zuordnung "
+                    "entsteht im Verfahren ohnehin und wird jetzt festgehalten"
+    )
+    anzahl_geschuetzt: int = Field(
+        description="Handkorrekturen, die er nicht angefasst hat"
+    )
+    anzahl_je_kategorie: dict[str, int]
 
 
 Praezision = Literal["tag", "monat", "jahr", "spanne", "keine"]

@@ -102,12 +102,13 @@ def con(tmp_path):
 # ── Wiederaufnahme über die Datenbank ─────────────────────────────────────────
 
 def test_lauf_nimmt_nur_offene_einheiten(con, monkeypatch) -> None:
-    _kategorien(con)
+    kat = _kategorien(con)
     ids = _einheiten(con, ["a", "b", "c"])
-    with con:  # eine ist schon klassifiziert
+    with con:  # eine ist schon klassifiziert — also hat sie eine Kategorie
         con.execute(
-            "UPDATE einheit SET kategorie_herkunft='bge', konfidenz='high' WHERE id=?",
-            (ids[0],),
+            "UPDATE einheit SET kategorie_id=?, kategorie_herkunft='bge', "
+            "konfidenz='high' WHERE id=?",
+            (kat[0], ids[0]),
         )
 
     monkeypatch.setitem(
@@ -317,10 +318,11 @@ def test_ohne_taxonomie_kein_lauf(con) -> None:
 
 
 def test_ohne_offene_einheiten(con, monkeypatch) -> None:
-    _kategorien(con)
+    kat = _kategorien(con)
     ids = _einheiten(con, ["a"])
     with con:
-        con.execute("UPDATE einheit SET kategorie_herkunft='bge' WHERE id=?", (ids[0],))
+        con.execute("UPDATE einheit SET kategorie_id=?, kategorie_herkunft='bge' "
+                    "WHERE id=?", (kat[0], ids[0]))
     with pytest.raises(KlassifikationFehler) as exc:
         klassifizieren(con, "p", umfang="offen")
     assert exc.value.code == "keine_einheiten"

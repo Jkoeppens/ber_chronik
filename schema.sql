@@ -75,7 +75,11 @@ CREATE TABLE einheit (
     -- Ergebnis der Klassifikation
     kategorie_id       INTEGER REFERENCES kategorie(id) ON DELETE SET NULL,
     konfidenz          TEXT,               -- high | medium | low
-    kategorie_herkunft TEXT,               -- llm | bge | manuell
+    kategorie_herkunft TEXT                -- wer zugeordnet hat:
+                       CHECK (kategorie_herkunft IN
+                              ('taxonomie', 'bge', 'llm', 'manuell')),
+                                           -- taxonomie = aus dem Clusterlauf,
+                                           -- der ohnehin jede Einheit zuordnet
                                            -- NULL = nie klassifiziert
     kategorie_lauf_id  INTEGER REFERENCES lauf(id) ON DELETE SET NULL,
 

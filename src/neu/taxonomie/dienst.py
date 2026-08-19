@@ -51,6 +51,10 @@ class TaxonomieErgebnis:
     embedding_modell: str
     llm_modell: str
     trajektorie: list[dict] = field(default_factory=list)
+    # Die Zuordnung, die der Lauf nebenbei erzeugt und jetzt auch festhält.
+    anzahl_zugeordnet: int = 0
+    anzahl_geschuetzt: int = 0
+    anzahl_je_kategorie: dict[str, int] = field(default_factory=dict)
 
 
 def _jetzt() -> str:
@@ -59,20 +63,24 @@ def _jetzt() -> str:
 
 # ── Lesen ─────────────────────────────────────────────────────────────────────
 
-def _texte_lesen(con: sqlite3.Connection, projekt_id: str) -> list[str]:
-    """content-Einheiten in Dokumentreihenfolge, auf SEG_CHARS gekürzt.
+def _texte_lesen(con: sqlite3.Connection, projekt_id: str) -> list[tuple[int, str]]:
+    """content-Einheiten als (id, Text) in Dokumentreihenfolge, auf SEG_CHARS gekürzt.
 
     MIN_LENGTH und die Kürzung stammen aus der Vorlage: zu kurze Segmente
     tragen kein Signal, zu lange werden beim Embedden ohnehin abgeschnitten.
+
+    Die Kennung kommt mit, weil der Lauf seine Zuordnung mitschreibt: das
+    Verfahren ordnet in jeder Runde ohnehin jede Einheit zu, und dieses
+    Ergebnis wurde bisher weggeworfen.
     """
     zeilen = con.execute(
-        "SELECT e.text FROM einheit e JOIN quelle q ON q.id = e.quelle_id "
+        "SELECT e.id, e.text FROM einheit e JOIN quelle q ON q.id = e.quelle_id "
         "WHERE q.projekt_id = ? AND e.typ = 'content' "
         "ORDER BY e.quelle_id, e.position",
         (projekt_id,),
     ).fetchall()
-    return [z[0][:kern.SEG_CHARS] for z in zeilen
-            if z[0] and len(z[0]) >= kern.MIN_LENGTH]
+    return [(z[0], z[1][:kern.SEG_CHARS]) for z in zeilen
+            if z[1] and len(z[1]) >= kern.MIN_LENGTH]
 
 
 def _vorhandene_kategorien(con: sqlite3.Connection, projekt_id: str) -> list[dict]:
@@ -137,7 +145,8 @@ def vorschlagen(
     )
 
     try:
-        texte = _texte_lesen(con, projekt_id)
+        einheiten = _texte_lesen(con, projekt_id)
+        texte = [t for _, t in einheiten]
         if len(texte) < anzahl:
             raise TaxonomieFehler(
                 f"Projekt '{projekt_id}' hat {len(texte)} verwertbare Einheiten, "
@@ -198,42 +207,72 @@ def vorschlagen(
         ]
 
         with con:
-            werte = json.dumps({
-                    "warm_start": warm_start,
-                    "n_clusters": anzahl,
-                    "embedding_modell": emb_modell,
-                    "llm_modell": llm_modell,
-                    "llm_calls": vorschlag.llm_calls,
-                    "in_tokens": vorschlag.in_tokens,
-                    "out_tokens": vorschlag.out_tokens,
-                    "kosten_usd": round(kosten_usd, 6),
-                    "fruehzeitig_beendet": vorschlag.fruehzeitig_beendet,
-                    "eingefroren": vorschlag.eingefroren,
-                    "trajektorie": trajektorie,
-                }, ensure_ascii=False)
+            # Zuerst die lauf-Zeile: die Zuordnung verweist mit
+            # kategorie_lauf_id auf sie.
             if lauf_id is None:
                 zeiger = con.execute(
-                    "INSERT INTO lauf (projekt_id, schritt, begonnen_am, beendet_am, "
-                    "parameter, status) VALUES (?, 'taxonomie', ?, ?, ?, 'erfolg')",
-                    (projekt_id, begonnen_am, beendet_am, werte),
+                    "INSERT INTO lauf (projekt_id, schritt, begonnen_am, "
+                    "parameter, status) VALUES (?, 'taxonomie', ?, '{}', 'laeuft')",
+                    (projekt_id, begonnen_am),
                 )
                 lauf_id = zeiger.lastrowid
-            else:
-                con.execute(
-                    "UPDATE lauf SET beendet_am = ?, parameter = ?, status = 'erfolg' "
-                    "WHERE id = ?",
-                    (beendet_am, werte, lauf_id),
-                )
 
             # Die alten Kategorien weichen den neuen. Zuordnungen, die auf sie
             # zeigen, werden durch ON DELETE SET NULL auf NULL gesetzt — die
             # Einheiten bleiben, ihre Kategorie ist danach offen.
             con.execute("DELETE FROM kategorie WHERE projekt_id = ?", (projekt_id,))
+            kategorie_ids: list[int] = []
+            for k in vorschlag.kategorien:
+                zeiger = con.execute(
+                    "INSERT INTO kategorie (projekt_id, name, beschreibung, "
+                    "schlagworte, herkunft) VALUES (?, ?, ?, ?, 'vorschlag')",
+                    (projekt_id, k["name"], k["description"], ",".join(k["keywords"])),
+                )
+                kategorie_ids.append(zeiger.lastrowid)
+
+            # Die Zuordnung der letzten Runde festhalten. Sie entsteht im
+            # Verfahren ohnehin — labels = argmax(seg_embs @ label_embs.T) —
+            # und wurde bisher verworfen, damit ein zweiter Schritt dasselbe
+            # noch einmal rechnet, nur leicht anders.
+            geschuetzt = {z[0] for z in con.execute(
+                "SELECT e.id FROM einheit e JOIN quelle q ON q.id = e.quelle_id "
+                "WHERE q.projekt_id = ? AND e.kategorie_herkunft = 'manuell'",
+                (projekt_id,))}
+            zuordnungen = [
+                (kategorie_ids[int(label)], lauf_id, einheit_id)
+                for (einheit_id, _), label in zip(einheiten, vorschlag.labels)
+                if einheit_id not in geschuetzt
+            ]
             con.executemany(
-                "INSERT INTO kategorie (projekt_id, name, beschreibung, schlagworte, herkunft) "
-                "VALUES (?, ?, ?, ?, 'vorschlag')",
-                [(projekt_id, k["name"], k["description"], ",".join(k["keywords"]))
-                 for k in vorschlag.kategorien],
+                "UPDATE einheit SET kategorie_id = ?, konfidenz = NULL, "
+                "kategorie_herkunft = 'taxonomie', kategorie_lauf_id = ? WHERE id = ?",
+                zuordnungen,
+            )
+            je_kategorie: dict[str, int] = {}
+            for kategorie_id, _, _ in zuordnungen:
+                name = vorschlag.kategorien[kategorie_ids.index(kategorie_id)]["name"]
+                je_kategorie[name] = je_kategorie.get(name, 0) + 1
+
+            werte = json.dumps({
+                "warm_start": warm_start,
+                "n_clusters": anzahl,
+                "embedding_modell": emb_modell,
+                "llm_modell": llm_modell,
+                "llm_calls": vorschlag.llm_calls,
+                "in_tokens": vorschlag.in_tokens,
+                "out_tokens": vorschlag.out_tokens,
+                "kosten_usd": round(kosten_usd, 6),
+                "fruehzeitig_beendet": vorschlag.fruehzeitig_beendet,
+                "eingefroren": vorschlag.eingefroren,
+                "trajektorie": trajektorie,
+                "anzahl_zugeordnet": len(zuordnungen),
+                "anzahl_geschuetzt": len(geschuetzt),
+                "anzahl_je_kategorie": je_kategorie,
+            }, ensure_ascii=False)
+            con.execute(
+                "UPDATE lauf SET beendet_am = ?, parameter = ?, status = 'erfolg' "
+                "WHERE id = ?",
+                (beendet_am, werte, lauf_id),
             )
 
     except Exception as exc:
@@ -271,4 +310,7 @@ def vorschlagen(
         embedding_modell=emb_modell,
         llm_modell=llm_modell,
         trajektorie=trajektorie,
+        anzahl_zugeordnet=len(zuordnungen),
+        anzahl_geschuetzt=len(geschuetzt),
+        anzahl_je_kategorie=je_kategorie,
     )

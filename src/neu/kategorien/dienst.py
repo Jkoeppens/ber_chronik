@@ -6,9 +6,15 @@ das Ergebnis in einer Transaktion, zusammen mit der lauf-Zeile, die es erklärt.
 
 Kein print — wer etwas anzeigen will, nimmt das KlassifikationErgebnis.
 
-Wiederaufnahme steht in der Datenbank, nicht in einer Datei: ein Lauf nimmt
-sich `WHERE kategorie_herkunft IS NULL`. Es gibt kein classified.json und
-keinen Embedding-Zwischenspeicher; Embeddings werden je Lauf neu berechnet.
+Wiederaufnahme steht in der Datenbank, nicht in einer Datei: ein Lauf mit
+Umfang 'offen' nimmt sich, was gerade keine Kategorie hat. Es gibt kein
+classified.json und keinen Embedding-Zwischenspeicher; Embeddings werden je
+Lauf neu berechnet.
+
+Dieser Schritt ist kein Nachlauf mehr. Der Themenlauf ordnet bereits jede
+Einheit zu (siehe src/neu/taxonomie/dienst.py); hier geht es um zwei Fälle:
+eine Kategorie wurde von Hand geändert oder ergänzt, oder es sind Einheiten
+dazugekommen.
 """
 
 from __future__ import annotations
@@ -23,7 +29,7 @@ from src.neu.kategorien import kern
 from src.neu.kategorien.kern import Zuordnung
 
 # Umfang eines Laufs.
-#   offen    — nur nie klassifizierte Einheiten (kategorie_herkunft IS NULL)
+#   offen    — Einheiten ohne Kategorie, ausgenommen Handkorrekturen
 #   alle     — auch maschinell klassifizierte erneut; manuell gesetzte bleiben
 #   auch_manuell — auch die Handkorrekturen überschreiben. Eigener Wert, weil
 #              das die Arbeit des Historikers verwirft und nie beiläufig
@@ -86,7 +92,15 @@ def _einheiten_lesen(
         "WHERE q.projekt_id = ? AND e.typ = 'content'"
     )
     if umfang == "offen":
-        sql += " AND e.kategorie_herkunft IS NULL"
+        # Nicht "nie angefasst", sondern "hat gerade keine Kategorie". Der
+        # Unterschied wurde sichtbar, als der Themenlauf anfing, die alten
+        # Kategorien zu ersetzen: die Einheiten daran verlieren durch
+        # ON DELETE SET NULL ihre Zuordnung, behalten aber ihre Herkunft. Mit
+        # der alten Bedingung (herkunft IS NULL) wären sie unerreichbar
+        # geworden — bei den vier Projekten 80 Stück.
+        # Eine Handkorrektur auf "keine Kategorie" bleibt außen vor.
+        sql += (" AND e.kategorie_id IS NULL "
+                "AND (e.kategorie_herkunft IS NULL OR e.kategorie_herkunft != 'manuell')")
     elif umfang == "alle":
         # Handkorrekturen bleiben unberührt — auch bei einem erzwungenen Neulauf.
         sql += " AND (e.kategorie_herkunft IS NULL OR e.kategorie_herkunft != 'manuell')"

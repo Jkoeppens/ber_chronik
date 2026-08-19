@@ -93,7 +93,11 @@ CREATE TABLE einheit (
     -- Ergebnis der Klassifikation
     kategorie_id       INTEGER REFERENCES kategorie(id) ON DELETE SET NULL,
     konfidenz          TEXT,               -- high | medium | low
-    kategorie_herkunft TEXT,               -- llm | bge | manuell
+    kategorie_herkunft TEXT                -- wer zugeordnet hat:
+                       CHECK (kategorie_herkunft IN
+                              ('taxonomie', 'bge', 'llm', 'manuell')),
+                                           -- taxonomie = aus dem Clusterlauf,
+                                           -- der ohnehin jede Einheit zuordnet
                                            -- NULL = nie klassifiziert
     kategorie_lauf_id  INTEGER REFERENCES lauf(id) ON DELETE SET NULL,
 
@@ -340,6 +344,19 @@ Selbsteinschätzung des Modells und im BGE-Pfad einen Schwellwert auf der
 Kosinusähnlichkeit — zwei verschiedene Größen in einer Spalte, ununterscheidbar.
 `kategorie_herkunft` trennt sie und hält zugleich die Handkorrektur fest;
 `kategorie_lauf_id` verweist auf den Lauf, der die Zuordnung geschrieben hat.
+
+Vier Werte, weil vier Wege zuordnen:
+
+- `taxonomie` — der Clusterlauf. Er ordnet in jeder Runde ohnehin alle
+  Einheiten zu (`argmax(seg_embs @ label_embs.T)`); diese Zuordnung wurde
+  bisher verworfen und danach von `classify_segments` noch einmal gerechnet,
+  leicht anders: dort die Beschreibung allein gegen `name+description+keywords`,
+  der volle Text gegen 500 Zeichen. Zwei Verfahren für dieselbe Sache.
+- `bge` — der eigene Zuordnungsschritt. Er ist kein Nachlauf mehr, sondern für
+  zwei Fälle da: eine Kategorie wurde von Hand geändert, oder es sind Einheiten
+  dazugekommen.
+- `llm` — derselbe Schritt mit Sprachmodell statt Embedding.
+- `manuell` — Handkorrektur, gegen jeden Neulauf geschützt.
 
 `NULL` heißt nie klassifiziert und ist zugleich die Wiederaufnahme-Bedingung: ein
 Lauf nimmt sich `WHERE kategorie_herkunft IS NULL`. Damit braucht es keine

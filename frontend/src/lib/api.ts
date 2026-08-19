@@ -194,10 +194,15 @@ export function schlageTaxonomieVor(
 	);
 }
 
-/** Stößt die Klassifikation an. Kommt sofort mit einer lauf_id zurück. */
+/**
+ * Stößt die Zuordnung an. Kommt sofort mit einer lauf_id zurück.
+ *
+ * 'offen' ist die Vorgabe: der Taxonomielauf ordnet bereits alles zu, hier
+ * geht es um das, was seither dazugekommen oder offen geblieben ist.
+ */
 export function klassifiziere(
 	projektId: string,
-	umfang: 'offen' | 'alle' | 'auch_manuell' = 'alle'
+	umfang: 'offen' | 'alle' | 'auch_manuell' = 'offen'
 ): Promise<LaufBegonnen> {
 	return ruf<LaufBegonnen>(
 		`/api/projekt/${encodeURIComponent(projektId)}/klassifizieren`,

@@ -154,13 +154,14 @@
 	// ── 3. Klassifizieren ────────────────────────────────────────────────────
 	let klassLauf = $state<LaufStand | null>(null);
 	let klassLaeuft = $state(false);
+	let klassUmfang = $state<'offen' | 'alle'>('offen');
 
 	async function klassifizierenStarten() {
 		klassLaeuft = true;
 		fehler = null;
 		klassLauf = null;
 		try {
-			const begonnen = await klassifiziere(data.projektId, 'alle');
+			const begonnen = await klassifiziere(data.projektId, klassUmfang);
 			await verfolgeLauf(begonnen.lauf_id, (s) => (klassLauf = s));
 			await Promise.all([kategorienNeuLaden(), einheitenNeuLaden()]);
 		} catch (e) {
@@ -266,11 +267,11 @@
 		</div>
 
 		<!-- ── 2. Vorschlagen und verfeinern ─────────────────────────────── -->
-		<span class="section-label">Vorschlagen</span>
+		<span class="section-label">Themen</span>
 		<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
 			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 				<button class="btn btn-primary" disabled={laeuft} onclick={() => starte(false)}>
-					Themen vorschlagen
+					Themen erarbeiten
 				</button>
 				<label class="leer" style="display:flex;gap:5px;align-items:center">
 					Cluster
@@ -286,8 +287,10 @@
 				</button>
 			</div>
 			<span class="leer">
-				Vorschlagen fängt bei null an und verwirft die vorhandenen Kategorien.
-				Verfeinern nimmt sie als Ausgangspunkt; die Clusterzahl ist dann ihre Anzahl.
+				Erarbeiten fängt bei null an, verwirft die vorhandenen Kategorien und ordnet
+				dabei jede Einheit zu — beides in einem Zug. Verfeinern nimmt die vorhandenen
+				Kategorien als Ausgangspunkt; die Clusterzahl ist dann ihre Anzahl.
+				Handkorrekturen bleiben in beiden Fällen stehen.
 			</span>
 			{#if lauf}
 				<div class="log-box" class:error={lauf.status === 'fehler'}>{fortschrittstext(lauf)}</div>
@@ -295,21 +298,29 @@
 		</div>
 
 		<!-- ── 3. Klassifizieren ─────────────────────────────────────────── -->
-		<span class="section-label">Klassifizieren</span>
+		<span class="section-label">Zuordnung</span>
 		<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
 			<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
 				<button
-					class="btn btn-primary"
+					class="btn btn-outline"
 					disabled={klassLaeuft || stand.anzahl === 0}
 					onclick={klassifizierenStarten}
 				>
-					{klassLaeuft ? 'Klassifiziert …' : 'Klassifizieren'}
+					{klassLaeuft ? 'Ordnet zu …' : 'Neu zuordnen'}
 				</button>
-				<span class="leer">
-					Ordnet jeder Einheit eine Kategorie zu. Handkorrekturen bleiben unberührt —
-					derzeit {stand.anzahl_manuell_zugeordnet}.
+				<select class="input" bind:value={klassUmfang} disabled={klassLaeuft}>
+					<option value="offen">nur noch nicht zugeordnete</option>
+					<option value="alle">alle außer Handkorrekturen</option>
+				</select>
+				<span class="leer" style="flex:1;min-width:240px">
+					Gebraucht, wenn eine Kategorie von Hand geändert wurde oder Einheiten
+					dazugekommen sind. Der Themenlauf ordnet bereits alles zu.
 				</span>
 			</div>
+			<span class="leer">
+				{stand.anzahl_ohne_kategorie} ohne Kategorie ·
+				{stand.anzahl_manuell_zugeordnet} Handkorrekturen, die kein Lauf anfasst
+			</span>
 			{#if klassLauf}
 				<div class="log-box" class:error={klassLauf.status === 'fehler'}>{klassLauf.status === 'laeuft'
 					? `läuft — Lauf ${klassLauf.id}, seit ${klassLauf.begonnen_am}`
