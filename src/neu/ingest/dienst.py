@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -42,6 +42,12 @@ class IngestErgebnis:
     status: str
     anzahl_einheiten: int
     anzahl_je_typ: dict[str, int] = field(default_factory=dict)
+    # Der Riegel: was ein zweiter Lauf über dieselbe Quelle vorgefunden hat.
+    fortgesetzt: bool = False
+    anzahl_neu: int = 0
+    anzahl_uebersprungen: int = 0
+    geaenderte_dateien: list[str] = field(default_factory=list)
+    hinweise: list[str] = field(default_factory=list)
 
 
 def _jetzt() -> str:
@@ -132,12 +138,45 @@ def _einheit_werte(einheit: Einheit, quelle_id: str) -> tuple:
     )
 
 
+def _bestehende_quelle(
+    con: sqlite3.Connection, projekt_id: str, pfad: str, quellformat: str
+) -> tuple[str | None, str | None]:
+    """Findet die Quelle, die fortzuführen ist. Gibt (quelle_id, Hinweis).
+
+    Zuerst über (projekt_id, pfad) — der geradlinige Fall. Bei einer
+    Pressesammlung zusätzlich über (projekt_id, quellformat): derselbe
+    Obsidian-Ordner heißt lokal '/Users/…/Dropbox_test1' und über Dropbox
+    '/Dropbox_test1'. Ein Projekt hat eine Sammlung, nicht zwei; wer denselben
+    Ordner anders erreicht, soll keine zweite anlegen.
+    """
+    zeile = con.execute(
+        "SELECT id FROM quelle WHERE projekt_id = ? AND pfad = ?", (projekt_id, pfad)
+    ).fetchone()
+    if zeile is not None:
+        return zeile[0], None
+
+    if quellformat != "pressesammlung":
+        return None, None
+
+    zeile = con.execute(
+        "SELECT id, pfad FROM quelle WHERE projekt_id = ? AND quellformat = 'pressesammlung' "
+        "ORDER BY eingelesen_am LIMIT 1", (projekt_id,)
+    ).fetchone()
+    if zeile is None:
+        return None, None
+    return zeile[0], (
+        f"Die Sammlung dieses Projekts wurde bisher über '{zeile[1]}' gelesen, "
+        f"jetzt über '{pfad}'. Sie wird fortgeführt, nicht neu angelegt."
+    )
+
+
 def einlesen(
     con: sqlite3.Connection,
     projekt_id: str,
-    pfad: Path,
+    pfad: Path | str,
     quellformat: str,
     quelle_id: str | None = None,
+    dateien: list[RohDatei] | None = None,
 ) -> IngestErgebnis:
     """Liest pfad ein und schreibt quelle, einheit und lauf in einer Transaktion.
 
@@ -145,11 +184,21 @@ def einlesen(
     PRAGMA foreign_keys = ON. Bei einem Fehler wird alles zurückgerollt und
     anschließend eine lauf-Zeile mit status='fehler' geschrieben — der
     Fehlversuch bleibt sichtbar, seine Daten nicht.
+
+    `dateien` übergibt den Inhalt statt ihn zu lesen — so kommt eine Sammlung
+    aus Dropbox herein, ohne dass dieser Dienst das Netz kennt.
+
+    Gibt es zu (projekt_id, pfad) schon eine Quelle, wird sie **fortgeführt**
+    statt eine zweite anzulegen: bekannte quellpfade werden übersprungen, neue
+    hinten angehängt. Eine Datei, deren Inhalt sich geändert hat, wird gemeldet
+    und nicht angefasst — was damit geschehen soll, ist keine Entscheidung
+    dieses Dienstes.
     """
     quellformat_pruefen(quellformat)
     begonnen_am = _jetzt()
+    pfad_text = str(pfad)
     parameter = json.dumps(
-        {"pfad": str(pfad), "quellformat": quellformat}, ensure_ascii=False
+        {"pfad": pfad_text, "quellformat": quellformat}, ensure_ascii=False
     )
 
     if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone() is None:
@@ -157,19 +206,67 @@ def einlesen(
             f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
         )
 
-    try:
-        einheiten = einheiten_lesen(pfad, quellformat)
-        if not einheiten:
-            raise IngestFehler(f"{pfad} ergibt keine Einheit.", "keine_einheiten")
+    fortgesetzt = False
+    uebersprungen = 0
+    geaendert: list[str] = []
+    hinweise: list[str] = []
 
-        quelle_id = quelle_id or uuid.uuid4().hex[:8]
+    try:
+        einheiten = (kern.aus_dateien(dateien) if dateien is not None
+                     else einheiten_lesen(Path(pfad), quellformat))
+        if not einheiten:
+            raise IngestFehler(f"{pfad_text} ergibt keine Einheit.", "keine_einheiten")
+
+        vorhanden, hinweis = (
+            _bestehende_quelle(con, projekt_id, pfad_text, quellformat)
+            if quelle_id is None else (None, None)
+        )
+        if hinweis:
+            hinweise.append(hinweis)
+
+        if vorhanden is not None:
+            fortgesetzt = True
+            quelle_id = vorhanden
+            bekannt = {z[0]: z[1] for z in con.execute(
+                "SELECT quellpfad, text FROM einheit "
+                "WHERE quelle_id = ? AND quellpfad IS NOT NULL", (quelle_id,))}
+            if not bekannt:
+                raise IngestFehler(
+                    f"Zu '{pfad_text}' gibt es in diesem Projekt schon eine Quelle "
+                    f"({quelle_id}), deren Einheiten keinen Dateibezug haben — "
+                    "ein DOCX wird nicht fortgeführt. Bitte die vorhandene Quelle "
+                    "verwenden oder ein eigenes Projekt anlegen.",
+                    "quelle_gibt_es_schon",
+                )
+            hoechste = con.execute(
+                "SELECT COALESCE(MAX(position), 0) FROM einheit WHERE quelle_id = ?",
+                (quelle_id,),
+            ).fetchone()[0]
+
+            neue: list[Einheit] = []
+            for e in einheiten:
+                if e.quellpfad in bekannt:
+                    uebersprungen += 1
+                    if bekannt[e.quellpfad] != e.text:
+                        geaendert.append(e.quellpfad)
+                    continue
+                hoechste += 1
+                neue.append(replace(e, position=hoechste))
+            einheiten = neue
+        else:
+            quelle_id = quelle_id or uuid.uuid4().hex[:8]
 
         with con:  # commit bei Erfolg, rollback bei Ausnahme
-            con.execute(
-                "INSERT INTO quelle (id, projekt_id, quellformat, pfad, eingelesen_am) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (quelle_id, projekt_id, quellformat, str(pfad), begonnen_am),
-            )
+            if not fortgesetzt:
+                con.execute(
+                    "INSERT INTO quelle (id, projekt_id, quellformat, pfad, eingelesen_am) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (quelle_id, projekt_id, quellformat, pfad_text, begonnen_am),
+                )
+            elif pfad_text:
+                # Der zuletzt benutzte Weg zur selben Sammlung.
+                con.execute("UPDATE quelle SET pfad = ? WHERE id = ?",
+                            (pfad_text, quelle_id))
             platzhalter = ", ".join("?" * len(_EINHEIT_SPALTEN))
             con.executemany(
                 f"INSERT INTO einheit ({', '.join(_EINHEIT_SPALTEN)}) "
@@ -191,24 +288,33 @@ def einlesen(
                 "INSERT INTO lauf (projekt_id, schritt, begonnen_am, beendet_am, "
                 "parameter, status) VALUES (?, 'ingest', ?, ?, ?, 'fehler')",
                 (projekt_id, begonnen_am, _jetzt(),
-                 json.dumps({"pfad": str(pfad), "quellformat": quellformat,
+                 json.dumps({"pfad": pfad_text, "quellformat": quellformat,
                              "fehler": str(exc)}, ensure_ascii=False)),
             )
         raise
 
-    je_typ: dict[str, int] = {}
-    for e in einheiten:
-        je_typ[e.typ] = je_typ.get(e.typ, 0) + 1
+    # anzahl_einheiten ist der Stand der Quelle nach dem Lauf, nicht nur das
+    # neu Geschriebene — sonst zeigte ein fortgesetzter Lauf eine kleinere
+    # Zahl an als der erste.
+    je_typ = {z[0]: z[1] for z in con.execute(
+        "SELECT typ, COUNT(*) FROM einheit WHERE quelle_id = ? GROUP BY typ "
+        "ORDER BY COUNT(*) DESC", (quelle_id,))}
+    gesamt = sum(je_typ.values())
 
     return IngestErgebnis(
         projekt_id=projekt_id,
         quelle_id=quelle_id,
         quellformat=quellformat,
-        pfad=str(pfad),
+        pfad=pfad_text,
         lauf_id=lauf_id,
         begonnen_am=begonnen_am,
         beendet_am=beendet_am,
         status="erfolg",
-        anzahl_einheiten=len(einheiten),
+        anzahl_einheiten=gesamt,
         anzahl_je_typ=je_typ,
+        fortgesetzt=fortgesetzt,
+        anzahl_neu=len(einheiten),
+        anzahl_uebersprungen=uebersprungen,
+        geaenderte_dateien=sorted(geaendert),
+        hinweise=hinweise,
     )

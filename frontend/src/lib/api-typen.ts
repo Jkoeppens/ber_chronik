@@ -413,6 +413,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projekt/{projekt_id}/dropbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dropbox Stand
+         * @description Ob das Projekt mit Dropbox verbunden ist und gegen welchen Ordner.
+         *
+         *     Der Status kommt aus projekt.dropbox_token. Das alte System prüfte dafür
+         *     data/dropbox_tokens.json — eine Datei, die von keiner Zeile geschrieben
+         *     wird und mit den tatsächlich benutzten Zugangsdaten nichts zu tun hat.
+         */
+        get: operations["dropbox_stand_api_projekt__projekt_id__dropbox_get"];
+        /**
+         * Dropbox Ordner Setzen
+         * @description Trägt den Ordner ein, gegen den gelesen wird.
+         */
+        put: operations["dropbox_ordner_setzen_api_projekt__projekt_id__dropbox_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/dropbox/anmeldung": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dropbox Anmeldung Beginnen
+         * @description Beginnt die Anmeldung. Der begonnene Vorgang steht in der Datenbank.
+         *
+         *     Damit übersteht er einen Serverneustart zwischen dem Beginn und der
+         *     Rückleitung — im alten System lag er in einem Wörterbuch im Arbeitsspeicher.
+         */
+        post: operations["dropbox_anmeldung_beginnen_api_projekt__projekt_id__dropbox_anmeldung_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/quelle/dropbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Quelle Aus Dropbox
+         * @description Liest den eingestellten Dropbox-Ordner ein.
+         *
+         *     Ein zweiter Lauf legt keine zweite Quelle an: bekannte Dateien werden
+         *     übersprungen, neue angehängt. Der Riegel steht im Schema —
+         *     UNIQUE (quelle_id, quellpfad).
+         */
+        post: operations["quelle_aus_dropbox_api_projekt__projekt_id__quelle_dropbox_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -564,6 +639,18 @@ export interface components {
              */
             hinweis?: string | null;
         };
+        /** AnmeldungBeginn */
+        AnmeldungBeginn: {
+            /**
+             * Auth Url
+             * @description Dorthin schickt man den Browser
+             */
+            auth_url: string;
+            /** Csrf */
+            csrf: string;
+            /** Projekt Id */
+            projekt_id: string | null;
+        };
         /** Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post */
         Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post: {
             /**
@@ -672,6 +759,37 @@ export interface components {
             datierung_herkunft: string;
             /** Datierung Lauf Id */
             datierung_lauf_id: number | null;
+        };
+        /**
+         * DropboxOrdnerRumpf
+         * @description Rumpf von PUT /api/projekt/{id}/dropbox.
+         */
+        DropboxOrdnerRumpf: {
+            /**
+             * Ordner
+             * @description Pfad im App-Ordner, z.B. /Dropbox_test1
+             */
+            ordner: string;
+        };
+        /**
+         * DropboxStand
+         * @description Der Verbindungsstand eines Projekts — aus projekt.dropbox_token.
+         */
+        DropboxStand: {
+            /** Projekt Id */
+            projekt_id: string;
+            /**
+             * Verbunden
+             * @description Ob ein refresh_token hinterlegt ist
+             */
+            verbunden: boolean;
+            /** Ordner */
+            ordner: string | null;
+            /**
+             * Anbieter Bereit
+             * @description Ob SDK und DROPBOX_APP_KEY/SECRET vorliegen
+             */
+            anbieter_bereit: boolean;
         };
         /** Einheit */
         Einheit: {
@@ -848,12 +966,34 @@ export interface components {
             beendet_am: string;
             /** Status */
             status: string;
-            /** Anzahl Einheiten */
+            /**
+             * Anzahl Einheiten
+             * @description Stand der Quelle nach dem Lauf
+             */
             anzahl_einheiten: number;
             /** Anzahl Je Typ */
             anzahl_je_typ: {
                 [key: string]: number;
             };
+            /**
+             * Fortgesetzt
+             * @description Ob eine vorhandene Quelle fortgeführt wurde
+             */
+            fortgesetzt: boolean;
+            /** Anzahl Neu */
+            anzahl_neu: number;
+            /**
+             * Anzahl Uebersprungen
+             * @description Dateien, die schon in der Quelle standen
+             */
+            anzahl_uebersprungen: number;
+            /**
+             * Geaenderte Dateien
+             * @description Bekannte Dateien mit geändertem Inhalt — gemeldet, nicht angefasst
+             */
+            geaenderte_dateien: string[];
+            /** Hinweise */
+            hinweise: string[];
         };
         /** Kandidat */
         Kandidat: {
@@ -2334,6 +2474,242 @@ export interface operations {
                 "multipart/form-data": components["schemas"]["Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    dropbox_stand_api_projekt__projekt_id__dropbox_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DropboxStand"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    dropbox_ordner_setzen_api_projekt__projekt_id__dropbox_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DropboxOrdnerRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DropboxStand"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    dropbox_anmeldung_beginnen_api_projekt__projekt_id__dropbox_anmeldung_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnmeldungBeginn"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    quelle_aus_dropbox_api_projekt__projekt_id__quelle_dropbox_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             201: {

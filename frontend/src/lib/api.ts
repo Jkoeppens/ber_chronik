@@ -25,6 +25,8 @@ export type Lauf = components['schemas']['Lauf'];
 export type IngestAntwort = components['schemas']['IngestAntwort'];
 export type ExportAntwort = components['schemas']['ExportAntwort'];
 export type Quellformat = components['schemas']['QuelleAnlegen']['quellformat'];
+export type DropboxStand = components['schemas']['DropboxStand'];
+export type AnmeldungBeginn = components['schemas']['AnmeldungBeginn'];
 
 /** Die eine Fehlergestalt des Servers — auch sie kommt aus dem Schema. */
 type ServerFehler = components['schemas']['FehlerAntwort'];
@@ -148,6 +150,37 @@ export function ladeEinheiten(
 ): Promise<EinheitenListe> {
 	const abfrage = typ ? `?typ=${encodeURIComponent(typ)}` : '';
 	return ruf<EinheitenListe>(`/api/projekt/${encodeURIComponent(projektId)}/einheiten${abfrage}`);
+}
+
+// ── Dropbox ─────────────────────────────────────────────────────────────────
+
+/** Ob das Projekt verbunden ist und gegen welchen Ordner. */
+export function ladeDropboxStand(projektId: string): Promise<DropboxStand> {
+	return ruf<DropboxStand>(`/api/projekt/${encodeURIComponent(projektId)}/dropbox`);
+}
+
+/** Trägt den Ordner ein, gegen den gelesen wird. */
+export function setzeDropboxOrdner(projektId: string, ordner: string): Promise<DropboxStand> {
+	return ruf<DropboxStand>(`/api/projekt/${encodeURIComponent(projektId)}/dropbox`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ ordner })
+	});
+}
+
+/** Beginnt die Anmeldung. Der Vorgang liegt danach in der Datenbank. */
+export function beginneDropboxAnmeldung(projektId: string): Promise<AnmeldungBeginn> {
+	return ruf<AnmeldungBeginn>(
+		`/api/projekt/${encodeURIComponent(projektId)}/dropbox/anmeldung`,
+		{ method: 'POST' }
+	);
+}
+
+/** Liest den eingestellten Dropbox-Ordner ein — beim zweiten Mal fortsetzend. */
+export function leseDropboxEin(projektId: string): Promise<IngestAntwort> {
+	return ruf<IngestAntwort>(`/api/projekt/${encodeURIComponent(projektId)}/quelle/dropbox`, {
+		method: 'POST'
+	});
 }
 
 /** Wohin die Visualisierung eines Projekts zeigt. */

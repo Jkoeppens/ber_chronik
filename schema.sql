@@ -79,7 +79,11 @@ CREATE TABLE einheit (
                                            -- NULL = nie klassifiziert
     kategorie_lauf_id  INTEGER REFERENCES lauf(id) ON DELETE SET NULL,
 
-    UNIQUE (quelle_id, position)
+    UNIQUE (quelle_id, position),
+    -- Der Riegel gegen doppeltes Einlesen: dieselbe Clip-Datei kommt in einer
+    -- Quelle genau einmal vor. NULL zählt in SQLite nicht als Dublette, DOCX
+    -- ohne quellpfad bleibt also unberührt.
+    UNIQUE (quelle_id, quellpfad)
 );
 
 -- ── anker ─────────────────────────────────────────────────────────────────────
@@ -163,6 +167,18 @@ CREATE TABLE einheit_akteur (
     start      INTEGER NOT NULL,
     ende       INTEGER NOT NULL,
     UNIQUE (einheit_id, akteur_id, start)
+);
+
+-- ── anmeldung ─────────────────────────────────────────────────────────────────
+-- Ein begonnener Dropbox-Anmeldevorgang. In der Datenbank und nicht im
+-- Arbeitsspeicher: zwischen dem Beginn und der Rückleitung liegt ein Besuch bei
+-- Dropbox, und ein Neustart in dieser Zeit ließ die Anmeldung bisher auflaufen.
+CREATE TABLE anmeldung (
+    csrf        TEXT NOT NULL PRIMARY KEY,  -- der state-Wert gegen Dropbox
+    projekt_id  TEXT REFERENCES projekt(id) ON DELETE CASCADE,
+                                            -- NULL: Anmeldung ohne Projekt
+    sitzung     TEXT NOT NULL,              -- JSON, was der Fluss sich merkt
+    begonnen_am TEXT NOT NULL
 );
 
 -- ── lauf ──────────────────────────────────────────────────────────────────────

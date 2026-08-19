@@ -97,7 +97,11 @@ CREATE TABLE einheit (
                                            -- NULL = nie klassifiziert
     kategorie_lauf_id  INTEGER REFERENCES lauf(id) ON DELETE SET NULL,
 
-    UNIQUE (quelle_id, position)
+    UNIQUE (quelle_id, position),
+    -- Der Riegel gegen doppeltes Einlesen: dieselbe Clip-Datei kommt in einer
+    -- Quelle genau einmal vor. NULL zählt in SQLite nicht als Dublette, DOCX
+    -- ohne quellpfad bleibt also unberührt.
+    UNIQUE (quelle_id, quellpfad)
 );
 
 -- ── anker ─────────────────────────────────────────────────────────────────────
@@ -183,6 +187,18 @@ CREATE TABLE einheit_akteur (
     UNIQUE (einheit_id, akteur_id, start)
 );
 
+-- ── anmeldung ─────────────────────────────────────────────────────────────────
+-- Ein begonnener Dropbox-Anmeldevorgang. In der Datenbank und nicht im
+-- Arbeitsspeicher: zwischen dem Beginn und der Rückleitung liegt ein Besuch bei
+-- Dropbox, und ein Neustart in dieser Zeit ließ die Anmeldung bisher auflaufen.
+CREATE TABLE anmeldung (
+    csrf        TEXT NOT NULL PRIMARY KEY,  -- der state-Wert gegen Dropbox
+    projekt_id  TEXT REFERENCES projekt(id) ON DELETE CASCADE,
+                                            -- NULL: Anmeldung ohne Projekt
+    sitzung     TEXT NOT NULL,              -- JSON, was der Fluss sich merkt
+    begonnen_am TEXT NOT NULL
+);
+
 -- ── lauf ──────────────────────────────────────────────────────────────────────
 -- Ein Verarbeitungsschritt, der gelaufen ist. Was womit erzeugt wurde.
 CREATE TABLE lauf (
@@ -229,9 +245,19 @@ reicht: 159 von 672 Einheiten waren auf der Zeitachse nicht vorhanden — mehr a
 alle undatierten zusammen.
 
 **Ergänzt:** `dropbox_ordner`, `dropbox_token` — die Obsidian-Anbindung hängt am
-Projekt, nicht an einer globalen Datei. Heute liegen alle Zugangsdaten in einer
-einzigen `dropbox_tokens.json` für die ganze Installation; beim zweiten Nutzer
-überschreiben sie sich gegenseitig.
+Projekt. Das ist keine Änderung am Ablageort, sondern eine an der Form: heute
+stehen die Zugangsdaten bereits projektweise in
+`data/projects/{id}/config.json` unter `obsidian.tokens`, neun Projekte mit
+sieben verschiedenen Token. Die oft genannte globale `data/dropbox_tokens.json`
+existiert zwar als Datei, wird aber von keiner Zeile geschrieben und nur an
+einer einzigen Stelle gelesen: `_dropbox_connected()` setzt daraus einen Haken
+in der Oberfläche — für Zugangsdaten, die gar nicht benutzt werden. Sie wird
+nicht übernommen.
+
+Gespeichert wird nur der `refresh_token`. Den `access_token` legt das alte
+System mit ab, obwohl er nach vier Stunden verfällt und nirgends gelesen wird:
+der Client wird ausschließlich mit `oauth2_refresh_token` gebaut, das SDK holt
+sich neue Zugriffstoken selbst.
 
 **Ergänzt:** `eigentuemer_id` — jedes Projekt gehört genau einem Zugang, und die
 Datenbank erzwingt das. Als Flag in `projekt_zugang` war Eigentum optional: eine
@@ -276,8 +302,15 @@ Literaturexzerpten das exzerpierte Werk (richtig), bei einer Chronik die Zeitung
 (falsch, es ist eine durchgehende Zeitachse). Das Format entscheidet beim Einlesen,
 was die Gruppe ist; die Interpolation liest nur noch die Spalte.
 
-**Ergänzt:** `quellpfad` — die einzelne Clip-Datei bei Sammlungen. Ohne sie liest
-ein zweiter Sync dieselben Artikel erneut ein.
+**Ergänzt:** `quellpfad` — die einzelne Clip-Datei bei Sammlungen, und damit der
+Riegel gegen doppeltes Einlesen: `UNIQUE (quelle_id, quellpfad)`.
+
+Er hat genau eine Form, gleich woher die Datei kommt: **relativ zum
+eingestellten Ordner, ohne führenden Schrägstrich**. Dropbox liefert
+`path_display` als `/Dropbox_test1/x.md`, der lokale Weg `x.md`; ohne
+Vereinheitlichung gälte beim Wechsel zwischen beiden jede Datei als neu. Das
+alte System hat das mit einem Vergleich nur über den Dateinamen überbrückt —
+das bricht, sobald zwei Unterordner eine gleichnamige Datei enthalten.
 
 **Geändert:** die Zeitangaben. `datum` nimmt die genaueste bekannte Form auf —
 `"1989"`, `"1989-06"` oder `"1989-06-15"`. `jahr_von`/`jahr_bis` bleiben für echte

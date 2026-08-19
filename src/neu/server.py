@@ -28,7 +28,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -41,6 +41,10 @@ env_laden()
 
 from src.neu.db import verbindung, verbindung_schreibend  # noqa: E402
 from src.neu.ingest.dienst import IngestFehler, einlesen  # noqa: E402
+from src.neu.ingest import anmeldung as anmelde_dienst  # noqa: E402
+from src.neu.ingest import dropbox_anbindung  # noqa: E402
+from src.neu.ingest.anmeldung import AnmeldungFehler  # noqa: E402
+from src.neu.ingest.kern import RohDatei  # noqa: E402
 from src.neu.kategorien.dienst import (  # noqa: E402
     KlassifikationFehler,
     klassifizieren,
@@ -69,6 +73,9 @@ from src.neu.modelle import (  # noqa: E402
     AkteurAntwort,
     AkteurErkennungAntwort,
     AkteureErkennenRumpf,
+    AnmeldungBeginn,
+    DropboxOrdnerRumpf,
+    DropboxStand,
     Einheit,
     ExportAntwort,
     Kennzahlen,
@@ -707,6 +714,149 @@ async def quelle_hochladen(
     except IngestFehler as exc:
         # Die Datei bleibt liegen: sie ist angekommen, und ein zweiter Versuch
         # mit richtigem Quellformat soll sie nicht erneut hochladen müssen.
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    return IngestAntwort(**vars(ergebnis))
+
+
+# ── Dropbox ───────────────────────────────────────────────────────────────────
+
+@app.get(
+    "/api/projekt/{projekt_id}/dropbox",
+    response_model=DropboxStand,
+    responses=FEHLER_ANTWORTEN,
+)
+def dropbox_stand(projekt_id: str) -> DropboxStand:
+    """Ob das Projekt mit Dropbox verbunden ist und gegen welchen Ordner.
+
+    Der Status kommt aus projekt.dropbox_token. Das alte System prüfte dafür
+    data/dropbox_tokens.json — eine Datei, die von keiner Zeile geschrieben
+    wird und mit den tatsächlich benutzten Zugangsdaten nichts zu tun hat.
+    """
+    con = verbindung()
+    try:
+        return DropboxStand(**anmelde_dienst.verbindung(con, projekt_id))
+    except AnmeldungFehler as exc:
+        raise HTTPException(status_code=404, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.put(
+    "/api/projekt/{projekt_id}/dropbox",
+    response_model=DropboxStand,
+    responses=FEHLER_ANTWORTEN,
+)
+def dropbox_ordner_setzen(projekt_id: str, rumpf: DropboxOrdnerRumpf) -> DropboxStand:
+    """Trägt den Ordner ein, gegen den gelesen wird."""
+    con = verbindung_schreibend()
+    try:
+        return DropboxStand(
+            **anmelde_dienst.ordner_setzen(con, projekt_id, rumpf.ordner)
+        )
+    except AnmeldungFehler as exc:
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.post(
+    "/api/projekt/{projekt_id}/dropbox/anmeldung",
+    response_model=AnmeldungBeginn,
+    responses=FEHLER_ANTWORTEN,
+)
+def dropbox_anmeldung_beginnen(projekt_id: str) -> AnmeldungBeginn:
+    """Beginnt die Anmeldung. Der begonnene Vorgang steht in der Datenbank.
+
+    Damit übersteht er einen Serverneustart zwischen dem Beginn und der
+    Rückleitung — im alten System lag er in einem Wörterbuch im Arbeitsspeicher.
+    """
+    con = verbindung_schreibend()
+    try:
+        return AnmeldungBeginn(**anmelde_dienst.beginnen(con, projekt_id))
+    except AnmeldungFehler as exc:
+        raise HTTPException(status_code=404, detail=(exc.code, str(exc)))
+    except AnbieterFehler as exc:
+        raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.get("/api/obsidian/oauth/callback", include_in_schema=False)
+def dropbox_rueckleitung(code: str = "", state: str = "") -> HTMLResponse:
+    """Hierher schickt Dropbox den Nutzer zurück.
+
+    Der Pfad trägt den alten englischen Namen, weil er in der Dropbox-App
+    eingetragen ist — siehe dropbox_anbindung.RUECKLEITUNG_VORGABE.
+
+    Der refresh_token wird sofort an projekt.dropbox_token geschrieben, nicht
+    erst beim nächsten Formular — sonst verliert ein Neustart ihn still.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = anmelde_dienst.beenden(con, code=code, state=state)
+        meldung = f"Dropbox verbunden — Projekt {ergebnis['projekt_id']}"
+        farbe = "#16a34a"
+    except (AnmeldungFehler, AnbieterFehler) as exc:
+        meldung = str(exc)
+        farbe = "#dc2626"
+    finally:
+        con.close()
+
+    return HTMLResponse(
+        "<!doctype html><meta charset='utf-8'><title>Dropbox</title>"
+        "<body style=\"font-family:-apple-system,sans-serif;text-align:center;"
+        "padding:48px;color:#1a1a1a\">"
+        f"<h2 style='color:{farbe};font-size:16px'>{meldung}</h2>"
+        "<p style='font-size:12px;color:#888'>Dieses Fenster kann geschlossen werden.</p>"
+        "<script>setTimeout(() => window.close(), 2500)</script></body>"
+    )
+
+
+@app.post(
+    "/api/projekt/{projekt_id}/quelle/dropbox",
+    response_model=IngestAntwort,
+    responses=FEHLER_ANTWORTEN,
+    status_code=201,
+)
+def quelle_aus_dropbox(projekt_id: str) -> IngestAntwort:
+    """Liest den eingestellten Dropbox-Ordner ein.
+
+    Ein zweiter Lauf legt keine zweite Quelle an: bekannte Dateien werden
+    übersprungen, neue angehängt. Der Riegel steht im Schema —
+    UNIQUE (quelle_id, quellpfad).
+    """
+    con = verbindung_schreibend()
+    try:
+        stand = anmelde_dienst.verbindung(con, projekt_id)
+        if not stand["ordner"]:
+            raise HTTPException(
+                status_code=422,
+                detail=("dropbox_ordner_fehlt",
+                        "Für dieses Projekt ist kein Dropbox-Ordner eingetragen."),
+            )
+        token = anmelde_dienst.token(con, projekt_id)
+        dbx = dropbox_anbindung.klient(token)
+        ordner = stand["ordner"]
+        dateien = [
+            RohDatei(pfad=relativ,
+                     inhalt=dropbox_anbindung.datei_laden(dbx, anzeige))
+            for relativ, anzeige in dropbox_anbindung.md_dateien(dbx, ordner)
+        ]
+        ergebnis = einlesen(
+            con, projekt_id=projekt_id, pfad=ordner,
+            quellformat="pressesammlung", dateien=dateien,
+        )
+    except AnmeldungFehler as exc:
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    except AnbieterFehler as exc:
+        raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
+    except IngestFehler as exc:
         status = 404 if exc.code == "projekt_nicht_gefunden" else 422
         raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
     finally:
