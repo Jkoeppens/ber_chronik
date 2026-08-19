@@ -506,11 +506,23 @@ def interpolieren(
 ) -> list[Datierung]:
     """Undatierte Einheiten aus ihren Nachbarn datieren, je Gruppe.
 
-    Unverändert aus interpolate_anchors.interpolate:
+    Aus interpolate_anchors.interpolate:
       - zwischen zwei Ankern wird eine Spanne aufgespannt, nicht verteilt
       - nach dem letzten Anker wird vorwärts geerbt
       - vor dem ersten Anker bleibt es undatiert; kein Rückwärtserben
       - eine Gruppe ohne einen einzigen Anker bleibt ganz undatiert
+
+    Eine Bedingung kommt hinzu, und nur diese eine: aufgespannt wird nur
+    vorwärts. Läuft das Material zurück — der Anker davor ist später als der
+    danach —, gibt es keine Spanne, sondern den Anker davor als Zeitpunkt.
+
+    Die Vorlage kannte den Fall nicht und schrieb 'von, bis = davor, danach'
+    ohne Prüfung. Im Bestand stehen dadurch 176 Zeilen mit jahr_bis < jahr_von,
+    verteilt auf 65 zusammenhängende Abschnitte in 20 Werken. Sie entstehen
+    nicht durch Fehler im Material, sondern durch seine Anlage: ein Exzerpt ist
+    nach Thema geordnet, nicht nach Jahr, und springt von 1914 zurück auf 1860.
+    'jahr_bis < jahr_von' ist dabei keine ungewöhnliche Spanne, sondern keine —
+    MIN/MAX über die Einheiten, jeder Filter und jede Achse rechnen damit falsch.
     """
     undatierbar = undatierbar or set()
     ergebnis = [Datierung(d.einheit_id, d.datum, d.jahr_von, d.jahr_bis,
@@ -544,8 +556,12 @@ def interpolieren(
                 continue                      # kein Rückwärtserben
             if jahr_danach is None:
                 von = bis = jahr_davor        # Vorwärtserben
-            else:
+            elif jahr_davor <= jahr_danach:
                 von, bis = jahr_davor, jahr_danach   # aufspannen
+            else:
+                # Rücksprung: hier ist nichts aufzuspannen. Der Anker davor
+                # ist das Letzte, was über diese Einheit bekannt ist.
+                von = bis = jahr_davor
 
             d.jahr_von, d.jahr_bis = von, bis
             d.datum = str(von)

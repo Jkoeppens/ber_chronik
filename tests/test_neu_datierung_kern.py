@@ -248,6 +248,66 @@ def test_ueber_gruppengrenzen_wird_nicht_interpoliert() -> None:
     assert d[1].jahr_von is None
 
 
+# ── Rücksprung: der eine Fall, den die Vorlage nicht kannte ──────────────────
+
+def test_rueckwaerts_wird_nicht_aufgespannt() -> None:
+    """A > B: kein 1914–1860, sondern 1914 als Zeitpunkt.
+
+    Ein Exzerpt ist nach Thema geordnet, nicht nach Jahr. Springt es von 1914
+    zurück auf 1860, ist 'jahr_bis < jahr_von' keine ungewöhnliche Spanne,
+    sondern keine.
+    """
+    d = interpolieren([_fest(1, 1914), _leer(2), _leer(3), _fest(4, 1860)],
+                      {i: "W" for i in range(1, 5)})
+    for x in (d[1], d[2]):
+        assert (x.jahr_von, x.jahr_bis) == (1914, 1914)
+        assert x.praezision == "jahr" and x.herkunft == "interpoliert"
+
+
+def test_gleiche_jahre_bleiben_ein_zeitpunkt() -> None:
+    """A == B ist kein Rücksprung — die Grenze liegt bei 'kleiner gleich'."""
+    d = interpolieren([_fest(1, 1908), _leer(2), _fest(3, 1908)],
+                      {i: "W" for i in range(1, 4)})
+    assert (d[1].jahr_von, d[1].jahr_bis) == (1908, 1908)
+    assert d[1].praezision == "jahr"
+
+
+def test_vorwaerts_spannt_weiterhin_auf() -> None:
+    """Der Normalfall bleibt unberührt — nur eine Bedingung kommt hinzu."""
+    d = interpolieren([_fest(1, 1908), _leer(2), _fest(3, 1912)],
+                      {i: "W" for i in range(1, 4)})
+    assert (d[1].jahr_von, d[1].jahr_bis) == (1908, 1912)
+    assert d[1].praezision == "spanne"
+
+
+def test_nach_dem_ruecksprung_wird_wieder_aufgespannt() -> None:
+    """Der Rücksprung betrifft die eine Lücke, nicht den Rest der Gruppe."""
+    d = interpolieren(
+        [_fest(1, 1914), _leer(2), _fest(3, 1860), _leer(4), _fest(5, 1880)],
+        {i: "W" for i in range(1, 6)})
+    assert (d[1].jahr_von, d[1].jahr_bis) == (1914, 1914)   # Rücksprung
+    assert (d[3].jahr_von, d[3].jahr_bis) == (1860, 1880)   # wieder vorwärts
+
+
+def test_textspanne_bleibt_unangetastet() -> None:
+    """Nennt ein Absatz selbst '1830–1870', ist das keine Interpolation."""
+    from src.neu.datierung.kern import Datierung
+    eigene = Datierung(2, "1830", 1830, 1870, "spanne", "text", [])
+    d = interpolieren([_fest(1, 1914), eigene, _fest(3, 1860)],
+                      {i: "W" for i in range(1, 4)})
+    assert (d[1].jahr_von, d[1].jahr_bis) == (1830, 1870)
+    assert d[1].herkunft == "text"
+
+
+def test_handkorrektur_beginnt_einen_abschnitt_wie_jeder_anker() -> None:
+    from src.neu.datierung.kern import Datierung
+    hand = Datierung(3, "1890", 1890, 1890, "jahr", "manuell", [])
+    d = interpolieren([_fest(1, 1914), _leer(2), hand, _leer(4), _fest(5, 1900)],
+                      {i: "W" for i in range(1, 6)})
+    assert (d[1].jahr_von, d[1].jahr_bis) == (1914, 1914)   # 1914 > 1890
+    assert (d[3].jahr_von, d[3].jahr_bis) == (1890, 1900)   # 1890 < 1900
+
+
 def test_spanne_wird_ueber_den_mittelpunkt_weitergereicht() -> None:
     from src.neu.datierung.kern import Datierung
     d = interpolieren([Datierung(1, "1900", 1900, 1910, "spanne", "text", []), _leer(2)],

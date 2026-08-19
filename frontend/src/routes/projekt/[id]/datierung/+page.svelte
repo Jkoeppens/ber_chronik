@@ -258,8 +258,9 @@
 			{#if verteilung.anzahl_interpoliert > 0}
 				<span class="leer">
 					<strong>{verteilung.anzahl_interpoliert} von {verteilung.anzahl}</strong> Einheiten sind
-					interpoliert — zwischen zwei bekannten Ankern gemittelt, also geraten. Sie tragen kein
-					Datum aus dem Material.
+					interpoliert — aus den Ankern davor und danach abgeleitet, also geraten. Sie tragen
+					kein Datum aus dem Material. Wo der Anker davor später ist als der danach, gilt der
+					davor als Zeitpunkt; aufgespannt wird nur vorwärts.
 				</span>
 			{/if}
 			{#if verteilung.ausreisser.einheiten.length > 0}
