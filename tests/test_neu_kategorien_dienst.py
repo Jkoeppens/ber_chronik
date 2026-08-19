@@ -113,7 +113,7 @@ def test_lauf_nimmt_nur_offene_einheiten(con, monkeypatch) -> None:
 
     monkeypatch.setitem(
         dienst.VERFAHREN, "bge",
-        lambda texte, tax: [kern.Zuordnung("Politik", "high", "automatisch") for _ in texte],
+        lambda con, einheiten, tax, melden=None: [kern.Zuordnung("Politik", "high", "automatisch") for _ in einheiten],
     )
     ergebnis = klassifizieren(con, "p", verfahren="bge", umfang="offen")
     assert ergebnis.anzahl_einheiten == 2
@@ -129,7 +129,7 @@ def test_nicht_content_einheiten_bleiben_unberuehrt(con, monkeypatch) -> None:
         )
     monkeypatch.setitem(
         dienst.VERFAHREN, "bge",
-        lambda texte, tax: [kern.Zuordnung("Politik", "high", "automatisch") for _ in texte],
+        lambda con, einheiten, tax, melden=None: [kern.Zuordnung("Politik", "high", "automatisch") for _ in einheiten],
     )
     klassifizieren(con, "p")
     offen = con.execute(
@@ -147,7 +147,7 @@ def test_manuell_bleibt_auch_bei_umfang_alle_unberuehrt(con, monkeypatch) -> Non
 
     monkeypatch.setitem(
         dienst.VERFAHREN, "bge",
-        lambda texte, tax: [kern.Zuordnung("Politik", "high", "automatisch") for _ in texte],
+        lambda con, einheiten, tax, melden=None: [kern.Zuordnung("Politik", "high", "automatisch") for _ in einheiten],
     )
     ergebnis = klassifizieren(con, "p", umfang="alle")
 
@@ -166,7 +166,7 @@ def test_nur_auch_manuell_ueberschreibt_die_handkorrektur(con, monkeypatch) -> N
 
     monkeypatch.setitem(
         dienst.VERFAHREN, "bge",
-        lambda texte, tax: [kern.Zuordnung("Politik", "high", "automatisch") for _ in texte],
+        lambda con, einheiten, tax, melden=None: [kern.Zuordnung("Politik", "high", "automatisch") for _ in einheiten],
     )
     ergebnis = klassifizieren(con, "p", umfang="auch_manuell")
 
@@ -264,7 +264,7 @@ def test_lauf_wird_festgehalten_und_verknuepft(con, monkeypatch) -> None:
     ids = _einheiten(con, ["a"])
     monkeypatch.setitem(
         dienst.VERFAHREN, "bge",
-        lambda texte, tax: [kern.Zuordnung("Politik", "high", "automatisch") for _ in texte],
+        lambda con, einheiten, tax, melden=None: [kern.Zuordnung("Politik", "high", "automatisch") for _ in einheiten],
     )
     ergebnis = klassifizieren(con, "p")
 
@@ -288,7 +288,7 @@ def test_fehlschlag_rollt_zurueck_und_haelt_den_lauf_fest(con, monkeypatch) -> N
     _kategorien(con)
     _einheiten(con, ["a"])
 
-    def kaputt(texte, tax):
+    def kaputt(con, einheiten, tax, melden=None):
         raise RuntimeError("Modell nicht erreichbar")
 
     monkeypatch.setitem(dienst.VERFAHREN, "bge", kaputt)

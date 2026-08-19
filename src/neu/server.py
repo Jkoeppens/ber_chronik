@@ -64,7 +64,7 @@ from src.neu.akteure.dienst import (  # noqa: E402
     erkennen,
 )
 from src.neu.export.dienst import ExportFehler, exportieren  # noqa: E402
-from src.neu import laeufe  # noqa: E402
+from src.neu import laeufe, vektoren  # noqa: E402
 from src.neu.laeufe import LaufFehler  # noqa: E402
 from src.neu.kategorien import verwaltung as kategorie_verwaltung  # noqa: E402
 from src.neu.kategorien.verwaltung import KategorieFehler  # noqa: E402
@@ -817,10 +817,25 @@ async def quelle_hochladen(
     responses=FEHLER_ANTWORTEN,
 )
 def kategorien_liste(projekt_id: str) -> KategorienListe:
-    """Die Kategorien eines Projekts mit der Zahl der Einheiten darauf."""
+    """Die Kategorien eines Projekts mit der Zahl der Einheiten darauf.
+
+    Dazu, wie viele Einheiten beim nächsten Zuordnen erst embeddet werden
+    müssen: die Fläche soll eine Dauer nur ankündigen, wenn es eine gibt. Steht
+    kein Anbieter, ist die Frage nicht zu beantworten — dann null statt einer
+    geratenen Zahl, und der Lauf scheitert später ohnehin mit 503.
+    """
     con = verbindung()
     try:
-        return KategorienListe(**kategorie_verwaltung.liste(con, projekt_id))
+        stand = kategorie_verwaltung.liste(con, projekt_id)
+        try:
+            from src.neu.taxonomie.anbieter import embedding_modellname
+
+            stand["einheiten_ohne_vektor"] = vektoren.lage(
+                con, projekt_id, embedding_modellname()
+            )["zu_rechnen"]
+        except AnbieterFehler:
+            stand["einheiten_ohne_vektor"] = None
+        return KategorienListe(**stand)
     except KategorieFehler as exc:
         raise HTTPException(status_code=404, detail=(exc.code, str(exc)))
     finally:
@@ -869,8 +884,17 @@ def kategorien_speichern(
     Einheiten gehören. Es getrennt zu lassen hieße, einen Zustand zu erlauben,
     in dem die Zuordnung zu Beschreibungen passt, die es nicht mehr gibt.
 
-    Das Zuordnen braucht bei 672 Einheiten rund 30 Sekunden — deshalb 202 mit
-    einer lauf_id, und der Stand kommt aus GET /api/lauf/{id}.
+    Warum 202 und ein Lauf, obwohl das Zuordnen mit gefüllten Vektoren in etwa
+    einer Sekunde durch ist: die Ausnahmen sind zu regelmäßig für einen
+    gewöhnlichen Klick. Beim ersten Speichern nach dem Ingest ist der Speicher
+    leer (12 bis 31 Sekunden je nach Projektgröße), nach einem Serverneustart
+    liegt das Modell nicht im Arbeitsspeicher (weitere 12), und ein
+    Anbieterwechsel entwertet alles auf einmal. Ein Klick, der meistens eine
+    Sekunde dauert und ab und zu eine halbe Minute, ist schlechter als einer,
+    der immer denselben Weg nimmt.
+
+    Was stattdessen aufhört: die Fläche kündigt eine Dauer nur an, wenn
+    einheiten_ohne_vektor aus GET …/kategorien größer als null ist.
     """
     con = verbindung_schreibend()
     try:

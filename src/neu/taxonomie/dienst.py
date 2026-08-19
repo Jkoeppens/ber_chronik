@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 
-from src.neu import laeufe
+from src.neu import laeufe, vektoren
 from src.neu.taxonomie import anbieter, kern
 
 
@@ -163,7 +163,22 @@ def vorschlagen(
                 embedding_modell=emb_modell, llm_modell=llm_modell,
             )
 
-        seg_embs = kern.nachbar_aggregat(embed(texte), texte)
+        # Derselbe Zwischenspeicher wie beim Zuordnen: die Texte sind dieselben,
+        # auf SEG_CHARS gekürzten, und das Modell ist dasselbe. Wer erst eine
+        # Taxonomie vorschlagen lässt, hat die Einheitenseite danach schon
+        # bezahlt. Die Titel-Embeddings im Kreislauf gehen nicht durch den
+        # Speicher — sie sind in jeder Runde neu und gehören keiner Einheit.
+        aus_speicher = zu_rechnen = 0
+
+        def melden(gespeichert: int, offen: int) -> None:
+            nonlocal aus_speicher, zu_rechnen
+            aus_speicher, zu_rechnen = gespeichert, offen
+            if lauf_id is not None:
+                laeufe.fortschritt(con, lauf_id, phase="embedding",
+                                   aus_speicher=gespeichert, zu_rechnen=offen)
+
+        roh_embs = vektoren.hole(con, einheiten, emb_modell, embed, melden)
+        seg_embs = kern.nachbar_aggregat(roh_embs, texte)
 
         if lauf_id is not None:
             # Der Fortschritt entsteht ohne Eingriff in den Kern: gezählt wird,

@@ -8,8 +8,12 @@ Kein print — wer etwas anzeigen will, nimmt das KlassifikationErgebnis.
 
 Wiederaufnahme steht in der Datenbank, nicht in einer Datei: ein Lauf mit
 Umfang 'offen' nimmt sich, was gerade keine Kategorie hat. Es gibt kein
-classified.json und keinen Embedding-Zwischenspeicher; Embeddings werden je
-Lauf neu berechnet.
+classified.json.
+
+Die Einheiten-Embeddings kommen aus src/neu/vektoren.py und werden nur beim
+ersten Mal gerechnet. Neu ist je Lauf nur die andere Seite: die Kategorien,
+deren Beschreibungen sich dauernd ändern. Danach ist ein Zuordnen sieben kurze
+Einbettungen und eine Matrixmultiplikation.
 
 Dieser Schritt ist kein Nachlauf mehr. Der Themenlauf ordnet bereits jede
 Einheit zu (siehe src/neu/taxonomie/dienst.py); hier geht es um zwei Fälle:
@@ -23,8 +27,9 @@ import json
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Callable
 
-from src.neu import laeufe
+from src.neu import laeufe, vektoren
 from src.neu.kategorien import kern
 from src.neu.kategorien.kern import Zuordnung
 
@@ -56,6 +61,10 @@ class KlassifikationErgebnis:
     anzahl_ohne_kategorie: int
     anzahl_je_konfidenz: dict[str, int] = field(default_factory=dict)
     anzahl_je_kategorie: dict[str, int] = field(default_factory=dict)
+    # Woher die Einheiten-Embeddings kamen. Beim 'llm'-Verfahren beides 0 —
+    # dort wird nicht embeddet.
+    anzahl_aus_speicher: int = 0
+    anzahl_gerechnet: int = 0
 
 
 def _jetzt() -> str:
@@ -111,22 +120,43 @@ def _einheiten_lesen(
 
 # ── Verfahren ─────────────────────────────────────────────────────────────────
 
-def _zuordnungen_bge(texte: list[str], taxonomie: list[dict]) -> list[Zuordnung]:
+def _zuordnungen_bge(
+    con: sqlite3.Connection,
+    einheiten: list[tuple[int, str]],
+    taxonomie: list[dict],
+    melden: Callable[[int, int], None] | None = None,
+) -> list[Zuordnung]:
     """Embeddet Einheiten und Taxonomie und ordnet per Argmax zu.
 
-    Der Embedding-Anbieter ist der einzige Teil, der die Außenwelt berührt;
-    die Entscheidung selbst trifft der Kern.
-    """
-    from src.generalized.embeddings import EMB_TASK_CLASSIFY, get_embedding_provider
+    Die Einheitenseite kommt aus dem Zwischenspeicher (src/neu/vektoren.py) —
+    ihre Texte ändern sich nach dem Ingest nicht mehr. Die Kategorienseite wird
+    immer gerechnet: sieben kurze Zeichenketten, die sich bei jedem Speichern
+    geändert haben können.
 
-    provider = get_embedding_provider(EMB_TASK_CLASSIFY)
-    einheit_embs = provider.encode(kern.einheit_texte(texte))
-    tax_embs = provider.encode(kern.taxonomie_texte(taxonomie))
+    Der Embedding-Anbieter ist der einzige Teil, der die Außenwelt berührt;
+    die Entscheidung selbst trifft der Kern. Er kommt aus taxonomie.anbieter
+    und nicht aus generalized.embeddings.get_embedding_provider, weil nur der
+    erste den Modellnamen mitgibt — und ohne Modellnamen gibt es keinen
+    Schlüssel für den Speicher. Dasselbe Modell in beiden Fällen.
+    """
+    from src.neu.taxonomie.anbieter import embedding_funktion
+
+    embed, modell = embedding_funktion()
+    # Gekürzt wird vor dem Nachschlagen: die Prüfsumme steht über der
+    # Zeichenkette, die das Modell gesehen hat, nicht über dem ganzen Absatz.
+    gekuerzt = [(einheit_id, text[:kern.SEG_CHARS]) for einheit_id, text in einheiten]
+    einheit_embs = vektoren.hole(con, gekuerzt, modell, embed, melden)
+    tax_embs = embed(kern.taxonomie_texte(taxonomie))
     namen = [c["name"] for c in taxonomie]
     return kern.zuordnungen_aus_embeddings(einheit_embs, tax_embs, namen)
 
 
-def _zuordnungen_llm(texte: list[str], taxonomie: list[dict]) -> list[Zuordnung]:
+def _zuordnungen_llm(
+    con: sqlite3.Connection,
+    einheiten: list[tuple[int, str]],
+    taxonomie: list[dict],
+    melden: Callable[[int, int], None] | None = None,
+) -> list[Zuordnung]:
     from src.generalized.llm import TASK_CLASSIFY, get_provider
 
     provider = get_provider(task=TASK_CLASSIFY)
@@ -136,7 +166,8 @@ def _zuordnungen_llm(texte: list[str], taxonomie: list[dict]) -> list[Zuordnung]
     def frage_modell(prompt: str, system: str) -> str:
         return provider.complete(prompt, system)
 
-    return [kern.klassifiziere_eine(t, block, namen, frage_modell) for t in texte]
+    return [kern.klassifiziere_eine(t, block, namen, frage_modell)
+            for _, t in einheiten]
 
 
 VERFAHREN = {"bge": _zuordnungen_bge, "llm": _zuordnungen_llm}
@@ -197,7 +228,16 @@ def klassifizieren(
             laeufe.fortschritt(con, lauf_id, phase="embedding",
                                einheiten=len(einheiten), kategorien=len(taxonomie))
 
-        zuordnungen = VERFAHREN[verfahren]([t for _, t in einheiten], taxonomie)
+        aus_speicher = zu_rechnen = 0
+
+        def melden(gespeichert: int, offen: int) -> None:
+            nonlocal aus_speicher, zu_rechnen
+            aus_speicher, zu_rechnen = gespeichert, offen
+            if lauf_id is not None:
+                laeufe.fortschritt(con, lauf_id, phase="embedding",
+                                   aus_speicher=gespeichert, zu_rechnen=offen)
+
+        zuordnungen = VERFAHREN[verfahren](con, einheiten, taxonomie, melden)
         id_je_name = {c["name"]: c["id"] for c in taxonomie}
 
         with con:
@@ -279,6 +319,8 @@ def klassifizieren(
         anzahl_ohne_kategorie=ohne,
         anzahl_je_konfidenz=je_konfidenz,
         anzahl_je_kategorie=je_kategorie,
+        anzahl_aus_speicher=aus_speicher,
+        anzahl_gerechnet=zu_rechnen,
     )
 
 

@@ -427,6 +427,7 @@ Fix: Schritt analog zu Wizard-Logik dynamisch berechnen, Mindest-Schritt 1 Jahr.
 
 - **C5 — `bge_embeddings.npy` Cache stale bei Provider-Wechsel** [OFFEN]
   `classify_segments.py:146` und `propose_taxonomy.py:265` schreiben in `bge_embeddings.npy`. Bei `EMBEDDING_PROVIDER=voyage` enthält die Datei Voyage-Vektoren. Der Cache-Check prüft nur `shape[0] == n` (Segmentanzahl), nicht Modell-Herkunft oder Embedding-Dimension. Provider-Wechsel führt zu stale Cache ohne Warnung.
+  Auf `datenmodell` nicht übernommen: `src/neu/vektoren.py` legt in der Tabelle `einheit_embedding` ab, mit `(einheit_id, modell)` als Schlüssel und einer sha256-Prüfsumme über den embeddeten Text. Ein Anbieterwechsel kann keinen alten Wert erwischen, ein geänderter Text macht ihn von selbst ungültig. `src/generalized/` bleibt unverändert.
 
 - **C6 — `CLUSTER_SYSTEM`-Prompt domänenspezifisch in `src/generalized/`** [OFFEN]
   `propose_taxonomy.py:77`: `"Du analysierst Forschungsnotizen zur osmanischen Geschichte."` — hart verdrahtet in einem Modul das explizit als generalisiert deklariert ist. Betrifft nur `--method kmeans`.

@@ -470,6 +470,11 @@ export interface paths {
         /**
          * Kategorien Liste
          * @description Die Kategorien eines Projekts mit der Zahl der Einheiten darauf.
+         *
+         *     Dazu, wie viele Einheiten beim nächsten Zuordnen erst embeddet werden
+         *     müssen: die Fläche soll eine Dauer nur ankündigen, wenn es eine gibt. Steht
+         *     kein Anbieter, ist die Frage nicht zu beantworten — dann null statt einer
+         *     geratenen Zahl, und der Lauf scheitert später ohnehin mit 503.
          */
         get: operations["kategorien_liste_api_projekt__projekt_id__kategorien_get"];
         /**
@@ -480,8 +485,17 @@ export interface paths {
          *     Einheiten gehören. Es getrennt zu lassen hieße, einen Zustand zu erlauben,
          *     in dem die Zuordnung zu Beschreibungen passt, die es nicht mehr gibt.
          *
-         *     Das Zuordnen braucht bei 672 Einheiten rund 30 Sekunden — deshalb 202 mit
-         *     einer lauf_id, und der Stand kommt aus GET /api/lauf/{id}.
+         *     Warum 202 und ein Lauf, obwohl das Zuordnen mit gefüllten Vektoren in etwa
+         *     einer Sekunde durch ist: die Ausnahmen sind zu regelmäßig für einen
+         *     gewöhnlichen Klick. Beim ersten Speichern nach dem Ingest ist der Speicher
+         *     leer (12 bis 31 Sekunden je nach Projektgröße), nach einem Serverneustart
+         *     liegt das Modell nicht im Arbeitsspeicher (weitere 12), und ein
+         *     Anbieterwechsel entwertet alles auf einmal. Ein Klick, der meistens eine
+         *     Sekunde dauert und ab und zu eine halbe Minute, ist schlechter als einer,
+         *     der immer denselben Weg nimmt.
+         *
+         *     Was stattdessen aufhört: die Fläche kündigt eine Dauer nur an, wenn
+         *     einheiten_ohne_vektor aus GET …/kategorien größer als null ist.
          */
         put: operations["kategorien_speichern_api_projekt__projekt_id__kategorien_put"];
         /**
@@ -748,8 +762,16 @@ export interface components {
              * @description steht im Wertevorrat
              */
             bekannt: boolean;
-            /** Modell */
+            /**
+             * Modell
+             * @description Beim Embedding: das Modell für Themen und Zuordnung
+             */
             modell: string | null;
+            /**
+             * Modell Akteure
+             * @description Nur beim Embedding: das Modell fürs Zusammenführen von Akteuren. Bei 'local' ein anderes als modell; beim Sprachmodell immer null.
+             */
+            modell_akteure: string | null;
             /**
              * Schluessel Name
              * @description Welche Variable gebraucht wird; null bei lokalen Anbietern
@@ -1244,6 +1266,11 @@ export interface components {
              * @description Handkorrekturen — vor jedem Neulauf sicher
              */
             anzahl_manuell_zugeordnet: number;
+            /**
+             * Einheiten Ohne Vektor
+             * @description Wie viele Einheiten beim nächsten Zuordnen erst embeddet werden müssen. 0 heißt: das Speichern ist in etwa einer Sekunde durch. null, wenn kein Embedding-Anbieter steht.
+             */
+            einheiten_ohne_vektor: number | null;
         };
         /**
          * KategorienSpeichernRumpf

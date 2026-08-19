@@ -170,6 +170,31 @@ CREATE TABLE einheit_akteur (
     UNIQUE (einheit_id, akteur_id, start)
 );
 
+-- ── einheit_embedding ─────────────────────────────────────────────────────────
+-- Der Vektor einer Einheit unter einem bestimmten Modell. Kein Sachverhalt,
+-- sondern eine Wiederholung: aus text und modell jederzeit neu herstellbar.
+-- Deshalb darf die Tabelle jederzeit geleert werden, und deshalb steht der
+-- Grundsatz "kein Wert zweimal" ihr nicht entgegen — sie legt nichts ab, was
+-- nicht ohnehin abzuleiten wäre, sie legt es nur schneller vor.
+--
+-- pruefsumme ist sha256 über genau die Zeichenkette, die embeddet wurde (der
+-- Text auf 500 Zeichen gekürzt). Stimmt sie nicht mehr, gilt der Vektor als
+-- nicht vorhanden — der Speicher veraltet nicht, er wird ungültig.
+--
+-- modell gehört in den Schlüssel: bge-m3 (1024), MiniLM (384) und voyage-4
+-- liefern verschiedene Vektoren. Ein Anbieterwechsel darf keinen alten Wert
+-- weiterverwenden, und ein Zurückwechseln soll die alten sofort wieder gelten
+-- lassen.
+CREATE TABLE einheit_embedding (
+    einheit_id   INTEGER NOT NULL REFERENCES einheit(id) ON DELETE CASCADE,
+    modell       TEXT    NOT NULL,   -- BAAI/bge-m3 | voyage-4 | …
+    pruefsumme   TEXT    NOT NULL,   -- sha256 des embeddeten Texts
+    masse        INTEGER NOT NULL,   -- Dimensionen, = len(vektor)/4
+    vektor       BLOB    NOT NULL,   -- float32, normalisiert
+    berechnet_am TEXT    NOT NULL,
+    PRIMARY KEY (einheit_id, modell)
+);
+
 -- ── anmeldung ─────────────────────────────────────────────────────────────────
 -- Ein begonnener Dropbox-Anmeldevorgang. In der Datenbank und nicht im
 -- Arbeitsspeicher: zwischen dem Beginn und der Rückleitung liegt ein Besuch bei

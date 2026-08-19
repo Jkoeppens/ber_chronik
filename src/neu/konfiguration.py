@@ -56,6 +56,13 @@ class Anbieterlage:
     schluessel_vorhanden: bool | None   # None = wird keiner gebraucht
     einsatzbereit: bool
     hinweis: str | None = None      # was fehlt, in einem Satz
+    # Beim Embedding: 'local' sind zwei Modelle mit zwei Aufgaben — bge-m3 für
+    # Themen und Zuordnung, MiniLM für das Zusammenführen von Akteuren. Diese
+    # Stelle nannte lange nur MiniLM, und die Taxonomiefläche schrieb es an den
+    # Kopf, wo bge-m3 rechnete. Seit der Modellname der Schlüssel des
+    # Vektorspeichers ist (src/neu/vektoren.py), ist das kein Schönheitsfehler
+    # mehr. `modell` ist deshalb das der Kategorien; hier steht das andere.
+    modell_akteure: str | None = None
 
 
 @dataclass
@@ -74,6 +81,7 @@ def _embedding_lage() -> tuple[Anbieterlage, float | None]:
         EMBEDDING_ANBIETER, MODELL_MINILM, MODELL_VOYAGE,
         SCHWELLE_MINILM, SCHWELLE_VOYAGE,
     )
+    from src.neu.taxonomie.anbieter import EMBEDDING_MODELLE
 
     roh = (os.environ.get("EMBEDDING_PROVIDER") or "").strip().lower()
     if not roh:
@@ -96,13 +104,15 @@ def _embedding_lage() -> tuple[Anbieterlage, float | None]:
         da = bool(os.environ.get("VOYAGE_API_KEY"))
         return Anbieterlage(
             anbieter="voyage", bekannt=True, modell=MODELL_VOYAGE,
+            modell_akteure=MODELL_VOYAGE,
             schluessel_name="VOYAGE_API_KEY", schluessel_vorhanden=da,
             einsatzbereit=da,
             hinweis=None if da else "VOYAGE_API_KEY fehlt.",
         ), SCHWELLE_VOYAGE
 
     return Anbieterlage(
-        anbieter="local", bekannt=True, modell=MODELL_MINILM,
+        anbieter="local", bekannt=True,
+        modell=EMBEDDING_MODELLE["local"], modell_akteure=MODELL_MINILM,
         schluessel_name=None, schluessel_vorhanden=None, einsatzbereit=True,
     ), SCHWELLE_MINILM
 
@@ -173,6 +183,8 @@ def _zeile(name: str, a: Anbieterlage) -> str:
     teile = [a.anbieter or "?"]
     if a.modell:
         teile.append(a.modell)
+    if a.modell_akteure and a.modell_akteure != a.modell:
+        teile.append(f"{a.modell_akteure} (Akteure)")
     stand = "Schlüssel vorhanden" if a.schluessel_vorhanden else "ohne Schlüssel, lokal"
     return f"  {name:10s} ✓  {' · '.join(teile)}  ({stand})"
 

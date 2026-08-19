@@ -169,8 +169,17 @@ class AnbieterFehler(RuntimeError):
 
 # ── Embedding ─────────────────────────────────────────────────────────────────
 
-def embedding_funktion(name: str | None = None) -> tuple[Callable[[list[str]], np.ndarray], str]:
-    """Gibt (embed, bezeichnung) zurück. Bricht ab, wenn etwas fehlt."""
+# Das Modell je Anbieter. Es steht hier und nicht in der Funktion, weil sein
+# Name inzwischen ein Schlüssel ist: src/neu/vektoren.py legt die Vektoren der
+# Einheiten darunter ab. Ändert sich der Name, ohne dass sich das Modell
+# ändert, wird alles einmal umsonst neu gerechnet; ändert sich das Modell,
+# ohne dass sich der Name ändert, wird mit falschen Werten gerechnet — das
+# zweite ist der Grund, den Namen an einer Stelle zu führen.
+EMBEDDING_MODELLE = {"local": "BAAI/bge-m3", "voyage": "voyage-4"}
+
+
+def _embedding_anbieter(name: str | None = None) -> str:
+    """Der eingestellte Anbieter, geprüft. Kein Rückfall, kein Modellaufruf."""
     anbieter = (name or os.environ.get("EMBEDDING_PROVIDER") or "").lower()
     if not anbieter:
         raise AnbieterFehler(
@@ -184,6 +193,21 @@ def embedding_funktion(name: str | None = None) -> tuple[Callable[[list[str]], n
             + " | ".join(EMBEDDING_ANBIETER),
             "embedding_anbieter_unbekannt",
         )
+    return anbieter
+
+
+def embedding_modellname(name: str | None = None) -> str:
+    """Welches Modell gilt — ohne es zu laden und ohne Schlüsselprüfung.
+
+    Wer nur wissen will, unter welchem Schlüssel die Vektoren liegen, soll
+    dafür kein halbes Gigabyte in den Speicher holen.
+    """
+    return EMBEDDING_MODELLE[_embedding_anbieter(name)]
+
+
+def embedding_funktion(name: str | None = None) -> tuple[Callable[[list[str]], np.ndarray], str]:
+    """Gibt (embed, bezeichnung) zurück. Bricht ab, wenn etwas fehlt."""
+    anbieter = _embedding_anbieter(name)
 
     if anbieter == "voyage":
         if not os.environ.get("VOYAGE_API_KEY"):
@@ -194,14 +218,14 @@ def embedding_funktion(name: str | None = None) -> tuple[Callable[[list[str]], n
         from src.generalized.embeddings import VoyageProvider
 
         provider = VoyageProvider()
-        return (lambda texte: provider.encode(list(texte))), "voyage-4"
+        return (lambda texte: provider.encode(list(texte))), EMBEDDING_MODELLE["voyage"]
 
     from src.generalized.embeddings import BGEProvider
 
     provider = BGEProvider()
     # Die Vorlage embeddet mit batch_size=16, BGEProvider mit 32. Rechnerisch
     # identisch, nur andere Stapelgröße.
-    return (lambda texte: provider.encode(list(texte))), "BAAI/bge-m3"
+    return (lambda texte: provider.encode(list(texte))), EMBEDDING_MODELLE["local"]
 
 
 # ── Sprachmodell ──────────────────────────────────────────────────────────────

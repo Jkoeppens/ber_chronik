@@ -500,6 +500,11 @@ class KategorienListe(BaseModel):
     anzahl_manuell_zugeordnet: int = Field(
         description="Handkorrekturen — vor jedem Neulauf sicher"
     )
+    einheiten_ohne_vektor: int | None = Field(
+        description="Wie viele Einheiten beim nächsten Zuordnen erst embeddet "
+                    "werden müssen. 0 heißt: das Speichern ist in etwa einer "
+                    "Sekunde durch. null, wenn kein Embedding-Anbieter steht."
+    )
 
 
 class KategorieEintrag(BaseModel):
@@ -578,7 +583,14 @@ class AnbieterLage(BaseModel):
 
     anbieter: str | None = Field(description="null heißt: nicht gesetzt")
     bekannt: bool = Field(description="steht im Wertevorrat")
-    modell: str | None
+    modell: str | None = Field(
+        description="Beim Embedding: das Modell für Themen und Zuordnung"
+    )
+    modell_akteure: str | None = Field(
+        description="Nur beim Embedding: das Modell fürs Zusammenführen von "
+                    "Akteuren. Bei 'local' ein anderes als modell; beim "
+                    "Sprachmodell immer null.",
+    )
     schluessel_name: str | None = Field(
         description="Welche Variable gebraucht wird; null bei lokalen Anbietern"
     )

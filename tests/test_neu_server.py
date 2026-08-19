@@ -226,9 +226,22 @@ def test_konfiguration_liefert_die_lage(client: TestClient) -> None:
     }
     for teil in ("embedding", "llm"):
         assert set(body[teil]) == {
-            "anbieter", "bekannt", "modell", "schluessel_name",
+            "anbieter", "bekannt", "modell", "modell_akteure", "schluessel_name",
             "schluessel_vorhanden", "einsatzbereit", "hinweis",
         }
+
+
+def test_lokales_embedding_nennt_beide_modelle(client: TestClient, monkeypatch) -> None:
+    """'local' sind zwei Modelle mit zwei Aufgaben; modell ist das der Kategorien.
+
+    Diese Stelle nannte lange nur MiniLM, und die Taxonomiefläche schrieb es an
+    den Kopf, wo bge-m3 rechnete. Seit der Modellname der Schlüssel des
+    Vektorspeichers ist, wäre das eine falsche Auskunft über den Speicher.
+    """
+    monkeypatch.setenv("EMBEDDING_PROVIDER", "local")
+    e = client.get("/api/konfiguration").json()["embedding"]
+    assert e["modell"] == "BAAI/bge-m3"
+    assert e["modell_akteure"] == "paraphrase-multilingual-MiniLM-L12-v2"
 
 
 def test_konfiguration_verraet_keine_schluessel(client: TestClient, monkeypatch) -> None:

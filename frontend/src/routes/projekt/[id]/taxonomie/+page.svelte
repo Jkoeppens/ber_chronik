@@ -70,7 +70,13 @@
 		if (s.status === 'laeuft') {
 			const phase = String(p.phase ?? 'beginnt');
 			const runde = p.runde ? ` · Runde ${p.runde}/${p.runden_max}` : '';
-			return `läuft (${phase}${runde}) — Lauf ${s.id}, seit ${s.begonnen_am}`;
+			// Beim Embedden interessiert nur, wie viel davon gerechnet werden muss
+			// — der Rest liegt gespeichert und kostet nichts.
+			const vektoren =
+				phase === 'embedding' && p.zu_rechnen !== undefined
+					? ` · ${p.zu_rechnen} zu rechnen, ${p.aus_speicher} gespeichert`
+					: '';
+			return `läuft (${phase}${runde}${vektoren}) — Lauf ${s.id}, seit ${s.begonnen_am}`;
 		}
 		if (s.status === 'fehler') return `fehlgeschlagen: ${s.fehler ?? 'ohne Meldung'}`;
 		if (s.schritt === 'klassifikation')
@@ -164,6 +170,13 @@
 
 	// ── Neu zuordnen — nur wenn es etwas zu tun gibt ─────────────────────────
 	const offeneEinheiten = $derived(stand?.anzahl_ohne_kategorie ?? 0);
+
+	// Wie viele Einheiten beim nächsten Zuordnen erst eingebettet werden müssen.
+	// Sind es null, ist das Speichern in etwa einer Sekunde durch, und eine
+	// angekündigte Dauer wäre eine Warnung vor nichts. null (unbekannt, kein
+	// Anbieter) wird wie 0 behandelt: der Lauf scheitert dann ohnehin mit einer
+	// Meldung, und eine geratene Sekundenzahl macht sie nicht verständlicher.
+	const ohneVektor = $derived(stand?.einheiten_ohne_vektor ?? 0);
 	let zuordnungsLauf = $state<LaufStand | null>(null);
 	let ordnetZu = $state(false);
 
@@ -277,10 +290,12 @@
 
 		{#if geaendert}
 			<span class="leer">
-				Speichern schreibt die Beschreibungen und ordnet danach alle Einheiten neu zu —
-				bei {einheiten.length} Einheiten dauert das etwa
-				{Math.max(5, Math.round(einheiten.length / 22))} Sekunden. Ohne Speichern geht die
-				Änderung verloren.
+				Speichern schreibt die Beschreibungen und ordnet danach alle Einheiten neu zu.
+				{#if ohneVektor > 0}
+					{ohneVektor} Einheiten müssen dafür erst eingebettet werden, das dauert etwa
+					{Math.max(5, Math.round(ohneVektor / 32))} Sekunden.
+				{/if}
+				Ohne Speichern geht die Änderung verloren.
 			</span>
 		{/if}
 
