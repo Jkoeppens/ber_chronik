@@ -523,6 +523,13 @@ class DropboxOrdnerRumpf(BaseModel):
     ordner: str = Field(min_length=1, description="Pfad im App-Ordner, z.B. /Dropbox_test1")
 
 
+class DropboxOrdnerListe(BaseModel):
+    """Was im App-Ordner liegt — zur Auswahl, statt zum Auswendiglernen."""
+
+    projekt_id: str
+    ordner: list[str] = Field(description="Pfade wie /Dropbox_test1")
+
+
 class AnmeldungBeginn(BaseModel):
     auth_url: str = Field(description="Dorthin schickt man den Browser")
     csrf: str

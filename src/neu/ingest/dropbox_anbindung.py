@@ -165,6 +165,26 @@ def relativer_pfad(voller_pfad: str, ordner: str) -> str:
     return str(PurePosixPath(voll.lstrip("/")))
 
 
+def ordner_liste(dbx) -> list[str]:
+    """Die Ordner im App-Ordner, alphabetisch.
+
+    Ein Aufruf mit leerem Pfad: das ist die Wurzel aus Sicht der App. Damit
+    muss niemand den Ordnernamen auswendig wissen — der alte Weg hatte nur ein
+    Textfeld.
+    """
+    import dropbox.files
+
+    antwort = dbx.files_list_folder("")
+    eintraege = list(antwort.entries)
+    while antwort.has_more:
+        antwort = dbx.files_list_folder_continue(antwort.cursor)
+        eintraege.extend(antwort.entries)
+    return sorted(
+        e.path_display for e in eintraege
+        if isinstance(e, dropbox.files.FolderMetadata)
+    )
+
+
 def md_dateien(dbx, ordner: str) -> list[tuple[str, str]]:
     """Alle .md-Dateien im Ordner als (relativer_pfad, path_display).
 

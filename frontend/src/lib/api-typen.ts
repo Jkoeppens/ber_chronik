@@ -145,6 +145,14 @@ export interface paths {
         /**
          * Quelle Anlegen
          * @description Liest eine Quelle ein und legt quelle, einheit und lauf an.
+         *
+         *     Ein DOCX kommt aus data/raw/ — dorthin legt der Upload es ab, und ein Pfad
+         *     aus dem Netz darf nicht ins übrige Dateisystem zeigen.
+         *
+         *     Ein Obsidian-Ordner liegt dort nie: er liegt in Dropbox oder als
+         *     absoluter Pfad auf der Platte, etwa unter ~/Library/CloudStorage/. Für
+         *     Sammlungen gilt die data/raw/-Bindung deshalb nicht — geprüft wird, dass
+         *     der Pfad ein vorhandenes Verzeichnis ist.
          */
         post: operations["quelle_anlegen_api_projekt__projekt_id__quelle_post"];
         delete?: never;
@@ -464,6 +472,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projekt/{projekt_id}/dropbox/ordner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dropbox Ordner Auflisten
+         * @description Die Ordner im App-Ordner — damit man den Namen nicht wissen muss.
+         *
+         *     Ein Aufruf: files_list_folder(""). Die App sieht nur ihren eigenen Ordner,
+         *     nicht die ganze Dropbox.
+         */
+        get: operations["dropbox_ordner_auflisten_api_projekt__projekt_id__dropbox_ordner_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projekt/{projekt_id}/quelle/dropbox": {
         parameters: {
             query?: never;
@@ -759,6 +790,19 @@ export interface components {
             datierung_herkunft: string;
             /** Datierung Lauf Id */
             datierung_lauf_id: number | null;
+        };
+        /**
+         * DropboxOrdnerListe
+         * @description Was im App-Ordner liegt — zur Auswahl, statt zum Auswendiglernen.
+         */
+        DropboxOrdnerListe: {
+            /** Projekt Id */
+            projekt_id: string;
+            /**
+             * Ordner
+             * @description Pfade wie /Dropbox_test1
+             */
+            ordner: string[];
         };
         /**
          * DropboxOrdnerRumpf
@@ -1480,6 +1524,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -1529,6 +1582,15 @@ export interface operations {
             };
             /** @description Serverfehler */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1596,6 +1658,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -1647,6 +1718,15 @@ export interface operations {
             };
             /** @description Serverfehler */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1712,6 +1792,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -1766,6 +1855,15 @@ export interface operations {
             };
             /** @description Serverfehler */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1835,6 +1933,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -1890,6 +1997,15 @@ export interface operations {
             };
             /** @description Serverfehler */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1959,6 +2075,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -2014,6 +2139,15 @@ export interface operations {
             };
             /** @description Serverfehler */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2083,6 +2217,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -2138,6 +2281,15 @@ export interface operations {
             };
             /** @description Serverfehler */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2207,6 +2359,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -2262,6 +2423,15 @@ export interface operations {
             };
             /** @description Serverfehler */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2329,6 +2499,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -2380,6 +2559,15 @@ export interface operations {
             };
             /** @description Serverfehler */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2449,6 +2637,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -2511,6 +2708,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -2562,6 +2768,15 @@ export interface operations {
             };
             /** @description Serverfehler */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2631,6 +2846,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -2689,6 +2913,82 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    dropbox_ordner_auflisten_api_projekt__projekt_id__dropbox_ordner_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DropboxOrdnerListe"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Anbieter nicht verfügbar */
             503: {
                 headers: {
@@ -2740,6 +3040,15 @@ export interface operations {
             };
             /** @description Serverfehler */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };

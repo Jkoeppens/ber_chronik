@@ -74,6 +74,7 @@ from src.neu.modelle import (  # noqa: E402
     AkteurErkennungAntwort,
     AkteureErkennenRumpf,
     AnmeldungBeginn,
+    DropboxOrdnerListe,
     DropboxOrdnerRumpf,
     DropboxStand,
     Einheit,
@@ -111,6 +112,7 @@ FEHLER_ANTWORTEN = {
     404: {"model": FehlerAntwort, "description": "Nicht gefunden"},
     422: {"model": FehlerAntwort, "description": "Ungültiger Parameter"},
     500: {"model": FehlerAntwort, "description": "Serverfehler"},
+    502: {"model": FehlerAntwort, "description": "Ein Dienst dahinter antwortet nicht"},
     503: {"model": FehlerAntwort, "description": "Anbieter nicht verfügbar"},
 }
 
@@ -378,8 +380,30 @@ def einheiten(
     status_code=201,
 )
 def quelle_anlegen(projekt_id: str, rumpf: QuelleAnlegen) -> IngestAntwort:
-    """Liest eine Quelle ein und legt quelle, einheit und lauf an."""
-    pfad = _pfad_in_rohdaten(rumpf.pfad)
+    """Liest eine Quelle ein und legt quelle, einheit und lauf an.
+
+    Ein DOCX kommt aus data/raw/ — dorthin legt der Upload es ab, und ein Pfad
+    aus dem Netz darf nicht ins übrige Dateisystem zeigen.
+
+    Ein Obsidian-Ordner liegt dort nie: er liegt in Dropbox oder als
+    absoluter Pfad auf der Platte, etwa unter ~/Library/CloudStorage/. Für
+    Sammlungen gilt die data/raw/-Bindung deshalb nicht — geprüft wird, dass
+    der Pfad ein vorhandenes Verzeichnis ist.
+    """
+    if rumpf.quellformat == "pressesammlung":
+        pfad = Path(rumpf.pfad).expanduser()
+        if not pfad.is_absolute():
+            pfad = (ROHDATEN / pfad).resolve()
+        if not pfad.is_dir():
+            raise HTTPException(
+                status_code=422,
+                detail=("ordner_nicht_gefunden",
+                        f"'{rumpf.pfad}' ist kein vorhandenes Verzeichnis. Für "
+                        "eine Sammlung wird ein Ordner erwartet — lokal ein "
+                        "absoluter Pfad, sonst der Weg über Dropbox."),
+            )
+    else:
+        pfad = _pfad_in_rohdaten(rumpf.pfad)
 
     con = verbindung_schreibend()
     try:
@@ -815,6 +839,41 @@ def dropbox_rueckleitung(code: str = "", state: str = "") -> HTMLResponse:
         "<p style='font-size:12px;color:#888'>Dieses Fenster kann geschlossen werden.</p>"
         "<script>setTimeout(() => window.close(), 2500)</script></body>"
     )
+
+
+@app.get(
+    "/api/projekt/{projekt_id}/dropbox/ordner",
+    response_model=DropboxOrdnerListe,
+    responses=FEHLER_ANTWORTEN,
+)
+def dropbox_ordner_auflisten(projekt_id: str) -> DropboxOrdnerListe:
+    """Die Ordner im App-Ordner — damit man den Namen nicht wissen muss.
+
+    Ein Aufruf: files_list_folder(""). Die App sieht nur ihren eigenen Ordner,
+    nicht die ganze Dropbox.
+    """
+    con = verbindung()
+    try:
+        token = anmelde_dienst.token(con, projekt_id)
+    except AnmeldungFehler as exc:
+        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    try:
+        dbx = dropbox_anbindung.klient(token)
+        return DropboxOrdnerListe(
+            projekt_id=projekt_id, ordner=dropbox_anbindung.ordner_liste(dbx)
+        )
+    except AnbieterFehler as exc:
+        raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=("dropbox_nicht_erreichbar",
+                    f"Dropbox antwortet nicht wie erwartet: {exc}"),
+        )
 
 
 @app.post(

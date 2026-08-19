@@ -1,11 +1,16 @@
 <script lang="ts">
 	import {
 		ApiFehler,
+		beginneDropboxAnmeldung,
 		exportiere,
+		ladeDropboxOrdner,
+		ladeDropboxStand,
 		ladeProjekte,
 		legeProjektAn,
 		leseDateiEin,
+		leseDropboxEin,
 		lesePfadEin,
+		setzeDropboxOrdner,
 		vizAdresse,
 		type IngestAntwort,
 		type ProjektZeile,
@@ -34,8 +39,21 @@
 
 	// Eine Pressesammlung kommt als Obsidian-Ordner, die beiden anderen als DOCX.
 	const istSammlung = $derived(quellformat === 'pressesammlung');
+
+	// Bei einer Sammlung gibt es zwei Wege: Dropbox oder ein lokaler Ordner.
+	let weg = $state<'dropbox' | 'lokal'>('dropbox');
+	let dbProjekt = $state<string | null>(null);   // angelegt, sobald verbunden wird
+	let dbVerbunden = $state(false);
+	let dbOrdnerListe = $state<string[]>([]);
+	let dbWartet = $state(false);
+
 	const bereit = $derived(
-		titel.trim().length > 0 && (istSammlung ? ordner.trim().length > 0 : datei !== null)
+		titel.trim().length > 0 &&
+			(istSammlung
+				? weg === 'dropbox'
+					? dbVerbunden && ordner.trim().length > 0
+					: ordner.trim().length > 0
+				: datei !== null)
 	);
 
 	function zuruecksetzen() {
@@ -43,8 +61,62 @@
 		datei = null;
 		ordner = '';
 		quellformat = 'literaturexzerpt';
+		weg = 'dropbox';
+		dbProjekt = null;
+		dbVerbunden = false;
+		dbOrdnerListe = [];
 		fehler = null;
 		ergebnis = null;
+	}
+
+	/**
+	 * Verbindet mit Dropbox. Das Projekt muss dafür schon bestehen — der Token
+	 * gehört einem Projekt, nicht einer Sitzung. Es wird deshalb hier angelegt
+	 * und bleibt stehen, auch wenn die Anmeldung abbricht: sichtbar in der
+	 * Liste, und ein zweiter Versuch braucht keinen neuen Namen.
+	 */
+	async function mitDropboxVerbinden() {
+		laeuft = true;
+		fehler = null;
+		try {
+			if (!dbProjekt) {
+				dbProjekt = (await legeProjektAn(titel.trim())).id;
+				nachgeladen = (await ladeProjekte()).projekte;
+			}
+			const beginn = await beginneDropboxAnmeldung(dbProjekt);
+			window.open(beginn.auth_url, 'dropbox', 'width=680,height=760');
+			await aufVerbindungWarten(dbProjekt);
+		} catch (e) {
+			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
+		} finally {
+			laeuft = false;
+		}
+	}
+
+	/**
+	 * Wartet, bis die Rückleitung angekommen ist. Das Fenster schließt sich
+	 * selbst und kann der Seite nichts sagen; gefragt wird deshalb der Server,
+	 * bei dem der Token landet.
+	 */
+	async function aufVerbindungWarten(projektId: string) {
+		dbWartet = true;
+		try {
+			for (let versuch = 0; versuch < 150; versuch++) {
+				await new Promise((r) => setTimeout(r, 2000));
+				const stand = await ladeDropboxStand(projektId);
+				if (stand.verbunden) {
+					dbVerbunden = true;
+					dbOrdnerListe = (await ladeDropboxOrdner(projektId)).ordner;
+					if (dbOrdnerListe.length === 1) ordner = dbOrdnerListe[0];
+					return;
+				}
+			}
+			fehler =
+				'Die Anmeldung ist nach fünf Minuten nicht angekommen. ' +
+				'Sie können sie über das Projekt erneut beginnen.';
+		} finally {
+			dbWartet = false;
+		}
 	}
 
 	function dateiGewaehlt(ereignis: Event) {
@@ -57,13 +129,18 @@
 		fehler = null;
 		ergebnis = null;
 		try {
-			const projekt = await legeProjektAn(titel.trim());
 			// Zwei Schritte, ein Knopf: erst die Zeile, dann die Quelle. Schlägt das
 			// Einlesen fehl, bleibt das leere Projekt stehen — sichtbar in der Liste,
 			// und ein zweiter Versuch braucht keinen neuen Namen.
-			ergebnis = istSammlung
-				? await lesePfadEin(projekt.id, ordner.trim(), quellformat)
-				: await leseDateiEin(projekt.id, datei as File, quellformat);
+			const projektId = dbProjekt ?? (await legeProjektAn(titel.trim())).id;
+			if (istSammlung && weg === 'dropbox') {
+				await setzeDropboxOrdner(projektId, ordner.trim());
+				ergebnis = await leseDropboxEin(projektId);
+			} else if (istSammlung) {
+				ergebnis = await lesePfadEin(projektId, ordner.trim(), quellformat);
+			} else {
+				ergebnis = await leseDateiEin(projektId, datei as File, quellformat);
+			}
 			nachgeladen = (await ladeProjekte()).projekte;
 			titel = '';
 			datei = null;
@@ -155,12 +232,47 @@
 				</select>
 			</div>
 
+			{#if istSammlung}
+				<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+					<label style="display:flex;gap:5px;align-items:center;font-size:12px">
+						<input type="radio" bind:group={weg} value="dropbox" disabled={laeuft} />
+						Aus Dropbox
+					</label>
+					<label style="display:flex;gap:5px;align-items:center;font-size:12px">
+						<input type="radio" bind:group={weg} value="lokal" disabled={laeuft} />
+						Lokaler Ordner
+					</label>
+				</div>
+			{/if}
+
 			<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-				{#if istSammlung}
+				{#if istSammlung && weg === 'dropbox'}
+					{#if !dbVerbunden}
+						<button
+							class="btn btn-outline"
+							disabled={!titel.trim() || laeuft || dbWartet}
+							onclick={mitDropboxVerbinden}
+						>
+							{dbWartet ? 'Warte auf die Anmeldung …' : 'Mit Dropbox verbinden'}
+						</button>
+						<span class="leer">
+							{dbWartet
+								? 'Das Fenster schließt sich nach der Zustimmung von selbst.'
+								: 'Legt das Projekt an und öffnet die Dropbox-Anmeldung.'}
+						</span>
+					{:else}
+						<select class="input" style="flex:1;min-width:240px" bind:value={ordner} disabled={laeuft}>
+							<option value="" disabled>Ordner auswählen …</option>
+							{#each dbOrdnerListe as o (o)}
+								<option value={o}>{o}</option>
+							{/each}
+						</select>
+					{/if}
+				{:else if istSammlung}
 					<input
 						class="input"
-						style="flex:1;min-width:240px"
-						placeholder="Ordner unterhalb von data/raw/"
+						style="flex:1;min-width:280px"
+						placeholder="Absoluter Pfad, z.B. /Users/…/Dropbox/Apps/ber-chronik/Dropbox_test1"
 						bind:value={ordner}
 						disabled={laeuft}
 					/>
@@ -174,9 +286,11 @@
 						disabled={laeuft}
 					/>
 				{/if}
-				<button class="btn btn-primary" disabled={!bereit || laeuft} onclick={anlegenUndEinlesen}>
-					{laeuft ? 'Liest ein …' : 'Anlegen und einlesen'}
-				</button>
+				{#if !(istSammlung && weg === 'dropbox' && !dbVerbunden)}
+					<button class="btn btn-primary" disabled={!bereit || laeuft} onclick={anlegenUndEinlesen}>
+						{laeuft ? 'Liest ein …' : dbProjekt ? 'Einlesen' : 'Anlegen und einlesen'}
+					</button>
+				{/if}
 			</div>
 
 			{#if fehler}

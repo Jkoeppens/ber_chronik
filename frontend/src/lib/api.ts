@@ -27,6 +27,7 @@ export type ExportAntwort = components['schemas']['ExportAntwort'];
 export type Quellformat = components['schemas']['QuelleAnlegen']['quellformat'];
 export type DropboxStand = components['schemas']['DropboxStand'];
 export type AnmeldungBeginn = components['schemas']['AnmeldungBeginn'];
+export type DropboxOrdnerListe = components['schemas']['DropboxOrdnerListe'];
 
 /** Die eine Fehlergestalt des Servers — auch sie kommt aus dem Schema. */
 type ServerFehler = components['schemas']['FehlerAntwort'];
@@ -174,6 +175,11 @@ export function beginneDropboxAnmeldung(projektId: string): Promise<AnmeldungBeg
 		`/api/projekt/${encodeURIComponent(projektId)}/dropbox/anmeldung`,
 		{ method: 'POST' }
 	);
+}
+
+/** Die Ordner im App-Ordner — zur Auswahl statt zum Tippen. */
+export function ladeDropboxOrdner(projektId: string): Promise<DropboxOrdnerListe> {
+	return ruf<DropboxOrdnerListe>(`/api/projekt/${encodeURIComponent(projektId)}/dropbox/ordner`);
 }
 
 /** Liest den eingestellten Dropbox-Ordner ein — beim zweiten Mal fortsetzend. */
