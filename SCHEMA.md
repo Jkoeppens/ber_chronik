@@ -409,6 +409,20 @@ Oberfläche vergeben.
 Spalte ist einem Namen nicht anzusehen, ob je ein Mensch ihn geprüft hat.
 Kein Vorgabewert: der Erzeuger muss sich äußern.
 
+**Die Regel dazu:** ein Taxonomielauf ersetzt nur, was er selbst vorgeschlagen
+hat. `manuell`-Zeilen gehen als von Anfang an eingefrorene Cluster in den Lauf —
+sie wirken auf die Rechnung und stehen im Prompt, damit sich die anderen von
+ihnen abgrenzen, werden aber nicht umgeschrieben. Das ist dieselbe Regel wie
+`kategorie_herkunft='manuell'` bei `einheit`, eine Ebene höher.
+
+**Kennungen bleiben.** Der Lauf schreibt in die vorhandenen Zeilen (`cid` ist die
+Position in der nach `id` sortierten Liste, die er bekommen hat) und legt nur
+kalt neue an. Ein `DELETE FROM kategorie WHERE projekt_id = ?` gibt es nicht: es
+hat die Handarbeit mitgenommen, alle Kennungen neu vergeben — SQLite vergibt
+freigewordene rowids wieder, sodass dieselbe Zahl danach eine andere Kategorie
+bezeichnete — und jede Einheit über `ON DELETE SET NULL` kurzzeitig ohne
+Kategorie dastehen lassen.
+
 ### `akteur`
 
 **Ergänzt:** `status` mit zwei Werten, projektweit. Ablehnungen liegen heute in

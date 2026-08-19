@@ -85,6 +85,8 @@
 			`${p.n_clusters} Kategorien nach ${p.llm_calls} Runden` +
 				(p.fruehzeitig_beendet ? ' (früh stabil)' : ''),
 			`${p.anzahl_zugeordnet} Einheiten zugeordnet, ${p.anzahl_geschuetzt} Handkorrekturen unberührt`,
+			`${p.anzahl_unangetastet ?? 0} Kategorien von Hand gepflegt und nicht umgeschrieben`,
+			...((p.warnungen ?? []) as string[]).map((w) => `⚠ ${w}`),
 			`eingefroren: ${JSON.stringify(p.eingefroren ?? [])}`,
 			`${p.embedding_modell} / ${p.llm_modell}`,
 			`${p.in_tokens} Token ein, ${p.out_tokens} aus — $${Number(p.kosten_usd ?? 0).toFixed(4)}`,
@@ -158,8 +160,11 @@
 		fehler = null;
 		speicherLauf = null;
 		try {
-			const begonnen = await speichereKategorien(data.projektId, zeilen);
-			await verfolgeLauf(begonnen.lauf_id, (s) => (speicherLauf = s));
+			const gespeichert = await speichereKategorien(data.projektId, zeilen);
+			// Ohne Kategorien gibt es nichts zuzuordnen, also auch keinen Lauf.
+			if (gespeichert.lauf_id !== null) {
+				await verfolgeLauf(gespeichert.lauf_id, (s) => (speicherLauf = s));
+			}
 			await allesNeuLaden();
 		} catch (e) {
 			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
@@ -237,14 +242,18 @@
 		<span class="section-label">Themen</span>
 		<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
 			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-				<button class="btn btn-primary" disabled={beschaeftigt} onclick={themenlauf}>
+				<button
+					class="btn btn-primary"
+					disabled={beschaeftigt || geaendert}
+					onclick={themenlauf}
+				>
 					{laeuft
 						? 'Läuft …'
 						: hatKategorien
 							? 'Taxonomie verfeinern'
 							: 'Themen vorschlagen'}
 				</button>
-				{#if !hatKategorien}
+				{#if !hatKategorien && !geaendert}
 					<label class="leer" style="display:flex;gap:5px;align-items:center">
 						Cluster
 						<input
@@ -259,10 +268,20 @@
 					</label>
 				{/if}
 				<span class="leer" style="flex:1;min-width:260px">
-					{hatKategorien
-						? `Nimmt die ${stand.anzahl} vorhandenen Kategorien als Ausgangspunkt und ` +
-							'schärft sie. Um bei null anzufangen, erst alle Kategorien löschen.'
-						: 'Findet Themen im Material und ordnet dabei jede Einheit zu — in einem Zug.'}
+					{#if geaendert}
+						<!-- Der Lauf liest die Datenbank, der Entwurf steht daneben. Beides
+						     gleichzeitig hieße, einen Lauf auf einen Stand loszulassen, den
+						     der Historiker gerade nicht ansieht — und sein Ergebnis danach
+						     den Entwurf ohne Nachfrage überschreiben zu lassen. -->
+						<strong>Erst speichern.</strong> Der Lauf rechnet mit dem gespeicherten Stand, nicht
+						mit den Änderungen im Editor.
+					{:else if hatKategorien}
+						Nimmt die {stand.anzahl} vorhandenen Kategorien als Ausgangspunkt und schärft sie.
+						Von Hand gepflegte bleiben unangetastet. Um bei null anzufangen, erst alle
+						Kategorien löschen.
+					{:else}
+						Findet Themen im Material und ordnet dabei jede Einheit zu — in einem Zug.
+					{/if}
 				</span>
 			</div>
 			{#if lauf}

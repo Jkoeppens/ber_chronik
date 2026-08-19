@@ -496,6 +496,10 @@ export interface paths {
          *
          *     Was stattdessen aufhört: die Fläche kündigt eine Dauer nur an, wenn
          *     einheiten_ohne_vektor aus GET …/kategorien größer als null ist.
+         *
+         *     Eine leere Liste ist ein gültiger Sollzustand — alle Kategorien weg — und
+         *     hängt keinen Lauf an: es gibt nichts, wogegen zugeordnet werden könnte.
+         *     Dann kommt lauf_id null zurück.
          */
         put: operations["kategorien_speichern_api_projekt__projekt_id__kategorien_put"];
         /**
@@ -1250,6 +1254,35 @@ export interface components {
              * @description Wie viele Einheiten darauf zeigen
              */
             anzahl_einheiten: number;
+        };
+        /**
+         * KategorienGespeichert
+         * @description Antwort auf PUT /api/projekt/{id}/kategorien.
+         *
+         *     Kein LaufBegonnen, weil es nicht immer einen Lauf gibt: wer alle Kategorien
+         *     entfernt, hat nichts, wogegen zugeordnet werden könnte. Dann ist lauf_id
+         *     null und das Speichern ist fertig — vorher scheiterte an dieser Stelle ein
+         *     Lauf mit 'keine_taxonomie', obwohl das Löschen gelungen war.
+         */
+        KategorienGespeichert: {
+            /** Projekt Id */
+            projekt_id: string;
+            /**
+             * Anzahl
+             * @description Kategorien nach dem Speichern
+             */
+            anzahl: number;
+            /** Angelegt */
+            angelegt: number;
+            /** Geaendert */
+            geaendert: number;
+            /** Geloescht */
+            geloescht: number;
+            /**
+             * Lauf Id
+             * @description Der Zuordnungslauf; null, wenn es nichts zuzuordnen gibt
+             */
+            lauf_id: number | null;
         };
         /** KategorienListe */
         KategorienListe: {
@@ -3269,7 +3302,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LaufBegonnen"];
+                    "application/json": components["schemas"]["KategorienGespeichert"];
                 };
             };
             /** @description Nicht gefunden */

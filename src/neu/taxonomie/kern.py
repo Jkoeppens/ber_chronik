@@ -126,6 +126,9 @@ class Vorschlag:
     in_tokens: int = 0
     out_tokens: int = 0
     fruehzeitig_beendet: bool = False
+    # Was schieflief, ohne den Lauf zu beenden: teilweise gelesene Antworten.
+    # Eine leere Liste heißt, dass jede Runde vollständig gelesen wurde.
+    warnungen: list[str] = field(default_factory=list)
 
 
 # ── Bausteine ─────────────────────────────────────────────────────────────────
@@ -260,13 +263,53 @@ def baue_prompt(
     )
 
 
-def parse_antwort(roh: str, n_clusters: int = N_CLUSTERS) -> list[tuple[str, str] | None]:
-    """'## Gruppe N / Titel / Beschreibung' → [(titel, text), …] oder None.
+# Die Kopfzeile einer Gruppe. Der Prompt verlangt '## Gruppe N', aber welche
+# Auszeichnung ein Modell daraus macht, ist Geschmackssache seines Trainings:
+# llama3.2:3b schreibt durchgehend '**Gruppe 1**', andere 'Gruppe 1:'. Alle drei
+# meinen dasselbe, und an der Auszeichnung eine Antwort scheitern zu lassen, ist
+# keine Strenge, sondern eine Verwechslung von Form und Inhalt.
+#
+# Was streng bleibt: die Zeile muss aus dem Kopf bestehen und aus nichts sonst.
+# Sonst zerlegt ein 'Gruppe 1: die Texte …' mitten in einer Beschreibung die
+# Antwort an der falschen Stelle. '## Gruppe 1: Titel' wird deshalb nicht
+# gelesen — und das fällt jetzt auf, weil ein Lauf ohne gelesene Gruppe scheitert.
+GRUPPENKOPF = re.compile(
+    r"^[ \t]*(?:#{1,6}[ \t]*)?\*{0,3}[ \t]*Gruppe[ \t]+(\d+)[ \t]*\*{0,3}[ \t]*:?[ \t]*$",
+    re.MULTILINE,
+)
 
-    Fehlende Gruppen → None; das vorherige Label bleibt dann stehen.
+
+class UnlesbareAntwort(ValueError):
+    """Das Modell hat geantwortet, aber keine einzige Gruppe war darin zu finden.
+
+    Kein Sonderfall von 'nichts hat sich geändert': wenn keine Gruppe gelesen
+    wurde, behält der Kreislauf seinen Stand, embeddet nichts zurück und friert
+    nichts ein — die nächste Runde bekommt denselben Prompt und scheitert
+    genauso. Vier Aufrufe später steht dann ein Ergebnis da, das keines ist.
+    Deshalb sofort und laut.
+    """
+
+    def __init__(self, runde: int, roh: str, auszug_zeichen: int = 800):
+        self.runde = runde
+        self.roh = roh
+        auszug = roh.strip()[:auszug_zeichen]
+        if len(roh.strip()) > auszug_zeichen:
+            auszug += " …"
+        super().__init__(
+            f"In Runde {runde} war keine einzige Gruppe zu lesen. Erwartet wird je "
+            f"Gruppe eine Zeile, die nur aus dem Kopf besteht: '## Gruppe N', "
+            f"'**Gruppe N**' oder 'Gruppe N:'. Das Modell antwortete:\n{auszug}"
+        )
+
+
+def parse_antwort(roh: str, n_clusters: int = N_CLUSTERS) -> list[tuple[str, str] | None]:
+    """'Gruppe N / Titel / Beschreibung' → [(titel, text), …] oder None.
+
+    Fehlende Gruppen → None; das vorherige Label bleibt dann stehen. Erkannt
+    werden alle drei Kopfformen aus GRUPPENKOPF.
     """
     ergebnis: list[tuple[str, str] | None] = [None] * n_clusters
-    teile = re.split(r"^##\s*Gruppe\s+(\d+)\s*$", roh, flags=re.MULTILINE)
+    teile = GRUPPENKOPF.split(roh)
     i = 1
     while i + 1 < len(teile):
         try:
@@ -307,6 +350,7 @@ def verfeinern(
     km_interval: int = KM_INTERVAL,
     early_stop_delta: float = EARLY_STOP_DELTA,
     warm_start: Sequence[dict] | None = None,
+    eingefroren_start: Sequence[int] | None = None,
 ) -> Vorschlag:
     """Der iterative Kreislauf, unverändert nach _run_tfidf_anchor.
 
@@ -322,44 +366,64 @@ def verfeinern(
 
     embed        : Texte → normalisierte Embeddings
     frage_modell : (prompt, system) → (antwort, in_tokens, out_tokens)
-    warm_start   : vorhandene Kategorien als Ausgangspunkt des rolling context
+    warm_start   : vorhandene Kategorien als Ausgangspunkt. cid ist die Position
+                   in dieser Liste — die Zuordnung von Cluster zu Kategorie ist
+                   damit festgelegt und nicht dem Zufall von KMeans überlassen.
+    eingefroren_start : cids, die von Anfang an feststehen (die von Hand
+                   gepflegten Kategorien). Sie wirken auf die Rechnung und
+                   stehen im Prompt, werden aber nie umgeschrieben.
+
+    Wirft UnlesbareAntwort, wenn in einer Runde keine einzige Gruppe zu lesen
+    war. Teilweise gelesene Runden landen als Warnung im Vorschlag.
     """
     from sklearn.cluster import KMeans
 
     n_segs = len(texte)
     rng = np.random.default_rng(42)
-
-    labels = KMeans(n_clusters=n_clusters, random_state=42,
-                    n_init="auto").fit_predict(seg_embs)
-    label_embs = zentroide(seg_embs, labels, n_clusters)
+    warnungen: list[str] = []
 
     if warm_start:
+        # Warm heißt: von den vorhandenen Kategorien aus, nicht von einem
+        # frischen KMeans. Vorher lief beides nebeneinander — die Beschreibung
+        # der N-ten Kategorie ging als 'vorherige' in den Prompt für Gruppe N,
+        # während Gruppe N das N-te KMeans-Cluster war, das damit nichts zu tun
+        # hatte. Die Paarung war willkürlich, und deshalb verfeinerte
+        # 'verfeinern' nichts. Jetzt sind die Kategorien selbst die Label, und
+        # cid N ist Kategorie N.
         vt = list(warm_start)[:n_clusters]
         vorherige: list[str | None] = [c.get("description") or None for c in vt]
         zusammenfassungen: list[str] = [
             f"{c.get('name', '')}. {c.get('description', '')}"
-            if c.get("description") else c.get("name", f"Cluster {i+1}")
+            if c.get("description") else c.get("name") or f"Cluster {i+1}"
             for i, c in enumerate(vt)
         ]
         while len(vorherige) < n_clusters:
             vorherige.append(None)
         while len(zusammenfassungen) < n_clusters:
             zusammenfassungen.append(f"Cluster {len(zusammenfassungen)+1}")
+        label_embs = np.asarray(embed(list(zusammenfassungen)), dtype=np.float32)
+        labels = zuordnen(seg_embs, label_embs)
     else:
+        labels = KMeans(n_clusters=n_clusters, random_state=42,
+                        n_init="auto").fit_predict(seg_embs)
+        label_embs = zentroide(seg_embs, labels, n_clusters)
         vorherige = [None] * n_clusters
         zusammenfassungen = [f"Cluster {i+1}" for i in range(n_clusters)]
 
     vorherige_llm_runde: int | None = None
     kw_map: dict[int, list[str]] = {}
-    eingefroren: set[int] = set()
+    eingefroren: set[int] = set(eingefroren_start or ())
+    von_anfang_fest = set(eingefroren)
     sim_verlauf: dict[int, list[float]] = {cid: [] for cid in range(n_clusters)}
     llm_calls = 0
     in_ges = 0
     out_ges = 0
     runden: list[Runde] = []
-    frueh = False
+    frueh = len(eingefroren) >= n_clusters
 
-    max_km_iter = n_iter * km_interval
+    # Steht schon alles fest, gibt es nichts zu fragen. Ein Modellaufruf, dessen
+    # Antwort ohnehin verworfen würde, ist kein Nulltarif.
+    max_km_iter = 0 if frueh else n_iter * km_interval
 
     for km_iter in range(1, max_km_iter + 1):
         if km_iter % km_interval != 0:
@@ -376,6 +440,15 @@ def verfeinern(
         llm_calls += 1
         in_ges += in_tok
         out_ges += out_tok
+
+        gelesen = sum(1 for e in geparst if e is not None)
+        if gelesen == 0:
+            raise UnlesbareAntwort(km_iter // km_interval, roh)
+        if gelesen < n_clusters:
+            warnungen.append(
+                f"Runde {km_iter // km_interval}: nur {gelesen} von {n_clusters} "
+                f"Gruppen gelesen — die übrigen behalten ihre bisherige Beschreibung."
+            )
 
         neue_zusammenfassungen = []
         for cid, eintrag in enumerate(geparst):
@@ -447,6 +520,18 @@ def verfeinern(
 
     kategorien = []
     for cid in range(n_clusters):
+        if cid in von_anfang_fest:
+            # Wörtlich zurückgeben, nicht aus der Zusammenfassung rekonstruieren:
+            # das Zerlegen am ersten '. ' würde einen Namen zerschneiden, der
+            # selbst einen Punkt enthält. Was ein Mensch geschrieben hat, geht
+            # hier unangetastet durch.
+            vorlage = list(warm_start)[cid]
+            kategorien.append({
+                "name": vorlage.get("name", ""),
+                "description": vorlage.get("description", ""),
+                "keywords": list(vorlage.get("keywords") or []),
+            })
+            continue
         z = zusammenfassungen[cid]
         titel, text = (z.split(". ", 1) if ". " in z else (z, ""))
         kategorien.append({
@@ -464,4 +549,5 @@ def verfeinern(
         in_tokens=in_ges,
         out_tokens=out_ges,
         fruehzeitig_beendet=frueh,
+        warnungen=warnungen,
     )

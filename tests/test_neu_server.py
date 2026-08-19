@@ -395,3 +395,60 @@ def test_projects_db_wird_nie_geoeffnet() -> None:
                 and id(knoten) not in doktexte
             ):
                 assert "projects.db" not in knoten.value, f"{datei}:{knoten.lineno}"
+
+
+# ── PUT /api/projekt/{id}/kategorien ──────────────────────────────────────────
+
+def _eigene_db(tmp_path, monkeypatch) -> tuple[TestClient, sqlite3.Connection]:
+    """Eine frische Datenbank mit einem Projekt und zwei Kategorien.
+
+    Nicht data/neu.db: dieser Test schreibt, und die echte Datenbank ist die
+    Arbeitsgrundlage des Historikers.
+    """
+    pfad = tmp_path / "put.db"
+    con = sqlite3.connect(pfad)
+    con.executescript((ROOT / "schema.sql").read_text(encoding="utf-8"))
+    with con:
+        con.execute("INSERT INTO zugang (token, angelegt_am, rolle) "
+                    "VALUES ('t','2026-01-01','nutzer')")
+        con.execute("INSERT INTO projekt (id, titel, eigentuemer_id, angelegt_am) "
+                    "VALUES ('p','P',1,'2026-01-01')")
+        con.execute("INSERT INTO quelle (id, projekt_id, quellformat, eingelesen_am) "
+                    "VALUES ('q','p','literaturexzerpt','2026-01-01')")
+        con.execute("INSERT INTO einheit (quelle_id, position, typ, text) "
+                    "VALUES ('q', 1, 'content', 'Ein Text mit genug Zeichen darin.')")
+        for name in ("Eins", "Zwei"):
+            con.execute("INSERT INTO kategorie (projekt_id, name, beschreibung, "
+                        "schlagworte, herkunft) VALUES ('p',?,'','','vorschlag')", (name,))
+    monkeypatch.setenv("NEU_DB", str(pfad))
+    return TestClient(app), con
+
+
+def test_leere_liste_haengt_keinen_lauf_an(tmp_path, monkeypatch) -> None:
+    """Alle Kategorien entfernen ist ein gültiger Sollzustand.
+
+    Vorher scheiterte hier ein Klassifikationslauf mit 'keine_taxonomie',
+    obwohl das Löschen gelungen war — die Fläche zeigte eine Fehlermeldung für
+    eine Handlung, die geklappt hatte.
+    """
+    client, con = _eigene_db(tmp_path, monkeypatch)
+    r = client.put("/api/projekt/p/kategorien", json={"kategorien": []})
+
+    assert r.status_code == 202
+    assert r.json() == {"projekt_id": "p", "anzahl": 0, "angelegt": 0,
+                        "geaendert": 0, "geloescht": 2, "lauf_id": None}
+    assert con.execute("SELECT COUNT(*) FROM kategorie").fetchone()[0] == 0
+    assert con.execute("SELECT COUNT(*) FROM lauf").fetchone()[0] == 0
+    con.close()
+
+
+def test_nichtleere_liste_haengt_einen_lauf_an(tmp_path, monkeypatch) -> None:
+    client, con = _eigene_db(tmp_path, monkeypatch)
+    kats = [{"id": None, "name": "Neu", "beschreibung": "", "schlagworte": []}]
+    r = client.put("/api/projekt/p/kategorien", json={"kategorien": kats})
+
+    assert r.status_code == 202
+    body = r.json()
+    assert body["anzahl"] == 1 and body["angelegt"] == 1 and body["geloescht"] == 2
+    assert isinstance(body["lauf_id"], int)
+    con.close()

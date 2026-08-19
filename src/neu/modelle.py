@@ -520,6 +520,25 @@ class KategorieEintrag(BaseModel):
     schlagworte: list[str]
 
 
+class KategorienGespeichert(BaseModel):
+    """Antwort auf PUT /api/projekt/{id}/kategorien.
+
+    Kein LaufBegonnen, weil es nicht immer einen Lauf gibt: wer alle Kategorien
+    entfernt, hat nichts, wogegen zugeordnet werden könnte. Dann ist lauf_id
+    null und das Speichern ist fertig — vorher scheiterte an dieser Stelle ein
+    Lauf mit 'keine_taxonomie', obwohl das Löschen gelungen war.
+    """
+
+    projekt_id: str
+    anzahl: int = Field(description="Kategorien nach dem Speichern")
+    angelegt: int
+    geaendert: int
+    geloescht: int
+    lauf_id: int | None = Field(
+        description="Der Zuordnungslauf; null, wenn es nichts zuzuordnen gibt"
+    )
+
+
 class KategorienSpeichernRumpf(BaseModel):
     """Rumpf von PUT /api/projekt/{id}/kategorien.
 

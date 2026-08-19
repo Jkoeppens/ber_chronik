@@ -1,11 +1,13 @@
 """
 verwaltung.py — Kategorien von Hand pflegen
 
-Anlegen, ändern, löschen. Alles, was hier durchgeht, bekommt
+Anlegen, ändern, löschen. Was hier tatsächlich geändert wird, bekommt
 `herkunft='manuell'`: einem Namen soll anzusehen sein, ob je ein Mensch ihn
 geprüft hat. Ein Taxonomielauf ersetzt nur, was er selbst vorgeschlagen hat —
 das ist die Regel aus SCHEMA.md, und sie hat nur Bestand, wenn die Herkunft
-beim Bearbeiten mitgeführt wird.
+beim Bearbeiten mitgeführt wird. Umgesetzt ist sie in
+src/neu/taxonomie/dienst.py: `manuell`-Zeilen gehen als eingefrorene Cluster in
+den Lauf und werden nicht überschrieben.
 
 Beim Löschen einer Kategorie greift ON DELETE SET NULL: die Einheiten bleiben,
 ihre Kategorie ist danach offen. `kategorie_herkunft` bleibt dabei stehen; ein
@@ -158,8 +160,15 @@ def stapel_aendern(
     ohne Speichern verlässt, bekommt beim nächsten Mal die alte Beschreibung.
 
     Angelegt wird, was keine `id` hat; geändert, was eine hat; gelöscht, was in
-    der Liste fehlt. Alles, was hier durchgeht, wird 'manuell' — die Zuordnung
-    danach ist Sache des Aufrufers.
+    der Liste fehlt. Die Zuordnung danach ist Sache des Aufrufers.
+
+    'manuell' wird nur, was sich tatsächlich geändert hat. Der Editor schickt
+    bei jedem Speichern die ganze Liste — würde jede Zeile gestempelt, wäre
+    nach dem ersten Speichern einer einzigen Beschreibung die gesamte Taxonomie
+    von Hand geprüft. Da ein Taxonomielauf 'manuell'-Zeilen nicht mehr anfasst
+    (src/neu/taxonomie/dienst.py), hätte ein Speichern das Verfeinern damit
+    stillgelegt. Die Spalte soll sagen, ob ein Mensch diesen Namen geprüft hat,
+    nicht ob er einmal auf dieser Seite war.
     """
     _projekt_pruefen(con, projekt_id)
 
@@ -182,18 +191,25 @@ def stapel_aendern(
             f"'{doppelt}' kommt zweimal vor.", "kategorie_gibt_es_schon"
         )
 
+    alt = {z[0]: (z[1], z[2], z[3]) for z in con.execute(
+        "SELECT id, name, beschreibung, schlagworte FROM kategorie WHERE projekt_id = ?",
+        (projekt_id,))}
+
     with con:
         # Erst löschen: sonst kollidiert ein umbenannter Name mit einem, der
         # gleich verschwindet.
         weg = vorhanden - genannt
         for kategorie_id in weg:
             con.execute("DELETE FROM kategorie WHERE id = ?", (kategorie_id,))
-        angelegt = 0
+        angelegt = geaendert = 0
         for eintrag in eintraege:
             werte = ((eintrag.get("name") or "").strip(),
                      (eintrag.get("beschreibung") or "").strip(),
                      ",".join(eintrag.get("schlagworte") or []))
             if eintrag.get("id"):
+                if werte == alt.get(eintrag["id"]):
+                    continue        # unverändert durchgereicht — nicht angefasst
+                geaendert += 1
                 con.execute(
                     "UPDATE kategorie SET name = ?, beschreibung = ?, "
                     "schlagworte = ?, herkunft = 'manuell' WHERE id = ?",
@@ -209,7 +225,7 @@ def stapel_aendern(
 
     return {"projekt_id": projekt_id, "anzahl": len(eintraege),
             "angelegt": angelegt, "geloescht": len(weg),
-            "geaendert": len(genannt)}
+            "geaendert": geaendert}
 
 
 def einzeln(con: sqlite3.Connection, kategorie_id: int) -> dict:

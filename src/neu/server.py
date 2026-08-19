@@ -88,6 +88,7 @@ from src.neu.modelle import (  # noqa: E402
     ExportierenRumpf,
     KandidatenListe,
     KategorieRumpf,
+    KategorienGespeichert,
     KategorienSpeichernRumpf,
     KategorieZeile,
     KategorienListe,
@@ -871,13 +872,13 @@ def kategorie_anlegen(projekt_id: str, rumpf: KategorieRumpf) -> KategorieZeile:
 
 @app.put(
     "/api/projekt/{projekt_id}/kategorien",
-    response_model=LaufBegonnen,
+    response_model=KategorienGespeichert,
     responses=FEHLER_ANTWORTEN,
     status_code=202,
 )
 def kategorien_speichern(
     projekt_id: str, rumpf: KategorienSpeichernRumpf
-) -> LaufBegonnen:
+) -> KategorienGespeichert:
     """Speichert die ganze Kategorienliste und ordnet danach neu zu.
 
     Beides gehört zusammen: eine geänderte Beschreibung ändert, wohin die
@@ -895,6 +896,10 @@ def kategorien_speichern(
 
     Was stattdessen aufhört: die Fläche kündigt eine Dauer nur an, wenn
     einheiten_ohne_vektor aus GET …/kategorien größer als null ist.
+
+    Eine leere Liste ist ein gültiger Sollzustand — alle Kategorien weg — und
+    hängt keinen Lauf an: es gibt nichts, wogegen zugeordnet werden könnte.
+    Dann kommt lauf_id null zurück.
     """
     con = verbindung_schreibend()
     try:
@@ -907,6 +912,12 @@ def kategorien_speichern(
         raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
     finally:
         con.close()
+
+    antwort = dict(projekt_id=projekt_id, anzahl=ergebnis["anzahl"],
+                   angelegt=ergebnis["angelegt"], geaendert=ergebnis["geaendert"],
+                   geloescht=ergebnis["geloescht"])
+    if ergebnis["anzahl"] == 0:
+        return KategorienGespeichert(**antwort, lauf_id=None)
 
     def arbeit(eigene, lauf_id: int) -> None:
         klassifizieren(eigene, projekt_id=projekt_id, verfahren="bge",
@@ -921,8 +932,7 @@ def kategorien_speichern(
     except LaufFehler as exc:
         raise HTTPException(status_code=409, detail=(exc.code, str(exc)))
 
-    return LaufBegonnen(lauf_id=lauf_id, projekt_id=projekt_id,
-                        schritt="klassifikation", status="laeuft")
+    return KategorienGespeichert(**antwort, lauf_id=lauf_id)
 
 
 @app.patch(

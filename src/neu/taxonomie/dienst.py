@@ -55,6 +55,10 @@ class TaxonomieErgebnis:
     anzahl_zugeordnet: int = 0
     anzahl_geschuetzt: int = 0
     anzahl_je_kategorie: dict[str, int] = field(default_factory=dict)
+    # Teilweise gelesene Modellantworten. Leer heißt: jede Runde ganz gelesen.
+    warnungen: list[str] = field(default_factory=list)
+    # Kategorien mit herkunft='manuell', die der Lauf nicht angefasst hat.
+    anzahl_unangetastet: int = 0
 
 
 def _jetzt() -> str:
@@ -84,14 +88,46 @@ def _texte_lesen(con: sqlite3.Connection, projekt_id: str) -> list[tuple[int, st
 
 
 def _vorhandene_kategorien(con: sqlite3.Connection, projekt_id: str) -> list[dict]:
+    """Die Kategorien mit ihrer Kennung, in fester Reihenfolge.
+
+    Die Kennung kommt mit. Vorher wurde sie hier weggeworfen, und damit war an
+    der Grenze zum Kern nicht mehr feststellbar, welche der neuen Beschreibungen
+    zu welcher alten Zeile gehört — der Lauf konnte deshalb nur alles löschen
+    und neu anlegen. cid ist die Position in dieser Liste, also ist cid → id
+    bekannt, solange die Reihenfolge dieselbe bleibt.
+    """
     zeilen = con.execute(
-        "SELECT name, beschreibung, schlagworte FROM kategorie "
+        "SELECT id, name, beschreibung, schlagworte, herkunft FROM kategorie "
         "WHERE projekt_id = ? ORDER BY id",
         (projekt_id,),
     ).fetchall()
-    return [{"name": z[0], "description": z[1],
-             "keywords": [k.strip() for k in (z[2] or "").split(",") if k.strip()]}
+    return [{"id": z[0], "name": z[1], "description": z[2],
+             "keywords": [k.strip() for k in (z[3] or "").split(",") if k.strip()],
+             "herkunft": z[4]}
             for z in zeilen]
+
+
+def _eindeutige_namen(vorschlaege: dict[int, str], belegt: set[str]) -> dict[int, str]:
+    """Sorgt dafür, dass kein Name zweimal vorkommt — UNIQUE (projekt_id, name).
+
+    Zwei Gruppen mit demselben Titel sind vom Modell nicht ausgeschlossen, und
+    ein UNIQUE-Verstoß mitten im Schreiben lässt den ganzen Lauf mit einer
+    SQLite-Meldung platzen, mit der niemand etwas anfangen kann. Ein Zusatz in
+    Klammern ist sichtbar und behebbar.
+
+    `belegt` sind die Namen, die stehen bleiben — die eingefrorenen.
+    """
+    ergebnis: dict[int, str] = {}
+    genommen = set(belegt)
+    for cid in sorted(vorschlaege):
+        name = vorschlaege[cid].strip() or f"Cluster {cid + 1}"
+        kandidat, n = name, 1
+        while kandidat in genommen:
+            n += 1
+            kandidat = f"{name} ({n})"
+        genommen.add(kandidat)
+        ergebnis[cid] = kandidat
+    return ergebnis
 
 
 # ── Vorschlagen ───────────────────────────────────────────────────────────────
@@ -135,8 +171,22 @@ def vorschlagen(
                 "n_clusters_beim_verfeinern",
             )
         anzahl = len(vorhanden)
+        eingefroren_start = [i for i, c in enumerate(vorhanden)
+                             if c["herkunft"] == "manuell"]
     else:
+        if vorhanden:
+            # Kalt heißt bei null anfangen, und das geht nur, wenn null ist.
+            # Solange der Lauf alles löschte, war das dasselbe; jetzt schreibt
+            # er in die vorhandenen Zeilen, und ein kalter Lauf wüsste nicht,
+            # in welche. Die Fläche sagt es ohnehin so: "Um bei null
+            # anzufangen, erst alle Kategorien löschen."
+            raise TaxonomieFehler(
+                f"Projekt '{projekt_id}' hat schon {len(vorhanden)} Kategorien. "
+                "Entweder verfeinern (warm_start=true) oder sie vorher löschen.",
+                "kalt_bei_vorhandenen",
+            )
         anzahl = n_clusters or kern.N_CLUSTERS
+        eingefroren_start = []
         if anzahl < 2:
             raise TaxonomieFehler("n_clusters muss mindestens 2 sein.", "n_clusters_zu_klein")
 
@@ -201,6 +251,7 @@ def vorschlagen(
             frage_modell=frage_modell,
             n_clusters=anzahl,
             warm_start=vorhanden if warm_start else None,
+            eingefroren_start=eingefroren_start,
         )
 
         beendet_am = _jetzt()
@@ -232,18 +283,49 @@ def vorschlagen(
                 )
                 lauf_id = zeiger.lastrowid
 
-            # Die alten Kategorien weichen den neuen. Zuordnungen, die auf sie
-            # zeigen, werden durch ON DELETE SET NULL auf NULL gesetzt — die
-            # Einheiten bleiben, ihre Kategorie ist danach offen.
-            con.execute("DELETE FROM kategorie WHERE projekt_id = ?", (projekt_id,))
-            kategorie_ids: list[int] = []
-            for k in vorschlag.kategorien:
-                zeiger = con.execute(
-                    "INSERT INTO kategorie (projekt_id, name, beschreibung, "
-                    "schlagworte, herkunft) VALUES (?, ?, ?, ?, 'vorschlag')",
-                    (projekt_id, k["name"], k["description"], ",".join(k["keywords"])),
+            # Abgleichen statt ersetzen. Warm: in die vorhandenen Zeilen
+            # schreiben, cid für cid — die Kennungen bleiben, und damit bleibt
+            # auch alles bestehen, was auf sie zeigt. Kalt: anlegen, es gibt
+            # noch nichts. Ein DELETE über das ganze Projekt gibt es nicht mehr;
+            # es hat jedes Mal auch die von Hand gepflegten Kategorien
+            # mitgenommen und die Kennungen neu vergeben.
+            fest = set(eingefroren_start)
+            if warm_start:
+                kategorie_ids = [c["id"] for c in vorhanden]
+                namen = _eindeutige_namen(
+                    {cid: k["name"] for cid, k in enumerate(vorschlag.kategorien)
+                     if cid not in fest},
+                    {vorhanden[cid]["name"] for cid in fest},
                 )
-                kategorie_ids.append(zeiger.lastrowid)
+                # Zwei Durchgänge: UNIQUE (projekt_id, name) prüft je Anweisung,
+                # und ein Tausch zweier Namen verstieße im Zwischenschritt.
+                for cid in namen:
+                    con.execute("UPDATE kategorie SET name = ? WHERE id = ?",
+                                (f"\x1f-{kategorie_ids[cid]}", kategorie_ids[cid]))
+                for cid, name in namen.items():
+                    k = vorschlag.kategorien[cid]
+                    con.execute(
+                        "UPDATE kategorie SET name = ?, beschreibung = ?, "
+                        "schlagworte = ?, herkunft = 'vorschlag' WHERE id = ?",
+                        (name, k["description"], ",".join(k["keywords"]),
+                         kategorie_ids[cid]),
+                    )
+                for cid, name in namen.items():
+                    vorschlag.kategorien[cid]["name"] = name
+            else:
+                kategorie_ids = []
+                namen = _eindeutige_namen(
+                    {cid: k["name"] for cid, k in enumerate(vorschlag.kategorien)}, set()
+                )
+                for cid, k in enumerate(vorschlag.kategorien):
+                    k["name"] = namen[cid]
+                    zeiger = con.execute(
+                        "INSERT INTO kategorie (projekt_id, name, beschreibung, "
+                        "schlagworte, herkunft) VALUES (?, ?, ?, ?, 'vorschlag')",
+                        (projekt_id, k["name"], k["description"],
+                         ",".join(k["keywords"])),
+                    )
+                    kategorie_ids.append(zeiger.lastrowid)
 
             # Die Zuordnung der letzten Runde festhalten. Sie entsteht im
             # Verfahren ohnehin — labels = argmax(seg_embs @ label_embs.T) —
@@ -283,6 +365,8 @@ def vorschlagen(
                 "anzahl_zugeordnet": len(zuordnungen),
                 "anzahl_geschuetzt": len(geschuetzt),
                 "anzahl_je_kategorie": je_kategorie,
+                "warnungen": vorschlag.warnungen,
+                "anzahl_unangetastet": len(fest),
             }, ensure_ascii=False)
             con.execute(
                 "UPDATE lauf SET beendet_am = ?, parameter = ?, status = 'erfolg' "
@@ -328,4 +412,6 @@ def vorschlagen(
         anzahl_zugeordnet=len(zuordnungen),
         anzahl_geschuetzt=len(geschuetzt),
         anzahl_je_kategorie=je_kategorie,
+        warnungen=vorschlag.warnungen,
+        anzahl_unangetastet=len(fest),
     )

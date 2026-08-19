@@ -207,3 +207,28 @@ def test_liste_zaehlt_handkorrekturen(db):
     assert stand["anzahl_manuell_zugeordnet"] == 1
     assert stand["anzahl_ohne_kategorie"] == 2
     assert stand["kategorien"][0]["anzahl_einheiten"] == 1
+
+
+def test_unveraenderte_zeilen_werden_nicht_manuell(db):
+    """Der Editor schickt immer die ganze Liste — das ist kein Prüfvermerk.
+
+    Würde jede durchgereichte Zeile 'manuell', hätte das Speichern einer
+    einzigen Beschreibung die ganze Taxonomie gegen jeden Taxonomielauf
+    eingefroren.
+    """
+    with db:
+        db.execute("INSERT INTO kategorie (projekt_id, name, beschreibung, "
+                   "schlagworte, herkunft) VALUES ('p','Alt','B','x','vorschlag')")
+        db.execute("INSERT INTO kategorie (projekt_id, name, beschreibung, "
+                   "schlagworte, herkunft) VALUES ('p','Zwei','C','','vorschlag')")
+    a, b = [z[0] for z in db.execute("SELECT id FROM kategorie ORDER BY id")]
+
+    ergebnis = verwaltung.stapel_aendern(db, "p", [
+        {"id": a, "name": "Alt", "beschreibung": "B", "schlagworte": ["x"]},
+        {"id": b, "name": "Zwei", "beschreibung": "NEU", "schlagworte": []},
+    ])
+
+    assert ergebnis["geaendert"] == 1
+    herkunft = dict(db.execute("SELECT id, herkunft FROM kategorie"))
+    assert herkunft[a] == "vorschlag", "unverändert durchgereicht, trotzdem gestempelt"
+    assert herkunft[b] == "manuell"

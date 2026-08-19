@@ -25,6 +25,7 @@ from src.neu.taxonomie.kern import (  # noqa: E402
     N_ITER,
     PROMPT_TEMPLATE,
     SHORT_THRESHOLD,
+    UnlesbareAntwort,
     baue_prompt,
     kmeanspp_stichprobe,
     nachbar_aggregat,
@@ -357,3 +358,170 @@ def test_kern_kennt_weder_netz_noch_datei_noch_ausgabe() -> None:
             namen = [a.name for a in knoten.names]
             for verboten in ("sqlite3", "requests", "anthropic", "httpx", "voyageai"):
                 assert verboten not in modul and verboten not in namen, verboten
+
+
+# ── Die Kopfzeile darf aussehen, wie sie will ─────────────────────────────────
+
+@pytest.mark.parametrize("kopf", [
+    "## Gruppe 1",          # was der Prompt verlangt
+    "**Gruppe 1**",         # was llama3.2:3b durchgehend schreibt
+    "Gruppe 1:",            # was andere Modelle schreiben
+    "### **Gruppe 1**",
+    "  Gruppe 1  ",
+])
+def test_alle_kopfformen_werden_gelesen(kopf: str) -> None:
+    roh = f"{kopf}\nDer Titel\nDie Beschreibung."
+    assert parse_antwort(roh, 1) == [("Der Titel", "Die Beschreibung.")]
+
+
+@pytest.mark.parametrize("zeile", [
+    "## Gruppe 1: Der Titel",       # Kopf und Titel in einer Zeile
+    "Gruppe 1 der Reformer",        # Fließtext, der zufällig so anfängt
+    "Die Gruppe 1 ist wichtig",
+])
+def test_nur_die_reine_kopfzeile_zaehlt(zeile: str) -> None:
+    """Sonst zerlegt ein 'Gruppe 1: …' mitten im Text die Antwort falsch."""
+    assert parse_antwort(f"{zeile}\nTitel\nText.", 1) == [None]
+
+
+# ── Ein Lauf, der nichts gelesen hat, ist kein erfolgreicher Lauf ─────────────
+
+def test_unlesbare_antwort_beendet_den_lauf() -> None:
+    embs, texte = _welt()
+    with pytest.raises(UnlesbareAntwort) as exc:
+        verfeinern(seg_embs=embs, texte=texte, embed=_embed_fest(),
+                   frage_modell=lambda p, s: ("Ich bin ein Sprachmodell und helfe gern.",
+                                              10, 10),
+                   n_clusters=2)
+    assert exc.value.runde == 1
+
+
+def test_die_meldung_zeigt_den_rohtext() -> None:
+    """Ohne ihn rät man, woran es lag — Format, Sprache, abgeschnittene Antwort."""
+    embs, texte = _welt()
+    with pytest.raises(UnlesbareAntwort) as exc:
+        verfeinern(seg_embs=embs, texte=texte, embed=_embed_fest(),
+                   frage_modell=lambda p, s: ("### Thema A\nirgendwas", 10, 10),
+                   n_clusters=2)
+    meldung = str(exc.value)
+    assert "### Thema A" in meldung
+    assert "**Gruppe N**" in meldung          # die erlaubten Formen stehen dabei
+
+
+def test_langer_rohtext_wird_gekuerzt() -> None:
+    lang = "x" * 5000
+    fehler = UnlesbareAntwort(2, lang, auszug_zeichen=100)
+    assert "x" * 100 in str(fehler)
+    assert "x" * 200 not in str(fehler)
+    assert fehler.roh == lang                 # vollständig bleibt er erhalten
+
+
+def test_teilweise_gelesen_wird_zur_warnung() -> None:
+    embs, texte = _welt()
+    # Das Modell antwortet nur für Gruppe 1, nie für Gruppe 2.
+    v = verfeinern(seg_embs=embs, texte=texte, embed=_embed_fest(),
+                   frage_modell=lambda p, s: ("## Gruppe 1\nA\neins.", 10, 10),
+                   n_clusters=2)
+    assert v.warnungen, "keine Warnung trotz halb gelesener Antwort"
+    assert "1 von 2" in v.warnungen[0]
+
+
+def test_ohne_warnung_wenn_alles_gelesen_wurde() -> None:
+    embs, texte = _welt()
+    v = verfeinern(seg_embs=embs, texte=texte, embed=_embed_fest(),
+                   frage_modell=_fester_anbieter([("A", "eins."), ("B", "zwei.")]),
+                   n_clusters=2)
+    assert v.warnungen == []
+
+
+# ── Warm-Start: cid ist die Kategorie, nicht ein KMeans-Cluster ───────────────
+
+def test_warm_start_nimmt_die_kategorien_als_label() -> None:
+    """Vorher kam label_embs aus KMeans — die Paarung cid ↔ Kategorie war Zufall.
+
+    Prüfbar am Embedding-Aufruf: die erste Anfrage muss die Zusammenfassungen
+    der übergebenen Kategorien sein, in ihrer Reihenfolge.
+    """
+    embs, texte = _welt()
+    gesehen: list[list[str]] = []
+    roh_embed = _embed_fest()
+
+    def embed(ts):
+        gesehen.append(list(ts))
+        return roh_embed(ts)
+
+    verfeinern(seg_embs=embs, texte=texte, embed=embed,
+               frage_modell=_fester_anbieter([("A", "eins."), ("B", "zwei.")]),
+               n_clusters=2,
+               warm_start=[{"name": "Erste", "description": "Beschreibung eins."},
+                           {"name": "Zweite", "description": "Beschreibung zwei."}])
+    assert gesehen[0] == ["Erste. Beschreibung eins.", "Zweite. Beschreibung zwei."]
+
+
+def test_ohne_warm_start_wird_nicht_vorab_embeddet() -> None:
+    embs, texte = _welt()
+    gesehen: list[list[str]] = []
+    roh_embed = _embed_fest()
+
+    def embed(ts):
+        gesehen.append(list(ts))
+        return roh_embed(ts)
+
+    verfeinern(seg_embs=embs, texte=texte, embed=embed,
+               frage_modell=_fester_anbieter([("A", "eins."), ("B", "zwei.")]),
+               n_clusters=2)
+    # Der erste Aufruf ist der Rückweg nach der ersten LLM-Runde, nicht ein
+    # Vorab-Embedden von Kategorien, die es nicht gibt.
+    assert gesehen[0] == ["A. eins.", "B. zwei."]
+
+
+# ── Eingefrorene gehen mit, werden aber nicht umgeschrieben ───────────────────
+
+def test_eingefrorene_kommen_woertlich_zurueck() -> None:
+    embs, texte = _welt()
+    handarbeit = {"name": "Von Hand. Mit Punkt im Namen",
+                  "description": "Bleibt so.", "keywords": ["a", "b"]}
+    v = verfeinern(seg_embs=embs, texte=texte, embed=_embed_fest(),
+                   frage_modell=_fester_anbieter([("A", "eins."), ("B", "zwei.")]),
+                   n_clusters=2,
+                   warm_start=[handarbeit, {"name": "Maschine", "description": "alt."}],
+                   eingefroren_start=[0])
+    assert v.kategorien[0] == handarbeit          # auch der Punkt im Namen überlebt
+    assert v.kategorien[1]["name"] == "B"         # die andere wurde geschärft
+    assert 0 in v.eingefroren
+
+
+def test_eingefrorene_stehen_trotzdem_im_prompt() -> None:
+    """Der Prompt ist kontrastiv: ohne sie grenzen sich die anderen an nichts ab."""
+    embs, texte = _welt()
+    protokoll: list[str] = []
+    verfeinern(seg_embs=embs, texte=texte, embed=_embed_fest(),
+               frage_modell=_fester_anbieter([("A", "eins."), ("B", "zwei.")], protokoll),
+               n_clusters=2,
+               warm_start=[{"name": "Fest", "description": "Steht fest."},
+                           {"name": "Los", "description": "Darf sich ändern."}],
+               eingefroren_start=[0])
+    assert "Steht fest." in protokoll[0]
+    assert "Gruppe 1 Keywords" in protokoll[0]
+
+
+def test_alles_eingefroren_fragt_das_modell_nicht() -> None:
+    """Eine Antwort, die ohnehin verworfen würde, ist kein Nulltarif."""
+    embs, texte = _welt()
+    aufrufe = {"n": 0}
+
+    def frage(p, s):
+        aufrufe["n"] += 1
+        return "## Gruppe 1\nA\neins.", 10, 10
+
+    kats = [{"name": "Eins", "description": "a.", "keywords": []},
+            {"name": "Zwei", "description": "b.", "keywords": []}]
+    v = verfeinern(seg_embs=embs, texte=texte, embed=_embed_fest(),
+                   frage_modell=frage, n_clusters=2,
+                   warm_start=kats, eingefroren_start=[0, 1])
+    assert aufrufe["n"] == 0
+    assert v.llm_calls == 0
+    assert v.kategorien == kats
+    assert v.fruehzeitig_beendet
+    # Zugeordnet wird trotzdem: die Kategorien sind die Label.
+    assert set(v.labels.tolist()) <= {0, 1}

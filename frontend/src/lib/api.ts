@@ -33,6 +33,7 @@ export type LaufBegonnen = components['schemas']['LaufBegonnen'];
 export type KategorieZeile = components['schemas']['KategorieZeile'];
 export type KategorienListe = components['schemas']['KategorienListe'];
 export type KategorieEintrag = components['schemas']['KategorieEintrag'];
+export type KategorienGespeichert = components['schemas']['KategorienGespeichert'];
 export type Konfiguration = components['schemas']['KonfigurationAntwort'];
 
 /** Die eine Fehlergestalt des Servers — auch sie kommt aus dem Schema. */
@@ -209,13 +210,14 @@ export function klassifiziere(projektId: string): Promise<LaufBegonnen> {
 
 /**
  * Speichert die ganze Kategorienliste und ordnet danach neu zu.
- * Kommt sofort mit einer lauf_id zurück — das Zuordnen dauert.
+ * Kommt sofort zurück — das Zuordnen dauert. `lauf_id` ist null, wenn die
+ * Liste leer war: dann gibt es nichts zuzuordnen und nichts zu verfolgen.
  */
 export function speichereKategorien(
 	projektId: string,
 	kategorien: KategorieEintrag[]
-): Promise<LaufBegonnen> {
-	return ruf<LaufBegonnen>(`/api/projekt/${encodeURIComponent(projektId)}/kategorien`, {
+): Promise<KategorienGespeichert> {
+	return ruf<KategorienGespeichert>(`/api/projekt/${encodeURIComponent(projektId)}/kategorien`, {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ kategorien })
