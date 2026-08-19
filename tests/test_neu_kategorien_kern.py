@@ -133,7 +133,7 @@ def test_prompt_enthaelt_kategorien_und_text() -> None:
 
 def test_antwort_wird_ausgewertet() -> None:
     z = zuordnung_aus_antwort('{"category": "Kosten", "confidence": "high"}', NAMEN)
-    assert z == Zuordnung(kategorie="Kosten", konfidenz="high", herkunft="llm")
+    assert z == Zuordnung(kategorie="Kosten", konfidenz="high", herkunft="automatisch")
 
 
 def test_markdown_zaun_wird_entfernt() -> None:
@@ -181,7 +181,7 @@ def test_zweimal_muell_ergibt_keine_kategorie_und_keine_konfidenz() -> None:
         return "immer noch Müll"
 
     z = klassifiziere_eine("Text", "", NAMEN, modell)
-    assert z == Zuordnung(kategorie=None, konfidenz=None, herkunft="llm")
+    assert z == Zuordnung(kategorie=None, konfidenz=None, herkunft="automatisch")
 
 
 # ── BGE-Pfad ──────────────────────────────────────────────────────────────────
@@ -202,7 +202,7 @@ def test_argmax_waehlt_die_aehnlichste_kategorie() -> None:
     assert [x.kategorie for x in z] == ["A", "B", "A"]
     # 1.0·0.9 = 0.90 → high | 1.0·0.3 = 0.30 → low | 0.5·0.9 = 0.45 → medium
     assert [x.konfidenz for x in z] == ["high", "low", "medium"]
-    assert {x.herkunft for x in z} == {"bge"}
+    assert {x.herkunft for x in z} == {"automatisch"}
 
 
 def test_bge_ordnet_immer_zu() -> None:

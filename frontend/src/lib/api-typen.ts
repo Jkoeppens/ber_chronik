@@ -472,7 +472,18 @@ export interface paths {
          * @description Die Kategorien eines Projekts mit der Zahl der Einheiten darauf.
          */
         get: operations["kategorien_liste_api_projekt__projekt_id__kategorien_get"];
-        put?: never;
+        /**
+         * Kategorien Speichern
+         * @description Speichert die ganze Kategorienliste und ordnet danach neu zu.
+         *
+         *     Beides gehört zusammen: eine geänderte Beschreibung ändert, wohin die
+         *     Einheiten gehören. Es getrennt zu lassen hieße, einen Zustand zu erlauben,
+         *     in dem die Zuordnung zu Beschreibungen passt, die es nicht mehr gibt.
+         *
+         *     Das Zuordnen braucht bei 672 Einheiten rund 30 Sekunden — deshalb 202 mit
+         *     einer lauf_id, und der Stand kommt aus GET /api/lauf/{id}.
+         */
+        put: operations["kategorien_speichern_api_projekt__projekt_id__kategorien_put"];
         /**
          * Kategorie Anlegen
          * @description Legt eine Kategorie von Hand an — herkunft='manuell'.
@@ -972,7 +983,7 @@ export interface components {
             konfidenz?: string | null;
             /**
              * Kategorie Herkunft
-             * @description llm | bge | manuell. NULL = nie klassifiziert; manuell ist gegen Neuläufe geschützt
+             * @description automatisch | manuell. NULL = nie zugeordnet; manuell ist gegen jeden Neulauf geschützt
              */
             kategorie_herkunft?: string | null;
         };
@@ -1166,6 +1177,23 @@ export interface components {
             kandidaten: components["schemas"]["Kandidat"][];
         };
         /**
+         * KategorieEintrag
+         * @description Eine Zeile im Editor. Ohne id wird angelegt, mit id geändert.
+         *
+         *     Ohne Vorgabewerte, damit die erzeugten TypeScript-Typen die Felder als
+         *     vorhanden führen: der Editor schickt immer die ganze Zeile.
+         */
+        KategorieEintrag: {
+            /** Id */
+            id: number | null;
+            /** Name */
+            name: string;
+            /** Beschreibung */
+            beschreibung: string;
+            /** Schlagworte */
+            schlagworte: string[];
+        };
+        /**
          * KategorieRumpf
          * @description Rumpf zum Anlegen und Ändern. Nur was gesetzt ist, wird geändert.
          */
@@ -1218,6 +1246,18 @@ export interface components {
             anzahl_manuell_zugeordnet: number;
         };
         /**
+         * KategorienSpeichernRumpf
+         * @description Rumpf von PUT /api/projekt/{id}/kategorien.
+         *
+         *     Die ganze Liste auf einmal: was fehlt, wird gelöscht. Danach wird neu
+         *     zugeordnet — das ist der Moment, in dem Beschreibungen und Zuordnung wieder
+         *     zusammenpassen.
+         */
+        KategorienSpeichernRumpf: {
+            /** Kategorien */
+            kategorien: components["schemas"]["KategorieEintrag"][];
+        };
+        /**
          * Kennzahlen
          * @description Was ein Projekt in der Datenbank stehen hat — alles gerechnet.
          */
@@ -1265,6 +1305,11 @@ export interface components {
         /**
          * KlassifizierenRumpf
          * @description Rumpf von POST /api/projekt/{id}/klassifizieren.
+         *
+         *     Kein Umfang: zugeordnet wird immer alles, und Handkorrekturen bleiben
+         *     unangetastet. Das ist eine Regel, keine Einstellung — sie zur Wahl zu
+         *     stellen hieße, das Überschreiben von Handarbeit als gleichwertige
+         *     Möglichkeit anzubieten.
          */
         KlassifizierenRumpf: {
             /**
@@ -1274,13 +1319,6 @@ export interface components {
              * @enum {string}
              */
             verfahren: "bge" | "llm";
-            /**
-             * Umfang
-             * @description offen = nur nie klassifizierte; alle = auch maschinelle erneut, Handkorrekturen bleiben; auch_manuell = auch Handkorrekturen überschreiben
-             * @default offen
-             * @enum {string}
-             */
-            umfang: "offen" | "alle" | "auch_manuell";
         };
         /** KonfigurationAntwort */
         KonfigurationAntwort: {
@@ -3125,6 +3163,86 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KategorienListe"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    kategorien_speichern_api_projekt__projekt_id__kategorien_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KategorienSpeichernRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LaufBegonnen"];
                 };
             };
             /** @description Nicht gefunden */

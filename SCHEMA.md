@@ -93,12 +93,9 @@ CREATE TABLE einheit (
     -- Ergebnis der Klassifikation
     kategorie_id       INTEGER REFERENCES kategorie(id) ON DELETE SET NULL,
     konfidenz          TEXT,               -- high | medium | low
-    kategorie_herkunft TEXT                -- wer zugeordnet hat:
-                       CHECK (kategorie_herkunft IN
-                              ('taxonomie', 'bge', 'llm', 'manuell')),
-                                           -- taxonomie = aus dem Clusterlauf,
-                                           -- der ohnehin jede Einheit zuordnet
-                                           -- NULL = nie klassifiziert
+    kategorie_herkunft TEXT                -- automatisch | manuell
+                       CHECK (kategorie_herkunft IN ('automatisch', 'manuell')),
+                                           -- NULL = nie zugeordnet
     kategorie_lauf_id  INTEGER REFERENCES lauf(id) ON DELETE SET NULL,
 
     UNIQUE (quelle_id, position),
@@ -345,18 +342,18 @@ Kosinusähnlichkeit — zwei verschiedene Größen in einer Spalte, ununterschei
 `kategorie_herkunft` trennt sie und hält zugleich die Handkorrektur fest;
 `kategorie_lauf_id` verweist auf den Lauf, der die Zuordnung geschrieben hat.
 
-Vier Werte, weil vier Wege zuordnen:
+Zwei Werte, weil es nur zwei Urheber gibt: die Maschine oder der Historiker.
 
-- `taxonomie` — der Clusterlauf. Er ordnet in jeder Runde ohnehin alle
-  Einheiten zu (`argmax(seg_embs @ label_embs.T)`); diese Zuordnung wurde
-  bisher verworfen und danach von `classify_segments` noch einmal gerechnet,
-  leicht anders: dort die Beschreibung allein gegen `name+description+keywords`,
-  der volle Text gegen 500 Zeichen. Zwei Verfahren für dieselbe Sache.
-- `bge` — der eigene Zuordnungsschritt. Er ist kein Nachlauf mehr, sondern für
-  zwei Fälle da: eine Kategorie wurde von Hand geändert, oder es sind Einheiten
-  dazugekommen.
-- `llm` — derselbe Schritt mit Sprachmodell statt Embedding.
-- `manuell` — Handkorrektur, gegen jeden Neulauf geschützt.
+`taxonomie`, `bge` und `llm` standen zwischenzeitlich für drei Wege, aber die
+ersten beiden waren dasselbe Verfahren in zwei Fassungen — Beschreibungen
+einbetten, Argmax über die Einheiten. Der Unterschied lag nur darin, was
+eingebettet wurde (`description` gegen `name+description+keywords`) und wie
+lang der Text sein durfte. Für die Frage, ob eine Zuordnung geschützt ist,
+trägt diese Unterscheidung nichts; für die Frage, womit gerechnet wurde, steht
+sie ohnehin genauer in der `lauf`-Zeile.
+
+`manuell` ist gegen jeden Neulauf geschützt. `automatisch` wird von jedem
+Zuordnen ersetzt.
 
 `NULL` heißt nie klassifiziert und ist zugleich die Wiederaufnahme-Bedingung: ein
 Lauf nimmt sich `WHERE kategorie_herkunft IS NULL`. Damit braucht es keine

@@ -32,6 +32,7 @@ export type LaufStand = components['schemas']['LaufStand'];
 export type LaufBegonnen = components['schemas']['LaufBegonnen'];
 export type KategorieZeile = components['schemas']['KategorieZeile'];
 export type KategorienListe = components['schemas']['KategorienListe'];
+export type KategorieEintrag = components['schemas']['KategorieEintrag'];
 export type Konfiguration = components['schemas']['KonfigurationAntwort'];
 
 /** Die eine Fehlergestalt des Servers — auch sie kommt aus dem Schema. */
@@ -197,17 +198,28 @@ export function schlageTaxonomieVor(
 /**
  * Stößt die Zuordnung an. Kommt sofort mit einer lauf_id zurück.
  *
- * 'offen' ist die Vorgabe: der Taxonomielauf ordnet bereits alles zu, hier
- * geht es um das, was seither dazugekommen oder offen geblieben ist.
+ * Kein Umfang: zugeordnet wird immer alles, Handkorrekturen bleiben stehen.
  */
-export function klassifiziere(
-	projektId: string,
-	umfang: 'offen' | 'alle' | 'auch_manuell' = 'offen'
-): Promise<LaufBegonnen> {
+export function klassifiziere(projektId: string): Promise<LaufBegonnen> {
 	return ruf<LaufBegonnen>(
 		`/api/projekt/${encodeURIComponent(projektId)}/klassifizieren`,
-		alsJson({ verfahren: 'bge', umfang })
+		alsJson({ verfahren: 'bge' })
 	);
+}
+
+/**
+ * Speichert die ganze Kategorienliste und ordnet danach neu zu.
+ * Kommt sofort mit einer lauf_id zurück — das Zuordnen dauert.
+ */
+export function speichereKategorien(
+	projektId: string,
+	kategorien: KategorieEintrag[]
+): Promise<LaufBegonnen> {
+	return ruf<LaufBegonnen>(`/api/projekt/${encodeURIComponent(projektId)}/kategorien`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ kategorien })
+	});
 }
 
 // ── Kategorien ──────────────────────────────────────────────────────────────

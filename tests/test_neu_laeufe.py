@@ -186,7 +186,7 @@ def test_doppelter_name_wird_abgewiesen(db):
 def test_loeschen_laesst_die_einheiten_stehen(db):
     k = verwaltung.anlegen(db, "p", "Kosten")
     with db:
-        db.execute("UPDATE einheit SET kategorie_id = ?, kategorie_herkunft='bge'", (k["id"],))
+        db.execute("UPDATE einheit SET kategorie_id = ?, kategorie_herkunft='automatisch'", (k["id"],))
     ergebnis = verwaltung.loeschen(db, k["id"])
 
     assert ergebnis["einheiten_ohne_kategorie"] == 3
@@ -195,7 +195,7 @@ def test_loeschen_laesst_die_einheiten_stehen(db):
         "SELECT COUNT(*) FROM einheit WHERE kategorie_id IS NULL").fetchone()[0] == 3
     # Die Herkunft bleibt stehen: die Einheit gilt weiter als behandelt.
     assert db.execute(
-        "SELECT kategorie_herkunft FROM einheit LIMIT 1").fetchone()[0] == "bge"
+        "SELECT kategorie_herkunft FROM einheit LIMIT 1").fetchone()[0] == "automatisch"
 
 
 def test_liste_zaehlt_handkorrekturen(db):

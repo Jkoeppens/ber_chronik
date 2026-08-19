@@ -88,6 +88,7 @@ from src.neu.modelle import (  # noqa: E402
     ExportierenRumpf,
     KandidatenListe,
     KategorieRumpf,
+    KategorienSpeichernRumpf,
     KategorieZeile,
     KategorienListe,
     LaufBegonnen,
@@ -458,13 +459,13 @@ def projekt_klassifizieren(
     def arbeit(eigene, lauf_id: int) -> None:
         klassifizieren(
             eigene, projekt_id=projekt_id, verfahren=rumpf.verfahren,
-            umfang=rumpf.umfang, lauf_id=lauf_id,
+            umfang="alle", lauf_id=lauf_id,
         )
 
     try:
         lauf_id = laeufe.starten(
             projekt_id, "klassifikation",
-            {"verfahren": rumpf.verfahren, "umfang": rumpf.umfang, "phase": "beginnt"},
+            {"verfahren": rumpf.verfahren, "umfang": "alle", "phase": "beginnt"},
             arbeit,
         )
     except LaufFehler as exc:
@@ -851,6 +852,53 @@ def kategorie_anlegen(projekt_id: str, rumpf: KategorieRumpf) -> KategorieZeile:
         raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
     finally:
         con.close()
+
+
+@app.put(
+    "/api/projekt/{projekt_id}/kategorien",
+    response_model=LaufBegonnen,
+    responses=FEHLER_ANTWORTEN,
+    status_code=202,
+)
+def kategorien_speichern(
+    projekt_id: str, rumpf: KategorienSpeichernRumpf
+) -> LaufBegonnen:
+    """Speichert die ganze Kategorienliste und ordnet danach neu zu.
+
+    Beides gehört zusammen: eine geänderte Beschreibung ändert, wohin die
+    Einheiten gehören. Es getrennt zu lassen hieße, einen Zustand zu erlauben,
+    in dem die Zuordnung zu Beschreibungen passt, die es nicht mehr gibt.
+
+    Das Zuordnen braucht bei 672 Einheiten rund 30 Sekunden — deshalb 202 mit
+    einer lauf_id, und der Stand kommt aus GET /api/lauf/{id}.
+    """
+    con = verbindung_schreibend()
+    try:
+        ergebnis = kategorie_verwaltung.stapel_aendern(
+            con, projekt_id, [e.model_dump() for e in rumpf.kategorien]
+        )
+    except KategorieFehler as exc:
+        status = (404 if exc.code.endswith("nicht_gefunden")
+                  else 409 if exc.code == "kategorie_gibt_es_schon" else 422)
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+    def arbeit(eigene, lauf_id: int) -> None:
+        klassifizieren(eigene, projekt_id=projekt_id, verfahren="bge",
+                       umfang="alle", lauf_id=lauf_id)
+
+    try:
+        lauf_id = laeufe.starten(
+            projekt_id, "klassifikation",
+            {"phase": "beginnt", "anlass": "kategorien gespeichert", **ergebnis},
+            arbeit,
+        )
+    except LaufFehler as exc:
+        raise HTTPException(status_code=409, detail=(exc.code, str(exc)))
+
+    return LaufBegonnen(lauf_id=lauf_id, projekt_id=projekt_id,
+                        schritt="klassifikation", status="laeuft")
 
 
 @app.patch(

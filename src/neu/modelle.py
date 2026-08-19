@@ -146,8 +146,8 @@ class Einheit(BaseModel):
     konfidenz: str | None = None
     kategorie_herkunft: str | None = Field(
         default=None,
-        description="llm | bge | manuell. NULL = nie klassifiziert; "
-                    "manuell ist gegen Neuläufe geschützt",
+        description="automatisch | manuell. NULL = nie zugeordnet; "
+                    "manuell ist gegen jeden Neulauf geschützt",
     )
 
 
@@ -174,16 +174,15 @@ Umfang = Literal["offen", "alle", "auch_manuell"]
 
 
 class KlassifizierenRumpf(BaseModel):
-    """Rumpf von POST /api/projekt/{id}/klassifizieren."""
+    """Rumpf von POST /api/projekt/{id}/klassifizieren.
+
+    Kein Umfang: zugeordnet wird immer alles, und Handkorrekturen bleiben
+    unangetastet. Das ist eine Regel, keine Einstellung — sie zur Wahl zu
+    stellen hieße, das Überschreiben von Handarbeit als gleichwertige
+    Möglichkeit anzubieten.
+    """
 
     verfahren: Verfahren = Field(default="bge", description="bge = lokal, llm = API")
-    umfang: Umfang = Field(
-        default="offen",
-        description=(
-            "offen = nur nie klassifizierte; alle = auch maschinelle erneut, "
-            "Handkorrekturen bleiben; auch_manuell = auch Handkorrekturen überschreiben"
-        ),
-    )
 
 
 class KlassifikationAntwort(BaseModel):
@@ -501,6 +500,30 @@ class KategorienListe(BaseModel):
     anzahl_manuell_zugeordnet: int = Field(
         description="Handkorrekturen — vor jedem Neulauf sicher"
     )
+
+
+class KategorieEintrag(BaseModel):
+    """Eine Zeile im Editor. Ohne id wird angelegt, mit id geändert.
+
+    Ohne Vorgabewerte, damit die erzeugten TypeScript-Typen die Felder als
+    vorhanden führen: der Editor schickt immer die ganze Zeile.
+    """
+
+    id: int | None
+    name: str = Field(min_length=1)
+    beschreibung: str
+    schlagworte: list[str]
+
+
+class KategorienSpeichernRumpf(BaseModel):
+    """Rumpf von PUT /api/projekt/{id}/kategorien.
+
+    Die ganze Liste auf einmal: was fehlt, wird gelöscht. Danach wird neu
+    zugeordnet — das ist der Moment, in dem Beschreibungen und Zuordnung wieder
+    zusammenpassen.
+    """
+
+    kategorien: list[KategorieEintrag]
 
 
 class KategorieRumpf(BaseModel):

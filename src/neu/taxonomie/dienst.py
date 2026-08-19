@@ -245,7 +245,7 @@ def vorschlagen(
             ]
             con.executemany(
                 "UPDATE einheit SET kategorie_id = ?, konfidenz = NULL, "
-                "kategorie_herkunft = 'taxonomie', kategorie_lauf_id = ? WHERE id = ?",
+                "kategorie_herkunft = 'automatisch', kategorie_lauf_id = ? WHERE id = ?",
                 zuordnungen,
             )
             je_kategorie: dict[str, int] = {}

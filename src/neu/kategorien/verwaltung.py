@@ -8,10 +8,9 @@ das ist die Regel aus SCHEMA.md, und sie hat nur Bestand, wenn die Herkunft
 beim Bearbeiten mitgeführt wird.
 
 Beim Löschen einer Kategorie greift ON DELETE SET NULL: die Einheiten bleiben,
-ihre Kategorie ist danach offen. `kategorie_herkunft` bleibt dabei stehen —
-eine Einheit, die einmal von Hand zugeordnet war, gilt weiter als von Hand
-behandelt und wird von einem Lauf mit Umfang 'offen' nicht wieder aufgegriffen.
-Darauf weist diese Stelle beim Löschen hin, statt es stillschweigend zu tun.
+ihre Kategorie ist danach offen. `kategorie_herkunft` bleibt dabei stehen; ein
+Lauf mit Umfang 'offen' greift sie trotzdem wieder auf, weil er sich nimmt, was
+gerade keine Kategorie hat.
 """
 
 from __future__ import annotations
@@ -148,6 +147,69 @@ def loeschen(con: sqlite3.Connection, kategorie_id: int) -> dict:
         con.execute("DELETE FROM kategorie WHERE id = ?", (kategorie_id,))
     return {"kategorie_id": kategorie_id, "name": zeile[1],
             "projekt_id": zeile[0], "einheiten_ohne_kategorie": betroffen}
+
+
+def stapel_aendern(
+    con: sqlite3.Connection, projekt_id: str, eintraege: list[dict]
+) -> dict:
+    """Speichert die ganze Liste auf einmal.
+
+    Der Editor hat keinen Zwischenstand: entweder alles oder nichts. Wer ihn
+    ohne Speichern verlässt, bekommt beim nächsten Mal die alte Beschreibung.
+
+    Angelegt wird, was keine `id` hat; geändert, was eine hat; gelöscht, was in
+    der Liste fehlt. Alles, was hier durchgeht, wird 'manuell' — die Zuordnung
+    danach ist Sache des Aufrufers.
+    """
+    _projekt_pruefen(con, projekt_id)
+
+    vorhanden = {z[0] for z in con.execute(
+        "SELECT id FROM kategorie WHERE projekt_id = ?", (projekt_id,))}
+    genannt = {e["id"] for e in eintraege if e.get("id")}
+    fehlend = genannt - vorhanden
+    if fehlend:
+        raise KategorieFehler(
+            f"Kategorie {sorted(fehlend)[0]} gehört nicht zu '{projekt_id}'.",
+            "kategorie_nicht_gefunden",
+        )
+
+    namen = [(e.get("name") or "").strip() for e in eintraege]
+    if any(not n for n in namen):
+        raise KategorieFehler("Jede Kategorie braucht einen Namen.", "name_leer")
+    if len(set(namen)) != len(namen):
+        doppelt = next(n for n in namen if namen.count(n) > 1)
+        raise KategorieFehler(
+            f"'{doppelt}' kommt zweimal vor.", "kategorie_gibt_es_schon"
+        )
+
+    with con:
+        # Erst löschen: sonst kollidiert ein umbenannter Name mit einem, der
+        # gleich verschwindet.
+        weg = vorhanden - genannt
+        for kategorie_id in weg:
+            con.execute("DELETE FROM kategorie WHERE id = ?", (kategorie_id,))
+        angelegt = 0
+        for eintrag in eintraege:
+            werte = ((eintrag.get("name") or "").strip(),
+                     (eintrag.get("beschreibung") or "").strip(),
+                     ",".join(eintrag.get("schlagworte") or []))
+            if eintrag.get("id"):
+                con.execute(
+                    "UPDATE kategorie SET name = ?, beschreibung = ?, "
+                    "schlagworte = ?, herkunft = 'manuell' WHERE id = ?",
+                    (*werte, eintrag["id"]),
+                )
+            else:
+                con.execute(
+                    "INSERT INTO kategorie (projekt_id, name, beschreibung, "
+                    "schlagworte, herkunft) VALUES (?, ?, ?, ?, 'manuell')",
+                    (projekt_id, *werte),
+                )
+                angelegt += 1
+
+    return {"projekt_id": projekt_id, "anzahl": len(eintraege),
+            "angelegt": angelegt, "geloescht": len(weg),
+            "geaendert": len(genannt)}
 
 
 def einzeln(con: sqlite3.Connection, kategorie_id: int) -> dict:

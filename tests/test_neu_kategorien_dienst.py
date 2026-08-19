@@ -106,14 +106,14 @@ def test_lauf_nimmt_nur_offene_einheiten(con, monkeypatch) -> None:
     ids = _einheiten(con, ["a", "b", "c"])
     with con:  # eine ist schon klassifiziert — also hat sie eine Kategorie
         con.execute(
-            "UPDATE einheit SET kategorie_id=?, kategorie_herkunft='bge', "
+            "UPDATE einheit SET kategorie_id=?, kategorie_herkunft='automatisch', "
             "konfidenz='high' WHERE id=?",
             (kat[0], ids[0]),
         )
 
     monkeypatch.setitem(
         dienst.VERFAHREN, "bge",
-        lambda texte, tax: [kern.Zuordnung("Politik", "high", "bge") for _ in texte],
+        lambda texte, tax: [kern.Zuordnung("Politik", "high", "automatisch") for _ in texte],
     )
     ergebnis = klassifizieren(con, "p", verfahren="bge", umfang="offen")
     assert ergebnis.anzahl_einheiten == 2
@@ -129,7 +129,7 @@ def test_nicht_content_einheiten_bleiben_unberuehrt(con, monkeypatch) -> None:
         )
     monkeypatch.setitem(
         dienst.VERFAHREN, "bge",
-        lambda texte, tax: [kern.Zuordnung("Politik", "high", "bge") for _ in texte],
+        lambda texte, tax: [kern.Zuordnung("Politik", "high", "automatisch") for _ in texte],
     )
     klassifizieren(con, "p")
     offen = con.execute(
@@ -147,7 +147,7 @@ def test_manuell_bleibt_auch_bei_umfang_alle_unberuehrt(con, monkeypatch) -> Non
 
     monkeypatch.setitem(
         dienst.VERFAHREN, "bge",
-        lambda texte, tax: [kern.Zuordnung("Politik", "high", "bge") for _ in texte],
+        lambda texte, tax: [kern.Zuordnung("Politik", "high", "automatisch") for _ in texte],
     )
     ergebnis = klassifizieren(con, "p", umfang="alle")
 
@@ -166,7 +166,7 @@ def test_nur_auch_manuell_ueberschreibt_die_handkorrektur(con, monkeypatch) -> N
 
     monkeypatch.setitem(
         dienst.VERFAHREN, "bge",
-        lambda texte, tax: [kern.Zuordnung("Politik", "high", "bge") for _ in texte],
+        lambda texte, tax: [kern.Zuordnung("Politik", "high", "automatisch") for _ in texte],
     )
     ergebnis = klassifizieren(con, "p", umfang="auch_manuell")
 
@@ -174,7 +174,7 @@ def test_nur_auch_manuell_ueberschreibt_die_handkorrektur(con, monkeypatch) -> N
     zeile = con.execute(
         "SELECT kategorie_id, kategorie_herkunft FROM einheit WHERE id=?", (ids[0],)
     ).fetchone()
-    assert zeile == (kat[0], "bge")
+    assert zeile == (kat[0], "automatisch")
 
 
 def test_handkorrektur_leert_die_konfidenz(con) -> None:
@@ -182,7 +182,7 @@ def test_handkorrektur_leert_die_konfidenz(con) -> None:
     ids = _einheiten(con, ["a"])
     with con:
         con.execute(
-            "UPDATE einheit SET kategorie_id=?, konfidenz='high', kategorie_herkunft='bge', "
+            "UPDATE einheit SET kategorie_id=?, konfidenz='high', kategorie_herkunft='automatisch', "
             "kategorie_lauf_id=NULL WHERE id=?", (kat[0], ids[0]),
         )
 
@@ -239,7 +239,7 @@ def test_unbekannte_kategorie_wird_null_bei_gesetzter_herkunft(con, monkeypatch)
         (ids[0],),
     ).fetchone()
     assert zeile[0] is None          # keine Kategorie
-    assert zeile[1] == "llm"         # aber klassifiziert worden
+    assert zeile[1] == "automatisch"   # aber zugeordnet worden
     assert zeile[2] == "high"
 
 
@@ -254,7 +254,7 @@ def test_unlesbare_antwort_ergibt_weder_kategorie_noch_konfidenz(con, monkeypatc
         "SELECT kategorie_id, konfidenz, kategorie_herkunft FROM einheit WHERE id=?",
         (ids[0],),
     ).fetchone()
-    assert zeile == (None, None, "llm")
+    assert zeile == (None, None, "automatisch")
 
 
 # ── lauf ──────────────────────────────────────────────────────────────────────
@@ -264,7 +264,7 @@ def test_lauf_wird_festgehalten_und_verknuepft(con, monkeypatch) -> None:
     ids = _einheiten(con, ["a"])
     monkeypatch.setitem(
         dienst.VERFAHREN, "bge",
-        lambda texte, tax: [kern.Zuordnung("Politik", "high", "bge") for _ in texte],
+        lambda texte, tax: [kern.Zuordnung("Politik", "high", "automatisch") for _ in texte],
     )
     ergebnis = klassifizieren(con, "p")
 
@@ -321,7 +321,7 @@ def test_ohne_offene_einheiten(con, monkeypatch) -> None:
     kat = _kategorien(con)
     ids = _einheiten(con, ["a"])
     with con:
-        con.execute("UPDATE einheit SET kategorie_id=?, kategorie_herkunft='bge' "
+        con.execute("UPDATE einheit SET kategorie_id=?, kategorie_herkunft='automatisch' "
                     "WHERE id=?", (kat[0], ids[0]))
     with pytest.raises(KlassifikationFehler) as exc:
         klassifizieren(con, "p", umfang="offen")
@@ -387,6 +387,6 @@ def test_bge_ist_deterministisch_und_die_klempnerei_verzerrt_nichts(tmp_path) ->
         )
 
         assert [(z.kategorie, z.konfidenz) for z in direkt] == [tuple(r) for r in aus_db]
-        assert all(z.herkunft == "bge" for z in direkt)
+        assert all(z.herkunft == "automatisch" for z in direkt)
     finally:
         con.close()

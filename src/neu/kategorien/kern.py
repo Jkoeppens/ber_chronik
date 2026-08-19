@@ -29,7 +29,9 @@ import numpy as np
 
 # ── Wertevorräte ──────────────────────────────────────────────────────────────
 
-HERKUENFTE = ("llm", "bge", "manuell")
+# Zwei Urheber, nicht drei Verfahren: die Maschine oder der Historiker. Womit
+# gerechnet wurde, steht genauer in der lauf-Zeile.
+HERKUENFTE = ("automatisch", "manuell")
 KATEGORIE_HERKUENFTE = ("vorschlag", "manuell")
 KONFIDENZEN = ("high", "medium", "low")
 
@@ -165,7 +167,7 @@ def zuordnung_aus_antwort(roh: str, gueltige_namen: list[str]) -> Zuordnung | No
     return Zuordnung(
         kategorie=normalisiere_kategorie(parsed.get("category"), gueltige_namen),
         konfidenz=parsed.get("confidence", "low"),
-        herkunft="llm",
+        herkunft="automatisch",
     )
 
 
@@ -188,7 +190,7 @@ def klassifiziere_eine(
         if versuch == 0:
             continue
     # Zweimal unlesbar — wie in der Vorlage: keine Kategorie, keine Konfidenz.
-    return Zuordnung(kategorie=None, konfidenz=None, herkunft="llm")
+    return Zuordnung(kategorie=None, konfidenz=None, herkunft="automatisch")
 
 
 # ── BGE-Pfad ──────────────────────────────────────────────────────────────────
@@ -234,6 +236,6 @@ def zuordnungen_aus_embeddings(
         zuordnungen.append(Zuordnung(
             kategorie=gueltige_namen[best_idx],
             konfidenz=konfidenz_aus_aehnlichkeit(best_sim),
-            herkunft="bge",
+            herkunft="automatisch",
         ))
     return zuordnungen

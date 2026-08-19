@@ -1,17 +1,15 @@
 <script lang="ts">
 	import {
 		ApiFehler,
-		aendereKategorie,
 		klassifiziere,
 		ladeEinheiten,
 		ladeKategorien,
-		legeKategorieAn,
-		loescheKategorie,
 		schlageTaxonomieVor,
 		setzeEinheitKategorie,
+		speichereKategorien,
 		verfolgeLauf,
 		type Einheit,
-		type KategorieZeile,
+		type KategorieEintrag,
 		type KategorienListe,
 		type LaufStand
 	} from '$lib/api';
@@ -28,93 +26,37 @@
 
 	let fehler = $state<string | null>(null);
 
-	async function kategorienNeuLaden() {
-		nachgeladen = await ladeKategorien(data.projektId);
-	}
-	async function einheitenNeuLaden() {
-		einheitenNeu = (await ladeEinheiten(data.projektId, 'content')).einheiten;
-	}
-
-	// ── 1. Kategorien pflegen ────────────────────────────────────────────────
-	let bearbeitet = $state<number | null>(null);
-	let eName = $state('');
-	let eBeschreibung = $state('');
-	let eSchlagworte = $state('');
-
-	function bearbeiten(k: KategorieZeile) {
-		bearbeitet = k.id;
-		eName = k.name;
-		eBeschreibung = k.beschreibung;
-		eSchlagworte = k.schlagworte.join(', ');
+	async function allesNeuLaden() {
+		const [k, e] = await Promise.all([
+			ladeKategorien(data.projektId),
+			ladeEinheiten(data.projektId, 'content')
+		]);
+		nachgeladen = k;
+		einheitenNeu = e.einheiten;
+		entwurf = null; // der gespeicherte Stand ist jetzt der gültige
 	}
 
-	function felder() {
-		return {
-			name: eName.trim(),
-			beschreibung: eBeschreibung.trim(),
-			schlagworte: eSchlagworte
-				.split(',')
-				.map((w) => w.trim())
-				.filter(Boolean)
-		};
-	}
-
-	async function speichern(id: number) {
-		fehler = null;
-		try {
-			await aendereKategorie(id, felder());
-			bearbeitet = null;
-			await kategorienNeuLaden();
-		} catch (e) {
-			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
-		}
-	}
-
-	let neuOffen = $state(false);
-	async function anlegen() {
-		fehler = null;
-		try {
-			const f = felder();
-			await legeKategorieAn(data.projektId, f.name, f.beschreibung, f.schlagworte);
-			neuOffen = false;
-			eName = eBeschreibung = eSchlagworte = '';
-			await kategorienNeuLaden();
-		} catch (e) {
-			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
-		}
-	}
-
-	async function loeschen(k: KategorieZeile) {
-		if (
-			!confirm(
-				`'${k.name}' löschen?\n\n` +
-					`${k.anzahl_einheiten} Einheiten verlieren dadurch ihre Kategorie. ` +
-					`Sie bleiben erhalten.`
-			)
-		)
-			return;
-		fehler = null;
-		try {
-			await loescheKategorie(k.id);
-			await Promise.all([kategorienNeuLaden(), einheitenNeuLaden()]);
-		} catch (e) {
-			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
-		}
-	}
-
-	// ── 2. Vorschlagen und verfeinern ────────────────────────────────────────
+	// ── Der Sprachmodell-Lauf ────────────────────────────────────────────────
+	// Ein Knopf. Ob er vorschlägt oder verfeinert, entscheidet der Zustand —
+	// und zwar Beschriftung UND Verhalten. Wer wirklich bei null anfangen will,
+	// löscht die Kategorien vorher; das ist eine eigene Handlung.
+	const hatKategorien = $derived((stand?.anzahl ?? 0) > 0);
 	let nClusters = $state(7);
 	let lauf = $state<LaufStand | null>(null);
 	let laeuft = $state(false);
 
-	async function starte(warmStart: boolean) {
+	async function themenlauf() {
 		laeuft = true;
 		fehler = null;
 		lauf = null;
 		try {
-			const begonnen = await schlageTaxonomieVor(data.projektId, warmStart, nClusters);
+			const begonnen = await schlageTaxonomieVor(
+				data.projektId,
+				hatKategorien,
+				hatKategorien ? undefined : nClusters
+			);
 			await verfolgeLauf(begonnen.lauf_id, (s) => (lauf = s));
-			await kategorienNeuLaden();
+			await allesNeuLaden();
 		} catch (e) {
 			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
 		} finally {
@@ -131,9 +73,12 @@
 			return `läuft (${phase}${runde}) — Lauf ${s.id}, seit ${s.begonnen_am}`;
 		}
 		if (s.status === 'fehler') return `fehlgeschlagen: ${s.fehler ?? 'ohne Meldung'}`;
+		if (s.schritt === 'klassifikation')
+			return `zugeordnet — Lauf ${s.id}, ${s.begonnen_am} → ${s.beendet_am}`;
 		const zeilen = [
 			`${p.n_clusters} Kategorien nach ${p.llm_calls} Runden` +
 				(p.fruehzeitig_beendet ? ' (früh stabil)' : ''),
+			`${p.anzahl_zugeordnet} Einheiten zugeordnet, ${p.anzahl_geschuetzt} Handkorrekturen unberührt`,
 			`eingefroren: ${JSON.stringify(p.eingefroren ?? [])}`,
 			`${p.embedding_modell} / ${p.llm_modell}`,
 			`${p.in_tokens} Token ein, ${p.out_tokens} aus — $${Number(p.kosten_usd ?? 0).toFixed(4)}`,
@@ -151,23 +96,89 @@
 		return zeilen.join('\n');
 	}
 
-	// ── 3. Klassifizieren ────────────────────────────────────────────────────
-	let klassLauf = $state<LaufStand | null>(null);
-	let klassLaeuft = $state(false);
-	let klassUmfang = $state<'offen' | 'alle'>('offen');
+	// ── Der Editor: ein Entwurf, ein Speichern ───────────────────────────────
+	// Solange nichts geändert ist, gibt es keinen Entwurf und der Knopf ist aus.
+	// Es gibt keinen Zwischenstand: wer die Seite verlässt, verliert die Änderung.
+	let entwurf = $state<KategorieEintrag[] | null>(null);
 
-	async function klassifizierenStarten() {
-		klassLaeuft = true;
+	const zeilen = $derived<KategorieEintrag[]>(
+		entwurf ??
+			(stand?.kategorien ?? []).map((k) => ({
+				id: k.id,
+				name: k.name,
+				beschreibung: k.beschreibung,
+				schlagworte: k.schlagworte
+			}))
+	);
+	const geaendert = $derived(entwurf !== null);
+
+	function bearbeite(index: number, feld: 'name' | 'beschreibung', wert: string) {
+		const kopie = zeilen.map((z) => ({ ...z, schlagworte: [...z.schlagworte] }));
+		kopie[index][feld] = wert;
+		entwurf = kopie;
+	}
+
+	function schlagworteSetzen(index: number, wert: string) {
+		const kopie = zeilen.map((z) => ({ ...z, schlagworte: [...z.schlagworte] }));
+		kopie[index].schlagworte = wert
+			.split(',')
+			.map((w) => w.trim())
+			.filter(Boolean);
+		entwurf = kopie;
+	}
+
+	function zeileEntfernen(index: number) {
+		const kopie = zeilen.map((z) => ({ ...z, schlagworte: [...z.schlagworte] }));
+		kopie.splice(index, 1);
+		entwurf = kopie;
+	}
+
+	function zeileHinzufuegen() {
+		entwurf = [
+			...zeilen.map((z) => ({ ...z, schlagworte: [...z.schlagworte] })),
+			{ id: null, name: '', beschreibung: '', schlagworte: [] }
+		];
+	}
+
+	function verwerfen() {
+		entwurf = null;
+	}
+
+	let speicherLauf = $state<LaufStand | null>(null);
+	let speichert = $state(false);
+
+	async function speichern() {
+		speichert = true;
 		fehler = null;
-		klassLauf = null;
+		speicherLauf = null;
 		try {
-			const begonnen = await klassifiziere(data.projektId, klassUmfang);
-			await verfolgeLauf(begonnen.lauf_id, (s) => (klassLauf = s));
-			await Promise.all([kategorienNeuLaden(), einheitenNeuLaden()]);
+			const begonnen = await speichereKategorien(data.projektId, zeilen);
+			await verfolgeLauf(begonnen.lauf_id, (s) => (speicherLauf = s));
+			await allesNeuLaden();
 		} catch (e) {
 			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
 		} finally {
-			klassLaeuft = false;
+			speichert = false;
+		}
+	}
+
+	// ── Neu zuordnen — nur wenn es etwas zu tun gibt ─────────────────────────
+	const offeneEinheiten = $derived(stand?.anzahl_ohne_kategorie ?? 0);
+	let zuordnungsLauf = $state<LaufStand | null>(null);
+	let ordnetZu = $state(false);
+
+	async function neuZuordnen() {
+		ordnetZu = true;
+		fehler = null;
+		zuordnungsLauf = null;
+		try {
+			const begonnen = await klassifiziere(data.projektId);
+			await verfolgeLauf(begonnen.lauf_id, (s) => (zuordnungsLauf = s));
+			await allesNeuLaden();
+		} catch (e) {
+			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
+		} finally {
+			ordnetZu = false;
 		}
 	}
 
@@ -175,7 +186,7 @@
 		fehler = null;
 		try {
 			await setzeEinheitKategorie(einheit.id, wert ? Number(wert) : null);
-			await Promise.all([kategorienNeuLaden(), einheitenNeuLaden()]);
+			await allesNeuLaden();
 		} catch (e) {
 			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
 		}
@@ -184,9 +195,7 @@
 	// Nur die ersten Einheiten zeigen — 949 Zeilen mit Auswahlfeld sind unbedienbar.
 	let zeigeAlle = $state(false);
 	const sichtbar = $derived(zeigeAlle ? einheiten : einheiten.slice(0, 50));
-	const nameJeId = $derived(
-		new Map((stand?.kategorien ?? []).map((k) => [k.id, k.name]))
-	);
+	const beschaeftigt = $derived(laeuft || speichert || ordnetZu);
 </script>
 
 <svelte:head><title>Taxonomie — {data.projektId}</title></svelte:head>
@@ -194,7 +203,7 @@
 <main class="inhalt">
 	<div style="display:flex;align-items:center;gap:10px">
 		<a href="/projekt/{encodeURIComponent(data.projektId)}" class="btn btn-sm">← Projekt</a>
-		<span class="section-label" style="flex:1">Taxonomie und Klassifikation</span>
+		<span class="section-label" style="flex:1">Taxonomie und Zuordnung</span>
 		{#if konfiguration}
 			<span class="leer">
 				{konfiguration.llm.modell ?? 'kein Sprachmodell'} ·
@@ -211,126 +220,128 @@
 	{/if}
 
 	{#if stand}
-		<!-- ── 1. Die Kategorien ─────────────────────────────────────────── -->
-		<div style="display:flex;align-items:center;gap:10px">
-			<span class="section-label" style="flex:1">
-				Kategorien ({stand.anzahl})
-			</span>
-			<button class="btn btn-dashed btn-sm" onclick={() => {
-				neuOffen = !neuOffen;
-				bearbeitet = null;
-				eName = eBeschreibung = eSchlagworte = '';
-			}}>
-				{neuOffen ? 'Abbrechen' : '+ Kategorie'}
-			</button>
-		</div>
-
-		{#if neuOffen}
-			<div class="card" style="padding:12px;display:flex;gap:8px;flex-wrap:wrap">
-				<input class="input" style="flex:1;min-width:160px" placeholder="Name" bind:value={eName} />
-				<input class="input" style="flex:2;min-width:200px" placeholder="Beschreibung" bind:value={eBeschreibung} />
-				<input class="input" style="flex:1;min-width:140px" placeholder="Schlagworte, mit Komma" bind:value={eSchlagworte} />
-				<button class="btn btn-sm btn-primary" disabled={!eName.trim()} onclick={anlegen}>Anlegen</button>
-			</div>
-		{/if}
-
-		<div class="zeilen">
-			{#each stand.kategorien as k (k.id)}
-				{#if bearbeitet === k.id}
-					<div class="card" style="padding:12px;display:flex;gap:8px;flex-wrap:wrap">
-						<input class="input" style="flex:1;min-width:160px" bind:value={eName} />
-						<input class="input" style="flex:2;min-width:200px" bind:value={eBeschreibung} />
-						<input class="input" style="flex:1;min-width:140px" bind:value={eSchlagworte} />
-						<button class="btn btn-sm btn-primary" onclick={() => speichern(k.id)}>Speichern</button>
-						<button class="btn btn-sm" onclick={() => (bearbeitet = null)}>Abbrechen</button>
-					</div>
-				{:else}
-					<div class="proj-card" style="align-items:flex-start">
-						<div style="flex:1;display:flex;flex-direction:column;gap:2px">
-							<span class="proj-card-title">{k.name}</span>
-							{#if k.beschreibung}
-								<span class="proj-card-meta">{k.beschreibung}</span>
-							{/if}
-							{#if k.schlagworte.length}
-								<span class="proj-card-meta">{k.schlagworte.join(' · ')}</span>
-							{/if}
-						</div>
-						<span class="proj-card-meta">{k.herkunft}</span>
-						<span class="proj-card-meta">{k.anzahl_einheiten} Einheiten</span>
-						<button class="btn btn-sm" onclick={() => bearbeiten(k)}>Bearbeiten</button>
-						<button class="btn btn-sm" onclick={() => loeschen(k)}>Löschen</button>
-					</div>
-				{/if}
-			{:else}
-				<span class="leer">Noch keine Kategorien — links vorschlagen lassen.</span>
-			{/each}
-		</div>
-
-		<!-- ── 2. Vorschlagen und verfeinern ─────────────────────────────── -->
+		<!-- ── Erst der Vorgang, der die Kategorien erzeugt ───────────────── -->
 		<span class="section-label">Themen</span>
 		<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
 			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-				<button class="btn btn-primary" disabled={laeuft} onclick={() => starte(false)}>
-					Themen erarbeiten
+				<button class="btn btn-primary" disabled={beschaeftigt} onclick={themenlauf}>
+					{laeuft
+						? 'Läuft …'
+						: hatKategorien
+							? 'Taxonomie verfeinern'
+							: 'Themen vorschlagen'}
 				</button>
-				<label class="leer" style="display:flex;gap:5px;align-items:center">
-					Cluster
-					<input class="input" style="width:60px" type="number" min="2" max="20" bind:value={nClusters} disabled={laeuft} />
-				</label>
-				<span style="flex:1"></span>
-				<button
-					class="btn btn-outline"
-					disabled={laeuft || stand.anzahl === 0}
-					onclick={() => starte(true)}
-				>
-					Taxonomie verfeinern
-				</button>
+				{#if !hatKategorien}
+					<label class="leer" style="display:flex;gap:5px;align-items:center">
+						Cluster
+						<input
+							class="input"
+							style="width:60px"
+							type="number"
+							min="2"
+							max="20"
+							bind:value={nClusters}
+							disabled={beschaeftigt}
+						/>
+					</label>
+				{/if}
+				<span class="leer" style="flex:1;min-width:260px">
+					{hatKategorien
+						? `Nimmt die ${stand.anzahl} vorhandenen Kategorien als Ausgangspunkt und ` +
+							'schärft sie. Um bei null anzufangen, erst alle Kategorien löschen.'
+						: 'Findet Themen im Material und ordnet dabei jede Einheit zu — in einem Zug.'}
+				</span>
 			</div>
-			<span class="leer">
-				Erarbeiten fängt bei null an, verwirft die vorhandenen Kategorien und ordnet
-				dabei jede Einheit zu — beides in einem Zug. Verfeinern nimmt die vorhandenen
-				Kategorien als Ausgangspunkt; die Clusterzahl ist dann ihre Anzahl.
-				Handkorrekturen bleiben in beiden Fällen stehen.
-			</span>
 			{#if lauf}
 				<div class="log-box" class:error={lauf.status === 'fehler'}>{fortschrittstext(lauf)}</div>
 			{/if}
 		</div>
 
-		<!-- ── 3. Klassifizieren ─────────────────────────────────────────── -->
-		<span class="section-label">Zuordnung</span>
-		<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
-			<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-				<button
-					class="btn btn-outline"
-					disabled={klassLaeuft || stand.anzahl === 0}
-					onclick={klassifizierenStarten}
-				>
-					{klassLaeuft ? 'Ordnet zu …' : 'Neu zuordnen'}
-				</button>
-				<select class="input" bind:value={klassUmfang} disabled={klassLaeuft}>
-					<option value="offen">nur noch nicht zugeordnete</option>
-					<option value="alle">alle außer Handkorrekturen</option>
-				</select>
-				<span class="leer" style="flex:1;min-width:240px">
-					Gebraucht, wenn eine Kategorie von Hand geändert wurde oder Einheiten
-					dazugekommen sind. Der Themenlauf ordnet bereits alles zu.
-				</span>
-			</div>
-			<span class="leer">
-				{stand.anzahl_ohne_kategorie} ohne Kategorie ·
-				{stand.anzahl_manuell_zugeordnet} Handkorrekturen, die kein Lauf anfasst
-			</span>
-			{#if klassLauf}
-				<div class="log-box" class:error={klassLauf.status === 'fehler'}>{klassLauf.status === 'laeuft'
-					? `läuft — Lauf ${klassLauf.id}, seit ${klassLauf.begonnen_am}`
-					: klassLauf.status === 'fehler'
-						? `fehlgeschlagen: ${klassLauf.fehler}`
-						: `fertig — Lauf ${klassLauf.id}, ${klassLauf.begonnen_am} → ${klassLauf.beendet_am}`}</div>
+		<!-- ── Dann die Kategorien selbst ─────────────────────────────────── -->
+		<div style="display:flex;align-items:center;gap:10px">
+			<span class="section-label" style="flex:1">Kategorien ({zeilen.length})</span>
+			<button class="btn btn-sm btn-dashed" disabled={beschaeftigt} onclick={zeileHinzufuegen}>
+				+ Kategorie
+			</button>
+			{#if geaendert}
+				<button class="btn btn-sm" disabled={beschaeftigt} onclick={verwerfen}>Verwerfen</button>
 			{/if}
+			<button
+				class="btn btn-sm btn-primary"
+				disabled={!geaendert || beschaeftigt}
+				onclick={speichern}
+			>
+				{speichert ? 'Speichert und ordnet zu …' : 'Speichern'}
+			</button>
+		</div>
 
-			<!-- Verteilung -->
-			<div class="zeilen">
+		{#if geaendert}
+			<span class="leer">
+				Speichern schreibt die Beschreibungen und ordnet danach alle Einheiten neu zu —
+				bei {einheiten.length} Einheiten dauert das etwa
+				{Math.max(5, Math.round(einheiten.length / 22))} Sekunden. Ohne Speichern geht die
+				Änderung verloren.
+			</span>
+		{/if}
+
+		<div class="zeilen">
+			{#each zeilen as k, i (k.id ?? `neu-${i}`)}
+				<div class="card" style="padding:10px 14px;display:flex;flex-direction:column;gap:6px">
+					<div style="display:flex;gap:8px;align-items:center">
+						<input
+							class="input"
+							style="flex:1;font-weight:600"
+							placeholder="Name"
+							value={k.name}
+							disabled={beschaeftigt}
+							oninput={(e) => bearbeite(i, 'name', (e.currentTarget as HTMLInputElement).value)}
+						/>
+						{#if k.id}
+							{@const gespeichert = stand.kategorien.find((x) => x.id === k.id)}
+							<span class="proj-card-meta">{gespeichert?.herkunft ?? ''}</span>
+							<span class="proj-card-meta">{gespeichert?.anzahl_einheiten ?? 0} Einheiten</span>
+						{:else}
+							<span class="proj-card-meta" style="color:var(--c-primary)">neu</span>
+						{/if}
+						<button class="btn btn-sm" disabled={beschaeftigt} onclick={() => zeileEntfernen(i)}>
+							Entfernen
+						</button>
+					</div>
+					<textarea
+						class="input"
+						rows="2"
+						placeholder="Beschreibung — sie bestimmt, was hierher zugeordnet wird"
+						value={k.beschreibung}
+						disabled={beschaeftigt}
+						oninput={(e) =>
+							bearbeite(i, 'beschreibung', (e.currentTarget as HTMLTextAreaElement).value)}
+					></textarea>
+					<input
+						class="input"
+						placeholder="Schlagworte, mit Komma"
+						value={k.schlagworte.join(', ')}
+						disabled={beschaeftigt}
+						oninput={(e) => schlagworteSetzen(i, (e.currentTarget as HTMLInputElement).value)}
+					/>
+				</div>
+			{:else}
+				<span class="leer">Noch keine Kategorien — oben Themen vorschlagen lassen.</span>
+			{/each}
+		</div>
+
+		{#if speicherLauf}
+			<div class="log-box" class:error={speicherLauf.status === 'fehler'}>{speicherLauf.status ===
+				'laeuft'
+					? `speichert und ordnet zu — Lauf ${speicherLauf.id}, seit ${speicherLauf.begonnen_am}`
+					: speicherLauf.status === 'fehler'
+						? `fehlgeschlagen: ${speicherLauf.fehler}`
+						: `gespeichert und zugeordnet — Lauf ${speicherLauf.id}, ${speicherLauf.begonnen_am} → ${speicherLauf.beendet_am}`}</div>
+		{/if}
+
+		<!-- ── Die Verteilung ─────────────────────────────────────────────── -->
+		{#if stand.anzahl > 0}
+			<span class="section-label">Verteilung</span>
+			<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:6px">
 				{#each stand.kategorien as k (k.id)}
 					<div style="display:flex;gap:8px;align-items:center;font-size:12px">
 						<span style="flex:1">{k.name}</span>
@@ -343,16 +354,33 @@
 						></span>
 					</div>
 				{/each}
-				{#if stand.anzahl_ohne_kategorie > 0}
-					<div style="display:flex;gap:8px;align-items:center;font-size:12px">
-						<span style="flex:1;color:var(--c-text-3)">ohne Kategorie</span>
-						<span style="color:var(--c-text-3)">{stand.anzahl_ohne_kategorie}</span>
+				<span class="leer">
+					{stand.anzahl_manuell_zugeordnet} Handkorrekturen, die kein Lauf anfasst
+				</span>
+
+				<!-- Der Knopf erscheint nur, wenn es etwas zu tun gibt. -->
+				{#if offeneEinheiten > 0}
+					<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px">
+						<button class="btn btn-sm btn-outline" disabled={beschaeftigt} onclick={neuZuordnen}>
+							{ordnetZu ? 'Ordnet zu …' : 'Neu zuordnen'}
+						</button>
+						<span class="leer">
+							{offeneEinheiten} Einheiten ohne Kategorie — etwa nach einem neuen Ingest.
+						</span>
 					</div>
 				{/if}
+				{#if zuordnungsLauf}
+					<div class="log-box" class:error={zuordnungsLauf.status === 'fehler'}>{zuordnungsLauf.status ===
+						'laeuft'
+							? `ordnet zu — Lauf ${zuordnungsLauf.id}`
+							: zuordnungsLauf.status === 'fehler'
+								? `fehlgeschlagen: ${zuordnungsLauf.fehler}`
+								: `zugeordnet — Lauf ${zuordnungsLauf.id}`}</div>
+				{/if}
 			</div>
-		</div>
+		{/if}
 
-		<!-- Handkorrektur je Einheit -->
+		<!-- ── Handkorrektur je Einheit ───────────────────────────────────── -->
 		<div style="display:flex;align-items:center;gap:10px">
 			<span class="section-label" style="flex:1">
 				Einheiten ({sichtbar.length} von {einheiten.length})
@@ -367,7 +395,9 @@
 			{#each sichtbar as e (e.id)}
 				<div class="proj-card" style="align-items:flex-start;gap:8px">
 					<span class="proj-card-meta" style="width:40px;flex-shrink:0">{e.position}</span>
-					<span style="flex:1;font-size:12px">{e.text.slice(0, 150)}{e.text.length > 150 ? '…' : ''}</span>
+					<span style="flex:1;font-size:12px">
+						{e.text.slice(0, 150)}{e.text.length > 150 ? '…' : ''}
+					</span>
 					{#if e.kategorie_herkunft === 'manuell'}
 						<span
 							class="proj-card-meta"
@@ -382,7 +412,10 @@
 					<select
 						class="input"
 						style="width:210px;flex-shrink:0"
-						value={e.kategorie_id === null || e.kategorie_id === undefined ? '' : String(e.kategorie_id)}
+						value={e.kategorie_id === null || e.kategorie_id === undefined
+							? ''
+							: String(e.kategorie_id)}
+						disabled={beschaeftigt}
 						onchange={(ereignis) =>
 							kategorieSetzen(e, (ereignis.currentTarget as HTMLSelectElement).value)}
 					>
