@@ -7,6 +7,7 @@
 		ladeDropboxStand,
 		ladeProjekte,
 		legeProjektAn,
+		loescheProjekt,
 		leseDateiEin,
 		leseDropboxEin,
 		lesePfadEin,
@@ -193,6 +194,26 @@
 		return zeilen.join('\n');
 	}
 
+	/** Löschen mit Rückfrage — die Zahlen stehen in der Frage, nicht im Kleingedruckten. */
+	async function projektLoeschen(p: ProjektZeile) {
+		if (
+			!confirm(
+				`Projekt '${p.titel}' endgültig löschen?\n\n` +
+					`${p.anzahl_einheiten} Einheiten, ${p.anzahl_quellen} Quelle(n) und alles, ` +
+					`was daran hängt — Kategorien, Akteure, Läufe.\n\n` +
+					`Die Exportdateien unter data/projects/ bleiben liegen.`
+			)
+		)
+			return;
+		fehler = null;
+		try {
+			await loescheProjekt(p.id);
+			nachgeladen = (await ladeProjekte()).projekte;
+		} catch (e) {
+			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler beim Löschen.';
+		}
+	}
+
 	function zeitraum(p: ProjektZeile): string {
 		if (p.jahr_von === null || p.jahr_von === undefined) return 'undatiert';
 		return p.jahr_von === p.jahr_bis ? `${p.jahr_von}` : `${p.jahr_von}–${p.jahr_bis}`;
@@ -329,6 +350,13 @@
 				{:else}
 					<span class="proj-card-viz proj-card-viz--disabled">Viz öffnen ↗</span>
 				{/if}
+				<button
+					class="btn btn-sm"
+					title="Projekt löschen"
+					onclick={() => projektLoeschen(p)}
+				>
+					Löschen
+				</button>
 				<a class="proj-card-open" href="/projekt/{encodeURIComponent(p.id)}">öffnen →</a>
 			</div>
 		{:else}

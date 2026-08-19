@@ -105,7 +105,16 @@ export interface paths {
         get: operations["projekt_api_projekt__projekt_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Projekt Loeschen
+         * @description Löscht ein Projekt samt allem, was daran hängt.
+         *
+         *     Quellen, Einheiten, Kategorien, Akteure, Perioden und Läufe gehen über
+         *     ON DELETE CASCADE mit. Die Exportdateien unter data/projects/ bleiben
+         *     liegen — sie sind ein Erzeugnis, kein Bestandteil des Projekts, und
+         *     Dateien zu löschen ist nicht Sache dieses Endpoints.
+         */
+        delete: operations["projekt_loeschen_api_projekt__projekt_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -172,7 +181,11 @@ export interface paths {
         put?: never;
         /**
          * Projekt Klassifizieren
-         * @description Ordnet den offenen Einheiten eines Projekts Kategorien zu.
+         * @description Stößt die Klassifikation an und kommt sofort zurück.
+         *
+         *     Das Embedding aller Einheiten dauert; den Stand liefert GET /api/lauf/{id}.
+         *     Handkorrekturen (kategorie_herkunft='manuell') bleiben bei 'offen' und
+         *     'alle' unberührt.
          */
         post: operations["projekt_klassifizieren_api_projekt__projekt_id__klassifizieren_post"];
         delete?: never;
@@ -204,6 +217,29 @@ export interface paths {
         patch: operations["kategorie_von_hand_setzen_api_einheit__einheit_id__kategorie_patch"];
         trace?: never;
     };
+    "/api/lauf/{lauf_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lauf Stand
+         * @description Der Stand eines Schritts — so oft abfragbar, wie man mag.
+         *
+         *     Kein Strom, keine Sentinels: der Fortschritt steht in der lauf-Zeile und
+         *     überlebt eine abgerissene Verbindung wie einen neu geladenen Reiter.
+         */
+        get: operations["lauf_stand_api_lauf__lauf_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projekt/{projekt_id}/taxonomie/vorschlagen": {
         parameters: {
             query?: never;
@@ -215,10 +251,13 @@ export interface paths {
         put?: never;
         /**
          * Taxonomie Vorschlagen
-         * @description Schlägt eine Taxonomie vor — von null oder aus den vorhandenen Kategorien.
+         * @description Stößt den Taxonomielauf an und kommt sofort zurück.
          *
          *     warm_start=false: neu vorschlagen, n_clusters wählbar.
          *     warm_start=true : verfeinern, n_clusters ist die Anzahl der vorhandenen.
+         *
+         *     Der Lauf dauert Minuten. Deshalb 202 mit einer lauf_id statt einer Antwort,
+         *     auf die man wartet — den Stand liefert GET /api/lauf/{id}.
          */
         post: operations["taxonomie_vorschlagen_api_projekt__projekt_id__taxonomie_vorschlagen_post"];
         delete?: never;
@@ -419,6 +458,54 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/kategorien": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kategorien Liste
+         * @description Die Kategorien eines Projekts mit der Zahl der Einheiten darauf.
+         */
+        get: operations["kategorien_liste_api_projekt__projekt_id__kategorien_get"];
+        put?: never;
+        /**
+         * Kategorie Anlegen
+         * @description Legt eine Kategorie von Hand an — herkunft='manuell'.
+         */
+        post: operations["kategorie_anlegen_api_projekt__projekt_id__kategorien_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kategorie/{kategorie_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Kategorie Loeschen
+         * @description Löscht eine Kategorie. Die Einheiten bleiben, ihre Zuordnung wird offen.
+         */
+        delete: operations["kategorie_loeschen_api_kategorie__kategorie_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Kategorie Aendern
+         * @description Ändert eine Kategorie. Sie gilt danach als von Hand geprüft.
+         */
+        patch: operations["kategorie_aendern_api_kategorie__kategorie_id__patch"];
         trace?: never;
     };
     "/api/projekt/{projekt_id}/dropbox": {
@@ -883,6 +970,11 @@ export interface components {
             kategorie_id?: number | null;
             /** Konfidenz */
             konfidenz?: string | null;
+            /**
+             * Kategorie Herkunft
+             * @description llm | bge | manuell. NULL = nie klassifiziert; manuell ist gegen Neuläufe geschützt
+             */
+            kategorie_herkunft?: string | null;
         };
         /** EinheitenListe */
         EinheitenListe: {
@@ -1074,26 +1166,56 @@ export interface components {
             kandidaten: components["schemas"]["Kandidat"][];
         };
         /**
-         * Kategorie
-         * @description Ein Taxonomie-Vorschlag, wie kern.verfeinern ihn baut.
-         *
-         *     Name und Beschreibung entstehen durch Aufteilen der Modellantwort am ersten
-         *     '. '; fehlt der Punkt, bleibt description leer.
+         * KategorieRumpf
+         * @description Rumpf zum Anlegen und Ändern. Nur was gesetzt ist, wird geändert.
          */
-        Kategorie: {
+        KategorieRumpf: {
+            /** Name */
+            name?: string | null;
+            /** Beschreibung */
+            beschreibung?: string | null;
+            /** Schlagworte */
+            schlagworte?: string[] | null;
+        };
+        /** KategorieZeile */
+        KategorieZeile: {
+            /** Id */
+            id: number;
+            /** Projekt Id */
+            projekt_id: string;
             /** Name */
             name: string;
+            /** Beschreibung */
+            beschreibung: string;
+            /** Schlagworte */
+            schlagworte: string[];
             /**
-             * Description
-             * @description Leer, wenn die Antwort keinen Satzteil dahinter hatte
-             * @default
+             * Herkunft
+             * @description vorschlag = aus einem Lauf, manuell = von Hand angefasst
+             * @enum {string}
              */
-            description: string;
+            herkunft: "vorschlag" | "manuell";
             /**
-             * Keywords
-             * @description Höchstens drei, aus den TF-IDF-Schlagworten
+             * Anzahl Einheiten
+             * @description Wie viele Einheiten darauf zeigen
              */
-            keywords?: string[];
+            anzahl_einheiten: number;
+        };
+        /** KategorienListe */
+        KategorienListe: {
+            /** Projekt Id */
+            projekt_id: string;
+            /** Anzahl */
+            anzahl: number;
+            /** Kategorien */
+            kategorien: components["schemas"]["KategorieZeile"][];
+            /** Anzahl Ohne Kategorie */
+            anzahl_ohne_kategorie: number;
+            /**
+             * Anzahl Manuell Zugeordnet
+             * @description Handkorrekturen — vor jedem Neulauf sicher
+             */
+            anzahl_manuell_zugeordnet: number;
         };
         /**
          * Kennzahlen
@@ -1139,41 +1261,6 @@ export interface components {
              * @description Die letzten Läufe, neueste zuerst
              */
             laeufe: components["schemas"]["Lauf"][];
-        };
-        /** KlassifikationAntwort */
-        KlassifikationAntwort: {
-            /** Projekt Id */
-            projekt_id: string;
-            /**
-             * Verfahren
-             * @enum {string}
-             */
-            verfahren: "bge" | "llm";
-            /**
-             * Umfang
-             * @enum {string}
-             */
-            umfang: "offen" | "alle" | "auch_manuell";
-            /** Lauf Id */
-            lauf_id: number;
-            /** Begonnen Am */
-            begonnen_am: string;
-            /** Beendet Am */
-            beendet_am: string;
-            /** Status */
-            status: string;
-            /** Anzahl Einheiten */
-            anzahl_einheiten: number;
-            /** Anzahl Ohne Kategorie */
-            anzahl_ohne_kategorie: number;
-            /** Anzahl Je Konfidenz */
-            anzahl_je_konfidenz: {
-                [key: string]: number;
-            };
-            /** Anzahl Je Kategorie */
-            anzahl_je_kategorie: {
-                [key: string]: number;
-            };
         };
         /**
          * KlassifizierenRumpf
@@ -1236,6 +1323,56 @@ export interface components {
             begonnen_am: string;
             /** Beendet Am */
             beendet_am: string | null;
+        };
+        /**
+         * LaufBegonnen
+         * @description Antwort auf das Anstoßen eines langen Schritts.
+         */
+        LaufBegonnen: {
+            /** Lauf Id */
+            lauf_id: number;
+            /** Projekt Id */
+            projekt_id: string;
+            /** Schritt */
+            schritt: string;
+            /**
+             * Status
+             * @description immer 'laeuft' — der Stand kommt aus GET /api/lauf/{id}
+             */
+            status: string;
+        };
+        /**
+         * LaufStand
+         * @description Der Stand eines Schritts — abgefragt, nicht gestreamt.
+         *
+         *     Der Fortschritt steht in der lauf-Zeile: reißt die Verbindung, ist er
+         *     trotzdem da, und ein neu geladener Reiter sieht denselben Lauf.
+         */
+        LaufStand: {
+            /** Id */
+            id: number;
+            /** Projekt Id */
+            projekt_id: string;
+            /** Schritt */
+            schritt: string;
+            /**
+             * Status
+             * @description laeuft | erfolg | fehler
+             */
+            status: string;
+            /** Begonnen Am */
+            begonnen_am: string;
+            /** Beendet Am */
+            beendet_am: string | null;
+            /**
+             * Parameter
+             * @description Was der Schritt bisher gemeldet hat; am Ende sein Ergebnis
+             */
+            parameter: {
+                [key: string]: unknown;
+            };
+            /** Fehler */
+            fehler: string | null;
         };
         /** Projekt */
         Projekt: {
@@ -1339,43 +1476,6 @@ export interface components {
              */
             quellformat: "literaturexzerpt" | "presseexzerpt" | "pressesammlung";
         };
-        /** TaxonomieAntwort */
-        TaxonomieAntwort: {
-            /** Projekt Id */
-            projekt_id: string;
-            /** Warm Start */
-            warm_start: boolean;
-            /** Lauf Id */
-            lauf_id: number;
-            /** Begonnen Am */
-            begonnen_am: string;
-            /** Beendet Am */
-            beendet_am: string;
-            /** Status */
-            status: string;
-            /** N Clusters */
-            n_clusters: number;
-            /** Kategorien */
-            kategorien: components["schemas"]["Kategorie"][];
-            /** Llm Runden */
-            llm_runden: number;
-            /** Fruehzeitig Beendet */
-            fruehzeitig_beendet: boolean;
-            /** Eingefroren */
-            eingefroren: number[];
-            /** In Tokens */
-            in_tokens: number;
-            /** Out Tokens */
-            out_tokens: number;
-            /** Kosten Usd */
-            kosten_usd: number;
-            /** Embedding Modell */
-            embedding_modell: string;
-            /** Llm Modell */
-            llm_modell: string;
-            /** Trajektorie */
-            trajektorie: components["schemas"]["TrajektorieRunde"][];
-        };
         /**
          * TaxonomieVorschlagRumpf
          * @description Rumpf von POST /api/projekt/{id}/taxonomie/vorschlagen.
@@ -1392,43 +1492,6 @@ export interface components {
              * @description Anzahl Kategorien; nur ohne warm_start erlaubt (Vorgabe 7)
              */
             n_clusters?: number | null;
-        };
-        /**
-         * TrajektorieRunde
-         * @description Was in einer LLM-Runde geschah — eine Zeile der Trajektorie.
-         *
-         *     Die Schlüssel von label_sim, delta und titel sind Clusternummern als
-         *     Zeichenketten: JSON kennt keine Zahlen als Schlüssel.
-         */
-        TrajektorieRunde: {
-            /** Llm Runde */
-            llm_runde: number;
-            /** Km Iter */
-            km_iter: number;
-            /** Aenderungsanteil */
-            aenderungsanteil: number;
-            /** Eingefroren Gesamt */
-            eingefroren_gesamt: number;
-            /** Neu Eingefroren */
-            neu_eingefroren: number[];
-            /**
-             * Label Sim
-             * @description Je Cluster die Ähnlichkeit zum vorigen Label; null in Runde 1
-             */
-            label_sim: {
-                [key: string]: number | null;
-            };
-            /**
-             * Delta
-             * @description Je Cluster die Veränderung dieser Ähnlichkeit
-             */
-            delta: {
-                [key: string]: number | null;
-            };
-            /** Titel */
-            titel: {
-                [key: string]: string;
-            };
         };
         /**
          * VerschmelzenRumpf
@@ -1506,6 +1569,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -1564,6 +1636,15 @@ export interface operations {
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1640,6 +1721,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -1700,6 +1790,15 @@ export interface operations {
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1774,6 +1873,93 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    projekt_loeschen_api_projekt__projekt_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -1837,6 +2023,15 @@ export interface operations {
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1915,6 +2110,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -1969,16 +2173,25 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KlassifikationAntwort"];
+                    "application/json": components["schemas"]["LaufBegonnen"];
                 };
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2057,6 +2270,91 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    lauf_stand_api_lauf__lauf_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lauf_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LaufStand"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -2111,16 +2409,25 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TaxonomieAntwort"];
+                    "application/json": components["schemas"]["LaufBegonnen"];
                 };
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2199,6 +2506,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -2263,6 +2579,15 @@ export interface operations {
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2341,6 +2666,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -2405,6 +2739,15 @@ export interface operations {
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2481,6 +2824,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -2541,6 +2893,15 @@ export interface operations {
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2619,6 +2980,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -2690,6 +3060,329 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    kategorien_liste_api_projekt__projekt_id__kategorien_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KategorienListe"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    kategorie_anlegen_api_projekt__projekt_id__kategorien_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KategorieRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KategorieZeile"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    kategorie_loeschen_api_kategorie__kategorie_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kategorie_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    kategorie_aendern_api_kategorie__kategorie_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kategorie_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KategorieRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KategorieZeile"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -2750,6 +3443,15 @@ export interface operations {
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2828,6 +3530,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -2888,6 +3599,15 @@ export interface operations {
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2962,6 +3682,15 @@ export interface operations {
                     "application/json": components["schemas"]["FehlerAntwort"];
                 };
             };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
             /** @description Ungültiger Parameter */
             422: {
                 headers: {
@@ -3022,6 +3751,15 @@ export interface operations {
             };
             /** @description Nicht gefunden */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

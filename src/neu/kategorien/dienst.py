@@ -18,6 +18,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+from src.neu import laeufe
 from src.neu.kategorien import kern
 from src.neu.kategorien.kern import Zuordnung
 
@@ -134,6 +135,7 @@ def klassifizieren(
     projekt_id: str,
     verfahren: str = "bge",
     umfang: str = "offen",
+    lauf_id: int | None = None,
 ) -> KlassifikationErgebnis:
     """Klassifiziert die offenen Einheiten eines Projekts.
 
@@ -177,16 +179,30 @@ def klassifizieren(
                 "keine_einheiten",
             )
 
+        if lauf_id is not None:
+            laeufe.fortschritt(con, lauf_id, phase="embedding",
+                               einheiten=len(einheiten), kategorien=len(taxonomie))
+
         zuordnungen = VERFAHREN[verfahren]([t for _, t in einheiten], taxonomie)
         id_je_name = {c["name"]: c["id"] for c in taxonomie}
 
         with con:
-            zeiger = con.execute(
-                "INSERT INTO lauf (projekt_id, schritt, begonnen_am, parameter, status) "
-                "VALUES (?, 'klassifikation', ?, ?, 'laeuft')",
-                (projekt_id, begonnen_am, parameter),
-            )
-            lauf_id = zeiger.lastrowid
+            if lauf_id is None:
+                zeiger = con.execute(
+                    "INSERT INTO lauf (projekt_id, schritt, begonnen_am, parameter, "
+                    "status) VALUES (?, 'klassifikation', ?, ?, 'laeuft')",
+                    (projekt_id, begonnen_am, parameter),
+                )
+                lauf_id = zeiger.lastrowid
+            else:
+                # Eine schon angelegte Zeile fortschreiben, damit die Oberfläche
+                # den Stand von Anfang an abfragen kann (src/neu/laeufe.py).
+                # Ergänzend, nicht ersetzend: was laeufe.starten hineingeschrieben
+                # hat, soll stehen bleiben.
+                laeufe.fortschritt(
+                    con, lauf_id, phase="schreiben",
+                    einheiten=len(einheiten), verfahren=verfahren, umfang=umfang,
+                )
 
             con.executemany(
                 "UPDATE einheit SET kategorie_id = ?, konfidenz = ?, "
@@ -211,6 +227,12 @@ def klassifizieren(
 
     except Exception as exc:
         with con:
+            if lauf_id is not None:
+                con.execute(
+                    "UPDATE lauf SET beendet_am = ?, status = 'fehler' WHERE id = ?",
+                    (_jetzt(), lauf_id),
+                )
+                raise
             con.execute(
                 "INSERT INTO lauf (projekt_id, schritt, begonnen_am, beendet_am, "
                 "parameter, status) VALUES (?, 'klassifikation', ?, ?, ?, 'fehler')",

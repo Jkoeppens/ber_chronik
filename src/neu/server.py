@@ -64,6 +64,10 @@ from src.neu.akteure.dienst import (  # noqa: E402
     erkennen,
 )
 from src.neu.export.dienst import ExportFehler, exportieren  # noqa: E402
+from src.neu import laeufe  # noqa: E402
+from src.neu.laeufe import LaufFehler  # noqa: E402
+from src.neu.kategorien import verwaltung as kategorie_verwaltung  # noqa: E402
+from src.neu.kategorien.verwaltung import KategorieFehler  # noqa: E402
 from src.neu import projekte as projekt_dienst  # noqa: E402
 from src.neu.projekte import ProjektFehler  # noqa: E402
 from src.neu.taxonomie.anbieter import AnbieterFehler  # noqa: E402
@@ -83,6 +87,11 @@ from src.neu.modelle import (  # noqa: E402
     ProjektAnlegenRumpf,
     ExportierenRumpf,
     KandidatenListe,
+    KategorieRumpf,
+    KategorieZeile,
+    KategorienListe,
+    LaufBegonnen,
+    LaufStand,
     KonfigurationAntwort,
     VerschmelzenRumpf,
     EinheitTyp,
@@ -110,6 +119,7 @@ from src.neu.modelle import (  # noqa: E402
 # Alle Fehlerantworten tragen dieselbe Gestalt — auch in der OpenAPI-Ausgabe.
 FEHLER_ANTWORTEN = {
     404: {"model": FehlerAntwort, "description": "Nicht gefunden"},
+    409: {"model": FehlerAntwort, "description": "Steht dem gerade etwas entgegen"},
     422: {"model": FehlerAntwort, "description": "Ungültiger Parameter"},
     500: {"model": FehlerAntwort, "description": "Serverfehler"},
     502: {"model": FehlerAntwort, "description": "Ein Dienst dahinter antwortet nicht"},
@@ -423,26 +433,45 @@ def quelle_anlegen(projekt_id: str, rumpf: QuelleAnlegen) -> IngestAntwort:
 
 @app.post(
     "/api/projekt/{projekt_id}/klassifizieren",
-    response_model=KlassifikationAntwort,
+    response_model=LaufBegonnen,
     responses=FEHLER_ANTWORTEN,
+    status_code=202,
 )
 def projekt_klassifizieren(
     projekt_id: str, rumpf: KlassifizierenRumpf
-) -> KlassifikationAntwort:
-    """Ordnet den offenen Einheiten eines Projekts Kategorien zu."""
-    con = verbindung_schreibend()
+) -> LaufBegonnen:
+    """Stößt die Klassifikation an und kommt sofort zurück.
+
+    Das Embedding aller Einheiten dauert; den Stand liefert GET /api/lauf/{id}.
+    Handkorrekturen (kategorie_herkunft='manuell') bleiben bei 'offen' und
+    'alle' unberührt.
+    """
+    con = verbindung()
     try:
-        ergebnis = klassifizieren(
-            con, projekt_id=projekt_id,
-            verfahren=rumpf.verfahren, umfang=rumpf.umfang,
-        )
-    except KlassifikationFehler as exc:
-        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
-        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+        if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone() is None:
+            raise nicht_gefunden(
+                "projekt_nicht_gefunden", f"Kein Projekt mit der Kennung '{projekt_id}'."
+            )
     finally:
         con.close()
 
-    return KlassifikationAntwort(**vars(ergebnis))
+    def arbeit(eigene, lauf_id: int) -> None:
+        klassifizieren(
+            eigene, projekt_id=projekt_id, verfahren=rumpf.verfahren,
+            umfang=rumpf.umfang, lauf_id=lauf_id,
+        )
+
+    try:
+        lauf_id = laeufe.starten(
+            projekt_id, "klassifikation",
+            {"verfahren": rumpf.verfahren, "umfang": rumpf.umfang, "phase": "beginnt"},
+            arbeit,
+        )
+    except LaufFehler as exc:
+        raise HTTPException(status_code=409, detail=(exc.code, str(exc)))
+
+    return LaufBegonnen(lauf_id=lauf_id, projekt_id=projekt_id,
+                        schritt="klassifikation", status="laeuft")
 
 
 @app.patch(
@@ -468,35 +497,68 @@ def kategorie_von_hand_setzen(einheit_id: int, rumpf: ZuordnungRumpf) -> Zuordnu
     return ZuordnungAntwort(**ergebnis)
 
 
-@app.post(
-    "/api/projekt/{projekt_id}/taxonomie/vorschlagen",
-    response_model=TaxonomieAntwort,
-    responses=FEHLER_ANTWORTEN,
-)
-def taxonomie_vorschlagen(
-    projekt_id: str, rumpf: TaxonomieVorschlagRumpf
-) -> TaxonomieAntwort:
-    """Schlägt eine Taxonomie vor — von null oder aus den vorhandenen Kategorien.
+# ── Läufe ─────────────────────────────────────────────────────────────────────
 
-    warm_start=false: neu vorschlagen, n_clusters wählbar.
-    warm_start=true : verfeinern, n_clusters ist die Anzahl der vorhandenen.
+@app.get("/api/lauf/{lauf_id}", response_model=LaufStand, responses=FEHLER_ANTWORTEN)
+def lauf_stand(lauf_id: int) -> LaufStand:
+    """Der Stand eines Schritts — so oft abfragbar, wie man mag.
+
+    Kein Strom, keine Sentinels: der Fortschritt steht in der lauf-Zeile und
+    überlebt eine abgerissene Verbindung wie einen neu geladenen Reiter.
     """
-    con = verbindung_schreibend()
+    con = verbindung()
     try:
-        ergebnis = vorschlagen(
-            con, projekt_id=projekt_id,
-            warm_start=rumpf.warm_start, n_clusters=rumpf.n_clusters,
-        )
-    except TaxonomieFehler as exc:
-        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
-        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
-    except AnbieterFehler as exc:
-        # Fehlender Schlüssel oder Anbieter: keine stille Ersatzwahl.
-        raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
+        return LaufStand(**laeufe.stand(con, lauf_id))
+    except LaufFehler as exc:
+        raise HTTPException(status_code=404, detail=(exc.code, str(exc)))
     finally:
         con.close()
 
-    return TaxonomieAntwort(**vars(ergebnis))
+
+@app.post(
+    "/api/projekt/{projekt_id}/taxonomie/vorschlagen",
+    response_model=LaufBegonnen,
+    responses=FEHLER_ANTWORTEN,
+    status_code=202,
+)
+def taxonomie_vorschlagen(
+    projekt_id: str, rumpf: TaxonomieVorschlagRumpf
+) -> LaufBegonnen:
+    """Stößt den Taxonomielauf an und kommt sofort zurück.
+
+    warm_start=false: neu vorschlagen, n_clusters wählbar.
+    warm_start=true : verfeinern, n_clusters ist die Anzahl der vorhandenen.
+
+    Der Lauf dauert Minuten. Deshalb 202 mit einer lauf_id statt einer Antwort,
+    auf die man wartet — den Stand liefert GET /api/lauf/{id}.
+    """
+    con = verbindung()
+    try:
+        if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone() is None:
+            raise nicht_gefunden(
+                "projekt_nicht_gefunden", f"Kein Projekt mit der Kennung '{projekt_id}'."
+            )
+    finally:
+        con.close()
+
+    def arbeit(eigene, lauf_id: int) -> None:
+        vorschlagen(
+            eigene, projekt_id=projekt_id, warm_start=rumpf.warm_start,
+            n_clusters=rumpf.n_clusters, lauf_id=lauf_id,
+        )
+
+    try:
+        lauf_id = laeufe.starten(
+            projekt_id, "taxonomie",
+            {"warm_start": rumpf.warm_start, "n_clusters": rumpf.n_clusters,
+             "phase": "beginnt"},
+            arbeit,
+        )
+    except LaufFehler as exc:
+        raise HTTPException(status_code=409, detail=(exc.code, str(exc)))
+
+    return LaufBegonnen(lauf_id=lauf_id, projekt_id=projekt_id,
+                        schritt="taxonomie", status="laeuft")
 
 
 @app.post(
@@ -744,6 +806,113 @@ async def quelle_hochladen(
         con.close()
 
     return IngestAntwort(**vars(ergebnis))
+
+
+# ── Kategorien pflegen ────────────────────────────────────────────────────────
+
+@app.get(
+    "/api/projekt/{projekt_id}/kategorien",
+    response_model=KategorienListe,
+    responses=FEHLER_ANTWORTEN,
+)
+def kategorien_liste(projekt_id: str) -> KategorienListe:
+    """Die Kategorien eines Projekts mit der Zahl der Einheiten darauf."""
+    con = verbindung()
+    try:
+        return KategorienListe(**kategorie_verwaltung.liste(con, projekt_id))
+    except KategorieFehler as exc:
+        raise HTTPException(status_code=404, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.post(
+    "/api/projekt/{projekt_id}/kategorien",
+    response_model=KategorieZeile,
+    responses=FEHLER_ANTWORTEN,
+    status_code=201,
+)
+def kategorie_anlegen(projekt_id: str, rumpf: KategorieRumpf) -> KategorieZeile:
+    """Legt eine Kategorie von Hand an — herkunft='manuell'."""
+    if not rumpf.name:
+        raise HTTPException(
+            status_code=422, detail=("name_leer", "name ist zum Anlegen nötig.")
+        )
+    con = verbindung_schreibend()
+    try:
+        return KategorieZeile(**kategorie_verwaltung.anlegen(
+            con, projekt_id, name=rumpf.name,
+            beschreibung=rumpf.beschreibung or "",
+            schlagworte=rumpf.schlagworte or [],
+        ))
+    except KategorieFehler as exc:
+        status = (404 if exc.code == "projekt_nicht_gefunden"
+                  else 409 if exc.code == "kategorie_gibt_es_schon" else 422)
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.patch(
+    "/api/kategorie/{kategorie_id}",
+    response_model=KategorieZeile,
+    responses=FEHLER_ANTWORTEN,
+)
+def kategorie_aendern(kategorie_id: int, rumpf: KategorieRumpf) -> KategorieZeile:
+    """Ändert eine Kategorie. Sie gilt danach als von Hand geprüft."""
+    con = verbindung_schreibend()
+    try:
+        return KategorieZeile(**kategorie_verwaltung.aendern(
+            con, kategorie_id, name=rumpf.name,
+            beschreibung=rumpf.beschreibung, schlagworte=rumpf.schlagworte,
+        ))
+    except KategorieFehler as exc:
+        status = (404 if exc.code == "kategorie_nicht_gefunden"
+                  else 409 if exc.code == "kategorie_gibt_es_schon" else 422)
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.delete("/api/kategorie/{kategorie_id}", responses=FEHLER_ANTWORTEN)
+def kategorie_loeschen(kategorie_id: int) -> dict:
+    """Löscht eine Kategorie. Die Einheiten bleiben, ihre Zuordnung wird offen."""
+    con = verbindung_schreibend()
+    try:
+        return kategorie_verwaltung.loeschen(con, kategorie_id)
+    except KategorieFehler as exc:
+        raise HTTPException(status_code=404, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.delete("/api/projekt/{projekt_id}", responses=FEHLER_ANTWORTEN)
+def projekt_loeschen(projekt_id: str) -> dict:
+    """Löscht ein Projekt samt allem, was daran hängt.
+
+    Quellen, Einheiten, Kategorien, Akteure, Perioden und Läufe gehen über
+    ON DELETE CASCADE mit. Die Exportdateien unter data/projects/ bleiben
+    liegen — sie sind ein Erzeugnis, kein Bestandteil des Projekts, und
+    Dateien zu löschen ist nicht Sache dieses Endpoints.
+    """
+    con = verbindung_schreibend()
+    try:
+        zeile = con.execute(
+            "SELECT titel FROM projekt WHERE id = ?", (projekt_id,)
+        ).fetchone()
+        if zeile is None:
+            raise nicht_gefunden(
+                "projekt_nicht_gefunden", f"Kein Projekt mit der Kennung '{projekt_id}'."
+            )
+        einheiten = con.execute(
+            "SELECT COUNT(*) FROM einheit e JOIN quelle q ON q.id = e.quelle_id "
+            "WHERE q.projekt_id = ?", (projekt_id,)
+        ).fetchone()[0]
+        with con:
+            con.execute("DELETE FROM projekt WHERE id = ?", (projekt_id,))
+    finally:
+        con.close()
+    return {"projekt_id": projekt_id, "titel": zeile[0], "geloeschte_einheiten": einheiten}
 
 
 # ── Dropbox ───────────────────────────────────────────────────────────────────

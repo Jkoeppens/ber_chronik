@@ -144,6 +144,11 @@ class Einheit(BaseModel):
     # Ergebnis der Klassifikation
     kategorie_id: int | None = None
     konfidenz: str | None = None
+    kategorie_herkunft: str | None = Field(
+        default=None,
+        description="llm | bge | manuell. NULL = nie klassifiziert; "
+                    "manuell ist gegen Neuläufe geschützt",
+    )
 
 
 class EinheitenListe(BaseModel):
@@ -431,6 +436,71 @@ class KandidatenListe(BaseModel):
     projekt_id: str
     anzahl: int
     kandidaten: list[Kandidat]
+
+
+# ── Läufe ─────────────────────────────────────────────────────────────────────
+
+class LaufStand(BaseModel):
+    """Der Stand eines Schritts — abgefragt, nicht gestreamt.
+
+    Der Fortschritt steht in der lauf-Zeile: reißt die Verbindung, ist er
+    trotzdem da, und ein neu geladener Reiter sieht denselben Lauf.
+    """
+
+    id: int
+    projekt_id: str
+    schritt: str
+    status: str = Field(description="laeuft | erfolg | fehler")
+    begonnen_am: str
+    beendet_am: str | None
+    parameter: dict = Field(
+        description="Was der Schritt bisher gemeldet hat; am Ende sein Ergebnis"
+    )
+    fehler: str | None
+
+
+class LaufBegonnen(BaseModel):
+    """Antwort auf das Anstoßen eines langen Schritts."""
+
+    lauf_id: int
+    projekt_id: str
+    schritt: str
+    status: str = Field(description="immer 'laeuft' — der Stand kommt aus GET /api/lauf/{id}")
+
+
+# ── Kategorien ────────────────────────────────────────────────────────────────
+
+KategorieHerkunft = Literal["vorschlag", "manuell"]
+
+
+class KategorieZeile(BaseModel):
+    id: int
+    projekt_id: str
+    name: str
+    beschreibung: str
+    schlagworte: list[str]
+    herkunft: KategorieHerkunft = Field(
+        description="vorschlag = aus einem Lauf, manuell = von Hand angefasst"
+    )
+    anzahl_einheiten: int = Field(description="Wie viele Einheiten darauf zeigen")
+
+
+class KategorienListe(BaseModel):
+    projekt_id: str
+    anzahl: int
+    kategorien: list[KategorieZeile]
+    anzahl_ohne_kategorie: int
+    anzahl_manuell_zugeordnet: int = Field(
+        description="Handkorrekturen — vor jedem Neulauf sicher"
+    )
+
+
+class KategorieRumpf(BaseModel):
+    """Rumpf zum Anlegen und Ändern. Nur was gesetzt ist, wird geändert."""
+
+    name: str | None = Field(default=None, min_length=1)
+    beschreibung: str | None = None
+    schlagworte: list[str] | None = None
 
 
 # ── Export ────────────────────────────────────────────────────────────────────

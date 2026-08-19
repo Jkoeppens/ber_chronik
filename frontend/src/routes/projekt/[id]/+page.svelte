@@ -133,6 +133,12 @@
 	<div style="display:flex;align-items:center;gap:10px">
 		<a href="/" class="btn btn-sm">← Projekte</a>
 		<span class="section-label" style="flex:1">{zahlen?.titel ?? data.projektId}</span>
+		<a
+			class="btn btn-sm"
+			href="/projekt/{encodeURIComponent(data.projektId)}/taxonomie"
+		>
+			Taxonomie und Klassifikation →
+		</a>
 		{#if zahlen?.hat_export}
 			<a class="btn btn-sm btn-outline" href={vizAdresse(data.projektId)} target="_blank" rel="noreferrer">
 				Viz öffnen ↗

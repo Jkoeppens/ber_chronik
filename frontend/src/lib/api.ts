@@ -28,6 +28,11 @@ export type Quellformat = components['schemas']['QuelleAnlegen']['quellformat'];
 export type DropboxStand = components['schemas']['DropboxStand'];
 export type AnmeldungBeginn = components['schemas']['AnmeldungBeginn'];
 export type DropboxOrdnerListe = components['schemas']['DropboxOrdnerListe'];
+export type LaufStand = components['schemas']['LaufStand'];
+export type LaufBegonnen = components['schemas']['LaufBegonnen'];
+export type KategorieZeile = components['schemas']['KategorieZeile'];
+export type KategorienListe = components['schemas']['KategorienListe'];
+export type Konfiguration = components['schemas']['KonfigurationAntwort'];
 
 /** Die eine Fehlergestalt des Servers — auch sie kommt aus dem Schema. */
 type ServerFehler = components['schemas']['FehlerAntwort'];
@@ -151,6 +156,111 @@ export function ladeEinheiten(
 ): Promise<EinheitenListe> {
 	const abfrage = typ ? `?typ=${encodeURIComponent(typ)}` : '';
 	return ruf<EinheitenListe>(`/api/projekt/${encodeURIComponent(projektId)}/einheiten${abfrage}`);
+}
+
+// ── Lange Läufe ─────────────────────────────────────────────────────────────
+
+/** Der Stand eines Schritts. Abgefragt, nicht gestreamt. */
+export function ladeLauf(laufId: number): Promise<LaufStand> {
+	return ruf<LaufStand>(`/api/lauf/${laufId}`);
+}
+
+/**
+ * Fragt den Stand, bis der Lauf zu Ende ist. `melde` bekommt jeden
+ * Zwischenstand — auch den ersten, damit die Fläche sofort etwas zeigt.
+ */
+export async function verfolgeLauf(
+	laufId: number,
+	melde: (stand: LaufStand) => void,
+	abstandMs = 1500
+): Promise<LaufStand> {
+	for (;;) {
+		const stand = await ladeLauf(laufId);
+		melde(stand);
+		if (stand.status !== 'laeuft') return stand;
+		await new Promise((r) => setTimeout(r, abstandMs));
+	}
+}
+
+/** Stößt den Taxonomievorschlag an. Kommt sofort mit einer lauf_id zurück. */
+export function schlageTaxonomieVor(
+	projektId: string,
+	warmStart: boolean,
+	nClusters?: number
+): Promise<LaufBegonnen> {
+	return ruf<LaufBegonnen>(
+		`/api/projekt/${encodeURIComponent(projektId)}/taxonomie/vorschlagen`,
+		alsJson(warmStart ? { warm_start: true } : { warm_start: false, n_clusters: nClusters })
+	);
+}
+
+/** Stößt die Klassifikation an. Kommt sofort mit einer lauf_id zurück. */
+export function klassifiziere(
+	projektId: string,
+	umfang: 'offen' | 'alle' | 'auch_manuell' = 'alle'
+): Promise<LaufBegonnen> {
+	return ruf<LaufBegonnen>(
+		`/api/projekt/${encodeURIComponent(projektId)}/klassifizieren`,
+		alsJson({ verfahren: 'bge', umfang })
+	);
+}
+
+// ── Kategorien ──────────────────────────────────────────────────────────────
+
+export function ladeKategorien(projektId: string): Promise<KategorienListe> {
+	return ruf<KategorienListe>(`/api/projekt/${encodeURIComponent(projektId)}/kategorien`);
+}
+
+export function legeKategorieAn(
+	projektId: string,
+	name: string,
+	beschreibung = '',
+	schlagworte: string[] = []
+): Promise<KategorieZeile> {
+	return ruf<KategorieZeile>(
+		`/api/projekt/${encodeURIComponent(projektId)}/kategorien`,
+		alsJson({ name, beschreibung, schlagworte })
+	);
+}
+
+export function aendereKategorie(
+	kategorieId: number,
+	felder: { name?: string; beschreibung?: string; schlagworte?: string[] }
+): Promise<KategorieZeile> {
+	return ruf<KategorieZeile>(`/api/kategorie/${kategorieId}`, {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(felder)
+	});
+}
+
+export function loescheKategorie(kategorieId: number): Promise<unknown> {
+	return ruf<unknown>(`/api/kategorie/${kategorieId}`, { method: 'DELETE' });
+}
+
+/** Setzt die Kategorie einer Einheit von Hand — danach 'manuell'. */
+export function setzeEinheitKategorie(
+	einheitId: number,
+	kategorieId: number | null
+): Promise<unknown> {
+	return ruf<unknown>(`/api/einheit/${einheitId}/kategorie`, {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ kategorie_id: kategorieId })
+	});
+}
+
+// ── Projekt ─────────────────────────────────────────────────────────────────
+
+export function loescheProjekt(projektId: string): Promise<unknown> {
+	return ruf<unknown>(`/api/projekt/${encodeURIComponent(projektId)}`, {
+		method: 'DELETE'
+	});
+}
+
+/** Welche Anbieter und Modelle gerade gelten. */
+export function ladeKonfiguration(): Promise<Konfiguration> {
+	return ruf<Konfiguration>('/api/konfiguration');
 }
 
 // ── Dropbox ─────────────────────────────────────────────────────────────────

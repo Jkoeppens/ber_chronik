@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 
+from src.neu import laeufe
 from src.neu.taxonomie import anbieter, kern
 
 
@@ -92,12 +93,17 @@ def vorschlagen(
     projekt_id: str,
     warm_start: bool = False,
     n_clusters: int | None = None,
+    lauf_id: int | None = None,
 ) -> TaxonomieErgebnis:
     """Schlägt eine Taxonomie vor und schreibt sie nach kategorie.
 
     warm_start=False: von null. n_clusters bestimmt die Anzahl (Vorgabe 7).
     warm_start=True : aus den vorhandenen Kategorien; n_clusters ist dann
                       deren Anzahl und der Parameter wird abgewiesen.
+
+    lauf_id: eine bereits angelegte 'laeuft'-Zeile, die fortgeschrieben wird,
+    statt am Ende eine neue anzulegen. So kann die Oberfläche den Stand
+    abfragen, während gerechnet wird (siehe src/neu/laeufe.py).
     """
     begonnen_am = _jetzt()
 
@@ -142,7 +148,27 @@ def vorschlagen(
         embed, emb_modell = anbieter.embedding_funktion()
         frage_modell, llm_modell = anbieter.llm_funktion()
 
+        if lauf_id is not None:
+            laeufe.fortschritt(
+                con, lauf_id, phase="embedding", einheiten=len(texte),
+                embedding_modell=emb_modell, llm_modell=llm_modell,
+            )
+
         seg_embs = kern.nachbar_aggregat(embed(texte), texte)
+
+        if lauf_id is not None:
+            # Der Fortschritt entsteht ohne Eingriff in den Kern: gezählt wird,
+            # wie oft er das Modell fragt.
+            roh_frage, runde = frage_modell, {"n": 0}
+
+            def frage_modell(prompt: str, system: str):   # noqa: F811
+                runde["n"] += 1
+                laeufe.fortschritt(con, lauf_id, phase="llm",
+                                   runde=runde["n"], runden_max=kern.N_ITER)
+                antwort = roh_frage(prompt, system)
+                laeufe.fortschritt(con, lauf_id, phase="clustering",
+                                   runde=runde["n"], runden_max=kern.N_ITER)
+                return antwort
 
         vorschlag = kern.verfeinern(
             seg_embs=seg_embs,
@@ -172,10 +198,7 @@ def vorschlagen(
         ]
 
         with con:
-            zeiger = con.execute(
-                "INSERT INTO lauf (projekt_id, schritt, begonnen_am, beendet_am, "
-                "parameter, status) VALUES (?, 'taxonomie', ?, ?, ?, 'erfolg')",
-                (projekt_id, begonnen_am, beendet_am, json.dumps({
+            werte = json.dumps({
                     "warm_start": warm_start,
                     "n_clusters": anzahl,
                     "embedding_modell": emb_modell,
@@ -187,9 +210,20 @@ def vorschlagen(
                     "fruehzeitig_beendet": vorschlag.fruehzeitig_beendet,
                     "eingefroren": vorschlag.eingefroren,
                     "trajektorie": trajektorie,
-                }, ensure_ascii=False)),
-            )
-            lauf_id = zeiger.lastrowid
+                }, ensure_ascii=False)
+            if lauf_id is None:
+                zeiger = con.execute(
+                    "INSERT INTO lauf (projekt_id, schritt, begonnen_am, beendet_am, "
+                    "parameter, status) VALUES (?, 'taxonomie', ?, ?, ?, 'erfolg')",
+                    (projekt_id, begonnen_am, beendet_am, werte),
+                )
+                lauf_id = zeiger.lastrowid
+            else:
+                con.execute(
+                    "UPDATE lauf SET beendet_am = ?, parameter = ?, status = 'erfolg' "
+                    "WHERE id = ?",
+                    (beendet_am, werte, lauf_id),
+                )
 
             # Die alten Kategorien weichen den neuen. Zuordnungen, die auf sie
             # zeigen, werden durch ON DELETE SET NULL auf NULL gesetzt — die
@@ -204,13 +238,19 @@ def vorschlagen(
 
     except Exception as exc:
         with con:
-            con.execute(
-                "INSERT INTO lauf (projekt_id, schritt, begonnen_am, beendet_am, "
-                "parameter, status) VALUES (?, 'taxonomie', ?, ?, ?, 'fehler')",
-                (projekt_id, begonnen_am, _jetzt(),
-                 json.dumps({"warm_start": warm_start, "n_clusters": anzahl,
-                             "fehler": str(exc)}, ensure_ascii=False)),
-            )
+            if lauf_id is None:
+                con.execute(
+                    "INSERT INTO lauf (projekt_id, schritt, begonnen_am, beendet_am, "
+                    "parameter, status) VALUES (?, 'taxonomie', ?, ?, ?, 'fehler')",
+                    (projekt_id, begonnen_am, _jetzt(),
+                     json.dumps({"warm_start": warm_start, "n_clusters": anzahl,
+                                 "fehler": str(exc)}, ensure_ascii=False)),
+                )
+            else:
+                con.execute(
+                    "UPDATE lauf SET beendet_am = ?, status = 'fehler' WHERE id = ?",
+                    (_jetzt(), lauf_id),
+                )
         raise
 
     return TaxonomieErgebnis(
