@@ -56,6 +56,7 @@ from src.neu.datierung.dienst import (  # noqa: E402
     datieren,
     datierung_setzen,
 )
+from src.neu.akteure import dienst as akteur_dienst  # noqa: E402
 from src.neu.akteure.dienst import (  # noqa: E402
     UNGESETZT,
     AkteurFehler,
@@ -75,9 +76,15 @@ from src.neu.taxonomie.anbieter import AnbieterFehler  # noqa: E402
 from src.neu.taxonomie.dienst import TaxonomieFehler, vorschlagen  # noqa: E402
 from src.neu.modelle import (  # noqa: E402
     AkteurAendernRumpf,
+    AkteurAnlegenRumpf,
     AkteurAntwort,
     AkteurErkennungAntwort,
+    AkteurListe,
     AkteureErkennenRumpf,
+    FundstelleGeloescht,
+    HerausgeloestAntwort,
+    HerausloesenRumpf,
+    MarkierungenListe,
     AnmeldungBeginn,
     DropboxOrdnerListe,
     DropboxOrdnerRumpf,
@@ -673,30 +680,170 @@ def datierung_verteilung(projekt_id: str) -> DatierungVerteilung:
 
 @app.post(
     "/api/projekt/{projekt_id}/akteure/erkennen",
-    response_model=AkteurErkennungAntwort,
+    response_model=LaufBegonnen,
     responses=FEHLER_ANTWORTEN,
+    status_code=202,
 )
 def akteure_erkennen(
     projekt_id: str, rumpf: AkteureErkennenRumpf | None = None
-) -> AkteurErkennungAntwort:
-    """Erkennt die Akteure eines Projekts und ordnet sie den Einheiten zu.
+) -> LaufBegonnen:
+    """Stößt die Akteurserkennung an und kommt sofort zurück.
 
     Akteure mit herkunft='manuell' bleiben unberührt, abgelehnte filtern den
     Fehlfund erneut heraus. Verschmelzungskandidaten werden dabei neu berechnet.
+
+    202 mit einer lauf_id statt einer Antwort, auf die man wartet: gemessen an
+    den vorhandenen lauf-Zeilen dauert der Schritt 81 Sekunden bei damaskus und
+    267 bei ber. Synchron läuft das in jeden Zeitablauf, der zwischen Browser
+    und Server steht. Den Stand liefert GET /api/lauf/{id}.
     """
-    con = verbindung_schreibend()
+    con = verbindung()
     try:
-        ergebnis = erkennen(con, projekt_id=projekt_id)
-    except AkteurFehler as exc:
-        status = 404 if exc.code == "projekt_nicht_gefunden" else 422
-        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
-    except AnbieterFehler as exc:
-        # Fehlender Schlüssel oder Anbieter: keine stille Ersatzwahl.
-        raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
+        if con.execute("SELECT 1 FROM projekt WHERE id = ?",
+                       (projekt_id,)).fetchone() is None:
+            raise nicht_gefunden(
+                "projekt_nicht_gefunden", f"Kein Projekt mit der Kennung '{projekt_id}'."
+            )
     finally:
         con.close()
 
-    return AkteurErkennungAntwort(**vars(ergebnis))
+    # Den Anbieter vorher prüfen, nicht im Faden: ein fehlender Schlüssel soll
+    # 503 an der Stelle des Klicks geben und nicht als gescheiterter Lauf vier
+    # Minuten später. Der Aufruf ist billig — das Modell lädt erst beim ersten
+    # encode. GLiNER wird hier nicht geprüft, weil dessen Prüfung das Modell
+    # lädt; sein Fehlen erscheint in der lauf-Zeile.
+    try:
+        from src.neu.akteure.anbieter import embedding_funktion
+
+        embedding_funktion()
+    except AnbieterFehler as exc:
+        raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
+
+    def arbeit(eigene, lauf_id: int) -> None:
+        akteur_dienst.erkennen(eigene, projekt_id=projekt_id, lauf_id=lauf_id)
+
+    try:
+        lauf_id = laeufe.starten(projekt_id, "akteure", {"phase": "beginnt"}, arbeit)
+    except LaufFehler as exc:
+        raise HTTPException(status_code=409, detail=(exc.code, str(exc)))
+
+    return LaufBegonnen(lauf_id=lauf_id, projekt_id=projekt_id,
+                        schritt="akteure", status="laeuft")
+
+
+@app.get(
+    "/api/projekt/{projekt_id}/akteure",
+    response_model=AkteurListe,
+    responses=FEHLER_ANTWORTEN,
+)
+def akteure_liste(projekt_id: str) -> AkteurListe:
+    """Alle Akteure mit Aliasen, Fundstellen und Trefferzahlen je Name.
+
+    Die Trefferzahlen sind der Unterschied zur alten Fläche: sie zeigte, welche
+    Namen ein Akteur trägt, nicht welcher davon die Fundstellen liefert.
+    """
+    con = verbindung()
+    try:
+        return AkteurListe(**akteur_dienst.liste(con, projekt_id))
+    except AkteurFehler as exc:
+        raise HTTPException(status_code=404, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.get(
+    "/api/projekt/{projekt_id}/markierungen",
+    response_model=MarkierungenListe,
+    responses=FEHLER_ANTWORTEN,
+)
+def markierungen(projekt_id: str) -> MarkierungenListe:
+    """Die Fundstellen je Einheit, mit Zeichenpositionen."""
+    con = verbindung()
+    try:
+        if con.execute("SELECT 1 FROM projekt WHERE id = ?",
+                       (projekt_id,)).fetchone() is None:
+            raise nicht_gefunden(
+                "projekt_nicht_gefunden", f"Kein Projekt mit der Kennung '{projekt_id}'."
+            )
+        je_einheit = akteur_dienst.fundstellen_je_einheit(con, projekt_id)
+        return MarkierungenListe(
+            projekt_id=projekt_id,
+            anzahl=sum(len(v) for v in je_einheit.values()),
+            je_einheit={str(k): v for k, v in je_einheit.items()},
+        )
+    finally:
+        con.close()
+
+
+@app.post(
+    "/api/projekt/{projekt_id}/akteure",
+    response_model=AkteurAntwort,
+    responses=FEHLER_ANTWORTEN,
+    status_code=201,
+)
+def akteur_anlegen(projekt_id: str, rumpf: AkteurAnlegenRumpf) -> AkteurAntwort:
+    """Legt einen Akteur von Hand an — herkunft='manuell', gegen Läufe geschützt."""
+    con = verbindung_schreibend()
+    try:
+        return AkteurAntwort(**akteur_dienst.anlegen(
+            con, projekt_id, rumpf.normalform, rumpf.typ, rumpf.aliase
+        ))
+    except AkteurFehler as exc:
+        status = (404 if exc.code == "projekt_nicht_gefunden"
+                  else 409 if exc.code == "normalform_belegt" else 422)
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.post(
+    "/api/akteur/{akteur_id}/herausloesen",
+    response_model=HerausgeloestAntwort,
+    responses=FEHLER_ANTWORTEN,
+    status_code=201,
+)
+def akteur_alias_herausloesen(
+    akteur_id: int, rumpf: HerausloesenRumpf
+) -> HerausgeloestAntwort:
+    """Macht aus einem Alias einen eigenen Akteur.
+
+    Die Bedienung, die einen Klumpen auflöst. Beide werden danach neu
+    zugeordnet: der alte verliert die Stellen des Alias, der neue bekommt sie.
+    """
+    con = verbindung_schreibend()
+    try:
+        return HerausgeloestAntwort(**akteur_dienst.alias_herausloesen(
+            con, akteur_id, rumpf.alias,
+            typ=rumpf.typ if "typ" in rumpf.model_fields_set else akteur_dienst.UNGESETZT,
+        ))
+    except AkteurFehler as exc:
+        status = (404 if exc.code.endswith("nicht_gefunden")
+                  else 409 if exc.code == "normalform_belegt" else 422)
+        raise HTTPException(status_code=status, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
+
+
+@app.delete(
+    "/api/fundstelle/{fundstelle_id}",
+    response_model=FundstelleGeloescht,
+    responses=FEHLER_ANTWORTEN,
+)
+def fundstelle_entfernen(fundstelle_id: int) -> FundstelleGeloescht:
+    """Entfernt eine einzelne Markierung, nicht den Akteur.
+
+    Der Unterschied zum Alias-Entfernen in der Liste ist Absicht: dort geht ein
+    Name samt allen seinen Stellen, hier eine falsch getroffene Stelle.
+    """
+    con = verbindung_schreibend()
+    try:
+        return FundstelleGeloescht(
+            **akteur_dienst.fundstelle_loeschen(con, fundstelle_id)
+        )
+    except AkteurFehler as exc:
+        raise HTTPException(status_code=404, detail=(exc.code, str(exc)))
+    finally:
+        con.close()
 
 
 @app.patch(

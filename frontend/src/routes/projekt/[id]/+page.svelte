@@ -136,6 +136,9 @@
 		<a class="btn btn-sm" href="/projekt/{encodeURIComponent(data.projektId)}/datierung">
 			Datierung →
 		</a>
+		<a class="btn btn-sm" href="/projekt/{encodeURIComponent(data.projektId)}/akteure">
+			Akteure →
+		</a>
 		<a
 			class="btn btn-sm"
 			href="/projekt/{encodeURIComponent(data.projektId)}/taxonomie"

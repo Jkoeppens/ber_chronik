@@ -375,13 +375,111 @@ export interface paths {
         put?: never;
         /**
          * Akteure Erkennen
-         * @description Erkennt die Akteure eines Projekts und ordnet sie den Einheiten zu.
+         * @description Stößt die Akteurserkennung an und kommt sofort zurück.
          *
          *     Akteure mit herkunft='manuell' bleiben unberührt, abgelehnte filtern den
          *     Fehlfund erneut heraus. Verschmelzungskandidaten werden dabei neu berechnet.
+         *
+         *     202 mit einer lauf_id statt einer Antwort, auf die man wartet: gemessen an
+         *     den vorhandenen lauf-Zeilen dauert der Schritt 81 Sekunden bei damaskus und
+         *     267 bei ber. Synchron läuft das in jeden Zeitablauf, der zwischen Browser
+         *     und Server steht. Den Stand liefert GET /api/lauf/{id}.
          */
         post: operations["akteure_erkennen_api_projekt__projekt_id__akteure_erkennen_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/akteure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Akteure Liste
+         * @description Alle Akteure mit Aliasen, Fundstellen und Trefferzahlen je Name.
+         *
+         *     Die Trefferzahlen sind der Unterschied zur alten Fläche: sie zeigte, welche
+         *     Namen ein Akteur trägt, nicht welcher davon die Fundstellen liefert.
+         */
+        get: operations["akteure_liste_api_projekt__projekt_id__akteure_get"];
+        put?: never;
+        /**
+         * Akteur Anlegen
+         * @description Legt einen Akteur von Hand an — herkunft='manuell', gegen Läufe geschützt.
+         */
+        post: operations["akteur_anlegen_api_projekt__projekt_id__akteure_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/markierungen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Markierungen
+         * @description Die Fundstellen je Einheit, mit Zeichenpositionen.
+         */
+        get: operations["markierungen_api_projekt__projekt_id__markierungen_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/akteur/{akteur_id}/herausloesen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Akteur Alias Herausloesen
+         * @description Macht aus einem Alias einen eigenen Akteur.
+         *
+         *     Die Bedienung, die einen Klumpen auflöst. Beide werden danach neu
+         *     zugeordnet: der alte verliert die Stellen des Alias, der neue bekommt sie.
+         */
+        post: operations["akteur_alias_herausloesen_api_akteur__akteur_id__herausloesen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fundstelle/{fundstelle_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Fundstelle Entfernen
+         * @description Entfernt eine einzelne Markierung, nicht den Akteur.
+         *
+         *     Der Unterschied zum Alias-Entfernen in der Liste ist Absicht: dort geht ein
+         *     Name samt allen seinen Stellen, hier eine falsch getroffene Stelle.
+         */
+        delete: operations["fundstelle_entfernen_api_fundstelle__fundstelle_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -710,6 +808,18 @@ export interface components {
              */
             aliase?: string[] | null;
         };
+        /**
+         * AkteurAnlegenRumpf
+         * @description Rumpf von POST /api/projekt/{id}/akteure.
+         */
+        AkteurAnlegenRumpf: {
+            /** Normalform */
+            normalform: string;
+            /** Typ */
+            typ?: ("Person" | "Organisation" | "Ort" | "Konzept") | null;
+            /** Aliase */
+            aliase?: string[];
+        };
         /** AkteurAntwort */
         AkteurAntwort: {
             /** Id */
@@ -740,60 +850,63 @@ export interface components {
              */
             aufgeloeste_akteure?: number[];
         };
-        /** AkteurErkennungAntwort */
-        AkteurErkennungAntwort: {
+        /** AkteurListe */
+        AkteurListe: {
             /** Projekt Id */
             projekt_id: string;
-            /** Lauf Id */
-            lauf_id: number;
-            /** Begonnen Am */
-            begonnen_am: string;
-            /** Beendet Am */
-            beendet_am: string;
-            /** Status */
-            status: string;
-            /** Embedding Modell */
-            embedding_modell: string;
-            /** Gliner Modell */
-            gliner_modell: string;
-            /** Schwelle */
-            schwelle: number;
-            /** Anzahl Einheiten */
-            anzahl_einheiten: number;
-            /** Anzahl Funde */
-            anzahl_funde: number;
-            /** Anzahl Vor Gruppierung */
-            anzahl_vor_gruppierung: number;
-            /** Anzahl Neu */
-            anzahl_neu: number;
+            /** Anzahl */
+            anzahl: number;
             /** Anzahl Manuell */
             anzahl_manuell: number;
             /** Anzahl Abgelehnt */
             anzahl_abgelehnt: number;
-            /** Anzahl Zuordnungen */
-            anzahl_zuordnungen: number;
-            /** Anzahl Einheiten Mit Akteur */
-            anzahl_einheiten_mit_akteur: number;
-            /** Anzahl Je Typ */
-            anzahl_je_typ: {
-                [key: string]: number;
-            };
-            /** Anzahl Kandidaten Je Grund */
-            anzahl_kandidaten_je_grund: {
-                [key: string]: number;
-            };
+            /** Anzahl Klumpen */
+            anzahl_klumpen: number;
+            /** Akteure */
+            akteure: components["schemas"]["AkteurZeile"][];
+        };
+        /**
+         * AkteurZeile
+         * @description Ein Akteur in der Liste, mit allem, was die Fläche zeigt.
+         */
+        AkteurZeile: {
+            /** Id */
+            id: number;
+            /** Projekt Id */
+            projekt_id: string;
+            /** Normalform */
+            normalform: string;
+            /** Typ */
+            typ: ("Person" | "Organisation" | "Ort" | "Konzept") | null;
             /**
-             * Unbekannte Labels
-             * @description GLiNER-Label ohne Abbildung; die Funde bleiben ohne Typ
+             * Status
+             * @enum {string}
              */
-            unbekannte_labels?: {
-                [key: string]: number;
-            };
+            status: "aktiv" | "abgelehnt";
             /**
-             * Verdraengt Von Manuell
-             * @description Funde, die auf einen von Hand gepflegten Namen fielen
+             * Herkunft
+             * @enum {string}
              */
-            verdraengt_von_manuell?: string[];
+            herkunft: "gliner" | "manuell";
+            /** Aliase */
+            aliase: string[];
+            /** Anzahl Fundstellen */
+            anzahl_fundstellen: number;
+            /**
+             * Namen
+             * @description Normalform und Aliase mit ihren Trefferzahlen, häufigster zuerst
+             */
+            namen: components["schemas"]["Namenstreffer"][];
+            /**
+             * Anteil Normalform
+             * @description Anteil der Fundstellen auf den eigenen Namen; null ohne Fundstellen
+             */
+            anteil_normalform: number | null;
+            /**
+             * Ist Klumpen
+             * @description Viele Aliase und der eigene Name trifft fast nie — der Eintrag heißt nach etwas, das er kaum ist
+             */
+            ist_klumpen: boolean;
         };
         /**
          * AkteureErkennenRumpf
@@ -1232,6 +1345,49 @@ export interface components {
         FehlerAntwort: {
             fehler: components["schemas"]["Fehler"];
         };
+        /** FundstelleGeloescht */
+        FundstelleGeloescht: {
+            /** Fundstelle Id */
+            fundstelle_id: number;
+            /** Akteur Id */
+            akteur_id: number;
+            /** Einheit Id */
+            einheit_id: number;
+            /** Normalform */
+            normalform: string;
+            /**
+             * Wortlaut
+             * @description Was an der Stelle stand
+             */
+            wortlaut: string;
+            /**
+             * Anzahl Fundstellen
+             * @description Die des Akteurs, danach
+             */
+            anzahl_fundstellen: number;
+        };
+        /** HerausgeloestAntwort */
+        HerausgeloestAntwort: {
+            /** @description Der Akteur, aus dem gelöst wurde */
+            quelle: components["schemas"]["AkteurAntwort"];
+            neu: components["schemas"]["AkteurAntwort"];
+        };
+        /**
+         * HerausloesenRumpf
+         * @description Rumpf von POST /api/akteur/{id}/herausloesen.
+         */
+        HerausloesenRumpf: {
+            /**
+             * Alias
+             * @description Wird Normalform des neuen Akteurs
+             */
+            alias: string;
+            /**
+             * Typ
+             * @description null übernimmt den Typ des alten
+             */
+            typ?: ("Person" | "Organisation" | "Ort" | "Konzept") | null;
+        };
         /** IngestAntwort */
         IngestAntwort: {
             /** Projekt Id */
@@ -1583,6 +1739,50 @@ export interface components {
             };
             /** Fehler */
             fehler: string | null;
+        };
+        /**
+         * Markierung
+         * @description Eine Fundstelle im Text einer Einheit — gelesen, nicht gesucht.
+         */
+        Markierung: {
+            /** Id */
+            id: number;
+            /** Akteur Id */
+            akteur_id: number;
+            /** Start */
+            start: number;
+            /** Ende */
+            ende: number;
+            /** Normalform */
+            normalform: string;
+            /** Typ */
+            typ: ("Person" | "Organisation" | "Ort" | "Konzept") | null;
+        };
+        /** MarkierungenListe */
+        MarkierungenListe: {
+            /** Projekt Id */
+            projekt_id: string;
+            /** Anzahl */
+            anzahl: number;
+            /**
+             * Je Einheit
+             * @description Schlüssel ist die einheit_id als Text
+             */
+            je_einheit: {
+                [key: string]: components["schemas"]["Markierung"][];
+            };
+        };
+        /**
+         * Namenstreffer
+         * @description Wie oft dieser Name die Fundstelle war.
+         */
+        Namenstreffer: {
+            /** Name */
+            name: string;
+            /** Ist Normalform */
+            ist_normalform: boolean;
+            /** Anzahl */
+            anzahl: number;
         };
         /** Projekt */
         Projekt: {
@@ -3044,12 +3244,400 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LaufBegonnen"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    akteure_liste_api_projekt__projekt_id__akteure_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AkteurErkennungAntwort"];
+                    "application/json": components["schemas"]["AkteurListe"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    akteur_anlegen_api_projekt__projekt_id__akteure_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AkteurAnlegenRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AkteurAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    markierungen_api_projekt__projekt_id__markierungen_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkierungenListe"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    akteur_alias_herausloesen_api_akteur__akteur_id__herausloesen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                akteur_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HerausloesenRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HerausgeloestAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    fundstelle_entfernen_api_fundstelle__fundstelle_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fundstelle_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FundstelleGeloescht"];
                 };
             };
             /** @description Nicht gefunden */

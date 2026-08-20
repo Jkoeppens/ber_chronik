@@ -223,12 +223,17 @@ def erkennen(
     embedding_modell: str | None = None,
     gliner_modell: str | None = None,
     schwelle: float | None = None,
+    lauf_id: int | None = None,
 ) -> AkteurErgebnis:
     """Erkennt die Akteure eines Projekts und ordnet sie den Einheiten zu.
 
     Erkenner und Embedding kommen aus src.neu.akteure.anbieter, wenn sie nicht
     übergeben werden — dann bricht ein fehlender Anbieter den Lauf ab, statt
     stillschweigend ein anderes Modell zu nehmen.
+
+    lauf_id: eine bereits angelegte 'laeuft'-Zeile, die fortgeschrieben wird,
+    statt am Ende eine neue anzulegen. So kann die Fläche den Stand abfragen,
+    während gerechnet wird — der Schritt dauert bei ber über vier Minuten.
     """
     begonnen_am = _jetzt()
     _projekt_pruefen(con, projekt_id)
@@ -289,12 +294,13 @@ def erkennen(
         neue = [a for a in neue if a.normalform.lower() not in belegt]
 
         with con:
-            zeiger = con.execute(
-                "INSERT INTO lauf (projekt_id, schritt, begonnen_am, parameter, status) "
-                "VALUES (?, 'akteure', ?, ?, 'laeuft')",
-                (projekt_id, begonnen_am, parameter),
-            )
-            lauf_id = zeiger.lastrowid
+            if lauf_id is None:
+                zeiger = con.execute(
+                    "INSERT INTO lauf (projekt_id, schritt, begonnen_am, parameter, "
+                    "status) VALUES (?, 'akteure', ?, ?, 'laeuft')",
+                    (projekt_id, begonnen_am, parameter),
+                )
+                lauf_id = zeiger.lastrowid
 
             con.execute(
                 "DELETE FROM akteur WHERE projekt_id = ? AND herkunft = 'gliner'",
@@ -339,12 +345,18 @@ def erkennen(
 
     except Exception as exc:
         with con:
-            con.execute(
-                "INSERT INTO lauf (projekt_id, schritt, begonnen_am, beendet_am, "
-                "parameter, status) VALUES (?, 'akteure', ?, ?, ?, 'fehler')",
-                (projekt_id, begonnen_am, _jetzt(),
-                 json.dumps({"fehler": str(exc)}, ensure_ascii=False)),
-            )
+            if lauf_id is None:
+                con.execute(
+                    "INSERT INTO lauf (projekt_id, schritt, begonnen_am, beendet_am, "
+                    "parameter, status) VALUES (?, 'akteure', ?, ?, ?, 'fehler')",
+                    (projekt_id, begonnen_am, _jetzt(),
+                     json.dumps({"fehler": str(exc)}, ensure_ascii=False)),
+                )
+            else:
+                con.execute(
+                    "UPDATE lauf SET beendet_am = ?, status = 'fehler' WHERE id = ?",
+                    (_jetzt(), lauf_id),
+                )
         raise
 
     je_typ: dict[str, int] = {}
@@ -601,3 +613,250 @@ def duplikatskandidaten(con: sqlite3.Connection, projekt_id: str) -> list[dict]:
         "ORDER BY k.grund, k.mass IS NULL, k.mass DESC, k.id",
         (projekt_id,),
     )]
+
+
+# ── Lesen für die Fläche ──────────────────────────────────────────────────────
+
+# Ab wann ein Akteur als Klumpen gilt: viele Namen, und der eigene ist fast nie
+# der, der gefunden wurde. Beides muss zutreffen — fünf Aliase allein sind
+# normal, und ein Akteur mit einem einzigen Alias, der öfter trifft als die
+# Normalform, auch. Zusammen heißt es: dieser Eintrag heißt nach etwas, das er
+# kaum ist. 'mustafa al hallaq' bei damaskus trägt 22 Aliase und 78
+# Fundstellen, davon eine auf seinen eigenen Namen — 1,3 %.
+KLUMPEN_ALIASE = 5
+KLUMPEN_ANTEIL = 0.10
+
+
+def _treffer_je_name(con: sqlite3.Connection, projekt_id: str) -> dict[int, dict[str, int]]:
+    """Je Akteur: welcher Name wie oft die Fundstelle war.
+
+    Die Zeichen zwischen start und ende sind das, was tatsächlich im Text
+    stand. Ohne diese Zahl sieht man einem Akteur mit 22 Aliasen nicht an,
+    welcher davon die Arbeit tut — die alte Fläche kannte nur die Namen.
+    """
+    ergebnis: dict[int, dict[str, int]] = {}
+    for z in con.execute(
+        "SELECT ea.akteur_id, LOWER(SUBSTR(e.text, ea.start + 1, ea.ende - ea.start)), "
+        "       COUNT(*) "
+        "FROM einheit_akteur ea "
+        "JOIN einheit e ON e.id = ea.einheit_id "
+        "JOIN akteur a ON a.id = ea.akteur_id "
+        "WHERE a.projekt_id = ? GROUP BY 1, 2", (projekt_id,)
+    ):
+        ergebnis.setdefault(z[0], {})[z[1]] = z[2]
+    return ergebnis
+
+
+def liste(con: sqlite3.Connection, projekt_id: str) -> dict:
+    """Alle Akteure eines Projekts mit Aliasen, Fundstellen und Trefferzahlen."""
+    _projekt_pruefen(con, projekt_id)
+
+    aliase: dict[int, list[str]] = {}
+    for z in con.execute(
+        "SELECT x.akteur_id, x.alias FROM akteur_alias x "
+        "JOIN akteur a ON a.id = x.akteur_id WHERE a.projekt_id = ? "
+        "ORDER BY x.alias", (projekt_id,)
+    ):
+        aliase.setdefault(z[0], []).append(z[1])
+
+    treffer = _treffer_je_name(con, projekt_id)
+    zahlen = {z[0]: z[1] for z in con.execute(
+        "SELECT ea.akteur_id, COUNT(*) FROM einheit_akteur ea "
+        "JOIN akteur a ON a.id = ea.akteur_id WHERE a.projekt_id = ? "
+        "GROUP BY 1", (projekt_id,))}
+
+    akteure = []
+    for z in con.execute(
+        "SELECT id, normalform, typ, status, herkunft FROM akteur "
+        "WHERE projekt_id = ? ORDER BY normalform COLLATE NOCASE", (projekt_id,)
+    ):
+        akteur_id, normalform, typ, status, herkunft = z
+        meine = treffer.get(akteur_id, {})
+        gesamt = zahlen.get(akteur_id, 0)
+        auf_normalform = meine.get(normalform.lower(), 0)
+        namen = [{"name": normalform, "ist_normalform": True,
+                  "anzahl": auf_normalform}]
+        namen += [{"name": a, "ist_normalform": False,
+                   "anzahl": meine.get(a.lower(), 0)}
+                  for a in aliase.get(akteur_id, [])]
+        namen.sort(key=lambda n: (-n["anzahl"], n["name"].lower()))
+        anteil = auf_normalform / gesamt if gesamt else None
+        akteure.append({
+            "id": akteur_id, "projekt_id": projekt_id, "normalform": normalform,
+            "typ": typ, "status": status, "herkunft": herkunft,
+            "aliase": aliase.get(akteur_id, []),
+            "anzahl_fundstellen": gesamt,
+            "namen": namen,
+            "anteil_normalform": None if anteil is None else round(anteil, 4),
+            "ist_klumpen": (len(aliase.get(akteur_id, [])) >= KLUMPEN_ALIASE
+                            and gesamt > 0 and anteil < KLUMPEN_ANTEIL),
+        })
+
+    return {
+        "projekt_id": projekt_id,
+        "anzahl": len(akteure),
+        "anzahl_manuell": sum(1 for a in akteure if a["herkunft"] == "manuell"),
+        "anzahl_abgelehnt": sum(1 for a in akteure if a["status"] == "abgelehnt"),
+        "anzahl_klumpen": sum(1 for a in akteure if a["ist_klumpen"]),
+        "akteure": akteure,
+    }
+
+
+def fundstellen_je_einheit(con: sqlite3.Connection, projekt_id: str) -> dict[int, list[dict]]:
+    """Die Markierungen je Einheit — gelesen, nicht gesucht.
+
+    Die alte Fläche suchte jeden Namen bei jedem Rendern per indexOf im Text.
+    Sie zeigte damit, wo ein Name vorkommt; hier steht, wo er zugeordnet ist.
+    Bei einem Akteur mit 22 Aliasen ist das der Unterschied zwischen einer
+    Vermutung und einem Befund.
+    """
+    ergebnis: dict[int, list[dict]] = {}
+    for z in con.execute(
+        "SELECT ea.einheit_id, ea.id, ea.akteur_id, ea.start, ea.ende, "
+        "       a.normalform, a.typ "
+        "FROM einheit_akteur ea JOIN akteur a ON a.id = ea.akteur_id "
+        "WHERE a.projekt_id = ? ORDER BY ea.einheit_id, ea.start", (projekt_id,)
+    ):
+        ergebnis.setdefault(z[0], []).append({
+            "id": z[1], "akteur_id": z[2], "start": z[3], "ende": z[4],
+            "normalform": z[5], "typ": z[6],
+        })
+    return ergebnis
+
+
+# ── Von Hand anlegen, herauslösen, Fundstelle entfernen ───────────────────────
+
+def anlegen(
+    con: sqlite3.Connection, projekt_id: str, normalform: str,
+    typ: str | None = None, aliase: Sequence[str] = (),
+) -> dict:
+    """Legt einen Akteur von Hand an — herkunft='manuell', gegen Läufe geschützt."""
+    _projekt_pruefen(con, projekt_id)
+    normalform = (normalform or "").strip()
+    if not normalform:
+        raise AkteurFehler("normalform darf nicht leer sein.", "normalform_leer")
+    if typ is not None and typ not in kern.TYPEN:
+        raise AkteurFehler(
+            f"Unbekannter Typ '{typ}'. Erlaubt: {' | '.join(kern.TYPEN)}", "typ_unbekannt"
+        )
+    belegt = con.execute(
+        "SELECT id FROM akteur WHERE projekt_id = ? AND lower(normalform) = ?",
+        (projekt_id, normalform.lower()),
+    ).fetchone()
+    if belegt is not None:
+        raise AkteurFehler(
+            f"'{normalform}' gibt es in diesem Projekt schon (Akteur {belegt[0]}). "
+            "Zum Zusammenlegen verschmelzen.",
+            "normalform_belegt",
+        )
+
+    with con:
+        akteur_id = _akteur_schreiben(
+            con, projekt_id,
+            Akteur(normalform=normalform, typ=typ, aliase=list(aliase)),
+            status="aktiv", herkunft="manuell",
+        )
+        _zuordnen(con, _einheiten(con, projekt_id),
+                  [(akteur_id, _akteur_holen(con, akteur_id))])
+    return _akteur_antwort(con, akteur_id)
+
+
+def alias_herausloesen(
+    con: sqlite3.Connection, akteur_id: int, alias: str, typ: object = UNGESETZT,
+) -> dict:
+    """Macht aus einem Alias einen eigenen Akteur.
+
+    Die Bedienung, die einen Klumpen auflöst: 'zahrawi' steckt in
+    'mustafa al hallaq' und ist eine andere Person. Den Alias nur zu entfernen
+    ließe ihn verschwinden; ihn von Hand neu anzulegen wäre derselbe Vorgang in
+    zwei Schritten, zwischen denen die Fundstellen niemandem gehören.
+
+    Beide werden danach neu zugeordnet — der alte verliert die Stellen des
+    Alias, der neue bekommt sie.
+    """
+    zeile = con.execute(
+        "SELECT projekt_id, typ FROM akteur WHERE id = ?", (akteur_id,)
+    ).fetchone()
+    if zeile is None:
+        raise AkteurFehler(
+            f"Kein Akteur mit der Kennung {akteur_id}.", "akteur_nicht_gefunden"
+        )
+    projekt_id, alter_typ = zeile
+
+    alias = (alias or "").strip()
+    vorhanden = [z[0] for z in con.execute(
+        "SELECT alias FROM akteur_alias WHERE akteur_id = ?", (akteur_id,))]
+    passend = next((a for a in vorhanden if a.lower() == alias.lower()), None)
+    if passend is None:
+        raise AkteurFehler(
+            f"'{alias}' ist kein Alias von Akteur {akteur_id}.", "alias_nicht_gefunden"
+        )
+
+    belegt = con.execute(
+        "SELECT id FROM akteur WHERE projekt_id = ? AND lower(normalform) = ?",
+        (projekt_id, passend.lower()),
+    ).fetchone()
+    if belegt is not None:
+        raise AkteurFehler(
+            f"'{passend}' ist schon ein eigener Akteur ({belegt[0]}).",
+            "normalform_belegt",
+        )
+
+    neuer_typ = alter_typ if typ is UNGESETZT else typ
+    if neuer_typ is not None and neuer_typ not in kern.TYPEN:
+        raise AkteurFehler(
+            f"Unbekannter Typ '{neuer_typ}'. Erlaubt: {' | '.join(kern.TYPEN)}",
+            "typ_unbekannt",
+        )
+
+    with con:
+        con.execute("DELETE FROM akteur_alias WHERE akteur_id = ? AND alias = ?",
+                    (akteur_id, passend))
+        con.execute("UPDATE akteur SET herkunft = 'manuell' WHERE id = ?", (akteur_id,))
+        neu_id = _akteur_schreiben(
+            con, projekt_id, Akteur(normalform=passend, typ=neuer_typ, aliase=[]),
+            status="aktiv", herkunft="manuell",
+        )
+        einheiten = _einheiten(con, projekt_id)
+        _zuordnen(con, einheiten, [
+            (akteur_id, _akteur_holen(con, akteur_id)),
+            (neu_id, _akteur_holen(con, neu_id)),
+        ])
+        # Die Kandidatenpaare beider sind überholt.
+        for i in (akteur_id, neu_id):
+            con.execute("DELETE FROM verschmelzungskandidat "
+                        "WHERE akteur_a_id = ? OR akteur_b_id = ?", (i, i))
+
+    return {"quelle": _akteur_antwort(con, akteur_id),
+            "neu": _akteur_antwort(con, neu_id)}
+
+
+def fundstelle_loeschen(con: sqlite3.Connection, fundstelle_id: int) -> dict:
+    """Entfernt eine einzelne Markierung, nicht den Akteur.
+
+    Der Unterschied zum Alias-Entfernen in der Liste ist Absicht: dort geht ein
+    Name samt allen seinen Stellen, hier eine falsch getroffene Stelle. Die
+    alte Fläche kannte nur das Löschen des ganzen Akteurs — sie hatte keine
+    Fundstellen als Gegenstände.
+
+    Ein Erkennungslauf legt sie wieder an; das ist kein Widerspruch, sondern
+    der Unterschied zwischen einer Korrektur am Befund und einer am Namen.
+    """
+    zeile = con.execute(
+        "SELECT ea.akteur_id, ea.einheit_id, a.normalform, "
+        "       SUBSTR(e.text, ea.start + 1, ea.ende - ea.start) "
+        "FROM einheit_akteur ea JOIN akteur a ON a.id = ea.akteur_id "
+        "JOIN einheit e ON e.id = ea.einheit_id WHERE ea.id = ?", (fundstelle_id,)
+    ).fetchone()
+    if zeile is None:
+        raise AkteurFehler(
+            f"Keine Fundstelle mit der Kennung {fundstelle_id}.",
+            "fundstelle_nicht_gefunden",
+        )
+    with con:
+        con.execute("DELETE FROM einheit_akteur WHERE id = ?", (fundstelle_id,))
+    return {"fundstelle_id": fundstelle_id, "akteur_id": zeile[0],
+            "einheit_id": zeile[1], "normalform": zeile[2], "wortlaut": zeile[3],
+            "anzahl_fundstellen": con.execute(
+                "SELECT COUNT(*) FROM einheit_akteur WHERE akteur_id = ?",
+                (zeile[0],)).fetchone()[0]}

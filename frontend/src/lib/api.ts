@@ -39,6 +39,17 @@ export type DatierungAntwort = components['schemas']['DatierungAntwort'];
 export type DatierungZeile = components['schemas']['DatierungZeileAntwort'];
 export type TextGeaendert = components['schemas']['TextAntwort'];
 export type Anker = components['schemas']['Anker'];
+export type AkteurListe = components['schemas']['AkteurListe'];
+export type AkteurZeile = components['schemas']['AkteurZeile'];
+export type Akteur = components['schemas']['AkteurAntwort'];
+export type AkteurTyp = NonNullable<components['schemas']['AkteurZeile']['typ']>;
+export type Namenstreffer = components['schemas']['Namenstreffer'];
+export type MarkierungenListe = components['schemas']['MarkierungenListe'];
+export type Markierung = components['schemas']['Markierung'];
+export type KandidatenListe = components['schemas']['KandidatenListe'];
+export type Kandidat = components['schemas']['Kandidat'];
+export type Herausgeloest = components['schemas']['HerausgeloestAntwort'];
+export type FundstelleWeg = components['schemas']['FundstelleGeloescht'];
 export type Umfang = components['schemas']['DatierenRumpf']['umfang'];
 export type Konfiguration = components['schemas']['KonfigurationAntwort'];
 
@@ -273,6 +284,90 @@ export function setzeEinheitKategorie(
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ kategorie_id: kategorieId })
 	});
+}
+
+// ── Akteure ─────────────────────────────────────────────────────────────────
+
+/** Alle Akteure mit Aliasen, Fundstellen und Trefferzahlen je Name. */
+export function ladeAkteure(projektId: string): Promise<AkteurListe> {
+	return ruf<AkteurListe>(`/api/projekt/${encodeURIComponent(projektId)}/akteure`);
+}
+
+/** Die Fundstellen je Einheit, mit Zeichenpositionen — gelesen, nicht gesucht. */
+export function ladeMarkierungen(projektId: string): Promise<MarkierungenListe> {
+	return ruf<MarkierungenListe>(
+		`/api/projekt/${encodeURIComponent(projektId)}/markierungen`
+	);
+}
+
+/** Die gespeicherten Verschmelzungskandidaten. */
+export function ladeKandidaten(projektId: string): Promise<KandidatenListe> {
+	return ruf<KandidatenListe>(
+		`/api/projekt/${encodeURIComponent(projektId)}/akteure/duplikatskandidaten`
+	);
+}
+
+/**
+ * Stößt die Erkennung an. Kommt sofort mit einer lauf_id zurück — der Schritt
+ * dauert bei ber über vier Minuten.
+ */
+export function erkenneAkteure(projektId: string): Promise<LaufBegonnen> {
+	return ruf<LaufBegonnen>(
+		`/api/projekt/${encodeURIComponent(projektId)}/akteure/erkennen`,
+		alsJson({})
+	);
+}
+
+/** Legt einen Akteur von Hand an — danach 'manuell' und gegen Läufe geschützt. */
+export function legeAkteurAn(
+	projektId: string,
+	normalform: string,
+	typ: AkteurTyp | null,
+	aliase: string[] = []
+): Promise<Akteur> {
+	return ruf<Akteur>(
+		`/api/projekt/${encodeURIComponent(projektId)}/akteure`,
+		alsJson({ normalform, typ, aliase })
+	);
+}
+
+/** Ändert einen Akteur. Nur was gesetzt ist, wird geändert. */
+export function aendereAkteur(
+	akteurId: number,
+	aenderung: {
+		normalform?: string;
+		typ?: AkteurTyp | null;
+		status?: 'aktiv' | 'abgelehnt';
+		aliase?: string[];
+	}
+): Promise<Akteur> {
+	return ruf<Akteur>(`/api/akteur/${akteurId}`, {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(aenderung)
+	});
+}
+
+/** Macht aus einem Alias einen eigenen Akteur. Beide werden neu zugeordnet. */
+export function loeseAliasHeraus(
+	akteurId: number,
+	alias: string,
+	typ?: AkteurTyp | null
+): Promise<Herausgeloest> {
+	return ruf<Herausgeloest>(
+		`/api/akteur/${akteurId}/herausloesen`,
+		alsJson(typ === undefined ? { alias } : { alias, typ })
+	);
+}
+
+/** Führt beliebige Akteure zusammen. `behaltenId` bestimmt die Normalform. */
+export function verschmelzeAkteure(ids: number[], behaltenId: number): Promise<Akteur> {
+	return ruf<Akteur>('/api/akteure/verschmelzen', alsJson({ ids, behalten_id: behaltenId }));
+}
+
+/** Entfernt eine einzelne Markierung, nicht den Akteur. */
+export function loescheFundstelle(fundstelleId: number): Promise<FundstelleWeg> {
+	return ruf<FundstelleWeg>(`/api/fundstelle/${fundstelleId}`, { method: 'DELETE' });
 }
 
 // ── Datierung ───────────────────────────────────────────────────────────────

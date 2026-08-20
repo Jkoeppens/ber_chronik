@@ -491,6 +491,96 @@ class VerschmelzenRumpf(BaseModel):
     behalten_id: int = Field(description="Dessen Normalform bleibt stehen")
 
 
+class Namenstreffer(BaseModel):
+    """Wie oft dieser Name die Fundstelle war."""
+
+    name: str
+    ist_normalform: bool
+    anzahl: int
+
+
+class AkteurZeile(BaseModel):
+    """Ein Akteur in der Liste, mit allem, was die Fläche zeigt."""
+
+    id: int
+    projekt_id: str
+    normalform: str
+    typ: AkteurTyp | None
+    status: AkteurStatus
+    herkunft: AkteurHerkunft
+    aliase: list[str]
+    anzahl_fundstellen: int
+    namen: list[Namenstreffer] = Field(
+        description="Normalform und Aliase mit ihren Trefferzahlen, häufigster zuerst"
+    )
+    anteil_normalform: float | None = Field(
+        description="Anteil der Fundstellen auf den eigenen Namen; null ohne Fundstellen"
+    )
+    ist_klumpen: bool = Field(
+        description="Viele Aliase und der eigene Name trifft fast nie — "
+                    "der Eintrag heißt nach etwas, das er kaum ist"
+    )
+
+
+class AkteurListe(BaseModel):
+    projekt_id: str
+    anzahl: int
+    anzahl_manuell: int
+    anzahl_abgelehnt: int
+    anzahl_klumpen: int
+    akteure: list[AkteurZeile]
+
+
+class AkteurAnlegenRumpf(BaseModel):
+    """Rumpf von POST /api/projekt/{id}/akteure."""
+
+    normalform: str = Field(min_length=1)
+    typ: AkteurTyp | None = None
+    aliase: list[str] = Field(default_factory=list)
+
+
+class HerausloesenRumpf(BaseModel):
+    """Rumpf von POST /api/akteur/{id}/herausloesen."""
+
+    alias: str = Field(min_length=1, description="Wird Normalform des neuen Akteurs")
+    typ: AkteurTyp | None = Field(
+        default=None, description="null übernimmt den Typ des alten"
+    )
+
+
+class HerausgeloestAntwort(BaseModel):
+    quelle: AkteurAntwort = Field(description="Der Akteur, aus dem gelöst wurde")
+    neu: AkteurAntwort
+
+
+class FundstelleGeloescht(BaseModel):
+    fundstelle_id: int
+    akteur_id: int
+    einheit_id: int
+    normalform: str
+    wortlaut: str = Field(description="Was an der Stelle stand")
+    anzahl_fundstellen: int = Field(description="Die des Akteurs, danach")
+
+
+class Markierung(BaseModel):
+    """Eine Fundstelle im Text einer Einheit — gelesen, nicht gesucht."""
+
+    id: int
+    akteur_id: int
+    start: int
+    ende: int
+    normalform: str
+    typ: AkteurTyp | None
+
+
+class MarkierungenListe(BaseModel):
+    projekt_id: str
+    anzahl: int
+    je_einheit: dict[str, list[Markierung]] = Field(
+        description="Schlüssel ist die einheit_id als Text"
+    )
+
+
 class Kandidat(BaseModel):
     id: int
     akteur_a_id: int
