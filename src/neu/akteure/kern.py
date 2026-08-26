@@ -41,10 +41,13 @@ import numpy as np
 
 # ── Wertevorräte ──────────────────────────────────────────────────────────────
 
-TYPEN = ("Person", "Organisation", "Ort", "Konzept")
-STATUS = ("aktiv", "abgelehnt")
-HERKUENFTE = ("gliner", "manuell")
-GRUENDE = ("alias", "schreibweise", "aehnlichkeit")
+# Aus src/neu/vokabular.py.
+from src.neu.vokabular import AKTEUR_STATUS as STATUS  # noqa: E402
+from src.neu.vokabular import AKTEUR_TYPEN as TYPEN  # noqa: E402
+from src.neu.vokabular import AKTEUR_HERKUENFTE as HERKUENFTE  # noqa: E402
+from src.neu.vokabular import KANDIDAT_GRUENDE as GRUENDE  # noqa: E402
+
+__all_vokabular__ = (TYPEN, STATUS, HERKUENFTE, GRUENDE)
 
 # GLiNER — unverändert aus src/generalized/config.py
 GLINER_MODELL = "urchade/gliner_multi"

@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from src.neu.datierung import kern
 from src.neu.datierung.kern import Einheit, Override
 
-UMFAENGE = ("offen", "alle", "auch_manuell")
+from src.neu.vokabular import UMFAENGE  # noqa: E402
 
 
 class DatierungFehler(Exception):

@@ -63,12 +63,14 @@ CREATE TABLE einheit (
     datum              TEXT,               -- "1989" | "1989-06" | "1989-06-15"
     jahr_von           INTEGER,            -- nur bei echten Spannen
     jahr_bis           INTEGER,
-    praezision         TEXT,               -- Granularität:
-                                           -- tag | monat | jahr | spanne | keine
-    datierung_herkunft TEXT,               -- wie zustande gekommen: text
-                                           -- | ueberschrift | frontmatter
-                                           -- | quellennotation | ereignis
-                                           -- | interpoliert | manuell
+    praezision         TEXT                -- Granularität
+                       CHECK (praezision IN
+                              ('tag', 'monat', 'jahr', 'spanne', 'keine')),
+    datierung_herkunft TEXT                -- wie zustande gekommen
+                       CHECK (datierung_herkunft IN
+                              ('text', 'ueberschrift', 'frontmatter',
+                               'quellennotation', 'ereignis', 'interpoliert',
+                               'manuell')),
                                            -- NULL = nie datiert
     datierung_lauf_id  INTEGER REFERENCES lauf(id) ON DELETE SET NULL,
 
@@ -92,8 +94,13 @@ CREATE TABLE anker (
     id         INTEGER NOT NULL PRIMARY KEY,
     einheit_id INTEGER NOT NULL REFERENCES einheit(id) ON DELETE CASCADE,
     jahr       INTEGER,
-    herkunft   TEXT    NOT NULL,   -- text | ueberschrift | frontmatter
-                                   -- | quellennotation | ereignis | jahrzehnt | manuell
+    -- Dieselben wie einheit.datierung_herkunft plus jahrzehnt: das gibt es nur
+    -- am Anker — der Wert wird erkannt, trägt aber kein Jahr.
+    herkunft   TEXT    NOT NULL
+                       CHECK (herkunft IN
+                              ('text', 'ueberschrift', 'frontmatter',
+                               'quellennotation', 'ereignis', 'interpoliert',
+                               'manuell', 'jahrzehnt')),
     fundstelle TEXT    NOT NULL DEFAULT ''
 );
 
@@ -104,7 +111,8 @@ CREATE TABLE kategorie (
     name         TEXT    NOT NULL,
     beschreibung TEXT    NOT NULL DEFAULT '',
     schlagworte  TEXT    NOT NULL DEFAULT '',
-    herkunft     TEXT    NOT NULL,   -- vorschlag | manuell
+    herkunft     TEXT    NOT NULL
+                         CHECK (herkunft IN ('vorschlag', 'manuell')),
     UNIQUE (projekt_id, name)
 );
 

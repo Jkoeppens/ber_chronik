@@ -42,29 +42,23 @@ from datetime import datetime
 from typing import Sequence
 
 # ── Wertevorräte ──────────────────────────────────────────────────────────────
+# Aus src/neu/vokabular.py. HERKUENFTE hieß hier wie in kategorien/kern.py und
+# akteure/kern.py, meinte aber jedes Mal etwas anderes; die Namen dort sind
+# jetzt nach der Spalte benannt, der sie gehören.
 
-QUELLFORMATE = ("literaturexzerpt", "presseexzerpt", "pressesammlung")
+from src.neu.vokabular import (  # noqa: E402
+    ANKER_HERKUENFTE,
+    PRAEZISIONEN,
+    QUELLFORMATE,
+    UnbekannterWert,
+    quellformat_pruefen,
+)
+from src.neu.vokabular import DATIERUNG_HERKUENFTE as HERKUENFTE  # noqa: E402
 
-PRAEZISIONEN = ("tag", "monat", "jahr", "spanne", "keine")
+UnbekanntesQuellformat = UnbekannterWert
 
-HERKUENFTE = ("text", "ueberschrift", "frontmatter", "quellennotation",
-              "ereignis", "interpoliert", "manuell")
-
-# jahrzehnt gibt es nur am Anker, nie als Datierungsherkunft: der Wert wird
-# erkannt, trägt aber kein Jahr.
-ANKER_HERKUENFTE = HERKUENFTE + ("jahrzehnt",)
-
-
-class UnbekanntesQuellformat(ValueError):
-    pass
-
-
-def quellformat_pruefen(wert: str) -> str:
-    if wert not in QUELLFORMATE:
-        raise UnbekanntesQuellformat(
-            f"Unbekanntes Quellformat '{wert}'. Erlaubt: {' | '.join(QUELLFORMATE)}"
-        )
-    return wert
+__all_vokabular__ = (QUELLFORMATE, PRAEZISIONEN, HERKUENFTE, ANKER_HERKUENFTE,
+                     quellformat_pruefen)
 
 
 # ── Regexe, unverändert aus der Vorlage ───────────────────────────────────────

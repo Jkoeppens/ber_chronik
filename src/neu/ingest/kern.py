@@ -27,24 +27,25 @@ from typing import Iterable
 import yaml
 
 # ── Wertevorrat ───────────────────────────────────────────────────────────────
+# Aus src/neu/vokabular.py, nicht hier noch einmal geschrieben: 'literaturexzerpt'
+# stand vorher an drei Stellen, und zwei wortgleiche quellformat_pruefen()
+# formulierten dieselbe Meldung verschieden.
 
-QUELLFORMATE = ("literaturexzerpt", "presseexzerpt", "pressesammlung")
+from src.neu.vokabular import (  # noqa: E402
+    QUELLFORMATE,
+    UnbekannterWert,
+    quellformat_pruefen,
+)
 
+# Der alte Name bleibt als Alias: Aufrufer, die ihn fangen, sollen weiter
+# funktionieren. Es ist dieselbe Klasse, nicht eine zweite.
+UnbekanntesQuellformat = UnbekannterWert
 
-class UnbekanntesQuellformat(ValueError):
-    pass
+__all_vokabular__ = (QUELLFORMATE, quellformat_pruefen)
 
 
 class NichtImplementiert(NotImplementedError):
     pass
-
-
-def quellformat_pruefen(wert: str) -> str:
-    """Prüft gegen den festen Wertevorrat. Nichts wird durchgereicht."""
-    if wert not in QUELLFORMATE:
-        erlaubt = " | ".join(QUELLFORMATE)
-        raise UnbekanntesQuellformat(f"Unbekanntes Quellformat '{wert}'. Erlaubt: {erlaubt}")
-    return wert
 
 
 # ── Ein- und Ausgabe des Kerns ────────────────────────────────────────────────

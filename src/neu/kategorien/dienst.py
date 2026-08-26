@@ -39,7 +39,7 @@ from src.neu.kategorien.kern import Zuordnung
 #   auch_manuell — auch die Handkorrekturen überschreiben. Eigener Wert, weil
 #              das die Arbeit des Historikers verwirft und nie beiläufig
 #              passieren darf.
-UMFAENGE = ("offen", "alle", "auch_manuell")
+from src.neu.vokabular import UMFAENGE  # noqa: E402
 
 
 class KlassifikationFehler(Exception):

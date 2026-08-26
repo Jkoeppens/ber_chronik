@@ -29,11 +29,17 @@ import numpy as np
 
 # ── Wertevorräte ──────────────────────────────────────────────────────────────
 
-# Zwei Urheber, nicht drei Verfahren: die Maschine oder der Historiker. Womit
-# gerechnet wurde, steht genauer in der lauf-Zeile.
-HERKUENFTE = ("automatisch", "manuell")
-KATEGORIE_HERKUENFTE = ("vorschlag", "manuell")
-KONFIDENZEN = ("high", "medium", "low")
+# Aus src/neu/vokabular.py. HERKUENFTE hieß hier wie in datierung/kern.py und
+# akteure/kern.py, meinte aber etwas anderes.
+from src.neu.vokabular import (  # noqa: E402
+    KONFIDENZEN,
+    UnbekannterWert,
+    pruefen,
+)
+from src.neu.vokabular import KATEGORIE_HERKUENFTE as HERKUENFTE  # noqa: E402
+from src.neu.vokabular import VORSCHLAG_HERKUENFTE as KATEGORIE_HERKUENFTE  # noqa: E402
+
+__all_vokabular__ = (HERKUENFTE, KATEGORIE_HERKUENFTE, KONFIDENZEN)
 
 # Zeichen-Limit beim Embedden — wie in der Vorlage
 SEG_CHARS = 500
@@ -43,16 +49,11 @@ SCHWELLE_HIGH = 0.5
 SCHWELLE_MEDIUM = 0.35
 
 
-class UnbekannteHerkunft(ValueError):
-    pass
+UnbekannteHerkunft = UnbekannterWert
 
 
 def herkunft_pruefen(wert: str) -> str:
-    if wert not in HERKUENFTE:
-        raise UnbekannteHerkunft(
-            f"Unbekannte Herkunft '{wert}'. Erlaubt: {' | '.join(HERKUENFTE)}"
-        )
-    return wert
+    return pruefen(wert, HERKUENFTE, "Herkunft")
 
 
 # ── Ergebnis einer Zuordnung ──────────────────────────────────────────────────

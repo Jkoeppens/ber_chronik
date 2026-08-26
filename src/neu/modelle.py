@@ -14,11 +14,28 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-# Die Werte, die einheit.typ laut SCHEMA.md annimmt.
-EinheitTyp = Literal["content", "heading", "bibliography", "meta"]
+# Die Wertevorräte stehen in src/neu/vokabular.py, einmal. Was hier steht, sind
+# Namen darauf — die Literale selbst wurden vorher in modelle.py, in den Kernen
+# und in schema.sql je noch einmal getippt.
+from src.neu.vokabular import (
+    AkteurHerkunft,
+    AkteurStatus,
+    AkteurTyp,
+    DatierungHerkunft,
+    EinheitTyp,
+    KandidatGrund,
+    Praezision,
+    Quellformat,
+    Umfang,
+)
 
-# Die drei Quellformate aus CLAUDE.md.
-Quellformat = Literal["literaturexzerpt", "presseexzerpt", "pressesammlung"]
+# Der Vorrat für kategorie.herkunft heißt im Vokabular nach der Sache, nicht
+# nach der Tabelle: es sind Vorschläge des Verfahrens gegen Handeinträge.
+from src.neu.vokabular import VorschlagHerkunft as KategorieHerkunft
+
+__all_vokabular__ = (EinheitTyp, Quellformat, Praezision, DatierungHerkunft,
+                     AkteurTyp, AkteurStatus, AkteurHerkunft, KandidatGrund,
+                     KategorieHerkunft, Umfang)
 
 
 # ── Fehler ────────────────────────────────────────────────────────────────────
@@ -175,7 +192,6 @@ class QuelleAnlegen(BaseModel):
 
 
 Verfahren = Literal["bge", "llm"]
-Umfang = Literal["offen", "alle", "auch_manuell"]
 
 
 class KlassifizierenRumpf(BaseModel):
@@ -299,10 +315,9 @@ class TaxonomieAntwort(BaseModel):
     anzahl_je_kategorie: dict[str, int]
 
 
-Praezision = Literal["tag", "monat", "jahr", "spanne", "keine"]
-DatierungHerkunft = Literal["text", "ueberschrift", "frontmatter", "quellennotation",
-                            "ereignis", "interpoliert", "manuell"]
-DatierungUmfang = Literal["offen", "alle", "auch_manuell"]
+# Derselbe Vorrat wie Umfang oben — der eigene Name bleibt, weil er in
+# DatierenRumpf steht und in der erzeugten api-typen.ts auftaucht.
+DatierungUmfang = Umfang
 
 
 class DatierenRumpf(BaseModel):
@@ -420,12 +435,6 @@ class DatierungVerteilung(BaseModel):
 
 
 # ── Akteure ───────────────────────────────────────────────────────────────────
-
-AkteurTyp = Literal["Person", "Organisation", "Ort", "Konzept"]
-AkteurStatus = Literal["aktiv", "abgelehnt"]
-AkteurHerkunft = Literal["gliner", "manuell"]
-KandidatGrund = Literal["alias", "schreibweise", "aehnlichkeit"]
-
 
 class AkteureErkennenRumpf(BaseModel):
     """Rumpf von POST /api/projekt/{id}/akteure/erkennen.
@@ -637,9 +646,6 @@ class LaufBegonnen(BaseModel):
 
 
 # ── Kategorien ────────────────────────────────────────────────────────────────
-
-KategorieHerkunft = Literal["vorschlag", "manuell"]
-
 
 class KategorieZeile(BaseModel):
     id: int
