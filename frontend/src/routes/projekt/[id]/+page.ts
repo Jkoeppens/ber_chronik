@@ -1,21 +1,14 @@
-import { ApiFehler, ladeKennzahlen, type Kennzahlen } from '$lib/api';
+import { redirect } from '@sveltejs/kit';
 
-// Ein Projekt je Kennung — nichts, was sich vorab erzeugen ließe.
-// Der Server liefert dafür die Ausweichseite (fallback), siehe vite.config.ts.
 export const prerender = false;
 export const ssr = false;
 
-export interface Seitendaten {
-	projektId: string;
-	kennzahlen: Kennzahlen | null;
-	fehler: string | null;
-}
-
-export async function load({ params }: { params: { id: string } }): Promise<Seitendaten> {
-	try {
-		return { projektId: params.id, kennzahlen: await ladeKennzahlen(params.id), fehler: null };
-	} catch (e) {
-		const meldung = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler beim Laden.';
-		return { projektId: params.id, kennzahlen: null, fehler: meldung };
-	}
+/**
+ * /projekt/[id] hat keinen eigenen Inhalt mehr. Die Projektseite war ein
+ * Verteiler mit drei gleich aussehenden Links ohne Reihenfolge; an ihre Stelle
+ * ist die Reiterleiste getreten. Was dort stand, trägt jetzt der Reiter
+ * "Quelle" — dorthin geht auch, wer die alte Adresse aufruft.
+ */
+export function load({ params }: { params: { id: string } }): never {
+	redirect(307, `/projekt/${encodeURIComponent(params.id)}/quelle`);
 }

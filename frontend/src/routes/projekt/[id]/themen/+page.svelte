@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidate } from '$app/navigation';
 	import {
 		ApiFehler,
 		klassifiziere,
@@ -34,6 +35,8 @@
 		nachgeladen = k;
 		einheitenNeu = e.einheiten;
 		entwurf = null; // der gespeicherte Stand ist jetzt der gültige
+		// Die Reiterleiste zeigt Zahlen, die sich hier gerade geändert haben.
+		await invalidate('app:kennzahlen');
 	}
 
 	// ── Der Sprachmodell-Lauf ────────────────────────────────────────────────
@@ -216,12 +219,9 @@
 	const beschaeftigt = $derived(laeuft || speichert || ordnetZu);
 </script>
 
-<svelte:head><title>Taxonomie — {data.projektId}</title></svelte:head>
-
 <main class="inhalt">
 	<div style="display:flex;align-items:center;gap:10px">
-		<a href="/projekt/{encodeURIComponent(data.projektId)}" class="btn btn-sm">← Projekt</a>
-		<span class="section-label" style="flex:1">Taxonomie und Zuordnung</span>
+		<span class="section-label" style="flex:1">Themen und Zuordnung</span>
 		{#if konfiguration}
 			<span class="leer">
 				{konfiguration.llm.modell ?? 'kein Sprachmodell'} ·

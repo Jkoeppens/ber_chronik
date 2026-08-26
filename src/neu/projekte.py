@@ -111,8 +111,27 @@ def anlegen(con: sqlite3.Connection, titel: str, kennung: str | None = None) -> 
 
 # ── Lesen ─────────────────────────────────────────────────────────────────────
 
+def _export_datei(projekt_id: str):
+    return WURZEL / "data" / "projects" / projekt_id / "exploration" / "data.json"
+
+
 def _export_vorhanden(projekt_id: str) -> bool:
-    return (WURZEL / "data" / "projects" / projekt_id / "exploration" / "data.json").exists()
+    return _export_datei(projekt_id).exists()
+
+
+def _export_am(projekt_id: str) -> str | None:
+    """Wann zuletzt exportiert wurde — aus der Datei, nicht aus der lauf-Zeile.
+
+    'Befüllt' heißt bei diesem Schritt: die Dateien liegen da. Dann ist auch
+    ihr Zeitstempel die richtige Auskunft; eine lauf-Zeile kann auf einen Lauf
+    zeigen, dessen Ergebnis inzwischen gelöscht wurde.
+    """
+    datei = _export_datei(projekt_id)
+    if not datei.exists():
+        return None
+    return datetime.fromtimestamp(
+        datei.stat().st_mtime, tz=timezone.utc
+    ).isoformat(timespec="seconds")
 
 
 def _aggregate(con: sqlite3.Connection, projekt_id: str) -> dict:
@@ -134,6 +153,7 @@ def _aggregate(con: sqlite3.Connection, projekt_id: str) -> dict:
         "jahr_von": jahr_von,
         "jahr_bis": jahr_bis,
         "hat_export": _export_vorhanden(projekt_id),
+        "export_am": _export_am(projekt_id),
     }
 
 
@@ -155,8 +175,14 @@ def zeile(con: sqlite3.Connection, projekt_id: str) -> dict:
 
 
 def liste(con: sqlite3.Connection) -> list[dict]:
+    """Alle Projekte, das Neueste zuerst.
+
+    Vorher aufsteigend: ein gerade angelegtes Projekt stand ganz unten, hinter
+    allen älteren, und musste gesucht werden. Wer die Liste öffnet, meint
+    meistens das, woran er zuletzt gearbeitet hat.
+    """
     ids = [z[0] for z in con.execute(
-        "SELECT id FROM projekt ORDER BY angelegt_am, id")]
+        "SELECT id FROM projekt ORDER BY angelegt_am DESC, id DESC")]
     return [zeile(con, i) for i in ids]
 
 
@@ -211,5 +237,6 @@ def kennzahlen(con: sqlite3.Connection, projekt_id: str) -> dict:
         "jahr_von": grund["jahr_von"],
         "jahr_bis": grund["jahr_bis"],
         "hat_export": grund["hat_export"],
+        "export_am": grund["export_am"],
         "laeufe": laeufe,
     }

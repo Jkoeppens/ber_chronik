@@ -64,6 +64,9 @@ class ProjektZeile(Projekt):
     hat_export: bool = Field(
         description="Ob exploration/data.json vorliegt — nur dann führt der Viz-Link irgendwohin"
     )
+    export_am: str | None = Field(
+        description="Zeitstempel der Exportdatei; null, wenn keine da ist"
+    )
 
 
 class ProjektListe(BaseModel):
@@ -107,6 +110,9 @@ class Kennzahlen(BaseModel):
     jahr_von: int | None
     jahr_bis: int | None
     hat_export: bool
+    export_am: str | None = Field(
+        description="Zeitstempel der Exportdatei; null, wenn keine da ist"
+    )
     laeufe: list[Lauf] = Field(description="Die letzten Läufe, neueste zuerst")
 
 

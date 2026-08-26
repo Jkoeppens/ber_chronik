@@ -320,6 +320,17 @@
 
 			{#if ergebnis}
 				<div class="log-box">{berichtstext(ergebnis)}</div>
+				<!-- Der einzige Übergang ohne Reiterleiste: das Projekt gab es
+				     vorher nicht, also gab es auch keine Leiste, von der aus man
+				     hinkommt. Ohne diesen Link steht das Ergebnis oben und das
+				     eben angelegte Projekt irgendwo in der Liste darunter. -->
+				<a
+					class="btn btn-sm btn-primary"
+					style="align-self:flex-start"
+					href="/projekt/{encodeURIComponent(ergebnis.projekt_id)}/quelle"
+				>
+					{ergebnis.projekt_id} öffnen →
+				</a>
 			{/if}
 		</div>
 	{/if}
@@ -331,7 +342,7 @@
 	<div class="zeilen">
 		{#each projekte as p (p.id)}
 			<div class="proj-card">
-				<a class="proj-card-title" href="/projekt/{encodeURIComponent(p.id)}">{p.titel}</a>
+				<a class="proj-card-title" href="/projekt/{encodeURIComponent(p.id)}/quelle">{p.titel}</a>
 				<span class="proj-card-meta">
 					{p.quellformate.join(' + ') || '—'} · {p.anzahl_einheiten} Einheiten · {zeitraum(p)}
 				</span>
@@ -357,7 +368,7 @@
 				>
 					Löschen
 				</button>
-				<a class="proj-card-open" href="/projekt/{encodeURIComponent(p.id)}">öffnen →</a>
+				<a class="proj-card-open" href="/projekt/{encodeURIComponent(p.id)}/quelle">öffnen →</a>
 			</div>
 		{:else}
 			{#if !ladefehler}

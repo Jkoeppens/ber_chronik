@@ -1,45 +1,20 @@
 <script lang="ts">
+	import { invalidate } from '$app/navigation';
 	import {
 		ApiFehler,
 		beginneDropboxAnmeldung,
-		exportiere,
 		ladeDropboxStand,
-		ladeKennzahlen,
 		leseDropboxEin,
 		setzeDropboxOrdner,
-		vizAdresse,
 		type DropboxStand,
-		type ExportAntwort,
-		type IngestAntwort,
-		type Kennzahlen
+		type IngestAntwort
 	} from '$lib/api';
-	import type { Seitendaten } from './+page';
+	import type { Layoutdaten } from '../+layout';
 
-	let { data }: { data: Seitendaten } = $props();
-
-	// Wie in der Übersicht: der geladene Stand kommt aus data, ein Export
-	// ersetzt ihn.
-	let nachgeladen = $state<Kennzahlen | null>(null);
-	const zahlen = $derived(nachgeladen ?? data.kennzahlen);
-	const ladefehler = $derived(data.fehler);
-
-	let laeuft = $state(false);
-	let fehler = $state<string | null>(null);
-	let bericht = $state<ExportAntwort | null>(null);
-
-	async function exportieren() {
-		laeuft = true;
-		fehler = null;
-		bericht = null;
-		try {
-			bericht = await exportiere(data.projektId);
-			nachgeladen = await ladeKennzahlen(data.projektId);
-		} catch (e) {
-			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler beim Export.';
-		} finally {
-			laeuft = false;
-		}
-	}
+	// Die Zahlen kommen aus dem Layout — dieselbe Abfrage, die auch die
+	// Reiterleiste füllt. Kein zweiter Aufruf für dieselbe Auskunft.
+	let { data }: { data: Layoutdaten } = $props();
+	const zahlen = $derived(data.kennzahlen);
 
 	// ── Dropbox ──────────────────────────────────────────────────────────────
 	let dropbox = $state<DropboxStand | null>(null);
@@ -91,7 +66,7 @@
 		dbBericht = null;
 		try {
 			dbBericht = await leseDropboxEin(data.projektId);
-			nachgeladen = await ladeKennzahlen(data.projektId);
+			await invalidate('app:kennzahlen');
 		} catch (e) {
 			dbFehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
 		} finally {
@@ -127,35 +102,7 @@
 	}
 </script>
 
-<svelte:head><title>{zahlen?.titel ?? data.projektId} — BER Chronik</title></svelte:head>
-
 <main class="inhalt">
-	<div style="display:flex;align-items:center;gap:10px">
-		<a href="/" class="btn btn-sm">← Projekte</a>
-		<span class="section-label" style="flex:1">{zahlen?.titel ?? data.projektId}</span>
-		<a class="btn btn-sm" href="/projekt/{encodeURIComponent(data.projektId)}/datierung">
-			Datierung →
-		</a>
-		<a class="btn btn-sm" href="/projekt/{encodeURIComponent(data.projektId)}/akteure">
-			Akteure →
-		</a>
-		<a
-			class="btn btn-sm"
-			href="/projekt/{encodeURIComponent(data.projektId)}/taxonomie"
-		>
-			Taxonomie und Klassifikation →
-		</a>
-		{#if zahlen?.hat_export}
-			<a class="btn btn-sm btn-outline" href={vizAdresse(data.projektId)} target="_blank" rel="noreferrer">
-				Viz öffnen ↗
-			</a>
-		{/if}
-	</div>
-
-	{#if ladefehler}
-		<div class="fehler">{ladefehler}</div>
-	{/if}
-
 	{#if zahlen}
 		<dl class="zahlen">
 			<div class="zahl">
@@ -163,47 +110,25 @@
 				<dd style="font-size:12px">{zahlen.quellformate.join(' + ') || '—'}</dd>
 			</div>
 			<div class="zahl">
-				<dt>Einheiten</dt>
-				<dd>{zahlen.anzahl_einheiten}</dd>
+				<dt>Quellen</dt>
+				<dd>{zahlen.anzahl_quellen}</dd>
 			</div>
 			<div class="zahl">
-				<dt>Datiert</dt>
-				<dd>{zahlen.anzahl_datiert} <small>/ {zahlen.anzahl_ohne_datum} ohne</small></dd>
+				<dt>Einheiten</dt>
+				<dd>{zahlen.anzahl_einheiten}</dd>
 			</div>
 			<div class="zahl">
 				<dt>Zeitraum</dt>
 				<dd style="font-size:13px">{spanne(zahlen.jahr_von, zahlen.jahr_bis)}</dd>
 			</div>
-			<div class="zahl">
-				<dt>Kategorien</dt>
-				<dd>{zahlen.anzahl_kategorien} <small>/ {zahlen.anzahl_klassifiziert} zugeordnet</small></dd>
-			</div>
-			<div class="zahl">
-				<dt>Akteure</dt>
-				<dd>{zahlen.anzahl_akteure} <small>/ {zahlen.anzahl_fundstellen} Fundstellen</small></dd>
-			</div>
 		</dl>
 
-		<div style="display:flex;align-items:center;gap:10px">
-			<button class="btn btn-primary" disabled={laeuft} onclick={exportieren}>
-				{laeuft ? 'Exportiert …' : 'Exportieren'}
-			</button>
+		{#if Object.keys(zahlen.anzahl_je_typ).length}
 			<span class="leer">
-				Erzeugt die Dateien, die die Visualisierung liest.
+				{#each Object.entries(zahlen.anzahl_je_typ) as [typ, n], i (typ)}{i > 0
+						? ' · '
+						: ''}{typ}: {n}{/each}
 			</span>
-		</div>
-
-		{#if fehler}
-			<div class="fehler">{fehler}</div>
-		{/if}
-
-		{#if bericht}
-			<div class="log-box">{bericht.anzahl_einheiten} Einheiten, davon {bericht.anzahl_mit_datum} mit Datum, {bericht.anzahl_ohne_datum} ohne
-{bericht.anzahl_ohne_kategorie} ohne Kategorie, {bericht.anzahl_mit_akteur} mit mindestens einem Akteur
-Zeitraum: {spanne(bericht.jahr_min, bericht.jahr_max)}
-Netzwerk: {bericht.anzahl_knoten} Knoten, {bericht.anzahl_kanten} Kanten
-Dateien: {bericht.dateien.join(', ')}
-Lauf {bericht.lauf_id}: {bericht.status}</div>
 		{/if}
 
 		<span class="section-label">Dropbox</span>
@@ -220,7 +145,11 @@ Lauf {bericht.lauf_id}: {bericht.status}</div>
 							· DROPBOX_APP_KEY/SECRET fehlen
 						{/if}
 					</span>
-					<button class="btn btn-sm btn-outline" disabled={dbLaeuft || !dropbox.anbieter_bereit} onclick={anmelden}>
+					<button
+						class="btn btn-sm btn-outline"
+						disabled={dbLaeuft || !dropbox.anbieter_bereit}
+						onclick={anmelden}
+					>
 						{dropbox.verbunden ? 'Neu anmelden' : 'Mit Dropbox anmelden'}
 					</button>
 					<button class="btn btn-sm" disabled={dbLaeuft} onclick={standHolen}>↻</button>
@@ -233,7 +162,11 @@ Lauf {bericht.lauf_id}: {bericht.status}</div>
 						bind:value={ordner}
 						disabled={dbLaeuft}
 					/>
-					<button class="btn btn-sm" disabled={dbLaeuft || !ordner.trim()} onclick={ordnerSpeichern}>
+					<button
+						class="btn btn-sm"
+						disabled={dbLaeuft || !ordner.trim()}
+						onclick={ordnerSpeichern}
+					>
 						Ordner merken
 					</button>
 					<button

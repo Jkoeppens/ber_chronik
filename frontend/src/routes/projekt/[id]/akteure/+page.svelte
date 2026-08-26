@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidate } from '$app/navigation';
 	import {
 		ApiFehler,
 		aendereAkteur,
@@ -59,6 +60,8 @@
 		akteureNeu = a;
 		markierungenNeu = m;
 		kandidatenNeu = k;
+		// Die Reiterleiste zeigt Zahlen, die sich hier gerade geändert haben.
+		await invalidate('app:kennzahlen');
 	}
 
 	async function versuche(was: () => Promise<unknown>) {
@@ -281,7 +284,6 @@
 	let ignoriert = $state<Set<number>>(new Set());
 </script>
 
-<svelte:head><title>Akteure — {data.projektId}</title></svelte:head>
 <!-- Am Dokument, nicht an einem div: die Auswahl kann über Kartengrenzen
      hinausgehen, und ein div mit Mauszeiger-Behandlung braucht eine ARIA-Rolle,
      die es nicht hat. Die alte Fläche hörte ebenfalls am Dokument. -->
@@ -289,7 +291,6 @@
 
 <main class="inhalt">
 	<div style="display:flex;align-items:center;gap:10px">
-		<a href="/projekt/{encodeURIComponent(data.projektId)}" class="btn btn-sm">← Projekt</a>
 		<span class="section-label" style="flex:1">Akteure</span>
 		{#if stand}
 			<span class="leer">

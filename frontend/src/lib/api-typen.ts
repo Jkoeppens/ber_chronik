@@ -1625,6 +1625,11 @@ export interface components {
             /** Hat Export */
             hat_export: boolean;
             /**
+             * Export Am
+             * @description Zeitstempel der Exportdatei; null, wenn keine da ist
+             */
+            export_am: string | null;
+            /**
              * Laeufe
              * @description Die letzten Läufe, neueste zuerst
              */
@@ -1869,6 +1874,11 @@ export interface components {
              * @description Ob exploration/data.json vorliegt — nur dann führt der Viz-Link irgendwohin
              */
             hat_export: boolean;
+            /**
+             * Export Am
+             * @description Zeitstempel der Exportdatei; null, wenn keine da ist
+             */
+            export_am: string | null;
         };
         /**
          * QuelleAnlegen

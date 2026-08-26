@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidate } from '$app/navigation';
 	import {
 		ApiFehler,
 		datiere,
@@ -31,6 +32,8 @@
 		einheitenNeu = e.einheiten;
 		verteilungNeu = v;
 		offen = null;
+		// Die Reiterleiste zeigt Zahlen, die sich hier gerade geändert haben.
+		await invalidate('app:kennzahlen');
 	}
 
 	// ── Die Herkunft: Farbe und Beschriftung ────────────────────────────────
@@ -227,11 +230,8 @@
 	const beschaeftigt = $derived(laeuft || speichert);
 </script>
 
-<svelte:head><title>Datierung — {data.projektId}</title></svelte:head>
-
 <main class="inhalt">
 	<div style="display:flex;align-items:center;gap:10px">
-		<a href="/projekt/{encodeURIComponent(data.projektId)}" class="btn btn-sm">← Projekt</a>
 		<span class="section-label" style="flex:1">Datierung</span>
 		<button class="btn btn-sm btn-outline" disabled={beschaeftigt} onclick={neuDatieren}>
 			{laeuft ? 'Datiert …' : 'Neu datieren'}
