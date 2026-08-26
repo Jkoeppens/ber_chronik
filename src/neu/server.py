@@ -1413,6 +1413,32 @@ if VIZ_DIR.is_dir():
     app.mount("/viz", StaticFiles(directory=VIZ_DIR, html=True), name="viz")
 
 
+# ── Der Riegel vor dem Ausweich-Mount ─────────────────────────────────────────
+
+@app.api_route(
+    "/api/{rest:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    include_in_schema=False,
+)
+def unbekannter_api_pfad(rest: str) -> JSONResponse:
+    """Alles unter /api/, was keine der Routen oben getroffen hat: 404.
+
+    Diese Route steht hinter allen echten /api-Routen und vor dem Mount auf
+    "/". Ohne sie fiele ein Tippfehler im Pfad in die Ausweichseite und käme
+    als 200 mit <!doctype html> zurück — der Aufrufer bekäme eine Seite, wo er
+    Daten erwartet, und scheiterte erst beim Auswerten, an einer Stelle, die
+    mit der Ursache nichts zu tun hat.
+
+    Registriert wird sie über api_route und nicht über einen Ausnahmebehandler,
+    weil der Mount die Anfrage sonst gar nicht erst weiterreicht: er beantwortet
+    sie selbst und wirft nichts, was zu behandeln wäre.
+    """
+    raise nicht_gefunden(
+        "endpoint_nicht_gefunden",
+        f"Kein Endpoint unter '/api/{rest}'. Die verfügbaren stehen in /openapi.json.",
+    )
+
+
 # ── Die Seite ─────────────────────────────────────────────────────────────────
 # Zuletzt montiert: die /api-Routen oben werden zuerst geprüft, der Mount auf "/"
 # fängt nur ab, was übrig bleibt. Ein Ursprung für Seite und Daten, kein CORS.

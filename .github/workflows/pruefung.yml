@@ -1,0 +1,66 @@
+# Die Prüfung, die bei jedem Push läuft.
+#
+# Ohne sie sind 521 Tests eine Zusage und keine Prüfung — genau die Lage, in
+# der ein Syntaxfehler drei Monate überlebt hat. Der pre-commit-Hook taugt
+# dafür nicht: er überspringt sich selbst, wenn kein viz-Server läuft, also
+# faktisch immer.
+name: Prüfung
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python:
+    name: pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      - run: pip install -r requirements-ci.txt
+
+      # Erst übersetzen: ein Syntaxfehler soll auffallen, auch wenn er in
+      # einer Datei steckt, die kein Test importiert.
+      #
+      # src/generalized/ ist absichtlich nicht dabei: dort steckt seit
+      # 2026-05-15 ein Syntaxfehler in parse_document.parse_presseartikel()
+      # (typografische Anführungszeichen statt gerader). Ihn zu beheben ist
+      # eine Entscheidung über das alte System, keine Nebenwirkung dieser
+      # Prüfung. Sobald er behoben ist, gehört 'src' hier wieder hin.
+      - name: Übersetzen
+        run: python -m compileall -q src/neu tests
+
+      - name: Tests
+        run: python -m pytest tests/ -q -m "not langsam" --ignore=tests/test_e2e.py
+
+  frontend:
+    name: npm run check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      # Die Typen kommen sonst aus dem laufenden Server. In der Prüfung gibt
+      # es keinen — geprüft wird gegen die eingecheckte api-typen.ts, und
+      # genau das ist der Punkt: weicht sie vom Schema ab, bricht der Build.
+      - name: Typen und Svelte prüfen
+        run: npm run check
+
+      - run: npm run build

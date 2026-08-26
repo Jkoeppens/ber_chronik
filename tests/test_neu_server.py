@@ -452,3 +452,47 @@ def test_nichtleere_liste_haengt_einen_lauf_an(tmp_path, monkeypatch) -> None:
     assert body["anzahl"] == 1 and body["angelegt"] == 1 and body["geloescht"] == 2
     assert isinstance(body["lauf_id"], int)
     con.close()
+
+
+# ── Unbekannte Pfade unter /api/ ──────────────────────────────────────────────
+# Der Ausweich-Mount auf '/' liefert die Svelte-Seite für jede Adresse, die
+# keine Route getroffen hat — das ist für /projekt/damaskus/themen richtig und
+# für /api/gibtsnicht falsch: die Fläche bekam dort 200 mit HTML und meldete
+# "Unexpected token '<'" statt eines Fehlers, den man lesen kann.
+
+@pytest.mark.parametrize("pfad", [
+    "/api/gibtsnicht",
+    "/api/projekt/damaskus/quatsch",
+    "/api/akteur/999999/tut-nichts",
+    "/api/",
+])
+def test_unbekannter_api_pfad_gibt_404_in_fehlergestalt(client: TestClient, pfad: str) -> None:
+    r = client.get(pfad)
+    assert r.status_code == 404, f"{pfad} gab {r.status_code}"
+    assert r.headers["content-type"].startswith("application/json")
+    fehler = fehlergestalt_pruefen(r.json(), 404)
+    assert fehler["code"] == "endpoint_nicht_gefunden"
+
+
+@pytest.mark.parametrize("methode", ["get", "post", "put", "patch", "delete"])
+def test_unbekannter_api_pfad_auch_bei_schreibenden_methoden(
+    client: TestClient, methode: str
+) -> None:
+    """Nicht nur GET: ein POST auf einen Tippfehler darf keine HTML-Seite sein."""
+    r = getattr(client, methode)("/api/gibtsnicht")
+    assert r.status_code == 404
+    assert r.json()["fehler"]["code"] == "endpoint_nicht_gefunden"
+
+
+def test_bekannter_api_pfad_bleibt_unberuehrt(client: TestClient) -> None:
+    """Der Auffangpfad steht hinter den Routen, nicht vor ihnen."""
+    r = client.get("/api/projekte")
+    assert r.status_code == 200
+    assert "projekte" in r.json()
+
+
+def test_unbekannter_pfad_ausserhalb_api_bleibt_die_svelte_seite(client: TestClient) -> None:
+    """Adressen ohne /api/ gehören der Fläche: sie löst sie selbst auf."""
+    r = client.get("/gibtsnichtmal")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/html")

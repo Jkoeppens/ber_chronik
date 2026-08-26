@@ -1,0 +1,20 @@
+# Was die Prüfung braucht — nicht was der Betrieb braucht.
+#
+# GLiNER, torch, voyageai und anthropic fehlen hier mit Absicht: die Tests
+# geben Erkenner, Embedding und Sprachmodell als Funktionen herein und rühren
+# kein Modell an. Sie mitzuinstallieren hieße, in jedem Lauf ein halbes
+# Gigabyte für nichts zu laden.
+fastapi>=0.110,<1.0
+pydantic>=2.0,<3.0
+python-dotenv>=1.0,<2.0
+python-multipart>=0.0.9,<1.0   # DOCX-Upload über TestClient
+httpx>=0.27,<1.0               # TestClient
+requests>=2.31,<3.0            # src/generalized/llm.py, Modulebene
+PyYAML>=6.0,<7.0               # Obsidian-Frontmatter
+numpy>=1.26,<3.0
+scikit-learn>=1.3,<2.0         # KMeans + TF-IDF im Taxonomiekern
+python-docx>=1.1,<2.0          # DOCX lesen
+networkx>=3.0,<4.0             # network_layout.json
+dropbox>=12.0,<13.0            # ingest/dropbox_anbindung.py, Modulebene
+tqdm>=4.66,<5.0                # src/generalized/classify_segments.py, Modulebene
+pytest>=8.0,<9.0
