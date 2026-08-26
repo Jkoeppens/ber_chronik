@@ -10,12 +10,18 @@
 	let fehler = $state<string | null>(null);
 	let bericht = $state<ExportAntwort | null>(null);
 
+	// „Mit ausgeben", nicht „jetzt erzeugen": geschrieben wird, was in
+	// akteur.zusammenfassung steht. Erzeugt werden sie auf der Akteursfläche —
+	// hier hinge sonst ein Modellaufruf je Akteur an einem Knopf, der schnell
+	// sein soll.
+	let mitZusammenfassungen = $state(false);
+
 	async function exportieren() {
 		laeuft = true;
 		fehler = null;
 		bericht = null;
 		try {
-			bericht = await exportiere(data.projektId);
+			bericht = await exportiere(data.projektId, mitZusammenfassungen);
 			await invalidate('app:kennzahlen');
 		} catch (e) {
 			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler beim Export.';
@@ -48,6 +54,15 @@
 		{/if}
 	</div>
 
+	<label class="schalter">
+		<input type="checkbox" bind:checked={mitZusammenfassungen} disabled={laeuft} />
+		Zusammenfassungen der Akteure mit ausgeben
+		<span class="leer">
+			— schreibt entities_summary.json aus dem, was schon dasteht. Erzeugt werden
+			sie auf dem Reiter „Akteure".
+		</span>
+	</label>
+
 	{#if zahlen?.export_am}
 		<span class="leer">Zuletzt exportiert: {zahlen.export_am}</span>
 	{:else}
@@ -67,3 +82,16 @@ Dateien: {bericht.dateien.join(', ')}
 Lauf {bericht.lauf_id}: {bericht.status}</div>
 	{/if}
 </main>
+
+<style>
+	.schalter {
+		display: flex;
+		align-items: baseline;
+		gap: 7px;
+		font-size: 12px;
+		flex-wrap: wrap;
+	}
+	.schalter input {
+		margin: 0;
+	}
+</style>

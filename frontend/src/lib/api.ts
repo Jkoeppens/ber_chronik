@@ -160,11 +160,20 @@ export function lesePfadEin(
 	);
 }
 
-/** Erzeugt die Dateien, die die Visualisierung liest. */
-export function exportiere(projektId: string): Promise<ExportAntwort> {
+/**
+ * Erzeugt die Dateien, die die Visualisierung liest.
+ *
+ * `zusammenfassungen` heißt „mit ausgeben", nicht „jetzt erzeugen": geschrieben
+ * wird, was in akteur.zusammenfassung steht. Erzeugt werden sie auf der
+ * Akteursfläche — sonst hinge an diesem Knopf ein Modellaufruf je Akteur.
+ */
+export function exportiere(
+	projektId: string,
+	zusammenfassungen = false
+): Promise<ExportAntwort> {
 	return ruf<ExportAntwort>(
 		`/api/projekt/${encodeURIComponent(projektId)}/exportieren`,
-		alsJson({ zusammenfassungen: false })
+		alsJson({ zusammenfassungen })
 	);
 }
 
@@ -315,6 +324,23 @@ export function erkenneAkteure(projektId: string): Promise<LaufBegonnen> {
 	return ruf<LaufBegonnen>(
 		`/api/projekt/${encodeURIComponent(projektId)}/akteure/erkennen`,
 		alsJson({})
+	);
+}
+
+/**
+ * Erzeugt die Zusammenfassungen der Akteure. Ein Modellaufruf je Akteur —
+ * deshalb eine lauf_id und kein Warten auf die Antwort.
+ *
+ * `alle` schreibt auch vorhandene neu und kostet entsprechend; ohne das
+ * werden sie übersprungen.
+ */
+export function fasseAkteureZusammen(
+	projektId: string,
+	alle = false
+): Promise<LaufBegonnen> {
+	return ruf<LaufBegonnen>(
+		`/api/projekt/${encodeURIComponent(projektId)}/akteure/zusammenfassen`,
+		alsJson({ alle })
 	);
 }
 

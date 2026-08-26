@@ -20,6 +20,17 @@ class AkteureErkennenRumpf(BaseModel):
     """
 
 
+class ZusammenfassenRumpf(BaseModel):
+    """Rumpf von POST /api/projekt/{id}/akteure/zusammenfassen."""
+
+    alle: bool = Field(
+        default=False,
+        description="Auch vorhandene Zusammenfassungen neu erzeugen. Kostet "
+                    "einen Modellaufruf je Akteur — die Vorgabe überspringt, "
+                    "was schon dasteht.",
+    )
+
+
 class AkteurAendernRumpf(BaseModel):
     """Rumpf von PATCH /api/akteur/{id}. Nur was gesetzt ist, wird geändert."""
 
@@ -83,6 +94,11 @@ class AkteurZeile(BaseModel):
         description="Viele Aliase und der eigene Name trifft fast nie — "
                     "der Eintrag heißt nach etwas, das er kaum ist"
     )
+    zusammenfassung: str | None = Field(
+        default=None,
+        description="Was dieser Akteur im Material war, in drei Absätzen. "
+                    "null, solange keine erzeugt wurde.",
+    )
 
 
 class AkteurListe(BaseModel):
@@ -91,6 +107,21 @@ class AkteurListe(BaseModel):
     anzahl_manuell: int
     anzahl_abgelehnt: int
     anzahl_klumpen: int
+    anzahl_kandidaten: int = Field(
+        default=0,
+        description="Akteure mit genug Nennungen für eine Zusammenfassung",
+    )
+    anzahl_mit_zusammenfassung: int = Field(
+        default=0, description="Davon haben so viele schon eine"
+    )
+    anzahl_offen: int = Field(
+        default=0, description="Die Zahl, die am Knopf steht"
+    )
+    mindest_nennungen: int = Field(
+        default=3,
+        description="Unter so vielen Nennungen steht zu wenig da, um etwas "
+                    "über eine Rolle zu sagen",
+    )
     akteure: list[AkteurZeile]
 
 

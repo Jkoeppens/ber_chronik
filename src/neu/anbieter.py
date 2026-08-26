@@ -190,6 +190,18 @@ def embedding_schwelle(name: str | None = None) -> float:
     return float(block["schwelle_akteure"])
 
 
+def embedding_tempo(name: str | None = None) -> float | None:
+    """Einheiten je Sekunde beim Einbetten, oder None, wenn nicht gemessen.
+
+    Eine Eigenschaft des Modells, keine des Browsers: die Zahl stand vorher als
+    32 in themen/+page.svelte und hätte bei jedem Modellwechsel eine falsche
+    Dauer angekündigt, ohne dass es jemandem aufgefallen wäre.
+    """
+    _, block = _embedding_block(name)
+    wert = block.get("einheiten_je_sekunde")
+    return float(wert) if wert else None
+
+
 def embedding_funktion(
     aufgabe: str, name: str | None = None
 ) -> tuple[Callable[[list[str]], np.ndarray], str]:

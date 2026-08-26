@@ -37,6 +37,7 @@ from src.neu.modelle.akteure import (
     MarkierungenListe,
     Namenstreffer,
     VerschmelzenRumpf,
+    ZusammenfassenRumpf,
 )
 from src.neu.modelle.datierung import (
     Anker,
@@ -112,5 +113,5 @@ __all__ = [
     "Praezision", "Projekt", "ProjektAnlegenRumpf", "ProjektListe", "ProjektZeile",
     "QuelleAnlegen", "Quellformat",
     "TextAntwort", "TextRumpf", "Umfang", "Verfahren", "VerschmelzenRumpf",
-    "ZuordnungAntwort", "ZuordnungRumpf",
+    "ZuordnungAntwort", "ZuordnungRumpf", "ZusammenfassenRumpf",
 ]

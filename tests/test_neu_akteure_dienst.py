@@ -381,3 +381,217 @@ def test_kandidaten_eines_unbekannten_projekts(tmp_path):
     with pytest.raises(AkteurFehler) as exc:
         duplikatskandidaten(con, "gibt-es-nicht")
     assert exc.value.code == "projekt_nicht_gefunden"
+
+
+# ── Zusammenfassungen ─────────────────────────────────────────────────────────
+# Kein Modell und kein Netz: frage_modell ist eine Attrappe. Geprüft wird, wen
+# der Dienst auswählt, was er schreibt und was er beim zweiten Mal unterlässt.
+
+def _mit_akteuren(tmp_path: Path, nennungen: dict[str, int]) -> sqlite3.Connection:
+    """Ein Projekt, in dem jeder Name in so vielen Einheiten vorkommt."""
+    con = _db(tmp_path, [])
+    with con:
+        con.execute("INSERT INTO kategorie (id, projekt_id, name, herkunft) "
+                    "VALUES (1,'p','Klage','vorschlag'), (2,'p','Kosten','vorschlag')")
+        pos = 0
+        for akteur_nr, (name, anzahl) in enumerate(nennungen.items(), 1):
+            con.execute("INSERT INTO akteur (id, projekt_id, normalform, typ, status, "
+                        "herkunft) VALUES (?,'p',?,'Person','aktiv','gliner')",
+                        (akteur_nr, name))
+            for _ in range(anzahl):
+                pos += 1
+                con.execute(
+                    "INSERT INTO einheit (id, quelle_id, position, typ, text, jahr_von, "
+                    "kategorie_id) VALUES (?,'q',?,'content',?,?,?)",
+                    (pos, pos, f"Absatz {pos} über {name}.", 1900 + pos,
+                     1 if pos % 2 else 2))
+                con.execute("INSERT INTO einheit_akteur (einheit_id, akteur_id, start, "
+                            "ende) VALUES (?,?,0,4)", (pos, akteur_nr))
+    return con
+
+
+def _modell(antwort: str = "Wer.\n\nRolle.\n\nKonflikte.", protokoll: list | None = None):
+    def frage(prompt: str, system: str) -> tuple[str, int, int]:
+        if protokoll is not None:
+            protokoll.append(prompt)
+        return antwort, 100, 50
+    return frage
+
+
+def test_nur_akteure_mit_genug_nennungen(tmp_path):
+    """Unter drei Nennungen steht zu wenig da, um etwas über eine Rolle zu sagen."""
+    from src.neu.akteure.dienst import zusammenfassungen_erzeugen, zusammenfassungen_stand
+
+    con = _mit_akteuren(tmp_path, {"Enver": 5, "Talaat": 3, "Randfigur": 2})
+
+    stand = zusammenfassungen_stand(con, "p")
+    assert stand["anzahl_kandidaten"] == 2      # Randfigur fällt raus
+    assert stand["anzahl_offen"] == 2
+    assert stand["mindest_nennungen"] == 3
+
+    e = zusammenfassungen_erzeugen(con, "p", frage_modell=_modell(), llm_modell="attrappe")
+    assert e.anzahl_kandidaten == 2
+    assert e.anzahl_geschrieben == 2
+
+    geschrieben = dict(con.execute(
+        "SELECT normalform, zusammenfassung IS NOT NULL FROM akteur"))
+    assert geschrieben == {"Enver": 1, "Talaat": 1, "Randfigur": 0}
+    con.close()
+
+
+def test_zweiter_lauf_zahlt_nicht_noch_einmal(tmp_path):
+    from src.neu.akteure.dienst import zusammenfassungen_erzeugen, zusammenfassungen_stand
+
+    con = _mit_akteuren(tmp_path, {"Enver": 5})
+    aufrufe: list = []
+    zusammenfassungen_erzeugen(con, "p", frage_modell=_modell(protokoll=aufrufe),
+                               llm_modell="attrappe")
+    assert len(aufrufe) == 1
+
+    zweiter = zusammenfassungen_erzeugen(
+        con, "p", frage_modell=_modell(protokoll=aufrufe), llm_modell="attrappe")
+    assert len(aufrufe) == 1, "Der zweite Lauf hat das Modell noch einmal gefragt"
+    assert zweiter.anzahl_geschrieben == 0
+    assert zweiter.anzahl_uebersprungen == 1
+    assert zusammenfassungen_stand(con, "p")["anzahl_offen"] == 0
+
+    # alle=True schreibt bewusst neu.
+    dritter = zusammenfassungen_erzeugen(
+        con, "p", frage_modell=_modell("Neu.", protokoll=aufrufe), llm_modell="attrappe",
+        alle=True)
+    assert dritter.anzahl_geschrieben == 1
+    assert con.execute("SELECT zusammenfassung FROM akteur").fetchone()[0] == "Neu."
+    con.close()
+
+
+def test_der_prompt_traegt_die_auszuege(tmp_path):
+    from src.neu.akteure.dienst import MAX_ABSAETZE, zusammenfassungen_erzeugen
+
+    con = _mit_akteuren(tmp_path, {"Enver": 4})
+    prompts: list = []
+    zusammenfassungen_erzeugen(con, "p", frage_modell=_modell(protokoll=prompts),
+                               llm_modell="attrappe")
+
+    prompt = prompts[0]
+    assert "Person/Organisation: Enver" in prompt
+    assert "(4 gesamt, 4 gezeigt)" in prompt
+    assert "Absatz 1 über Enver." in prompt
+    assert "[1, 1901]" in prompt          # Einheit und Jahr als Beleg
+    assert MAX_ABSAETZE == 30
+    con.close()
+
+
+def test_mehr_als_dreissig_absaetze_werden_ausgeduennt(tmp_path):
+    """Reihum über die Kategorien, damit die Auswahl nicht einseitig wird."""
+    from src.neu.akteure.dienst import zusammenfassungen_erzeugen
+
+    con = _mit_akteuren(tmp_path, {"Enver": 40})
+    prompts: list = []
+    zusammenfassungen_erzeugen(con, "p", frage_modell=_modell(protokoll=prompts),
+                               llm_modell="attrappe")
+
+    assert "(40 gesamt, 30 gezeigt)" in prompts[0]
+    gezeigt = [z for z in prompts[0].split("\n") if z.startswith("[")]
+    assert len(gezeigt) == 30
+    # Beide Kategorien kommen vor, keine ist verdrängt.
+    nummern = [int(z[1:z.index(",")]) for z in gezeigt]
+    assert any(n % 2 for n in nummern) and any(not n % 2 for n in nummern)
+    assert nummern == sorted(nummern), "Die Auszüge stehen nicht in Dokumentreihenfolge"
+    con.close()
+
+
+def test_ein_gescheiterter_akteur_beendet_den_lauf_nicht(tmp_path):
+    from src.neu.akteure.dienst import zusammenfassungen_erzeugen
+
+    con = _mit_akteuren(tmp_path, {"Enver": 5, "Talaat": 4})
+
+    def launisch(prompt, system):
+        if "Talaat" in prompt:
+            raise RuntimeError("Modell weg")
+        return "Wer.\n\nRolle.\n\nKonflikte.", 10, 5
+
+    e = zusammenfassungen_erzeugen(con, "p", frage_modell=launisch, llm_modell="attrappe")
+    assert e.anzahl_geschrieben == 1 and e.anzahl_gescheitert == 1
+    assert con.execute(
+        "SELECT zusammenfassung FROM akteur WHERE normalform='Enver'").fetchone()[0]
+    con.close()
+
+
+def test_ein_lauf_ohne_ein_einziges_ergebnis_scheitert(tmp_path):
+    """Erfolg mit null Ergebnissen wäre eine Lüge in der lauf-Zeile."""
+    from src.neu.akteure.dienst import zusammenfassungen_erzeugen
+
+    con = _mit_akteuren(tmp_path, {"Enver": 5})
+
+    def kaputt(prompt, system):
+        raise RuntimeError("Modell weg")
+
+    with pytest.raises(AkteurFehler) as fehler:
+        zusammenfassungen_erzeugen(con, "p", frage_modell=kaputt, llm_modell="attrappe")
+    assert fehler.value.code == "zusammenfassungen_gescheitert"
+    con.close()
+
+
+def test_leere_antwort_zaehlt_als_gescheitert(tmp_path):
+    from src.neu.akteure.dienst import zusammenfassungen_erzeugen
+
+    con = _mit_akteuren(tmp_path, {"Enver": 5, "Talaat": 4})
+    antworten = iter(["", "Wer.\n\nRolle.\n\nKonflikte."])
+    e = zusammenfassungen_erzeugen(
+        con, "p", frage_modell=lambda p, s: (next(antworten), 10, 5),
+        llm_modell="attrappe")
+    assert e.anzahl_geschrieben == 1 and e.anzahl_gescheitert == 1
+    con.close()
+
+
+def test_die_kosten_kommen_aus_der_anbieterdatei(tmp_path):
+    from src.neu.akteure.dienst import zusammenfassungen_erzeugen
+
+    con = _mit_akteuren(tmp_path, {"Enver": 5})
+    e = zusammenfassungen_erzeugen(
+        con, "p", frage_modell=lambda p, s: ("Text.", 1_000_000, 0),
+        llm_modell="claude-haiku-4-5-20251001")
+    assert e.in_tokens == 1_000_000
+    assert e.kosten_usd == pytest.approx(0.80)   # [llm.anthropic.preise]
+    con.close()
+
+
+def test_die_liste_nennt_den_stand_und_den_text(tmp_path):
+    """Die Zahl am Knopf und die Zusammenfassung auf der Karte."""
+    from src.neu.akteure.dienst import liste, zusammenfassungen_erzeugen
+
+    con = _mit_akteuren(tmp_path, {"Enver": 5, "Randfigur": 2})
+    vorher = liste(con, "p")
+    assert vorher["anzahl_kandidaten"] == 1 and vorher["anzahl_offen"] == 1
+    assert all(a["zusammenfassung"] is None for a in vorher["akteure"])
+
+    zusammenfassungen_erzeugen(con, "p", frage_modell=_modell(), llm_modell="attrappe")
+    nachher = liste(con, "p")
+    assert nachher["anzahl_offen"] == 0 and nachher["anzahl_mit_zusammenfassung"] == 1
+    enver = next(a for a in nachher["akteure"] if a["normalform"] == "Enver")
+    assert enver["zusammenfassung"].startswith("Wer.")
+    con.close()
+
+
+def test_kandidaten_stehen_nach_staerke_des_grundes(tmp_path):
+    """Die Rangfolge ist Fachwissen und stand bis dahin im Browser."""
+    from src.neu.akteure.kern import kandidat_rang
+
+    con = _db(tmp_path, ["Enver kam an.", "Kayali auch."])
+    with con:
+        con.execute("INSERT INTO akteur (id, projekt_id, normalform, typ, status, "
+                    "herkunft) VALUES (1,'p','A','Person','aktiv','gliner'),"
+                    "(2,'p','B','Person','aktiv','gliner'),"
+                    "(3,'p','C','Person','aktiv','gliner')")
+        con.execute(
+            "INSERT INTO verschmelzungskandidat (projekt_id, akteur_a_id, akteur_b_id, "
+            "grund, mass, berechnet_am) VALUES "
+            "('p',1,2,'aehnlichkeit',0.99,'2026-01-01'),"
+            "('p',2,3,'schreibweise',2,'2026-01-01'),"
+            "('p',1,3,'alias',NULL,'2026-01-01')")
+
+    gruende = [k["grund"] for k in duplikatskandidaten(con, "p")]
+    assert gruende == ["alias", "schreibweise", "aehnlichkeit"]
+    assert kandidat_rang("alias") < kandidat_rang("aehnlichkeit")
+    assert kandidat_rang("erfunden") == 3
+    con.close()

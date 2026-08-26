@@ -42,6 +42,11 @@ modell_akteure = "paraphrase-multilingual-MiniLM-L12-v2"  # Namen zusammenführe
 # Ab hier gelten zwei Namen als derselbe Akteur. 0,92 ist die Zahl für MiniLM,
 # gemessen an kurzen Namen; für lange Texte ist das Modell ungeeignet.
 schwelle_akteure = 0.92
+# Wie viele Einheiten bge-m3 auf dieser Maschine je Sekunde einbettet. Gemessen,
+# nicht geschätzt — und deshalb hier: die Fläche kündigt damit eine Dauer an,
+# und mit einem anderen Modell wäre die Ankündigung eine Lüge. Fehlt der Wert,
+# sagt der Server keine Dauer voraus.
+einheiten_je_sekunde = 32
 schluessel = ""   # keiner nötig, läuft lokal
 
 [embedding.voyage]
@@ -50,6 +55,9 @@ modell_akteure = "voyage-4"
 # Voyage-4 liegt bei kurzen Namen enger beieinander als MiniLM. Mit 0,92
 # führte ein Voyage-Lauf praktisch nichts mehr zusammen.
 schwelle_akteure = 0.78
+# Kein einheiten_je_sekunde: über das Netz hängt die Dauer an der Leitung und
+# an der Stapelgröße, und gemessen ist sie nicht. Lieber keine Angabe als eine
+# erfundene.
 schluessel = "VOYAGE_API_KEY"
 
 # ── Sprachmodell ─────────────────────────────────────────────────────────────

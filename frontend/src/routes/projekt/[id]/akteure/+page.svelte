@@ -4,6 +4,7 @@
 		ApiFehler,
 		aendereAkteur,
 		erkenneAkteure,
+		fasseAkteureZusammen,
 		ladeAkteure,
 		ladeKandidaten,
 		ladeMarkierungen,
@@ -96,10 +97,45 @@
 		}
 	}
 
+	// ── Zusammenfassungen ────────────────────────────────────────────────────
+	// Ein Modellaufruf je Akteur, deshalb derselbe Weg wie die Erkennung: 202,
+	// dann den Lauf verfolgen. Der Fortschritt nennt den zuletzt Bearbeiteten —
+	// bei über hundert Akteuren ist eine Zahl allein zu wenig.
+	let fasstZusammen = $state(false);
+
+	async function zusammenfassen() {
+		fasstZusammen = true;
+		fehler = null;
+		lauf = null;
+		try {
+			const begonnen = await fasseAkteureZusammen(data.projektId);
+			await verfolgeLauf(begonnen.lauf_id, (s) => (lauf = s));
+			await allesNeuLaden();
+		} catch (e) {
+			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler.';
+		} finally {
+			fasstZusammen = false;
+		}
+	}
+
 	function laufText(s: LaufStand): string {
 		const p = s.parameter as Record<string, unknown>;
-		if (s.status === 'laeuft') return `läuft — Lauf ${s.id}, seit ${s.begonnen_am}`;
+		if (s.status === 'laeuft') {
+			if (p.phase === 'zusammenfassen')
+				return `fasst zusammen — ${p.fertig ?? 0} von ${p.gesamt ?? '?'}${
+					p.zuletzt ? `, zuletzt ${p.zuletzt}` : ''
+				}`;
+			return `läuft — Lauf ${s.id}, seit ${s.begonnen_am}`;
+		}
 		if (s.status === 'fehler') return `fehlgeschlagen: ${s.fehler ?? 'ohne Meldung'}`;
+		if (p.anlass === 'zusammenfassen')
+			return [
+				`${p.anzahl_geschrieben} Zusammenfassungen geschrieben, ` +
+					`${p.anzahl_uebersprungen} übersprungen, ${p.anzahl_gescheitert} gescheitert`,
+				`${p.in_tokens} Token hinein, ${p.out_tokens} hinaus, ` +
+					`${Number(p.kosten_usd ?? 0).toFixed(4)} $`,
+				`Lauf ${s.id}: ${s.begonnen_am} → ${s.beendet_am}`
+			].join('\n');
 		const zeilen = [
 			`${p.akteure} Akteure aus ${p.funde} Funden, ${p.zuordnungen} Fundstellen`,
 			`${p.embedding_modell} / ${p.gliner_modell}, Schwelle ${p.schwelle}`,
@@ -256,7 +292,11 @@
 
 	// ── Reiter 3: Duplikate ──────────────────────────────────────────────────
 	// Eine Liste, nach Stärke sortiert. Keine Gruppenüberschriften.
-	const RANG: Record<string, number> = { alias: 0, schreibweise: 1, aehnlichkeit: 2 };
+	//
+	// Sortiert kommt sie schon so vom Server: welcher Grund schwerer wiegt, ist
+	// Fachwissen über die drei Regeln und steht in akteure/kern.py. Hier stand
+	// es als `const RANG` — im Browser, wo es beim Nachdenken über die Regeln
+	// niemand gefunden hätte.
 	/**
 	 * `mass` bedeutet je Grund etwas anderes: bei 'aehnlichkeit' eine
 	 * Kosinusähnlichkeit zwischen 0 und 1, bei 'schreibweise' einen
@@ -270,13 +310,7 @@
 		return mass === null ? 'ähnlich' : `${Math.round(mass * 100)} % ähnlich`;
 	}
 
-	const sortierteKandidaten = $derived(
-		[...(kandidaten?.kandidaten ?? [])].sort((a, b) => {
-			const r = (RANG[a.grund] ?? 9) - (RANG[b.grund] ?? 9);
-			if (r !== 0) return r;
-			return (b.mass ?? 0) - (a.mass ?? 0);
-		})
-	);
+	const sortierteKandidaten = $derived(kandidaten?.kandidaten ?? []);
 	let alleKandidaten = $state(false);
 	const gezeigteKandidaten = $derived(
 		alleKandidaten ? sortierteKandidaten : sortierteKandidaten.slice(0, 50)
@@ -297,9 +331,29 @@
 				{stand.anzahl} Akteure · {stand.anzahl_manuell} von Hand geändert, bleiben
 			</span>
 		{/if}
-		<button class="btn btn-sm btn-outline" disabled={laeuft || beschaeftigt} onclick={erkennen}>
+		<button
+			class="btn btn-sm btn-outline"
+			disabled={laeuft || fasstZusammen || beschaeftigt}
+			onclick={erkennen}
+		>
 			{laeuft ? 'Erkennt …' : 'Erkennung starten'}
 		</button>
+		{#if stand && stand.anzahl_kandidaten > 0}
+			<button
+				class="btn btn-sm btn-outline"
+				disabled={laeuft || fasstZusammen || beschaeftigt || stand.anzahl_offen === 0}
+				title="Ein Modellaufruf je Akteur. Wer schon eine Zusammenfassung hat, wird übersprungen."
+				onclick={zusammenfassen}
+			>
+				{#if fasstZusammen}
+					Fasst zusammen …
+				{:else if stand.anzahl_offen === 0}
+					Alle {stand.anzahl_kandidaten} zusammengefasst
+				{:else}
+					{stand.anzahl_offen} zusammenfassen
+				{/if}
+			</button>
+		{/if}
 	</div>
 
 	{#if ladefehler}<div class="fehler">{ladefehler}</div>{/if}
@@ -464,6 +518,10 @@
 									}}
 								/>
 							</div>
+
+							{#if a.zusammenfassung}
+								<p class="zusammenfassung">{a.zusammenfassung}</p>
+							{/if}
 
 							{#if offeneNamen.has(a.id)}
 								<table class="namen">
@@ -703,6 +761,18 @@
 		border: 1px solid #fcd34d;
 		border-radius: 4px;
 		padding: 3px 9px;
+	}
+	/* Die Zusammenfassung ist Fließtext, kein Datum: sie darf breiter atmen als
+	   die Zahlen darüber, aber nicht die Karte beherrschen. */
+	.zusammenfassung {
+		font-size: 12px;
+		line-height: 1.55;
+		color: var(--c-text-2);
+		margin: 6px 0 0;
+		padding-left: 10px;
+		border-left: 2px solid var(--c-line);
+		white-space: pre-wrap;
+		max-width: 78ch;
 	}
 	.namen {
 		font-size: 11px;

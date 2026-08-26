@@ -497,3 +497,35 @@ def test_unbekannter_pfad_ausserhalb_api_bleibt_die_svelte_seite(client: TestCli
     r = client.get("/gibtsnichtmal")
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("text/html")
+
+
+# ── Zusammenfassungen ─────────────────────────────────────────────────────────
+
+def test_zusammenfassen_prueft_das_projekt(client: TestClient) -> None:
+    r = client.post("/api/projekt/gibtsnicht/akteure/zusammenfassen", json={})
+    assert r.status_code == 404
+    assert fehlergestalt_pruefen(r.json(), 404)["code"] == "projekt_nicht_gefunden"
+
+
+def test_zusammenfassen_ohne_sprachmodell_gibt_503(
+    client: TestClient, monkeypatch
+) -> None:
+    """503 an der Stelle des Klicks, nicht als gescheiterter Lauf Minuten später."""
+    monkeypatch.setenv("LLM_PROVIDER", "")
+    r = client.post("/api/projekt/damaskus/akteure/zusammenfassen", json={})
+    assert r.status_code == 503
+    fehler = fehlergestalt_pruefen(r.json(), 503)
+    assert fehler["code"] == "llm_anbieter_fehlt"
+
+
+def test_akteurliste_nennt_den_zusammenfassungsstand(client: TestClient) -> None:
+    r = client.get("/api/projekt/damaskus/akteure")
+    assert r.status_code == 200
+    body = r.json()
+    for feld in ("anzahl_kandidaten", "anzahl_mit_zusammenfassung",
+                 "anzahl_offen", "mindest_nennungen"):
+        assert feld in body, feld
+    assert body["anzahl_offen"] == (
+        body["anzahl_kandidaten"] - body["anzahl_mit_zusammenfassung"]
+    )
+    assert "zusammenfassung" in body["akteure"][0]

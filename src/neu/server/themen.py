@@ -150,6 +150,20 @@ def kategorie_von_hand_setzen(einheit_id: int, rumpf: ZuordnungRumpf) -> Zuordnu
 
 # ── Kategorien pflegen ───────────────────────────────────────────────────────
 
+def _dauer(einheiten: int, tempo: float | None) -> int | None:
+    """Wie lange das Einbetten etwa dauert, in Sekunden.
+
+    Das Tempo ist eine Messung des Servers und steht in anbieter.toml, nicht im
+    Browser: wechselt das Modell, wechselt die Zahl mit. Ohne Messung wird
+    nichts angekündigt — eine geratene Dauer ist schlechter als keine.
+
+    Die Untergrenze von fünf Sekunden ist das Laden des Modells, das bei einem
+    kalten Server ohnehin anfällt.
+    """
+    if not einheiten or not tempo:
+        return None
+    return max(5, round(einheiten / tempo))
+
 @router.get(
     "/api/projekt/{projekt_id}/kategorien",
     response_model=KategorienListe,
@@ -167,13 +181,16 @@ def kategorien_liste(projekt_id: str) -> KategorienListe:
     try:
         stand = kategorie_verwaltung.liste(con, projekt_id)
         try:
-            from src.neu.anbieter import embedding_modellname
+            from src.neu.anbieter import embedding_modellname, embedding_tempo
 
-            stand["einheiten_ohne_vektor"] = vektoren.lage(
+            offen = vektoren.lage(
                 con, projekt_id, embedding_modellname("themen")
             )["zu_rechnen"]
+            stand["einheiten_ohne_vektor"] = offen
+            stand["dauer_schaetzung_sekunden"] = _dauer(offen, embedding_tempo())
         except AnbieterFehler:
             stand["einheiten_ohne_vektor"] = None
+            stand["dauer_schaetzung_sekunden"] = None
         return KategorienListe(**stand)
     except KategorieFehler as exc:
         raise HTTPException(status_code=404, detail=(exc.code, str(exc)))

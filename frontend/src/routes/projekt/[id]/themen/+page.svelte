@@ -185,6 +185,10 @@
 	// Anbieter) wird wie 0 behandelt: der Lauf scheitert dann ohnehin mit einer
 	// Meldung, und eine geratene Sekundenzahl macht sie nicht verständlicher.
 	const ohneVektor = $derived(stand?.einheiten_ohne_vektor ?? 0);
+	// Die Dauer rechnet der Server: das Tempo ist eine Eigenschaft des Modells
+	// und steht in anbieter.toml. Hier stand dafür die Zahl 32 — sie hätte nach
+	// einem Modellwechsel weiter eine Dauer angekündigt, nur die falsche.
+	const dauer = $derived(stand?.dauer_schaetzung_sekunden ?? null);
 	let zuordnungsLauf = $state<LaufStand | null>(null);
 	let ordnetZu = $state(false);
 
@@ -311,8 +315,9 @@
 			<span class="leer">
 				Speichern schreibt die Beschreibungen und ordnet danach alle Einheiten neu zu.
 				{#if ohneVektor > 0}
-					{ohneVektor} Einheiten müssen dafür erst eingebettet werden, das dauert etwa
-					{Math.max(5, Math.round(ohneVektor / 32))} Sekunden.
+					{ohneVektor} Einheiten müssen dafür erst eingebettet werden{dauer
+						? `, das dauert etwa ${dauer} Sekunden`
+						: ''}.
 				{/if}
 				Ohne Speichern geht die Änderung verloren.
 			</span>

@@ -85,6 +85,14 @@ class KategorienListe(BaseModel):
                     "werden müssen. 0 heißt: das Speichern ist in etwa einer "
                     "Sekunde durch. null, wenn kein Embedding-Anbieter steht."
     )
+    dauer_schaetzung_sekunden: int | None = Field(
+        default=None,
+        description="Wie lange das Einbetten dieser Einheiten etwa dauert. "
+                    "Gerechnet aus dem gemessenen Tempo des Modells "
+                    "(anbieter.toml). null, wenn nichts einzubetten ist oder "
+                    "für das Modell keine Messung vorliegt — dann kündigt die "
+                    "Fläche keine Dauer an.",
+    )
 
 
 class KategorieEintrag(BaseModel):

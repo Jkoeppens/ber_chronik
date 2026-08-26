@@ -49,6 +49,23 @@ from src.neu.vokabular import KANDIDAT_GRUENDE as GRUENDE  # noqa: E402
 
 __all_vokabular__ = (TYPEN, STATUS, HERKUENFTE, GRUENDE)
 
+# Wie schwer ein Grund wiegt, kleiner ist stärker.
+#
+# Ein gemeinsamer Alias ist ein Beleg: zwei Zeilen tragen denselben Namen. Eine
+# Schreibvariante ist ein starkes Indiz — 'Kayalı' und 'Kayali' sind fast immer
+# dieselbe Person. Ähnlichkeit im Vektorraum ist der schwächste Grund; sie
+# stellt auch Namen nebeneinander, die nur zum selben Thema gehören.
+#
+# Das ist Fachwissen über die drei Regeln und stand bis hierher als
+# `const RANG` in akteure/+page.svelte — im Browser, wo niemand es beim
+# Nachdenken über die Regeln gefunden hätte.
+GRUND_RANG: dict[str, int] = {"alias": 0, "schreibweise": 1, "aehnlichkeit": 2}
+
+
+def kandidat_rang(grund: str) -> int:
+    """Der Rang eines Grundes; ein unbekannter sortiert ans Ende."""
+    return GRUND_RANG.get(grund, len(GRUND_RANG))
+
 # GLiNER. Modellname und Erkennungsschwelle stehen nicht hier, sondern in
 # anbieter.toml unter [gliner] — sie sagen, WOMIT erkannt wird, und das ist
 # Anbieterwissen. Was hier bleibt, ist fachlich: die Labels, ihre Abbildung

@@ -592,6 +592,36 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projekt/{projekt_id}/akteure/zusammenfassen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Akteure Zusammenfassen
+         * @description Erzeugt die Zusammenfassungen und kommt sofort zurück.
+         *
+         *     Ein Modellaufruf je Akteur — bei damaskus sind das über hundert. Deshalb
+         *     202 mit einer lauf_id; den Stand liefert GET /api/lauf/{id}, samt der Zahl
+         *     der fertigen und dem zuletzt bearbeiteten Namen.
+         *
+         *     Wer schon eine Zusammenfassung hat, wird übersprungen. alle=true schreibt
+         *     auch die vorhandenen neu und kostet entsprechend.
+         *
+         *     Das Sprachmodell wird vorher geprüft, nicht im Faden: ein fehlender
+         *     Schlüssel soll 503 an der Stelle des Klicks geben.
+         */
+        post: operations["akteure_zusammenfassen_api_projekt__projekt_id__akteure_zusammenfassen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projekt/{projekt_id}/akteure": {
         parameters: {
             query?: never;
@@ -859,6 +889,30 @@ export interface components {
             anzahl_abgelehnt: number;
             /** Anzahl Klumpen */
             anzahl_klumpen: number;
+            /**
+             * Anzahl Kandidaten
+             * @description Akteure mit genug Nennungen für eine Zusammenfassung
+             * @default 0
+             */
+            anzahl_kandidaten: number;
+            /**
+             * Anzahl Mit Zusammenfassung
+             * @description Davon haben so viele schon eine
+             * @default 0
+             */
+            anzahl_mit_zusammenfassung: number;
+            /**
+             * Anzahl Offen
+             * @description Die Zahl, die am Knopf steht
+             * @default 0
+             */
+            anzahl_offen: number;
+            /**
+             * Mindest Nennungen
+             * @description Unter so vielen Nennungen steht zu wenig da, um etwas über eine Rolle zu sagen
+             * @default 3
+             */
+            mindest_nennungen: number;
             /** Akteure */
             akteure: components["schemas"]["AkteurZeile"][];
         };
@@ -904,6 +958,11 @@ export interface components {
              * @description Viele Aliase und der eigene Name trifft fast nie — der Eintrag heißt nach etwas, das er kaum ist
              */
             ist_klumpen: boolean;
+            /**
+             * Zusammenfassung
+             * @description Was dieser Akteur im Material war, in drei Absätzen. null, solange keine erzeugt wurde.
+             */
+            zusammenfassung?: string | null;
         };
         /**
          * AkteureErkennenRumpf
@@ -1571,6 +1630,11 @@ export interface components {
              * @description Wie viele Einheiten beim nächsten Zuordnen erst embeddet werden müssen. 0 heißt: das Speichern ist in etwa einer Sekunde durch. null, wenn kein Embedding-Anbieter steht.
              */
             einheiten_ohne_vektor: number | null;
+            /**
+             * Dauer Schaetzung Sekunden
+             * @description Wie lange das Einbetten dieser Einheiten etwa dauert. Gerechnet aus dem gemessenen Tempo des Modells (anbieter.toml). null, wenn nichts einzubetten ist oder für das Modell keine Messung vorliegt — dann kündigt die Fläche keine Dauer an.
+             */
+            dauer_schaetzung_sekunden?: number | null;
         };
         /**
          * KategorienSpeichernRumpf
@@ -1963,6 +2027,18 @@ export interface components {
              * @description Kennung der Kategorie, oder null für 'keine Kategorie'
              */
             kategorie_id: number | null;
+        };
+        /**
+         * ZusammenfassenRumpf
+         * @description Rumpf von POST /api/projekt/{id}/akteure/zusammenfassen.
+         */
+        ZusammenfassenRumpf: {
+            /**
+             * Alle
+             * @description Auch vorhandene Zusammenfassungen neu erzeugen. Kostet einen Modellaufruf je Akteur — die Vorgabe überspringt, was schon dasteht.
+             * @default false
+             */
+            alle: boolean;
         };
     };
     responses: never;
@@ -4014,6 +4090,86 @@ export interface operations {
         requestBody?: {
             content: {
                 "application/json": components["schemas"]["AkteureErkennenRumpf"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LaufBegonnen"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    akteure_zusammenfassen_api_projekt__projekt_id__akteure_zusammenfassen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ZusammenfassenRumpf"] | null;
             };
         };
         responses: {

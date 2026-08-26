@@ -27,7 +27,7 @@ from typing import Callable, Sequence
 
 import numpy as np
 
-from src.neu import projekte
+from src.neu import laeufe, projekte
 from src.neu.akteure import kern
 from src.neu.akteure.kern import Akteur
 
@@ -604,9 +604,13 @@ def duplikatskandidaten(con: sqlite3.Connection, projekt_id: str) -> list[dict]:
     """Die gespeicherten Verschmelzungskandidaten eines Projekts.
 
     Gelesen, nicht gerechnet: berechnet wird beim Erkennungslauf.
+
+    Sortiert nach der Stärke des Grundes, dann nach dem Maß. Das SQL sortierte
+    nach k.grund und damit alphabetisch — 'aehnlichkeit' vor 'alias', also der
+    schwächste Grund zuerst. Zurechtgerückt hat das bisher der Browser.
     """
     _projekt_pruefen(con, projekt_id)
-    return [{
+    zeilen = [{
         "id": z[0],
         "akteur_a_id": z[1],
         "akteur_a": z[2],
@@ -622,9 +626,282 @@ def duplikatskandidaten(con: sqlite3.Connection, projekt_id: str) -> list[dict]:
         "JOIN akteur a ON a.id = k.akteur_a_id "
         "JOIN akteur b ON b.id = k.akteur_b_id "
         "WHERE k.projekt_id = ? "
-        "ORDER BY k.grund, k.mass IS NULL, k.mass DESC, k.id",
+        "ORDER BY k.mass IS NULL, k.mass DESC, k.id",
         (projekt_id,),
     )]
+    zeilen.sort(key=lambda k: kern.kandidat_rang(k["grund"]))
+    return zeilen
+
+
+# ── Zusammenfassungen ─────────────────────────────────────────────────────────
+# Was ein Akteur in diesem Material war, in drei Absätzen. Ein Modellaufruf je
+# Akteur, geschrieben nach akteur.zusammenfassung.
+#
+# Warum das hier steht und nicht im Export: jeder Schritt schreibt seine eigene
+# Tabelle, der Export liest nur. Die Vorlage
+# (src/generalized/generate_entity_summaries.py) erzeugte die Datei
+# entities_summary.json und machte sie damit zur Wahrheit — wer zweimal
+# exportierte, zahlte zweimal, und wer die Datei löschte, verlor die Arbeit.
+#
+# Fachlich unverändert übernommen: die Auswahl von bis zu 30 Absätzen im
+# Reihum-Verfahren, die Schwelle von mindestens drei Nennungen und der Prompt.
+
+MAX_ABSAETZE = 30
+
+# Unter drei Nennungen steht zu wenig da, um etwas über eine Rolle zu sagen.
+# Die Vorlage nannte die Zahl min_mentions und hatte sie als Parameter; sie ist
+# hier eine Vorgabe, die man übergeben kann.
+MINDEST_NENNUNGEN = 3
+
+ZUSAMMENFASSUNG_PROMPT = """\
+Du fasst die Rolle einer Person oder Organisation in diesem historischen Text \
+zusammen, auf Basis von Auszügen aus einer Chronik.
+
+Person/Organisation: {name}
+
+Relevante Auszüge ({gesamt} gesamt, {gezeigt} gezeigt):
+{absaetze}
+
+Schreibe eine Zusammenfassung auf Deutsch mit genau dieser Struktur \
+(drei Absätze, keine Überschriften, kein JSON):
+
+Absatz 1 – Wer: Wer ist diese Person oder Organisation? \
+Welchen Hintergrund und welche Funktion hatten sie allgemein?
+
+Absatz 2 – Rolle: Welche konkreten Aufgaben, Entscheidungen und Beiträge \
+hatten sie in diesem Kontext? \
+Nenne mindestens drei konkrete Jahreszahlen aus den Auszügen. \
+Nenne mindestens zwei andere beteiligte Personen oder Organisationen \
+mit denen sie zusammenarbeiteten oder in Beziehung standen.
+
+Absatz 3 – Konflikte und Wendepunkte: Welche Konflikte, Krisen oder \
+Kursänderungen waren mit dieser Person/Organisation verbunden? \
+Was hat sich durch ihr Handeln verändert oder verschlechtert?
+
+Schreibe ausschließlich was explizit in den Auszügen steht. \
+Wenn du unsicher bist ob ein Detail in den Auszügen vorkommt, lass es weg.\
+"""
+
+
+@dataclass
+class ZusammenfassungErgebnis:
+    projekt_id: str
+    lauf_id: int
+    begonnen_am: str
+    beendet_am: str
+    status: str
+    llm_modell: str
+    anzahl_kandidaten: int = 0
+    anzahl_geschrieben: int = 0
+    anzahl_uebersprungen: int = 0
+    anzahl_gescheitert: int = 0
+    in_tokens: int = 0
+    out_tokens: int = 0
+    kosten_usd: float = 0.0
+
+
+def _absaetze_waehlen(zeilen: list[dict], hoechstens: int) -> list[dict]:
+    """Bis zu `hoechstens` Absätze, reihum über die Kategorien.
+
+    Aus der Vorlage (_sample_paragraphs), dort über event_type. Der Sinn ist
+    derselbe: dreißig Absätze zum selben Thema sagen weniger über eine Rolle
+    als dreißig aus verschiedenen. Die Reihenfolge wird danach wieder auf die
+    Dokumentreihenfolge gebracht, damit die Auszüge chronologisch stehen.
+    """
+    if len(zeilen) <= hoechstens:
+        return zeilen
+    je_kategorie: dict[str, list[dict]] = {}
+    for z in zeilen:
+        je_kategorie.setdefault(z.get("kategorie") or "?", []).append(z)
+    eimer = list(je_kategorie.values())
+    gewaehlt: list[dict] = []
+    i = 0
+    while len(gewaehlt) < hoechstens:
+        eimer_i = eimer[i % len(eimer)]
+        if eimer_i:
+            gewaehlt.append(eimer_i.pop(0))
+        i += 1
+        if all(not e for e in eimer):
+            break
+    gewaehlt.sort(key=lambda z: z["einheit_id"])
+    return gewaehlt
+
+
+def _absaetze_je_akteur(
+    con: sqlite3.Connection, projekt_id: str
+) -> dict[int, list[dict]]:
+    """Je Akteur die Einheiten, in denen er vorkommt, in Dokumentreihenfolge.
+
+    Die Vorlage baute dafür eine Alias-Landkarte und ordnete Zeichenketten zu.
+    Hier steht die Zuordnung schon in einheit_akteur — mit aufgelösten Aliasen,
+    weil der Erkennungslauf sie aufgelöst hat.
+    """
+    je_akteur: dict[int, list[dict]] = {}
+    for z in con.execute(
+        "SELECT ea.akteur_id, e.id, e.text, e.jahr_von, k.name "
+        "FROM einheit_akteur ea "
+        "JOIN einheit e ON e.id = ea.einheit_id "
+        "JOIN akteur a ON a.id = ea.akteur_id "
+        "LEFT JOIN kategorie k ON k.id = e.kategorie_id "
+        "WHERE a.projekt_id = ? "
+        "GROUP BY ea.akteur_id, e.id "
+        "ORDER BY ea.akteur_id, e.quelle_id, e.position",
+        (projekt_id,),
+    ):
+        je_akteur.setdefault(z[0], []).append(
+            {"einheit_id": z[1], "text": z[2], "jahr": z[3], "kategorie": z[4]}
+        )
+    return je_akteur
+
+
+def zusammenfassungen_stand(
+    con: sqlite3.Connection, projekt_id: str, mindestens: int = MINDEST_NENNUNGEN
+) -> dict:
+    """Wie viele Akteure eine Zusammenfassung bekämen und wie viele schon eine haben.
+
+    Ohne Modellaufruf: die Fläche soll die Zahl am Knopf zeigen können, ohne
+    dass dafür etwas gerechnet wird.
+    """
+    _projekt_pruefen(con, projekt_id)
+    zeile = con.execute(
+        "SELECT COUNT(*), COUNT(a.zusammenfassung) FROM akteur a "
+        "WHERE a.projekt_id = ? AND a.status = 'aktiv' AND ("
+        "  SELECT COUNT(DISTINCT ea.einheit_id) FROM einheit_akteur ea "
+        "  WHERE ea.akteur_id = a.id) >= ?",
+        (projekt_id, mindestens),
+    ).fetchone()
+    kandidaten, mit = zeile[0], zeile[1]
+    return {
+        "anzahl_kandidaten": kandidaten,
+        "anzahl_mit_zusammenfassung": mit,
+        "anzahl_offen": kandidaten - mit,
+        "mindest_nennungen": mindestens,
+    }
+
+
+def zusammenfassungen_erzeugen(
+    con: sqlite3.Connection,
+    projekt_id: str,
+    frage_modell: Callable[[str, str], tuple[str, int, int]] | None = None,
+    llm_modell: str | None = None,
+    mindestens: int = MINDEST_NENNUNGEN,
+    alle: bool = False,
+    lauf_id: int | None = None,
+) -> ZusammenfassungErgebnis:
+    """Schreibt akteur.zusammenfassung für die Akteure mit genug Nennungen.
+
+    Ein Modellaufruf je Akteur, und nach jedem wird geschrieben: ein Abbruch
+    nach der Hälfte kostet die zweite Hälfte, nicht alles. Aus demselben Grund
+    ist `alle=False` die Vorgabe — wer schon eine Zusammenfassung hat, wird
+    übersprungen, und ein zweiter Klick zahlt nicht noch einmal.
+
+    Das Sprachmodell kommt aus src.neu.anbieter, wenn es nicht übergeben wird.
+    """
+    begonnen_am = _jetzt()
+    _projekt_pruefen(con, projekt_id)
+
+    if frage_modell is None:
+        from src.neu.anbieter import llm_funktion
+
+        frage_modell, llm_modell = llm_funktion()
+
+    je_akteur = _absaetze_je_akteur(con, projekt_id)
+    kandidaten = [
+        (z[0], z[1], z[2]) for z in con.execute(
+            "SELECT id, normalform, zusammenfassung FROM akteur "
+            "WHERE projekt_id = ? AND status = 'aktiv' ORDER BY normalform",
+            (projekt_id,),
+        )
+        if len(je_akteur.get(z[0], [])) >= mindestens
+    ]
+    # Die mit den meisten Nennungen zuerst: bricht der Lauf ab, ist das
+    # Wichtigste getan.
+    kandidaten.sort(key=lambda k: -len(je_akteur.get(k[0], [])))
+
+    offen = [k for k in kandidaten if alle or not k[2]]
+    ergebnis = ZusammenfassungErgebnis(
+        projekt_id=projekt_id,
+        lauf_id=lauf_id or 0,
+        begonnen_am=begonnen_am,
+        beendet_am=begonnen_am,
+        status="erfolg",
+        llm_modell=llm_modell or "",
+        anzahl_kandidaten=len(kandidaten),
+        anzahl_uebersprungen=len(kandidaten) - len(offen),
+    )
+
+    if lauf_id is not None:
+        laeufe.fortschritt(
+            con, lauf_id, phase="zusammenfassen", gesamt=len(offen),
+            fertig=0, llm_modell=llm_modell,
+        )
+
+    for nr, (akteur_id, normalform, _) in enumerate(offen, 1):
+        absaetze = je_akteur[akteur_id]
+        gezeigt = _absaetze_waehlen(absaetze, MAX_ABSAETZE)
+        block = "\n\n".join(
+            f"[{a['einheit_id']}, {a['jahr'] or '?'}] {a['text']}" for a in gezeigt
+        )
+        prompt = ZUSAMMENFASSUNG_PROMPT.format(
+            name=normalform, gesamt=len(absaetze), gezeigt=len(gezeigt),
+            absaetze=block,
+        )
+
+        try:
+            text, ein, aus = frage_modell(prompt, "")
+        except Exception:
+            # Ein Akteur, an dem das Modell scheitert, beendet nicht den Lauf:
+            # die übrigen sind trotzdem zu holen, und die lauf-Zeile sagt am
+            # Ende, wie viele fehlen.
+            ergebnis.anzahl_gescheitert += 1
+            continue
+
+        ergebnis.in_tokens += ein
+        ergebnis.out_tokens += aus
+        text = (text or "").strip()
+        if not text:
+            ergebnis.anzahl_gescheitert += 1
+            continue
+
+        with con:
+            con.execute("UPDATE akteur SET zusammenfassung = ? WHERE id = ?",
+                        (text, akteur_id))
+        ergebnis.anzahl_geschrieben += 1
+
+        if lauf_id is not None:
+            laeufe.fortschritt(con, lauf_id, fertig=nr, zuletzt=normalform)
+
+    # Ein Lauf, an dem jeder einzelne Aufruf gescheitert ist, ist kein Erfolg mit
+    # null Ergebnissen — er ist gescheitert, und die lauf-Zeile soll das sagen.
+    if offen and ergebnis.anzahl_geschrieben == 0 and ergebnis.anzahl_gescheitert:
+        raise AkteurFehler(
+            f"Keine der {ergebnis.anzahl_gescheitert} Zusammenfassungen ist "
+            "zustande gekommen — das Sprachmodell hat auf keinen Aufruf "
+            "brauchbar geantwortet.",
+            "zusammenfassungen_gescheitert",
+        )
+
+    from src.neu.anbieter import kosten
+
+    ergebnis.kosten_usd = kosten(
+        ergebnis.llm_modell, ergebnis.in_tokens, ergebnis.out_tokens
+    )
+    ergebnis.beendet_am = _jetzt()
+
+    if lauf_id is not None:
+        laeufe.fortschritt(
+            con, lauf_id, phase="fertig",
+            anzahl_geschrieben=ergebnis.anzahl_geschrieben,
+            anzahl_gescheitert=ergebnis.anzahl_gescheitert,
+            anzahl_uebersprungen=ergebnis.anzahl_uebersprungen,
+            in_tokens=ergebnis.in_tokens, out_tokens=ergebnis.out_tokens,
+            kosten_usd=ergebnis.kosten_usd,
+        )
+        with con:
+            con.execute("UPDATE lauf SET status = 'erfolg', beendet_am = ? WHERE id = ?",
+                        (ergebnis.beendet_am, lauf_id))
+
+    return ergebnis
 
 
 # ── Lesen für die Fläche ──────────────────────────────────────────────────────
@@ -679,10 +956,10 @@ def liste(con: sqlite3.Connection, projekt_id: str) -> dict:
 
     akteure = []
     for z in con.execute(
-        "SELECT id, normalform, typ, status, herkunft FROM akteur "
+        "SELECT id, normalform, typ, status, herkunft, zusammenfassung FROM akteur "
         "WHERE projekt_id = ? ORDER BY normalform COLLATE NOCASE", (projekt_id,)
     ):
-        akteur_id, normalform, typ, status, herkunft = z
+        akteur_id, normalform, typ, status, herkunft, zusammenfassung = z
         meine = treffer.get(akteur_id, {})
         gesamt = zahlen.get(akteur_id, 0)
         auf_normalform = meine.get(normalform.lower(), 0)
@@ -702,6 +979,7 @@ def liste(con: sqlite3.Connection, projekt_id: str) -> dict:
             "anteil_normalform": None if anteil is None else round(anteil, 4),
             "ist_klumpen": (len(aliase.get(akteur_id, [])) >= KLUMPEN_ALIASE
                             and gesamt > 0 and anteil < KLUMPEN_ANTEIL),
+            "zusammenfassung": zusammenfassung,
         })
 
     return {
@@ -710,6 +988,7 @@ def liste(con: sqlite3.Connection, projekt_id: str) -> dict:
         "anzahl_manuell": sum(1 for a in akteure if a["herkunft"] == "manuell"),
         "anzahl_abgelehnt": sum(1 for a in akteure if a["status"] == "abgelehnt"),
         "anzahl_klumpen": sum(1 for a in akteure if a["ist_klumpen"]),
+        **zusammenfassungen_stand(con, projekt_id),
         "akteure": akteure,
     }
 

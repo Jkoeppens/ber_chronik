@@ -36,6 +36,7 @@ from src.neu.modelle import (
     LaufBegonnen,
     MarkierungenListe,
     VerschmelzenRumpf,
+    ZusammenfassenRumpf,
 )
 from src.neu.server.gemeinsam import FEHLER_ANTWORTEN, projekt_muss_es_geben
 
@@ -86,6 +87,59 @@ def akteure_erkennen(
 
     try:
         lauf_id = laeufe.starten(projekt_id, "akteure", {"phase": "beginnt"}, arbeit)
+    except LaufFehler as exc:
+        raise HTTPException(status_code=409, detail=(exc.code, str(exc)))
+
+    return LaufBegonnen(lauf_id=lauf_id, projekt_id=projekt_id,
+                        schritt="akteure", status="laeuft")
+
+
+@router.post(
+    "/api/projekt/{projekt_id}/akteure/zusammenfassen",
+    response_model=LaufBegonnen,
+    responses=FEHLER_ANTWORTEN,
+    status_code=202,
+)
+def akteure_zusammenfassen(
+    projekt_id: str, rumpf: ZusammenfassenRumpf | None = None
+) -> LaufBegonnen:
+    """Erzeugt die Zusammenfassungen und kommt sofort zurück.
+
+    Ein Modellaufruf je Akteur — bei damaskus sind das über hundert. Deshalb
+    202 mit einer lauf_id; den Stand liefert GET /api/lauf/{id}, samt der Zahl
+    der fertigen und dem zuletzt bearbeiteten Namen.
+
+    Wer schon eine Zusammenfassung hat, wird übersprungen. alle=true schreibt
+    auch die vorhandenen neu und kostet entsprechend.
+
+    Das Sprachmodell wird vorher geprüft, nicht im Faden: ein fehlender
+    Schlüssel soll 503 an der Stelle des Klicks geben.
+    """
+    con = verbindung()
+    try:
+        projekt_muss_es_geben(con, projekt_id)
+    finally:
+        con.close()
+
+    try:
+        from src.neu.anbieter import llm_funktion
+
+        llm_funktion()
+    except AnbieterFehler as exc:
+        raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
+
+    alle = bool(rumpf and rumpf.alle)
+
+    def arbeit(eigene, lauf_id: int) -> None:
+        akteur_dienst.zusammenfassungen_erzeugen(
+            eigene, projekt_id=projekt_id, alle=alle, lauf_id=lauf_id
+        )
+
+    try:
+        lauf_id = laeufe.starten(
+            projekt_id, "akteure", {"phase": "beginnt", "anlass": "zusammenfassen",
+                                    "alle": alle}, arbeit,
+        )
     except LaufFehler as exc:
         raise HTTPException(status_code=409, detail=(exc.code, str(exc)))
 
