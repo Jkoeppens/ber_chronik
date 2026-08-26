@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Callable
 
-from src.neu import laeufe, vektoren
+from src.neu import laeufe, projekte, vektoren
 from src.neu.kategorien import kern
 from src.neu.kategorien.kern import Zuordnung
 
@@ -204,7 +204,7 @@ def klassifizieren(
         {"verfahren": verfahren, "umfang": umfang}, ensure_ascii=False
     )
 
-    if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone() is None:
+    if not projekte.gibt_es(con, projekt_id):
         raise KlassifikationFehler(
             f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
         )

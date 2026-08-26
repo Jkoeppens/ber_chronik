@@ -1,5 +1,5 @@
 """
-tests/test_neu_server.py — Leseserver src/neu/server.py
+tests/test_neu_server.py — Leseserver src/neu/server/
 
 Läuft ohne Server: TestClient ruft die App im Prozess auf.
 
@@ -80,19 +80,20 @@ def test_leere_datenbank_gibt_200_mit_leerer_liste(tmp_path, monkeypatch) -> Non
 
 
 def test_projekt_einzeln(client: TestClient) -> None:
-    r = client.get("/api/projekt/damaskus")
+    """Ein Projekt gibt es nur noch über /kennzahlen.
+
+    GET /api/projekt/{id} ist weggefallen — die Fläche hat es nie gerufen,
+    und was es lieferte, steht in /kennzahlen mit drin.
+    """
+    r = client.get("/api/projekt/damaskus/kennzahlen")
     assert r.status_code == 200
     body = r.json()
-    assert body["id"] == "damaskus"
+    assert body["projekt_id"] == "damaskus"
     assert body["titel"] == "Damaskus"
-    # Kein fester Wert mehr: angelegt_am entsteht beim Anlegen des Projekts,
-    # seit es nicht mehr aus projects.db übertragen wird.
-    from datetime import datetime
-    datetime.fromisoformat(body["angelegt_am"])
 
 
 def test_projekt_unbekannt_gibt_404_in_fehlergestalt(client: TestClient) -> None:
-    r = client.get("/api/projekt/gibtsnicht")
+    r = client.get("/api/projekt/gibtsnicht/kennzahlen")
     assert r.status_code == 404
     fehler = fehlergestalt_pruefen(r.json(), 404)
     assert fehler["code"] == "projekt_nicht_gefunden"

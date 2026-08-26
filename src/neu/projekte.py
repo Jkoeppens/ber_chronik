@@ -42,6 +42,31 @@ def _jetzt() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+# ── Gibt es das Projekt? ──────────────────────────────────────────────────────
+# Die Frage stand fünfzehnmal als eigenes SELECT im Bestand, achtmal allein in
+# server.py. Sie hier zu stellen ist kein Selbstzweck: die Bedingung
+# ('WHERE id = ?', nicht etwa auch ein Status) gehört zum Projektbegriff, und
+# wer sie ändert, soll das an einer Stelle tun.
+#
+# Zwei Fassungen, weil die Aufrufer zwei verschiedene Ausnahmen werfen: jeder
+# Dienst meldet seinen eigenen Fehler mit seinem eigenen Code, und den soll
+# dieses Modul ihm nicht wegnehmen.
+
+def gibt_es(con: sqlite3.Connection, projekt_id: str) -> bool:
+    """Ob es ein Projekt mit dieser Kennung gibt."""
+    return con.execute(
+        "SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)
+    ).fetchone() is not None
+
+
+def pruefen(con: sqlite3.Connection, projekt_id: str) -> None:
+    """Wirft ProjektFehler('projekt_nicht_gefunden'), wenn es das Projekt nicht gibt."""
+    if not gibt_es(con, projekt_id):
+        raise ProjektFehler(
+            f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
+        )
+
+
 def kennung_aus_titel(titel: str) -> str:
     """Macht aus 'Damaskus 1908–1918' die Kennung 'damaskus-1908-1918'.
 
@@ -93,7 +118,7 @@ def anlegen(con: sqlite3.Connection, titel: str, kennung: str | None = None) -> 
             "und Bindestrich.",
             "kennung_ungueltig",
         )
-    if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone():
+    if gibt_es(con, projekt_id):
         raise ProjektFehler(
             f"Es gibt schon ein Projekt mit der Kennung '{projekt_id}'.",
             "projekt_gibt_es_schon",
@@ -240,3 +265,65 @@ def kennzahlen(con: sqlite3.Connection, projekt_id: str) -> dict:
         "export_am": grund["export_am"],
         "laeufe": laeufe,
     }
+
+
+def einheiten(
+    con: sqlite3.Connection, projekt_id: str, typ: str | None = None
+) -> dict:
+    """Alle Einheiten eines Projekts, nach Quelle und Position sortiert.
+
+    Unbekanntes Projekt → ProjektFehler. Bekanntes Projekt ohne Treffer → leere
+    Liste: das ist ein gültiges leeres Ergebnis, kein fehlender Gegenstand.
+
+    Die Abfrage stand vorher im Endpoint. Sie gehört hierher, weil sie dieselbe
+    Verbindung Projekt→Quelle→Einheit zieht wie kennzahlen() darüber, und weil
+    ein Endpoint, der sein eigenes SQL schreibt, keinen Dienst mehr hat, den
+    ein zweiter Aufrufer benutzen könnte.
+    """
+    pruefen(con, projekt_id)
+
+    sql = ("SELECT e.* FROM einheit e JOIN quelle q ON q.id = e.quelle_id "
+           "WHERE q.projekt_id = ?")
+    args: list = [projekt_id]
+    if typ is not None:
+        sql += " AND e.typ = ?"
+        args.append(typ)
+    sql += " ORDER BY e.quelle_id, e.position"
+
+    zeilen = [dict(z) for z in con.execute(sql, args).fetchall()]
+    return {
+        "projekt_id": projekt_id,
+        "anzahl": len(zeilen),
+        "typ_filter": typ,
+        "einheiten": zeilen,
+    }
+
+
+def loeschen(con: sqlite3.Connection, projekt_id: str) -> dict:
+    """Löscht ein Projekt samt allem, was daran hängt.
+
+    Quellen, Einheiten, Kategorien, Akteure und Läufe gehen über
+    ON DELETE CASCADE mit. Die Exportdateien unter data/projects/ bleiben
+    liegen — sie sind ein Erzeugnis, kein Bestandteil des Projekts, und Dateien
+    zu löschen ist nicht Sache dieses Diensts.
+
+    Die Zahl der gelöschten Einheiten wird vorher gezählt: hinterher gibt es
+    sie nicht mehr, und ein Löschen, das nicht sagt, was es mitgenommen hat,
+    ist schlecht zu prüfen.
+    """
+    zeile = con.execute(
+        "SELECT titel FROM projekt WHERE id = ?", (projekt_id,)
+    ).fetchone()
+    if zeile is None:
+        raise ProjektFehler(
+            f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
+        )
+    anzahl = con.execute(
+        "SELECT COUNT(*) FROM einheit e JOIN quelle q ON q.id = e.quelle_id "
+        "WHERE q.projekt_id = ?", (projekt_id,)
+    ).fetchone()[0]
+
+    with con:
+        con.execute("DELETE FROM projekt WHERE id = ?", (projekt_id,))
+
+    return {"projekt_id": projekt_id, "titel": zeile[0], "geloeschte_einheiten": anzahl}

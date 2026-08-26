@@ -18,6 +18,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
+from src.neu import projekte
 from src.neu.ingest import kern
 from src.neu.ingest.kern import Einheit, RohAbsatz, RohDatei, quellformat_pruefen
 
@@ -201,7 +202,7 @@ def einlesen(
         {"pfad": pfad_text, "quellformat": quellformat}, ensure_ascii=False
     )
 
-    if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone() is None:
+    if not projekte.gibt_es(con, projekt_id):
         raise IngestFehler(
             f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
         )

@@ -1,0 +1,213 @@
+"""
+server — Leseserver auf data/neu.db
+
+Endpoints:
+  GET /api/konfiguration            welche Anbieter, Modelle und Schwellen gelten
+  GET /api/projekte                 alle Projekte
+  GET /api/projekt/{id}/kennzahlen  ein Projekt mit seinen Zahlen
+  GET /api/projekt/{id}/einheiten   seine Einheiten, nach Quelle und Position
+                                    sortiert, Filter ?typ=content
+  dazu die Schritte: quelle, themen, datieren, akteure, export
+
+Starten:
+  uvicorn src.neu.server:app --port 8002 --reload
+
+Ein Modul je Schritt, jedes mit seinem eigenen APIRouter. Vorher stand alles in
+einer Datei mit 1414 Zeilen, die jeder Schritt anfassen musste — zwei Arbeiten
+an verschiedenen Schritten trafen sich dort zwangsläufig.
+
+Was hier in der Wurzel bleibt, ist das, was keinem Schritt gehört: das Laden
+von .env, die vier Fehlerbehandler, der Riegel vor dem Ausweich-Mount und die
+Mounts selbst. Die Reihenfolge dieser drei letzten Dinge ist nicht beliebig —
+siehe die Kommentare unten.
+
+Beim Hochfahren wird .env geladen (ohne override — was in der Umgebung steht,
+gewinnt) und protokolliert, welche Anbieter aktiv sind und was fehlt. Ein
+fehlender Anbieter bricht den Start nicht ab; nur die Schritte, die ihn
+brauchen, antworten dann mit 503.
+
+Liest und schreibt ausschließlich data/neu.db. data/projects.db und
+dev_server.py bleiben unberührt.
+"""
+
+import logging
+import sqlite3
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from src.neu.konfiguration import env_laden, lage, protokollzeilen
+
+# Vor allem anderen: die Anbieterwahl steht in der Umgebung, und die Module
+# darunter lesen sie beim Import. override=False — was schon in der Umgebung
+# steht (Railway), gewinnt gegen die Datei.
+env_laden()
+
+from src.neu.server import (  # noqa: E402
+    akteure,
+    datierung,
+    export,
+    ingest,
+    konfiguration,
+    laeufe,
+    projekte,
+    themen,
+)
+from src.neu.server.gemeinsam import (  # noqa: E402
+    WURZEL,
+    fehler_antwort,
+    nicht_gefunden,
+)
+
+protokoll = logging.getLogger("ber.neu")
+
+
+def anbieter_melden() -> None:
+    """Sagt beim Hochfahren, womit gerechnet wird und was fehlt.
+
+    Kein Abbruch: ein fehlender Schlüssel legt nicht den ganzen Server lahm,
+    sondern nur die Schritte, die ihn brauchen. Sichtbar soll es trotzdem
+    sein — beim Hochfahren, nicht erst beim ersten Klick.
+    """
+    z = lage()
+    vollstaendig = z.embedding.einsatzbereit and z.llm.einsatzbereit
+    for zeile in protokollzeilen(z):
+        protokoll.info(zeile) if vollstaendig else protokoll.warning(zeile)
+
+
+@asynccontextmanager
+async def lebenszyklus(_: FastAPI):
+    anbieter_melden()
+    yield
+
+
+app = FastAPI(
+    title="BER Chronik — Leseserver",
+    description="Liest data/neu.db. Nur lesend.",
+    version="0.1.0",
+    lifespan=lebenszyklus,
+)
+
+
+# ── Die Router, ein Modul je Schritt ──────────────────────────────────────────
+# Die Reihenfolge bestimmt die Reihenfolge der Pfade in /openapi.json und damit
+# in der erzeugten api-typen.ts. Sie ist sonst ohne Wirkung: keine zwei Routen
+# überschneiden sich.
+
+for teil in (konfiguration, projekte, ingest, themen, laeufe, datierung,
+             akteure, export):
+    app.include_router(teil.router)
+
+
+# ── Die eine Fehlergestalt ────────────────────────────────────────────────────
+
+@app.exception_handler(HTTPException)
+async def http_fehler(_: Request, exc: HTTPException) -> JSONResponse:
+    """Eigene 404er tragen ihren Code im detail-Feld als (code, meldung)."""
+    if isinstance(exc.detail, tuple):
+        code, meldung = exc.detail
+    else:
+        code, meldung = "fehler", str(exc.detail)
+    return fehler_antwort(exc.status_code, code, meldung)
+
+
+@app.exception_handler(RequestValidationError)
+async def validierungs_fehler(_: Request, exc: RequestValidationError) -> JSONResponse:
+    """FastAPIs {"detail": [...]} wird in dieselbe Gestalt übersetzt."""
+    erster = exc.errors()[0] if exc.errors() else {}
+    ort = ".".join(str(t) for t in erster.get("loc", ()) if t != "query")
+    return fehler_antwort(
+        422,
+        "ungueltiger_parameter",
+        f"Parameter '{ort}': {erster.get('msg', 'ungültig')}",
+    )
+
+
+@app.exception_handler(FileNotFoundError)
+async def db_fehlt(_: Request, exc: FileNotFoundError) -> JSONResponse:
+    return fehler_antwort(500, "datenbank_fehlt", str(exc))
+
+
+@app.exception_handler(sqlite3.Error)
+async def db_fehler(_: Request, exc: sqlite3.Error) -> JSONResponse:
+    return fehler_antwort(500, "datenbank_fehler", str(exc))
+
+
+# ── Die Visualisierung ────────────────────────────────────────────────────────
+# viz/ wird unverändert ausgeliefert. Von den Projektdaten geht nur das
+# Exportverzeichnis über die Leitung — das liefert der export-Router aus.
+
+VIZ_DIR = WURZEL / "viz"
+
+if VIZ_DIR.is_dir():
+    app.mount("/viz", StaticFiles(directory=VIZ_DIR, html=True), name="viz")
+
+
+# ── Der Riegel vor dem Ausweich-Mount ─────────────────────────────────────────
+
+@app.api_route(
+    "/api/{rest:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    include_in_schema=False,
+)
+def unbekannter_api_pfad(rest: str) -> JSONResponse:
+    """Alles unter /api/, was keine der Routen oben getroffen hat: 404.
+
+    Diese Route steht hinter allen echten /api-Routen und vor dem Mount auf
+    "/". Ohne sie fiele ein Tippfehler im Pfad in die Ausweichseite und käme
+    als 200 mit <!doctype html> zurück — der Aufrufer bekäme eine Seite, wo er
+    Daten erwartet, und scheiterte erst beim Auswerten, an einer Stelle, die
+    mit der Ursache nichts zu tun hat.
+
+    Registriert wird sie über api_route und nicht über einen Ausnahmebehandler,
+    weil der Mount die Anfrage sonst gar nicht erst weiterreicht: er beantwortet
+    sie selbst und wirft nichts, was zu behandeln wäre.
+    """
+    raise nicht_gefunden(
+        "endpoint_nicht_gefunden",
+        f"Kein Endpoint unter '/api/{rest}'. Die verfügbaren stehen in /openapi.json.",
+    )
+
+
+# ── Die Seite ─────────────────────────────────────────────────────────────────
+# Zuletzt montiert: die /api-Routen oben werden zuerst geprüft, der Mount auf "/"
+# fängt nur ab, was übrig bleibt. Ein Ursprung für Seite und Daten, kein CORS.
+
+BUILD_DIR = WURZEL / "frontend" / "build"
+
+if BUILD_DIR.is_dir():
+    AUSWEICHSEITE = BUILD_DIR / "200.html"
+
+    class SeiteMitAusweich(StaticFiles):
+        """Liefert 200.html für alles, was keine Datei ist.
+
+        Die Route /projekt/{id} gibt es nicht als Datei — es gibt beliebig viele
+        Kennungen. SvelteKit erzeugt dafür eine Ausweichseite, die im Browser
+        entscheidet, was sie lädt. Ohne diesen Griff bekäme jeder Neuladen einer
+        Projektseite ein 404.
+        """
+
+        async def get_response(self, path: str, scope):
+            try:
+                return await super().get_response(path, scope)
+            except StarletteHTTPException as exc:
+                # StaticFiles wirft 404, es gibt keine Antwort zum Prüfen.
+                if exc.status_code == 404 and AUSWEICHSEITE.is_file():
+                    return FileResponse(AUSWEICHSEITE)
+                raise
+
+    app.mount("/", SeiteMitAusweich(directory=BUILD_DIR, html=True), name="seite")
+else:
+
+    @app.get("/", include_in_schema=False)
+    def kein_build() -> PlainTextResponse:
+        return PlainTextResponse(
+            f"Kein Frontend-Build unter {BUILD_DIR}.\n"
+            "Erzeugen mit:  cd frontend && npm install && npm run build\n",
+            status_code=503,
+        )

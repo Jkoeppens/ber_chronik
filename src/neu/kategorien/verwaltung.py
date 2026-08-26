@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import sqlite3
 
+from src.neu import projekte
+
 
 class KategorieFehler(Exception):
     def __init__(self, meldung: str, code: str = "kategorie_fehler"):
@@ -27,7 +29,7 @@ class KategorieFehler(Exception):
 
 
 def _projekt_pruefen(con: sqlite3.Connection, projekt_id: str) -> None:
-    if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone() is None:
+    if not projekte.gibt_es(con, projekt_id):
         raise KategorieFehler(
             f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
         )

@@ -22,6 +22,7 @@ import json
 import sqlite3
 from datetime import datetime, timedelta, timezone
 
+from src.neu import projekte
 from src.neu.ingest import dropbox_anbindung
 
 # Wie lange ein begonnener Vorgang gültig bleibt. Wer länger braucht, fängt neu
@@ -42,7 +43,7 @@ def _jetzt() -> str:
 def beginnen(con: sqlite3.Connection, projekt_id: str | None = None) -> dict:
     """Beginnt einen Anmeldevorgang und legt ihn ab. Gibt die Adresse zurück."""
     if projekt_id is not None:
-        if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone() is None:
+        if not projekte.gibt_es(con, projekt_id):
             raise AnmeldungFehler(
                 f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
             )

@@ -27,6 +27,7 @@ from typing import Callable, Sequence
 
 import numpy as np
 
+from src.neu import projekte
 from src.neu.akteure import kern
 from src.neu.akteure.kern import Akteur
 
@@ -70,7 +71,7 @@ def _jetzt() -> str:
 # ── Lesen ─────────────────────────────────────────────────────────────────────
 
 def _projekt_pruefen(con: sqlite3.Connection, projekt_id: str) -> None:
-    if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone() is None:
+    if not projekte.gibt_es(con, projekt_id):
         raise AkteurFehler(
             f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
         )

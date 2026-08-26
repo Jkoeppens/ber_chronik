@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 
-from src.neu import laeufe, vektoren
+from src.neu import laeufe, projekte, vektoren
 from src.neu import anbieter
 from src.neu.taxonomie import kern
 
@@ -152,7 +152,7 @@ def vorschlagen(
     """
     begonnen_am = _jetzt()
 
-    if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone() is None:
+    if not projekte.gibt_es(con, projekt_id):
         raise TaxonomieFehler(
             f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
         )

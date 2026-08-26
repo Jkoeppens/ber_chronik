@@ -19,6 +19,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+from src.neu import projekte
 from src.neu.datierung import kern
 from src.neu.datierung.kern import Einheit, Override
 
@@ -121,7 +122,7 @@ def datieren(
     begonnen_am = _jetzt()
     parameter = json.dumps({"umfang": umfang}, ensure_ascii=False)
 
-    if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone() is None:
+    if not projekte.gibt_es(con, projekt_id):
         raise DatierungFehler(
             f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
         )

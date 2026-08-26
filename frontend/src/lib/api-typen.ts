@@ -91,35 +91,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/projekt/{projekt_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Projekt
-         * @description Ein Projekt.
-         */
-        get: operations["projekt_api_projekt__projekt_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Projekt Loeschen
-         * @description Löscht ein Projekt samt allem, was daran hängt.
-         *
-         *     Quellen, Einheiten, Kategorien, Akteure und Läufe gehen über
-         *     ON DELETE CASCADE mit. Die Exportdateien unter data/projects/ bleiben
-         *     liegen — sie sind ein Erzeugnis, kein Bestandteil des Projekts, und
-         *     Dateien zu löschen ist nicht Sache dieses Endpoints.
-         */
-        delete: operations["projekt_loeschen_api_projekt__projekt_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/projekt/{projekt_id}/einheiten": {
         parameters: {
             query?: never;
@@ -132,11 +103,37 @@ export interface paths {
          * @description Alle Einheiten eines Projekts, nach Quelle und Position sortiert.
          *
          *     Unbekanntes Projekt → 404. Bekanntes Projekt ohne Treffer → 200, leere Liste.
+         *     Was gelesen wird, steht in projekte.einheiten().
          */
         get: operations["einheiten_api_projekt__projekt_id__einheiten_get"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Projekt Loeschen
+         * @description Löscht ein Projekt samt allem, was daran hängt.
+         *
+         *     Quellen, Einheiten, Kategorien, Akteure und Läufe gehen über
+         *     ON DELETE CASCADE mit. Die Exportdateien unter data/projects/ bleiben
+         *     liegen — sie sind ein Erzeugnis, kein Bestandteil des Projekts, und
+         *     Dateien zu löschen ist nicht Sache dieses Endpoints.
+         */
+        delete: operations["projekt_loeschen_api_projekt__projekt_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -164,6 +161,158 @@ export interface paths {
          *     der Pfad ein vorhandenes Verzeichnis ist.
          */
         post: operations["quelle_anlegen_api_projekt__projekt_id__quelle_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/quelle/datei": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Quelle Hochladen
+         * @description Nimmt eine Datei aus dem Browser entgegen, legt sie in data/raw/ ab und
+         *     liest sie ein.
+         *
+         *     Der Dateiname kommt vom Client und wird nicht geglaubt: nur der Basisname
+         *     zählt, und der muss unterhalb von data/raw/ landen. Eine vorhandene Datei
+         *     wird nicht überschrieben — sonst könnte ein Upload eine fremde Quelle
+         *     austauschen, an der schon ein Projekt hängt.
+         *
+         *     Für Obsidian bleibt es ein Ordnerpfad: dafür ist POST …/quelle da.
+         */
+        post: operations["quelle_hochladen_api_projekt__projekt_id__quelle_datei_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/dropbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dropbox Stand
+         * @description Ob das Projekt mit Dropbox verbunden ist und gegen welchen Ordner.
+         *
+         *     Der Status kommt aus projekt.dropbox_token. Das alte System prüfte dafür
+         *     data/dropbox_tokens.json — eine Datei, die von keiner Zeile geschrieben
+         *     wird und mit den tatsächlich benutzten Zugangsdaten nichts zu tun hat.
+         */
+        get: operations["dropbox_stand_api_projekt__projekt_id__dropbox_get"];
+        /**
+         * Dropbox Ordner Setzen
+         * @description Trägt den Ordner ein, gegen den gelesen wird.
+         */
+        put: operations["dropbox_ordner_setzen_api_projekt__projekt_id__dropbox_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/dropbox/anmeldung": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dropbox Anmeldung Beginnen
+         * @description Beginnt die Anmeldung. Der begonnene Vorgang steht in der Datenbank.
+         *
+         *     Damit übersteht er einen Serverneustart zwischen dem Beginn und der
+         *     Rückleitung — im alten System lag er in einem Wörterbuch im Arbeitsspeicher.
+         */
+        post: operations["dropbox_anmeldung_beginnen_api_projekt__projekt_id__dropbox_anmeldung_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/dropbox/ordner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dropbox Ordner Auflisten
+         * @description Die Ordner im App-Ordner — damit man den Namen nicht wissen muss.
+         *
+         *     Ein Aufruf: files_list_folder(""). Die App sieht nur ihren eigenen Ordner,
+         *     nicht die ganze Dropbox.
+         */
+        get: operations["dropbox_ordner_auflisten_api_projekt__projekt_id__dropbox_ordner_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/quelle/dropbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Quelle Aus Dropbox
+         * @description Liest den eingestellten Dropbox-Ordner ein.
+         *
+         *     Ein zweiter Lauf legt keine zweite Quelle an: bekannte Dateien werden
+         *     übersprungen, neue angehängt. Der Riegel steht im Schema —
+         *     UNIQUE (quelle_id, quellpfad).
+         */
+        post: operations["quelle_aus_dropbox_api_projekt__projekt_id__quelle_dropbox_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/taxonomie/vorschlagen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Taxonomie Vorschlagen
+         * @description Stößt den Taxonomielauf an und kommt sofort zurück.
+         *
+         *     warm_start=false: neu vorschlagen, n_clusters wählbar.
+         *     warm_start=true : verfeinern, n_clusters ist die Anzahl der vorhandenen.
+         *
+         *     Der Lauf dauert Minuten. Deshalb 202 mit einer lauf_id statt einer Antwort,
+         *     auf die man wartet — den Stand liefert GET /api/lauf/{id}.
+         */
+        post: operations["taxonomie_vorschlagen_api_projekt__projekt_id__taxonomie_vorschlagen_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -217,6 +366,83 @@ export interface paths {
         patch: operations["kategorie_von_hand_setzen_api_einheit__einheit_id__kategorie_patch"];
         trace?: never;
     };
+    "/api/projekt/{projekt_id}/kategorien": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kategorien Liste
+         * @description Die Kategorien eines Projekts mit der Zahl der Einheiten darauf.
+         *
+         *     Dazu, wie viele Einheiten beim nächsten Zuordnen erst embeddet werden
+         *     müssen: die Fläche soll eine Dauer nur ankündigen, wenn es eine gibt. Steht
+         *     kein Anbieter, ist die Frage nicht zu beantworten — dann null statt einer
+         *     geratenen Zahl, und der Lauf scheitert später ohnehin mit 503.
+         */
+        get: operations["kategorien_liste_api_projekt__projekt_id__kategorien_get"];
+        /**
+         * Kategorien Speichern
+         * @description Speichert die ganze Kategorienliste und ordnet danach neu zu.
+         *
+         *     Beides gehört zusammen: eine geänderte Beschreibung ändert, wohin die
+         *     Einheiten gehören. Es getrennt zu lassen hieße, einen Zustand zu erlauben,
+         *     in dem die Zuordnung zu Beschreibungen passt, die es nicht mehr gibt.
+         *
+         *     Warum 202 und ein Lauf, obwohl das Zuordnen mit gefüllten Vektoren in etwa
+         *     einer Sekunde durch ist: die Ausnahmen sind zu regelmäßig für einen
+         *     gewöhnlichen Klick. Beim ersten Speichern nach dem Ingest ist der Speicher
+         *     leer (12 bis 31 Sekunden je nach Projektgröße), nach einem Serverneustart
+         *     liegt das Modell nicht im Arbeitsspeicher (weitere 12), und ein
+         *     Anbieterwechsel entwertet alles auf einmal. Ein Klick, der meistens eine
+         *     Sekunde dauert und ab und zu eine halbe Minute, ist schlechter als einer,
+         *     der immer denselben Weg nimmt.
+         *
+         *     Was stattdessen aufhört: die Fläche kündigt eine Dauer nur an, wenn
+         *     einheiten_ohne_vektor aus GET …/kategorien größer als null ist.
+         *
+         *     Eine leere Liste ist ein gültiger Sollzustand — alle Kategorien weg — und
+         *     hängt keinen Lauf an: es gibt nichts, wogegen zugeordnet werden könnte.
+         *     Dann kommt lauf_id null zurück.
+         */
+        put: operations["kategorien_speichern_api_projekt__projekt_id__kategorien_put"];
+        /**
+         * Kategorie Anlegen
+         * @description Legt eine Kategorie von Hand an — herkunft='manuell'.
+         */
+        post: operations["kategorie_anlegen_api_projekt__projekt_id__kategorien_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kategorie/{kategorie_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Kategorie Loeschen
+         * @description Löscht eine Kategorie. Die Einheiten bleiben, ihre Zuordnung wird offen.
+         */
+        delete: operations["kategorie_loeschen_api_kategorie__kategorie_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Kategorie Aendern
+         * @description Ändert eine Kategorie. Sie gilt danach als von Hand geprüft.
+         */
+        patch: operations["kategorie_aendern_api_kategorie__kategorie_id__patch"];
+        trace?: never;
+    };
     "/api/lauf/{lauf_id}": {
         parameters: {
             query?: never;
@@ -234,32 +460,6 @@ export interface paths {
         get: operations["lauf_stand_api_lauf__lauf_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projekt/{projekt_id}/taxonomie/vorschlagen": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Taxonomie Vorschlagen
-         * @description Stößt den Taxonomielauf an und kommt sofort zurück.
-         *
-         *     warm_start=false: neu vorschlagen, n_clusters wählbar.
-         *     warm_start=true : verfeinern, n_clusters ist die Anzahl der vorhandenen.
-         *
-         *     Der Lauf dauert Minuten. Deshalb 202 mit einer lauf_id statt einer Antwort,
-         *     auf die man wartet — den Stand liefert GET /api/lauf/{id}.
-         */
-        post: operations["taxonomie_vorschlagen_api_projekt__projekt_id__taxonomie_vorschlagen_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -575,209 +775,6 @@ export interface paths {
          *     anzahl_ohne_datum.
          */
         post: operations["projekt_exportieren_api_projekt__projekt_id__exportieren_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projekt/{projekt_id}/quelle/datei": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Quelle Hochladen
-         * @description Nimmt eine Datei aus dem Browser entgegen, legt sie in data/raw/ ab und
-         *     liest sie ein.
-         *
-         *     Der Dateiname kommt vom Client und wird nicht geglaubt: nur der Basisname
-         *     zählt, und der muss unterhalb von data/raw/ landen. Eine vorhandene Datei
-         *     wird nicht überschrieben — sonst könnte ein Upload eine fremde Quelle
-         *     austauschen, an der schon ein Projekt hängt.
-         *
-         *     Für Obsidian bleibt es ein Ordnerpfad: dafür ist POST …/quelle da.
-         */
-        post: operations["quelle_hochladen_api_projekt__projekt_id__quelle_datei_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projekt/{projekt_id}/kategorien": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Kategorien Liste
-         * @description Die Kategorien eines Projekts mit der Zahl der Einheiten darauf.
-         *
-         *     Dazu, wie viele Einheiten beim nächsten Zuordnen erst embeddet werden
-         *     müssen: die Fläche soll eine Dauer nur ankündigen, wenn es eine gibt. Steht
-         *     kein Anbieter, ist die Frage nicht zu beantworten — dann null statt einer
-         *     geratenen Zahl, und der Lauf scheitert später ohnehin mit 503.
-         */
-        get: operations["kategorien_liste_api_projekt__projekt_id__kategorien_get"];
-        /**
-         * Kategorien Speichern
-         * @description Speichert die ganze Kategorienliste und ordnet danach neu zu.
-         *
-         *     Beides gehört zusammen: eine geänderte Beschreibung ändert, wohin die
-         *     Einheiten gehören. Es getrennt zu lassen hieße, einen Zustand zu erlauben,
-         *     in dem die Zuordnung zu Beschreibungen passt, die es nicht mehr gibt.
-         *
-         *     Warum 202 und ein Lauf, obwohl das Zuordnen mit gefüllten Vektoren in etwa
-         *     einer Sekunde durch ist: die Ausnahmen sind zu regelmäßig für einen
-         *     gewöhnlichen Klick. Beim ersten Speichern nach dem Ingest ist der Speicher
-         *     leer (12 bis 31 Sekunden je nach Projektgröße), nach einem Serverneustart
-         *     liegt das Modell nicht im Arbeitsspeicher (weitere 12), und ein
-         *     Anbieterwechsel entwertet alles auf einmal. Ein Klick, der meistens eine
-         *     Sekunde dauert und ab und zu eine halbe Minute, ist schlechter als einer,
-         *     der immer denselben Weg nimmt.
-         *
-         *     Was stattdessen aufhört: die Fläche kündigt eine Dauer nur an, wenn
-         *     einheiten_ohne_vektor aus GET …/kategorien größer als null ist.
-         *
-         *     Eine leere Liste ist ein gültiger Sollzustand — alle Kategorien weg — und
-         *     hängt keinen Lauf an: es gibt nichts, wogegen zugeordnet werden könnte.
-         *     Dann kommt lauf_id null zurück.
-         */
-        put: operations["kategorien_speichern_api_projekt__projekt_id__kategorien_put"];
-        /**
-         * Kategorie Anlegen
-         * @description Legt eine Kategorie von Hand an — herkunft='manuell'.
-         */
-        post: operations["kategorie_anlegen_api_projekt__projekt_id__kategorien_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/kategorie/{kategorie_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Kategorie Loeschen
-         * @description Löscht eine Kategorie. Die Einheiten bleiben, ihre Zuordnung wird offen.
-         */
-        delete: operations["kategorie_loeschen_api_kategorie__kategorie_id__delete"];
-        options?: never;
-        head?: never;
-        /**
-         * Kategorie Aendern
-         * @description Ändert eine Kategorie. Sie gilt danach als von Hand geprüft.
-         */
-        patch: operations["kategorie_aendern_api_kategorie__kategorie_id__patch"];
-        trace?: never;
-    };
-    "/api/projekt/{projekt_id}/dropbox": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dropbox Stand
-         * @description Ob das Projekt mit Dropbox verbunden ist und gegen welchen Ordner.
-         *
-         *     Der Status kommt aus projekt.dropbox_token. Das alte System prüfte dafür
-         *     data/dropbox_tokens.json — eine Datei, die von keiner Zeile geschrieben
-         *     wird und mit den tatsächlich benutzten Zugangsdaten nichts zu tun hat.
-         */
-        get: operations["dropbox_stand_api_projekt__projekt_id__dropbox_get"];
-        /**
-         * Dropbox Ordner Setzen
-         * @description Trägt den Ordner ein, gegen den gelesen wird.
-         */
-        put: operations["dropbox_ordner_setzen_api_projekt__projekt_id__dropbox_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projekt/{projekt_id}/dropbox/anmeldung": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Dropbox Anmeldung Beginnen
-         * @description Beginnt die Anmeldung. Der begonnene Vorgang steht in der Datenbank.
-         *
-         *     Damit übersteht er einen Serverneustart zwischen dem Beginn und der
-         *     Rückleitung — im alten System lag er in einem Wörterbuch im Arbeitsspeicher.
-         */
-        post: operations["dropbox_anmeldung_beginnen_api_projekt__projekt_id__dropbox_anmeldung_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projekt/{projekt_id}/dropbox/ordner": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dropbox Ordner Auflisten
-         * @description Die Ordner im App-Ordner — damit man den Namen nicht wissen muss.
-         *
-         *     Ein Aufruf: files_list_folder(""). Die App sieht nur ihren eigenen Ordner,
-         *     nicht die ganze Dropbox.
-         */
-        get: operations["dropbox_ordner_auflisten_api_projekt__projekt_id__dropbox_ordner_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projekt/{projekt_id}/quelle/dropbox": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Quelle Aus Dropbox
-         * @description Liest den eingestellten Dropbox-Ordner ein.
-         *
-         *     Ein zweiter Lauf legt keine zweite Quelle an: bekannte Dateien werden
-         *     übersprungen, neue angehängt. Der Riegel steht im Schema —
-         *     UNIQUE (quelle_id, quellpfad).
-         */
-        post: operations["quelle_aus_dropbox_api_projekt__projekt_id__quelle_dropbox_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1789,21 +1786,6 @@ export interface components {
             /** Anzahl */
             anzahl: number;
         };
-        /** Projekt */
-        Projekt: {
-            /** Id */
-            id: string;
-            /** Titel */
-            titel: string;
-            /** Eigentuemer Id */
-            eigentuemer_id: number;
-            /** Angelegt Am */
-            angelegt_am: string;
-            /** Oeffentlich */
-            oeffentlich: boolean;
-            /** Dropbox Ordner */
-            dropbox_ordner?: string | null;
-        };
         /**
          * ProjektAnlegenRumpf
          * @description Rumpf von POST /api/projekte.
@@ -2293,9 +2275,12 @@ export interface operations {
             };
         };
     };
-    projekt_api_projekt__projekt_id__get: {
+    einheiten_api_projekt__projekt_id__einheiten_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Filter auf einheit.typ */
+                typ?: ("content" | "heading" | "bibliography" | "meta") | null;
+            };
             header?: never;
             path: {
                 projekt_id: string;
@@ -2310,7 +2295,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Projekt"];
+                    "application/json": components["schemas"]["EinheitenListe"];
                 };
             };
             /** @description Nicht gefunden */
@@ -2447,27 +2432,28 @@ export interface operations {
             };
         };
     };
-    einheiten_api_projekt__projekt_id__einheiten_get: {
+    quelle_anlegen_api_projekt__projekt_id__quelle_post: {
         parameters: {
-            query?: {
-                /** @description Filter auf einheit.typ */
-                typ?: ("content" | "heading" | "bibliography" | "meta") | null;
-            };
+            query?: never;
             header?: never;
             path: {
                 projekt_id: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuelleAnlegen"];
+            };
+        };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EinheitenListe"];
+                    "application/json": components["schemas"]["IngestAntwort"];
                 };
             };
             /** @description Nicht gefunden */
@@ -2526,7 +2512,7 @@ export interface operations {
             };
         };
     };
-    quelle_anlegen_api_projekt__projekt_id__quelle_post: {
+    quelle_hochladen_api_projekt__projekt_id__quelle_datei_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2537,7 +2523,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["QuelleAnlegen"];
+                "multipart/form-data": components["schemas"]["Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post"];
             };
         };
         responses: {
@@ -2548,6 +2534,470 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IngestAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    dropbox_stand_api_projekt__projekt_id__dropbox_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DropboxStand"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    dropbox_ordner_setzen_api_projekt__projekt_id__dropbox_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DropboxOrdnerRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DropboxStand"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    dropbox_anmeldung_beginnen_api_projekt__projekt_id__dropbox_anmeldung_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnmeldungBeginn"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    dropbox_ordner_auflisten_api_projekt__projekt_id__dropbox_ordner_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DropboxOrdnerListe"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    quelle_aus_dropbox_api_projekt__projekt_id__quelle_dropbox_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    taxonomie_vorschlagen_api_projekt__projekt_id__taxonomie_vorschlagen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaxonomieVorschlagRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LaufBegonnen"];
                 };
             };
             /** @description Nicht gefunden */
@@ -2766,12 +3216,12 @@ export interface operations {
             };
         };
     };
-    lauf_stand_api_lauf__lauf_id__get: {
+    kategorien_liste_api_projekt__projekt_id__kategorien_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                lauf_id: number;
+                projekt_id: string;
             };
             cookie?: never;
         };
@@ -2783,7 +3233,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LaufStand"];
+                    "application/json": components["schemas"]["KategorienListe"];
                 };
             };
             /** @description Nicht gefunden */
@@ -2842,7 +3292,7 @@ export interface operations {
             };
         };
     };
-    taxonomie_vorschlagen_api_projekt__projekt_id__taxonomie_vorschlagen_post: {
+    kategorien_speichern_api_projekt__projekt_id__kategorien_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -2853,7 +3303,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TaxonomieVorschlagRumpf"];
+                "application/json": components["schemas"]["KategorienSpeichernRumpf"];
             };
         };
         responses: {
@@ -2863,7 +3313,321 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LaufBegonnen"];
+                    "application/json": components["schemas"]["KategorienGespeichert"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    kategorie_anlegen_api_projekt__projekt_id__kategorien_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KategorieRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KategorieZeile"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    kategorie_loeschen_api_kategorie__kategorie_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kategorie_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    kategorie_aendern_api_kategorie__kategorie_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kategorie_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KategorieRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KategorieZeile"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    lauf_stand_api_lauf__lauf_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lauf_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LaufStand"];
                 };
             };
             /** @description Nicht gefunden */
@@ -3962,864 +4726,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExportAntwort"];
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    quelle_hochladen_api_projekt__projekt_id__quelle_datei_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projekt_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestAntwort"];
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    kategorien_liste_api_projekt__projekt_id__kategorien_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projekt_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KategorienListe"];
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    kategorien_speichern_api_projekt__projekt_id__kategorien_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projekt_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["KategorienSpeichernRumpf"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KategorienGespeichert"];
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    kategorie_anlegen_api_projekt__projekt_id__kategorien_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projekt_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["KategorieRumpf"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KategorieZeile"];
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    kategorie_loeschen_api_kategorie__kategorie_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                kategorie_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    kategorie_aendern_api_kategorie__kategorie_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                kategorie_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["KategorieRumpf"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KategorieZeile"];
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    dropbox_stand_api_projekt__projekt_id__dropbox_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projekt_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DropboxStand"];
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    dropbox_ordner_setzen_api_projekt__projekt_id__dropbox_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projekt_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DropboxOrdnerRumpf"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DropboxStand"];
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    dropbox_anmeldung_beginnen_api_projekt__projekt_id__dropbox_anmeldung_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projekt_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AnmeldungBeginn"];
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    dropbox_ordner_auflisten_api_projekt__projekt_id__dropbox_ordner_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projekt_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DropboxOrdnerListe"];
-                };
-            };
-            /** @description Nicht gefunden */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Steht dem gerade etwas entgegen */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ungültiger Parameter */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Serverfehler */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Ein Dienst dahinter antwortet nicht */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-            /** @description Anbieter nicht verfügbar */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FehlerAntwort"];
-                };
-            };
-        };
-    };
-    quelle_aus_dropbox_api_projekt__projekt_id__quelle_dropbox_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projekt_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestAntwort"];
                 };
             };
             /** @description Nicht gefunden */

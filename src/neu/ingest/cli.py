@@ -17,6 +17,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from src.neu import projekte
 from src.neu.db import db_pfad, verbindung_schreibend
 from src.neu.ingest.dienst import IngestFehler, einlesen
 from src.neu.ingest.kern import QUELLFORMATE
@@ -37,7 +38,7 @@ def _anlegen(projekt_id: str, titel: str) -> None:
 
     con = verbindung_schreibend()
     try:
-        if con.execute("SELECT 1 FROM projekt WHERE id = ?", (projekt_id,)).fetchone():
+        if projekte.gibt_es(con, projekt_id):
             return
         jetzt = datetime.now(timezone.utc).isoformat(timespec="seconds")
         token = secrets.token_urlsafe(32)
