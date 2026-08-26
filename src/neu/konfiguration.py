@@ -9,17 +9,18 @@ Lädt nichts, ruft nichts auf, prüft keinen Schlüssel gegen den Anbieter — n
 Umgebung und Konstanten. Das darf beim Hochfahren keine Sekunde kosten und kein
 Modell aus dem Netz holen.
 
-Was hier zusammenläuft, steht sonst an vier Stellen: die Anbieterwahl in
-src/neu/*/anbieter.py, die Schwellen in kern.py, die Modellnamen in beiden.
-Auseinanderlaufen können sie trotzdem — deshalb nimmt dieses Modul die Werte
-von dort und schreibt sie nicht noch einmal auf.
+Dieses Modul weiß selbst nichts über Anbieter. Was gilt, kommt aus
+src/neu/anbieter.py und damit aus anbieter.toml; hier wird es nur eingesammelt
+und in Zeilen gebracht. Vorher las es aus zwei Anbietermodulen und schrieb die
+Fallunterscheidung ein drittes Mal auf.
 """
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
+
+from src.neu.anbieter import Anbieterlage, embedding_lage, llm_lage
 
 WURZEL = Path(__file__).resolve().parent.parent.parent
 ENV_DATEI = WURZEL / ".env"
@@ -46,26 +47,6 @@ def env_laden(pfad: Path | None = None) -> bool:
 # ── Übersicht ─────────────────────────────────────────────────────────────────
 
 @dataclass
-class Anbieterlage:
-    """Was für einen Anbieter eingestellt ist und was ihm fehlt."""
-
-    anbieter: str | None            # None = nicht gesetzt
-    bekannt: bool                   # steht im Wertevorrat
-    modell: str | None
-    schluessel_name: str | None     # welche Variable gebraucht wird, oder None
-    schluessel_vorhanden: bool | None   # None = wird keiner gebraucht
-    einsatzbereit: bool
-    hinweis: str | None = None      # was fehlt, in einem Satz
-    # Beim Embedding: 'local' sind zwei Modelle mit zwei Aufgaben — bge-m3 für
-    # Themen und Zuordnung, MiniLM für das Zusammenführen von Akteuren. Diese
-    # Stelle nannte lange nur MiniLM, und die Taxonomiefläche schrieb es an den
-    # Kopf, wo bge-m3 rechnete. Seit der Modellname der Schlüssel des
-    # Vektorspeichers ist (src/neu/vektoren.py), ist das kein Schönheitsfehler
-    # mehr. `modell` ist deshalb das der Kategorien; hier steht das andere.
-    modell_akteure: str | None = None
-
-
-@dataclass
 class Lage:
     env_datei: str | None           # geladene Datei, oder None
     embedding: Anbieterlage
@@ -76,93 +57,13 @@ class Lage:
     ollama_frist_sekunden: int | None = None
 
 
-def _embedding_lage() -> tuple[Anbieterlage, float | None]:
-    from src.neu.akteure.anbieter import (
-        EMBEDDING_ANBIETER, MODELL_MINILM, MODELL_VOYAGE,
-        SCHWELLE_MINILM, SCHWELLE_VOYAGE,
-    )
-    from src.neu.taxonomie.anbieter import EMBEDDING_MODELLE
-
-    roh = (os.environ.get("EMBEDDING_PROVIDER") or "").strip().lower()
-    if not roh:
-        return Anbieterlage(
-            anbieter=None, bekannt=False, modell=None,
-            schluessel_name=None, schluessel_vorhanden=None, einsatzbereit=False,
-            hinweis="EMBEDDING_PROVIDER ist nicht gesetzt. Erlaubt: "
-                    + " | ".join(EMBEDDING_ANBIETER),
-        ), None
-
-    if roh not in EMBEDDING_ANBIETER:
-        return Anbieterlage(
-            anbieter=roh, bekannt=False, modell=None,
-            schluessel_name=None, schluessel_vorhanden=None, einsatzbereit=False,
-            hinweis=f"Unbekannter EMBEDDING_PROVIDER '{roh}'. Erlaubt: "
-                    + " | ".join(EMBEDDING_ANBIETER),
-        ), None
-
-    if roh == "voyage":
-        da = bool(os.environ.get("VOYAGE_API_KEY"))
-        return Anbieterlage(
-            anbieter="voyage", bekannt=True, modell=MODELL_VOYAGE,
-            modell_akteure=MODELL_VOYAGE,
-            schluessel_name="VOYAGE_API_KEY", schluessel_vorhanden=da,
-            einsatzbereit=da,
-            hinweis=None if da else "VOYAGE_API_KEY fehlt.",
-        ), SCHWELLE_VOYAGE
-
-    return Anbieterlage(
-        anbieter="local", bekannt=True,
-        modell=EMBEDDING_MODELLE["local"], modell_akteure=MODELL_MINILM,
-        schluessel_name=None, schluessel_vorhanden=None, einsatzbereit=True,
-    ), SCHWELLE_MINILM
-
-
-def _llm_lage() -> tuple[Anbieterlage, int | None]:
-    from src.neu.taxonomie.anbieter import (
-        LLM_ANBIETER, MODELL_ANTHROPIC, MODELL_OLLAMA, ollama_frist,
-    )
-
-    roh = (os.environ.get("LLM_PROVIDER") or "").strip().lower()
-    if not roh:
-        return Anbieterlage(
-            anbieter=None, bekannt=False, modell=None,
-            schluessel_name=None, schluessel_vorhanden=None, einsatzbereit=False,
-            hinweis="LLM_PROVIDER ist nicht gesetzt. Erlaubt: "
-                    + " | ".join(LLM_ANBIETER),
-        ), None
-
-    if roh not in LLM_ANBIETER:
-        return Anbieterlage(
-            anbieter=roh, bekannt=False, modell=None,
-            schluessel_name=None, schluessel_vorhanden=None, einsatzbereit=False,
-            hinweis=f"Unbekannter LLM_PROVIDER '{roh}'. Erlaubt: "
-                    + " | ".join(LLM_ANBIETER),
-        ), None
-
-    if roh == "anthropic":
-        da = bool(os.environ.get("ANTHROPIC_API_KEY"))
-        modell = os.environ.get("ANTHROPIC_MODEL_ANALYZE") or MODELL_ANTHROPIC
-        return Anbieterlage(
-            anbieter="anthropic", bekannt=True, modell=modell,
-            schluessel_name="ANTHROPIC_API_KEY", schluessel_vorhanden=da,
-            einsatzbereit=da,
-            hinweis=None if da else "ANTHROPIC_API_KEY fehlt.",
-        ), None
-
-    modell = os.environ.get("OLLAMA_MODEL") or MODELL_OLLAMA
-    return Anbieterlage(
-        anbieter="ollama", bekannt=True, modell=modell,
-        schluessel_name=None, schluessel_vorhanden=None, einsatzbereit=True,
-    ), ollama_frist()
-
-
 def lage() -> Lage:
     """Liest die Umgebung und gibt zurück, was eingestellt ist."""
     from src.neu.akteure.kern import band
     from src.neu.kategorien.kern import SCHWELLE_HIGH, SCHWELLE_MEDIUM
 
-    embedding, schwelle = _embedding_lage()
-    llm, frist = _llm_lage()
+    embedding, schwelle = embedding_lage()
+    llm, frist = llm_lage()
 
     return Lage(
         env_datei=str(ENV_DATEI) if ENV_DATEI.exists() else None,

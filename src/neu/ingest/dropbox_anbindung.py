@@ -27,7 +27,7 @@ from __future__ import annotations
 import os
 from pathlib import PurePosixPath
 
-from src.neu.taxonomie.anbieter import AnbieterFehler
+from src.neu.anbieter import AnbieterFehler
 
 # Der Pfad der Rückleitung ist keine freie Wahl: Dropbox nimmt nur Adressen an,
 # die in der App-Konsole eingetragen sind, und vergleicht sie samt Pfad. Für

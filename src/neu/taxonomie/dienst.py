@@ -23,7 +23,8 @@ from datetime import datetime, timezone
 import numpy as np
 
 from src.neu import laeufe, vektoren
-from src.neu.taxonomie import anbieter, kern
+from src.neu import anbieter
+from src.neu.taxonomie import kern
 
 
 class TaxonomieFehler(Exception):
@@ -204,7 +205,7 @@ def vorschlagen(
                 "zu_wenige_einheiten",
             )
 
-        embed, emb_modell = anbieter.embedding_funktion()
+        embed, emb_modell = anbieter.embedding_funktion("themen")
         frage_modell, llm_modell = anbieter.llm_funktion()
 
         if lauf_id is not None:

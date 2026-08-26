@@ -13,7 +13,7 @@ import sys
 
 from src.neu.akteure.dienst import AkteurFehler, erkennen
 from src.neu.db import verbindung_schreibend
-from src.neu.taxonomie.anbieter import AnbieterFehler
+from src.neu.anbieter import AnbieterFehler
 
 
 def main() -> int:

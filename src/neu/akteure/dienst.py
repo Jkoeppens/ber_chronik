@@ -223,11 +223,12 @@ def erkennen(
     embedding_modell: str | None = None,
     gliner_modell: str | None = None,
     schwelle: float | None = None,
+    gliner_schwelle: float | None = None,
     lauf_id: int | None = None,
 ) -> AkteurErgebnis:
     """Erkennt die Akteure eines Projekts und ordnet sie den Einheiten zu.
 
-    Erkenner und Embedding kommen aus src.neu.akteure.anbieter, wenn sie nicht
+    Erkenner und Embedding kommen aus src.neu.anbieter, wenn sie nicht
     übergeben werden — dann bricht ein fehlender Anbieter den Lauf ab, statt
     stillschweigend ein anderes Modell zu nehmen.
 
@@ -239,23 +240,33 @@ def erkennen(
     _projekt_pruefen(con, projekt_id)
 
     if vorhersage is None or embed is None:
-        from src.neu.akteure.anbieter import embedding_funktion, gliner_funktion
+        from src.neu.anbieter import (
+            embedding_funktion, embedding_schwelle, gliner_funktion,
+        )
 
         if embed is None:
-            embed, embedding_modell, schwelle_anbieter = embedding_funktion()
+            embed, embedding_modell = embedding_funktion("akteure")
             if schwelle is None:
-                schwelle = schwelle_anbieter
+                schwelle = embedding_schwelle()
         if vorhersage is None:
-            vorhersage, gliner_modell = gliner_funktion()
+            vorhersage, gliner_modell, geerbt = gliner_funktion()
+            if gliner_schwelle is None:
+                gliner_schwelle = geerbt
     if schwelle is None:
         raise AkteurFehler(
             "Ohne Anbieter muss die Schwelle übergeben werden.", "schwelle_fehlt"
+        )
+    if gliner_schwelle is None:
+        raise AkteurFehler(
+            "Ohne Anbieter muss die GLiNER-Schwelle übergeben werden.",
+            "gliner_schwelle_fehlt",
         )
 
     parameter = json.dumps({
         "embedding_modell": embedding_modell,
         "gliner_modell": gliner_modell,
         "schwelle": schwelle,
+        "gliner_schwelle": gliner_schwelle,
     }, ensure_ascii=False)
 
     try:
@@ -276,7 +287,7 @@ def erkennen(
 
         funde, unbekannte = kern.erkenne(
             [t for _, t in einheiten], vorhersage,
-            landkarte=landkarte, abgelehnt=abgelehnt,
+            landkarte=landkarte, abgelehnt=abgelehnt, schwelle=gliner_schwelle,
         )
         vor_gruppierung = kern.zusammenfassen([kern.funde_zu_akteuren(funde)])
 

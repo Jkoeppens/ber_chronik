@@ -134,14 +134,14 @@ def _zuordnungen_bge(
     geändert haben können.
 
     Der Embedding-Anbieter ist der einzige Teil, der die Außenwelt berührt;
-    die Entscheidung selbst trifft der Kern. Er kommt aus taxonomie.anbieter
-    und nicht aus generalized.embeddings.get_embedding_provider, weil nur der
-    erste den Modellnamen mitgibt — und ohne Modellnamen gibt es keinen
-    Schlüssel für den Speicher. Dasselbe Modell in beiden Fällen.
+    die Entscheidung selbst trifft der Kern. Er kommt aus src.neu.anbieter und
+    nicht aus generalized.embeddings.get_embedding_provider, weil nur der erste
+    den Modellnamen mitgibt — und ohne Modellnamen gibt es keinen Schlüssel für
+    den Speicher. Aufgabe 'themen', dasselbe Modell wie beim Themenlauf.
     """
-    from src.neu.taxonomie.anbieter import embedding_funktion
+    from src.neu.anbieter import embedding_funktion
 
-    embed, modell = embedding_funktion()
+    embed, modell = embedding_funktion("themen")
     # Gekürzt wird vor dem Nachschlagen: die Prüfsumme steht über der
     # Zeichenkette, die das Modell gesehen hat, nicht über dem ganzen Absatz.
     gekuerzt = [(einheit_id, text[:kern.SEG_CHARS]) for einheit_id, text in einheiten]

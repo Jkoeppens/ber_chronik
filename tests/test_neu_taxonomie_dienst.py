@@ -21,7 +21,8 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.neu.taxonomie import anbieter, dienst  # noqa: E402
+from src.neu import anbieter  # noqa: E402
+from src.neu.taxonomie import dienst  # noqa: E402
 from src.neu.taxonomie.dienst import TaxonomieFehler, vorschlagen  # noqa: E402
 from src.neu.taxonomie.kern import UnlesbareAntwort  # noqa: E402
 

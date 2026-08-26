@@ -72,7 +72,7 @@ from src.neu.kategorien import verwaltung as kategorie_verwaltung  # noqa: E402
 from src.neu.kategorien.verwaltung import KategorieFehler  # noqa: E402
 from src.neu import projekte as projekt_dienst  # noqa: E402
 from src.neu.projekte import ProjektFehler  # noqa: E402
-from src.neu.taxonomie.anbieter import AnbieterFehler  # noqa: E402
+from src.neu.anbieter import AnbieterFehler  # noqa: E402
 from src.neu.taxonomie.dienst import TaxonomieFehler, vorschlagen  # noqa: E402
 from src.neu.modelle import (  # noqa: E402
     AkteurAendernRumpf,
@@ -713,9 +713,9 @@ def akteure_erkennen(
     # encode. GLiNER wird hier nicht geprüft, weil dessen Prüfung das Modell
     # lädt; sein Fehlen erscheint in der lauf-Zeile.
     try:
-        from src.neu.akteure.anbieter import embedding_funktion
+        from src.neu.anbieter import embedding_funktion
 
-        embedding_funktion()
+        embedding_funktion("akteure")
     except AnbieterFehler as exc:
         raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
 
@@ -1033,10 +1033,10 @@ def kategorien_liste(projekt_id: str) -> KategorienListe:
     try:
         stand = kategorie_verwaltung.liste(con, projekt_id)
         try:
-            from src.neu.taxonomie.anbieter import embedding_modellname
+            from src.neu.anbieter import embedding_modellname
 
             stand["einheiten_ohne_vektor"] = vektoren.lage(
-                con, projekt_id, embedding_modellname()
+                con, projekt_id, embedding_modellname("themen")
             )["zu_rechnen"]
         except AnbieterFehler:
             stand["einheiten_ohne_vektor"] = None

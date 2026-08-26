@@ -71,6 +71,7 @@ def _lauf(con, **kwargs):
         vorhersage=kwargs.pop("vorhersage", _erkenner({"Enver": "Person"})),
         embed=kwargs.pop("embed", _embed_getrennt),
         schwelle=kwargs.pop("schwelle", 0.92),
+        gliner_schwelle=kwargs.pop("gliner_schwelle", 0.7),
         embedding_modell="attrappe", gliner_modell="attrappe",
         **kwargs,
     )
@@ -155,7 +156,7 @@ def test_unbekanntes_projekt(tmp_path):
     con = _db(tmp_path, ["Enver kam an."])
     with pytest.raises(AkteurFehler) as exc:
         erkennen(con, "gibt-es-nicht", vorhersage=_erkenner({}),
-                 embed=_embed_getrennt, schwelle=0.92)
+                 embed=_embed_getrennt, schwelle=0.92, gliner_schwelle=0.7)
     assert exc.value.code == "projekt_nicht_gefunden"
 
 

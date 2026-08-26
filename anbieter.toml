@@ -1,0 +1,90 @@
+# anbieter.toml — was womit gerechnet wird.
+#
+# Gelesen von src/neu/anbieter.py, der einzigen Stelle, die etwas über
+# Anbieter weiß. Fehlt diese Datei, startet nichts — wie bei schema.sql.
+#
+# Schlüssel stehen hier NIE. Hier steht nur, wie die Variable heißt, in der
+# ein Schlüssel erwartet wird; sein Wert kommt aus .env oder der Umgebung.
+#
+# Die Umgebung überschreibt jeden Wert hier, unter den bestehenden Namen.
+# Welche das sind, steht bei jedem Feld.
+
+[wahl]
+# Absichtlich leer. Die Wahl muss je Installation ausdrücklich getroffen
+# werden — hier keine Vorgabe einzutragen ist der Punkt, nicht ein Versäumnis.
+#
+# Ein falsch gewähltes Modell fällt nicht beim Klicken auf, sondern Wochen
+# später an Zahlen, die niemand mehr nachrechnen kann: eine Zuordnung, die
+# mit dem einen Modell gerechnet wurde und mit dem anderen verglichen wird,
+# sieht aus wie ein Ergebnis. Ein Lauf, der gar nicht erst startet, ist der
+# günstigere Fehler.
+#
+# Gesetzt wird sie in der Umgebung (.env lokal, Railway im Betrieb):
+#   EMBEDDING_PROVIDER = local | voyage
+#   LLM_PROVIDER       = anthropic | ollama
+#
+# Steht hier ein Wert, gilt er als Vorgabe für diese Installation und die
+# Umgebung schlägt ihn weiterhin.
+embedding = ""
+llm = ""
+
+# ── Embedding ────────────────────────────────────────────────────────────────
+# Das Modell hängt an der Aufgabe, die Schwelle am Modell.
+#
+# Der Modellname ist zugleich der Schlüssel des Vektorspeichers
+# (src/neu/vektoren.py): ändert er sich, ohne dass sich das Modell ändert,
+# wird einmal alles umsonst neu gerechnet — ändert sich das Modell, ohne dass
+# sich der Name ändert, wird mit falschen Werten weitergerechnet.
+
+[embedding.local]
+modell_themen = "BAAI/bge-m3"                             # Themen und Zuordnung
+modell_akteure = "paraphrase-multilingual-MiniLM-L12-v2"  # Namen zusammenführen
+# Ab hier gelten zwei Namen als derselbe Akteur. 0,92 ist die Zahl für MiniLM,
+# gemessen an kurzen Namen; für lange Texte ist das Modell ungeeignet.
+schwelle_akteure = 0.92
+schluessel = ""   # keiner nötig, läuft lokal
+
+[embedding.voyage]
+modell_themen = "voyage-4"
+modell_akteure = "voyage-4"
+# Voyage-4 liegt bei kurzen Namen enger beieinander als MiniLM. Mit 0,92
+# führte ein Voyage-Lauf praktisch nichts mehr zusammen.
+schwelle_akteure = 0.78
+schluessel = "VOYAGE_API_KEY"
+
+# ── Sprachmodell ─────────────────────────────────────────────────────────────
+
+[llm.anthropic]
+modell = "claude-haiku-4-5-20251001"   # Umgebung: ANTHROPIC_MODEL_ANALYZE
+schluessel = "ANTHROPIC_API_KEY"
+antwort_token = 2048
+
+# Dollar je Million Token, [Eingabe, Ausgabe]. Ein Modell, das hier fehlt,
+# kostet in der Abrechnung null — die Zahl ist dann unbekannt, nicht gratis.
+[llm.anthropic.preise]
+"claude-haiku-4-5-20251001" = [0.80, 4.00]
+"claude-sonnet-4-20250514" = [3.00, 15.00]
+"claude-sonnet-4-6" = [3.00, 15.00]
+"claude-opus-4-7" = [15.00, 75.00]
+
+[llm.ollama]
+modell = "llama3.2:3b"              # Umgebung: OLLAMA_MODEL
+basis = "http://localhost:11434"    # Umgebung: OLLAMA_BASE_URL
+schluessel = ""
+# Obergrenze der Antwortlänge. Ohne Deckel läuft ein kleines Modell in eine
+# Endlosausgabe: llama3.2:3b lieferte über nahda nach sieben Minuten immer
+# noch stetig Text, 22 000 Zeichen und kein Ende.
+antwort_token = 2048
+# Erlaubte **Stille** je Aufruf, nicht Gesamtdauer — Umgebung: OLLAMA_TIMEOUT.
+# Ein Aufruf darf lange rechnen, solange er dabei Zeichen liefert. Eine feste
+# Gesamtfrist bricht dagegen einen Aufruf ab, der ordentlich arbeitet, nur
+# langsam; genau das ist beim ersten Taxonomielauf passiert.
+stille_sekunden = 120
+# Wie oft beim Warten gemeldet wird, wie weit der Aufruf gekommen ist.
+puls_sekunden = 10
+
+# ── Erkenner ─────────────────────────────────────────────────────────────────
+
+[gliner]
+modell = "urchade/gliner_multi"   # Umgebung: GLINER_MODEL
+schwelle = 0.7

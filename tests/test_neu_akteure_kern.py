@@ -43,6 +43,11 @@ def _vorhersage(treffer_je_stueck):
     return vorhersage
 
 
+# Der Kern hat keine Vorgabe mehr — die produktive Schwelle steht in
+# anbieter.toml. Was hier steht, ist die Zahl dieses Tests.
+SCHWELLE = 0.7
+
+
 def test_labels_werden_auf_vier_typen_abgebildet():
     funde, unbekannt = kern.erkenne(
         ["egal"],
@@ -52,6 +57,7 @@ def test_labels_werden_auf_vier_typen_abgebildet():
             {"text": "Al-Fatat", "label": "politische Bewegung"},
             {"text": "Panislamismus", "label": "religiöse Strömung oder Konzept"},
         ]]),
+        schwelle=SCHWELLE,
     )
     assert [(f.normalform, f.typ) for f in funde] == [
         ("Kayali", "Person"),
@@ -69,6 +75,7 @@ def test_unbekanntes_label_wird_gemeldet_und_nicht_zu_konzept():
             {"text": "Kritik der reinen Vernunft", "label": "Werk"},
             {"text": "Anderes Werk", "label": "Werk"},
         ]]),
+        schwelle=SCHWELLE,
     )
     # Die Vorlage machte hier still ein 'Konzept' daraus.
     assert [f.typ for f in funde] == [None, None]
@@ -83,6 +90,7 @@ def test_kleinschreib_filter_verwirft_kurze_kleinbuchstaben():
             {"text": "fatat", "label": "Organisation"},  # klein, ≥ 5 → bleibt
             {"text": "Bey", "label": "Person"},       # groß → bleibt
         ]]),
+        schwelle=SCHWELLE,
     )
     assert [f.normalform for f in funde] == ["fatat", "Bey"]
 
@@ -93,7 +101,7 @@ def test_landkarte_fuehrt_kurzform_auf_vollnamen_zurueck():
     ])
     funde, _ = kern.erkenne(
         ["egal"], _vorhersage([[{"text": "Enver", "label": "Person"}]]),
-        landkarte=landkarte,
+        landkarte=landkarte, schwelle=SCHWELLE,
     )
     assert funde[0].normalform == "Ismail Enver"
 
@@ -105,7 +113,7 @@ def test_abgelehnte_normalform_wird_uebersprungen():
             {"text": "Berlin", "label": "geographischer Ort"},
             {"text": "Damaskus", "label": "geographischer Ort"},
         ]]),
-        abgelehnt=["berlin"],
+        abgelehnt=["berlin"], schwelle=SCHWELLE,
     )
     assert [f.normalform for f in funde] == ["Damaskus"]
 
@@ -116,7 +124,7 @@ def test_abgelehnt_prueft_nur_die_normalform_nicht_die_aliase():
     funde, _ = kern.erkenne(
         ["egal"],
         _vorhersage([[{"text": "Paris Agreement", "label": "Organisation"}]]),
-        abgelehnt=["Paris"],
+        abgelehnt=["Paris"], schwelle=SCHWELLE,
     )
     assert [f.normalform for f in funde] == ["Paris Agreement"]
 

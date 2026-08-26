@@ -49,9 +49,10 @@ from src.neu.vokabular import KANDIDAT_GRUENDE as GRUENDE  # noqa: E402
 
 __all_vokabular__ = (TYPEN, STATUS, HERKUENFTE, GRUENDE)
 
-# GLiNER — unverändert aus src/generalized/config.py
-GLINER_MODELL = "urchade/gliner_multi"
-GLINER_SCHWELLE = 0.7
+# GLiNER. Modellname und Erkennungsschwelle stehen nicht hier, sondern in
+# anbieter.toml unter [gliner] — sie sagen, WOMIT erkannt wird, und das ist
+# Anbieterwissen. Was hier bleibt, ist fachlich: die Labels, ihre Abbildung
+# auf die vier Typen, und wie lang ein Stück höchstens sein darf.
 GLINER_MAX_ZEICHEN = 2000
 
 GLINER_LABELS: tuple[str, ...] = (
@@ -171,12 +172,15 @@ def erkenne(
     landkarte: dict[str, str] | None = None,
     abgelehnt: Iterable[str] = (),
     labels: Sequence[str] = GLINER_LABELS,
-    schwelle: float = GLINER_SCHWELLE,
+    *,
+    schwelle: float,
 ) -> tuple[list[Fund], Counter]:
     """Läuft den Erkenner über die Texte und gibt Funde plus unbekannte Labels.
 
     vorhersage(stueck, labels, schwelle) -> [{"text": …, "label": …}, …].
-    Kommt von außen, damit der Kern kein Modell kennt.
+    Kommt von außen, damit der Kern kein Modell kennt. Die Schwelle ebenso und
+    ohne Vorgabe: sie gehört zum Erkenner, nicht zur Fachlogik, und stand
+    vorher als zweite Fassung neben der in anbieter.toml.
 
     Rückgabe: (Funde in Fundreihenfolge, Zähler der Labels ohne Abbildung).
     Ein unbekanntes Label wird gemeldet und der Fund bekommt typ=None — die

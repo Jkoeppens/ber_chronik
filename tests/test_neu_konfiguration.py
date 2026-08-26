@@ -17,12 +17,12 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.neu import konfiguration  # noqa: E402
-from src.neu.taxonomie.anbieter import (  # noqa: E402
+from src.neu.anbieter import (  # noqa: E402
     AnbieterFehler,
-    OLLAMA_STILLE,
     llm_funktion,
     ollama_frist,
 )
+
 
 ANBIETER_VARIABLEN = (
     "EMBEDDING_PROVIDER", "LLM_PROVIDER",
@@ -149,7 +149,8 @@ def test_protokoll_sagt_was_fehlt(leere_umgebung):
 # ── Ollama-Frist ──────────────────────────────────────────────────────────────
 
 def test_frist_vorgabe(leere_umgebung):
-    assert ollama_frist() == OLLAMA_STILLE == 120
+    """Die Vorgabe steht in anbieter.toml, nicht als Konstante im Modul."""
+    assert ollama_frist() == 120
 
 
 @pytest.mark.parametrize("wert,erwartet", [
@@ -249,7 +250,7 @@ def test_strom_ohne_text_ist_ein_fehler(leere_umgebung, monkeypatch):
 
 def test_lage_meldet_einen_nicht_laufenden_dienst(leere_umgebung, monkeypatch):
     import requests
-    from src.neu.taxonomie.anbieter import ollama_lage
+    from src.neu.anbieter import ollama_lage
 
     def wirft(*a, **k):
         raise requests.ConnectionError("kein Anschluss")
