@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "precompute-network": "node src/precompute_network.js",
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:alt": "playwright test --config playwright.alt.config.js"
   },
   "dependencies": {
     "d3-force": "^3.0.0"
