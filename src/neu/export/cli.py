@@ -2,10 +2,10 @@
 cli.py — Exportdateien für viz/ erzeugen
 
   python3 -m src.neu.export.cli --projekt damaskus
-  python3 -m src.neu.export.cli --projekt damaskus --ziel data/projects/x/exploration
+  python3 -m src.neu.export.cli --projekt damaskus --ziel /tmp/probe
 
-Ohne --ziel wird nach data/projects/{projekt}/exploration/ geschrieben — dorthin,
-wo viz/?project={projekt} nachsieht.
+Ohne --ziel wird nach data/exporte/{projekt}/ geschrieben — dorthin, wo
+viz/?project={projekt} nachsieht.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Exportdateien für viz/ erzeugen")
     ap.add_argument("--projekt", required=True, help="Projekt-Kennung, z.B. damaskus")
     ap.add_argument("--ziel", default=None,
-                    help="Zielverzeichnis; Vorgabe data/projects/{projekt}/exploration")
+                    help="Zielverzeichnis; Vorgabe data/exporte/{projekt}")
     ap.add_argument("--zusammenfassungen", action="store_true",
                     help="entities_summary.json aus akteur.zusammenfassung schreiben")
     args = ap.parse_args()

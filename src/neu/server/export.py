@@ -7,11 +7,15 @@ schon dasteht.
 
 Ausgeliefert werden genau die fünf Dateien, die viz/ lädt — data/ enthält auch
 Datenbanken und Rohdokumente.
+
+Die Wurzel ist data/exporte/, nicht data/projects/. Dort schreibt das alte
+System; drei Kennungen gibt es in beiden Datenbanken. Gebildet wird der Pfad
+in projekte.export_verzeichnis(), an einer Stelle für Schreiben und Lesen.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
+import re
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
@@ -19,9 +23,9 @@ from fastapi.responses import FileResponse
 from src.neu.db import verbindung_schreibend
 from src.neu.export.dienst import ExportFehler, exportieren
 from src.neu.modelle import ExportAntwort, ExportierenRumpf
+from src.neu.projekte import export_verzeichnis
 from src.neu.server.gemeinsam import (
     FEHLER_ANTWORTEN,
-    WURZEL,
     nicht_gefunden,
 )
 
@@ -29,11 +33,13 @@ from src.neu.server.gemeinsam import (
 # die Aufteilung soll dort nichts verändern.
 router = APIRouter()
 
-PROJEKT_DIR = WURZEL / "data" / "projects"
 EXPORT_DATEIEN = {
     "data.json", "project_meta.json", "entities_seed.csv",
     "entities_summary.json", "network_layout.json",
 }
+
+# Die Form, die projekte.kennung_aus_titel() erzeugt.
+KENNUNG = re.compile(r"[a-z0-9][a-z0-9-]*")
 
 
 @router.post(
@@ -66,15 +72,26 @@ def projekt_exportieren(
     return ExportAntwort(**vars(ergebnis))
 
 
-@router.get("/data/projects/{projekt_id}/exploration/{datei}", include_in_schema=False)
+@router.get("/data/exporte/{projekt_id}/{datei}", include_in_schema=False)
 def exportdatei(projekt_id: str, datei: str) -> FileResponse:
-    """Eine der fünf Exportdateien. Alles andere gibt es hier nicht."""
+    """Eine der fünf Exportdateien. Alles andere gibt es hier nicht.
+
+    Die Kennung muss eine Kennung sein: Path(...).name allein reicht nicht, denn
+    '..' hat keinen Schrägstrich und überlebt ihn unverändert. Kodiert (%2E%2E)
+    kommt es auch durch die Normalisierung davor. Deshalb hier die Form, die
+    kennung_aus_titel() ohnehin erzeugt.
+    """
     if datei not in EXPORT_DATEIEN:
         raise nicht_gefunden(
             "datei_nicht_ausgeliefert",
             f"'{datei}' gehört nicht zu den Dateien, die die Visualisierung lädt.",
         )
-    pfad = PROJEKT_DIR / Path(projekt_id).name / "exploration" / datei
+    if not KENNUNG.fullmatch(projekt_id):
+        raise nicht_gefunden(
+            "kennung_ungueltig",
+            f"'{projekt_id}' ist keine Projektkennung.",
+        )
+    pfad = export_verzeichnis(projekt_id) / datei
     if not pfad.is_file():
         raise nicht_gefunden(
             "exportdatei_fehlt",

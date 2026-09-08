@@ -136,8 +136,23 @@ def anlegen(con: sqlite3.Connection, titel: str, kennung: str | None = None) -> 
 
 # ── Lesen ─────────────────────────────────────────────────────────────────────
 
-def _export_datei(projekt_id: str):
-    return WURZEL / "data" / "projects" / projekt_id / "exploration" / "data.json"
+def export_verzeichnis(projekt_id: str) -> Path:
+    """Wohin dieses System exportiert und wo viz/ nachsieht: data/exporte/{id}/.
+
+    Eine eigene Wurzel, nicht data/projects/{id}/exploration/. Dort schreibt
+    das alte System, und drei Kennungen — ber, nahda, osmanisch — gibt es in
+    beiden Datenbanken. Ein Export von hier aus überschriebe dann, was 8001
+    ausliefert, ohne dass irgendwo ein Konflikt sichtbar würde.
+
+    Die einzige Stelle, die den Pfad bildet: der Export schreibt hierhin
+    (export/dienst.py), die Route liest von hier (server/export.py), und
+    hat_export sieht hier nach.
+    """
+    return WURZEL / "data" / "exporte" / projekt_id
+
+
+def _export_datei(projekt_id: str) -> Path:
+    return export_verzeichnis(projekt_id) / "data.json"
 
 
 def _export_vorhanden(projekt_id: str) -> bool:

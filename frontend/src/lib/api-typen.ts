@@ -1917,7 +1917,7 @@ export interface components {
             jahr_bis: number | null;
             /**
              * Hat Export
-             * @description Ob exploration/data.json vorliegt — nur dann führt der Viz-Link irgendwohin
+             * @description Ob data/exporte/{id}/data.json vorliegt — nur dann führt der Viz-Link irgendwohin
              */
             hat_export: boolean;
             /**

@@ -37,7 +37,7 @@ class ProjektZeile(Projekt):
     jahr_von: int | None = Field(description="MIN(einheit.jahr_von), abgeleitet")
     jahr_bis: int | None = Field(description="MAX(einheit.jahr_bis), abgeleitet")
     hat_export: bool = Field(
-        description="Ob exploration/data.json vorliegt — nur dann führt der Viz-Link irgendwohin"
+        description="Ob data/exporte/{id}/data.json vorliegt — nur dann führt der Viz-Link irgendwohin"
     )
     export_am: str | None = Field(
         description="Zeitstempel der Exportdatei; null, wenn keine da ist"

@@ -24,6 +24,10 @@ data/projects/damaskus_test_*/
 data/projects/*_test/
 data/projects/*_test_*/
 
+# Exporte des neuen Systems: jederzeit aus data/neu.db neu erzeugbar
+# (python3 -m src.neu.export.cli --projekt <kennung>)
+data/exporte/
+
 # Pipeline-Outputs die nicht versioniert werden
 data/projects/*/obsidian_checkpoint.json
 data/projects/*/zotero_checkpoint.json

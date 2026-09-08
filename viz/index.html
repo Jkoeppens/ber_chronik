@@ -12,36 +12,12 @@
 <div id="main">
   <div id="left-col">
     <header style="display:flex; align-items:center; height:44px; padding:0 20px; background:#F7F5F0; gap:24px; flex-shrink:0;">
-      <div id="project-selector" style="position:relative;">
-        <button id="project-title-btn" style="font-size:15px; font-weight:500; white-space:nowrap; background:none; border:none; cursor:pointer; padding:0; color:inherit; display:flex; align-items:center; gap:5px;">
-          <span id="project-title-text">BER Chronik 1989–2017</span>
-          <span style="font-size:10px; color:#888; line-height:1;">▾</span>
-        </button>
-        <div id="project-dropdown" style="display:none; position:absolute; top:calc(100% + 8px); left:0; background:#fff; border:1px solid #e5e2dc; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); min-width:240px; z-index:1000; overflow:hidden;">
-          <div id="project-list" style="padding:4px 0; max-height:200px; overflow-y:auto;"></div>
-          <div id="project-actions" style="border-top:1px solid #e5e2dc; padding:4px 0;">
-            <a id="pa-edit"       href="#" style="display:block;padding:7px 14px;font-size:12px;color:#374151;text-decoration:none;white-space:nowrap;">Daten bearbeiten →</a>
-            <a id="pa-add-source" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#374151;text-decoration:none;white-space:nowrap;">Dokument hinzufügen →</a>
-            <a id="pa-zotero-sync" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#059669;text-decoration:none;white-space:nowrap;">Obsidian aktualisieren ↻</a>
-            <div id="pa-zotero-progress" style="display:none;padding:6px 14px 2px;border-top:1px solid #d1fae5;">
-              <pre id="pa-zotero-log" style="font-size:10px;font-family:monospace;max-height:120px;overflow-y:auto;margin:0;white-space:pre-wrap;color:#374151;background:#f0fdf4;padding:6px 8px;border-radius:4px;"></pre>
-              <button id="pa-zotero-reload" style="display:none;margin-top:6px;padding:4px 10px;font-size:11px;background:#059669;color:#fff;border:none;border-radius:4px;cursor:pointer;">Viz neu laden</button>
-            </div>
-            <div id="pa-rename-wrap" style="padding:0 14px;">
-              <a id="pa-rename-btn" href="#" style="display:block;padding:7px 0;font-size:12px;color:#374151;text-decoration:none;">Umbenennen</a>
-              <form id="pa-rename-form" style="display:none;gap:4px;align-items:center;padding-bottom:6px;">
-                <input id="pa-rename-input" type="text" style="flex:1;padding:4px 7px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;min-width:0">
-                <button type="submit" style="padding:4px 8px;background:#6d28d9;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer;">✓</button>
-                <button type="button" id="pa-rename-cancel" style="padding:4px 8px;background:#e5e7eb;border:none;border-radius:4px;font-size:11px;cursor:pointer;">✕</button>
-              </form>
-            </div>
-            <a id="pa-delete" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#dc2626;text-decoration:none;white-space:nowrap;">Löschen…</a>
-          </div>
-          <div style="border-top:1px solid #e5e2dc; padding:4px 0;">
-            <a id="project-new" href="#" style="display:block;padding:7px 14px;font-size:12px;color:#6d28d9;text-decoration:none;white-space:nowrap;">+ Neues Projekt</a>
-          </div>
-        </div>
-      </div>
+      <!-- Der Titel: boot.js schreibt ihn aus project_meta.json hierher.
+           Der Rückweg daneben wird unten aus ?project= gebildet und bleibt ohne
+           diesen Parameter unsichtbar — es gäbe dann kein Projekt, in das er
+           führen könnte. -->
+      <span id="project-title-text" style="font-size:15px; font-weight:500; white-space:nowrap;">BER Chronik 1989–2017</span>
+      <a id="zur-oberflaeche" href="#" style="display:none; font-size:12px; color:#6d28d9; text-decoration:none; white-space:nowrap;">Projekt bearbeiten →</a>
       <nav id="tabs" style="display:flex; gap:0; align-items:center;">
         <button class="tab active" id="tab-timeline">Timeline</button>
         <button class="tab"        id="tab-network">Netzwerk</button>
@@ -91,162 +67,16 @@
 
 <script src="config.js"></script>
 <script>
-// ── Projekt-Selektor ──────────────────────────────────────────────────────────
+// ── Rückweg in die Oberfläche ─────────────────────────────────────────────────
+// Die Viz kennt ihr Projekt nur aus ?project= — in den fünf exportierten Dateien
+// steht die Kennung nirgends. Fehlt der Parameter, bleibt der Link unsichtbar
+// statt ins Leere zu führen.
 (function () {
-  const currentProject = new URLSearchParams(location.search).get("project") ?? null;
-
-  const btn      = document.getElementById("project-title-btn");
-  const dropdown = document.getElementById("project-dropdown");
-  const listEl   = document.getElementById("project-list");
-  const actEl    = document.getElementById("project-actions");
-  const newProj  = document.getElementById("project-new");
-
-  newProj.href = `${API_URL}/ingest`;
-
-  // Actions (only meaningful with a current project)
-  const paEdit         = document.getElementById("pa-edit");
-  const paAddSrc       = document.getElementById("pa-add-source");
-  const paZoteroSync   = document.getElementById("pa-zotero-sync");
-  const paZoteroWrap   = document.getElementById("pa-zotero-progress");
-  const paZoteroLog    = document.getElementById("pa-zotero-log");
-  const paZoteroReload = document.getElementById("pa-zotero-reload");
-  const paRenBtn  = document.getElementById("pa-rename-btn");
-  const paRenForm = document.getElementById("pa-rename-form");
-  const paRenIn   = document.getElementById("pa-rename-input");
-  const paRenCan  = document.getElementById("pa-rename-cancel");
-  const paDelete  = document.getElementById("pa-delete");
-
-  if (currentProject) {
-    paEdit.href   = `${API_URL}/ingest?project=${currentProject}&step=4`;
-    paAddSrc.href = `${API_URL}/ingest?add_to=${currentProject}`;
-    actEl.style.display = "";
-  } else {
-    actEl.style.display = "none";
-  }
-
-  // ── Obsidian Sync ──
-  paZoteroSync.addEventListener("click", async (e) => {
-    e.preventDefault();
-    if (!currentProject) return;
-    paZoteroWrap.style.display = "";
-    paZoteroLog.textContent = "Verbinde mit Obsidian …";
-    paZoteroReload.style.display = "none";
-    paZoteroSync.style.opacity = "0.5";
-    paZoteroSync.style.pointerEvents = "none";
-    try {
-      const tokRes = await fetch(`${API_URL}/api/projects/${currentProject}/token`);
-      if (!tokRes.ok) { paZoteroLog.textContent = "✗ Token konnte nicht geladen werden (" + tokRes.status + ")"; paZoteroSync.style.opacity = ""; paZoteroSync.style.pointerEvents = ""; return; }
-      const { token } = await tokRes.json();
-      const res = await fetch(`${API_URL}/api/projects/${currentProject}/obsidian/sync`, { method: "POST", headers: { "X-Project-Token": token } });
-      if (!res.ok || !res.body) { paZoteroLog.textContent += "\n✗ Server-Fehler " + res.status; return; }
-      const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
-      while (true) {
-        const { done, value } = await reader.read(); if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split("\n"); buf = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const msg = line.slice(6);
-          if (msg === "__done__") {
-            paZoteroLog.textContent += "\n✓ Obsidian-Sync abgeschlossen";
-            paZoteroReload.style.display = "";
-            paZoteroSync.style.opacity = ""; paZoteroSync.style.pointerEvents = "";
-            return;
-          }
-          if (!msg.startsWith("__")) { paZoteroLog.textContent += (paZoteroLog.textContent ? "\n" : "") + msg; paZoteroLog.scrollTop = paZoteroLog.scrollHeight; }
-        }
-      }
-    } catch (err) {
-      paZoteroLog.textContent += "\n✗ " + err.message;
-      paZoteroSync.style.opacity = ""; paZoteroSync.style.pointerEvents = "";
-    }
-  });
-  paZoteroReload.addEventListener("click", () => { location.reload(); });
-
-  let open = false;
-  function setOpen(val) {
-    open = val;
-    dropdown.style.display = val ? "block" : "none";
-    if (!val) { paRenForm.style.display = "none"; paRenBtn.style.display = "block"; }
-  }
-
-  btn.addEventListener("click", (e) => { e.stopPropagation(); if (!open) loadProjects(); setOpen(!open); });
-  document.addEventListener("click", () => setOpen(false));
-  dropdown.addEventListener("click", (e) => e.stopPropagation());
-
-  // ── Rename ──
-  paRenBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    paRenForm.style.display = "flex";
-    paRenBtn.style.display  = "none";
-    paRenIn.value           = document.getElementById("project-title-text").textContent;
-    paRenIn.focus();
-  });
-  paRenCan.addEventListener("click", () => {
-    paRenForm.style.display = "none"; paRenBtn.style.display = "block";
-  });
-  paRenForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const newTitle = paRenIn.value.trim();
-    if (!newTitle || !currentProject) return;
-    const res = await fetch(`${API_URL}/api/projects/${currentProject}`, {
-      method: "PUT", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTitle }),
-    });
-    if (res.ok) {
-      document.getElementById("project-title-text").textContent = newTitle;
-      document.title = newTitle;
-      paRenForm.style.display = "none"; paRenBtn.style.display = "block";
-    } else {
-      alert("Umbenennen fehlgeschlagen.");
-    }
-  });
-
-  // ── Delete ──
-  paDelete.addEventListener("click", async (e) => {
-    e.preventDefault();
-    if (!currentProject) return;
-    const name = document.getElementById("project-title-text").textContent;
-    if (!confirm(`Projekt „${name}" wirklich löschen?\nDieser Vorgang kann nicht rückgängig gemacht werden.`)) return;
-    const res = await fetch(`${API_URL}/api/projects/${currentProject}`, {
-      method: "DELETE", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ confirm: true }),
-    });
-    if (res.ok) {
-      window.location = window.location.pathname; // reload without ?project=
-    } else {
-      alert("Löschen fehlgeschlagen.");
-    }
-  });
-
-  function loadProjects() {
-    listEl.innerHTML = '<div style="padding:8px 14px;font-size:12px;color:#888;">Lade…</div>';
-    fetch(`${API_URL}/api/projects`)
-      .then(r => r.json())
-      .then(projects => {
-        listEl.innerHTML = "";
-        projects.forEach(p => {
-          const isCurrent = p.id === currentProject || (!currentProject && p.id === "ber");
-          const row = document.createElement("div");
-          row.style.cssText = "display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:12px;white-space:nowrap;";
-          row.innerHTML = `
-            <span style="color:#6d28d9;width:10px;flex-shrink:0;">${isCurrent ? "●" : ""}</span>
-            <span style="flex:1;">${p.title || p.id}</span>
-            <span style="color:#aaa;font-size:11px;">${p.entry_count > 0 ? p.entry_count + " Eintr." : "leer"}</span>
-          `;
-          row.addEventListener("mouseenter", () => row.style.background = "#f5f3ff");
-          row.addEventListener("mouseleave", () => row.style.background = "");
-          row.addEventListener("click", () => { window.location = `?project=${p.id}`; });
-          listEl.appendChild(row);
-        });
-        if (!projects.length) {
-          listEl.innerHTML = '<div style="padding:8px 14px;font-size:12px;color:#888;">Keine Projekte</div>';
-        }
-      })
-      .catch(() => {
-        listEl.innerHTML = '<div style="padding:8px 14px;font-size:12px;color:#dc2626;">Server nicht erreichbar</div>';
-      });
-  }
+  const projekt = new URLSearchParams(location.search).get("project");
+  if (!projekt) return;
+  const link = document.getElementById("zur-oberflaeche");
+  link.href = `${API_URL}/projekt/${encodeURIComponent(projekt)}/export`;
+  link.style.display = "";
 })();
 </script>
 <script src="highlight.js"></script>

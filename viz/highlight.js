@@ -3,7 +3,10 @@ marked.use({ breaks: true, gfm: true });
 
 // ── Project routing (set once from URL; used by boot.js, network.js, search.js) ──
 const PAGE_PROJECT = new URLSearchParams(location.search).get("project") ?? null;
-const DATA_BASE    = PAGE_PROJECT ? `../data/projects/${PAGE_PROJECT}/exploration/` : "";
+// data/exporte/ und nicht data/projects/: dort schreibt der alte Wizard, und
+// drei Kennungen gibt es in beiden Datenbanken. Ohne ?project= bleibt die Basis
+// leer — dann liest viz/ die fünf eingecheckten Dateien neben sich.
+const DATA_BASE    = PAGE_PROJECT ? `../data/exporte/${PAGE_PROJECT}/` : "";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const _EVENT_TYPES_FALLBACK = [

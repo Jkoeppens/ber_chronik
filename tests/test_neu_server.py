@@ -529,3 +529,76 @@ def test_akteurliste_nennt_den_zusammenfassungsstand(client: TestClient) -> None
         body["anzahl_kandidaten"] - body["anzahl_mit_zusammenfassung"]
     )
     assert "zusammenfassung" in body["akteure"][0]
+
+
+# ── GET /data/exporte/{id}/{datei} ────────────────────────────────────────────
+# Eigene Wurzel, nicht data/projects/{id}/exploration/. Dort schreibt der alte
+# Wizard, und ber, nahda und osmanisch stehen in beiden Datenbanken.
+
+def test_exportwurzel_liegt_neben_dem_alten_baum() -> None:
+    from src.neu.projekte import export_verzeichnis
+
+    pfad = export_verzeichnis("ber")
+    assert pfad == ROOT / "data" / "exporte" / "ber"
+    assert "projects" not in pfad.parts
+
+
+def test_keine_route_fuehrt_mehr_nach_exploration() -> None:
+    """Die alte Adresse gehört dem alten System — der neue Server kennt sie nicht."""
+    pfade = [getattr(r, "path", "") for r in app.routes]
+    assert not [p for p in pfade if "exploration" in p]
+    assert "/data/exporte/{projekt_id}/{datei}" in pfade
+
+
+def test_exportdatei_ausserhalb_der_fuenf_gibt_404(client: TestClient) -> None:
+    r = client.get("/data/exporte/ber/segments.json")
+    assert r.status_code == 404
+    fehler = fehlergestalt_pruefen(r.json(), 404)
+    assert fehler["code"] == "datei_nicht_ausgeliefert"
+
+
+def test_exportdatei_ohne_export_gibt_404(client: TestClient) -> None:
+    r = client.get("/data/exporte/gibtsnichtundwirdesnie/data.json")
+    assert r.status_code == 404
+    fehler = fehlergestalt_pruefen(r.json(), 404)
+    assert fehler["code"] == "exportdatei_fehlt"
+
+
+def test_exportdatei_liefert_die_datei(client: TestClient, tmp_path, monkeypatch) -> None:
+    from src.neu.server import export as export_router
+
+    ziel = tmp_path / "probe"
+    ziel.mkdir()
+    (ziel / "data.json").write_text('{"count": 1}', encoding="utf-8")
+    monkeypatch.setattr(export_router, "export_verzeichnis", lambda _: ziel)
+
+    r = client.get("/data/exporte/probe/data.json")
+    assert r.status_code == 200
+    assert r.json() == {"count": 1}
+
+
+@pytest.mark.parametrize("kennung", ["%2E%2E", "..%2E", "..;", "BER", "ber.", "-ber"])
+def test_exportdatei_bleibt_unter_der_wurzel(client: TestClient, kennung: str) -> None:
+    """Was keine Kennung ist, kommt nicht durch.
+
+    '%2E%2E' erreicht die Route als '..' — Starlette entschlüsselt erst nach der
+    Wegfindung, und '..' hat keinen Schrägstrich, den Path(...).name abschneiden
+    könnte. Der Pfad wäre data/exporte/../data.json gewesen.
+    """
+    r = client.get(f"/data/exporte/{kennung}/data.json")
+    assert r.status_code == 404
+    assert fehlergestalt_pruefen(r.json(), 404)["code"] == "kennung_ungueltig"
+
+
+def test_jede_kennung_in_neu_db_kommt_durch_den_riegel() -> None:
+    """Der Riegel darf kein vorhandenes Projekt aussperren."""
+    from src.neu.db import verbindung
+    from src.neu.server.export import KENNUNG
+
+    con = verbindung()
+    try:
+        ids = [z[0] for z in con.execute("SELECT id FROM projekt")]
+    finally:
+        con.close()
+    assert ids
+    assert [i for i in ids if not KENNUNG.fullmatch(i)] == []

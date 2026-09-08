@@ -24,8 +24,7 @@ from typing import Callable, Sequence
 
 from src.neu.export import kern
 from src.neu.export.kern import Akteur, Einheit
-
-WURZEL = Path(__file__).resolve().parent.parent.parent.parent
+from src.neu.projekte import export_verzeichnis
 
 
 class ExportFehler(Exception):
@@ -60,11 +59,6 @@ class ExportErgebnis:
 
 def _jetzt() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
-
-
-def ziel_pfad(projekt_id: str) -> Path:
-    """Wohin viz/ schaut: data/projects/{projekt}/exploration/."""
-    return WURZEL / "data" / "projects" / projekt_id / "exploration"
 
 
 # ── Lesen ─────────────────────────────────────────────────────────────────────
@@ -169,7 +163,7 @@ def exportieren(
     ab.
     """
     begonnen_am = _jetzt()
-    verzeichnis = Path(ziel) if ziel is not None else ziel_pfad(projekt_id)
+    verzeichnis = Path(ziel) if ziel is not None else export_verzeichnis(projekt_id)
     parameter = json.dumps(
         {"ziel": str(verzeichnis), "zusammenfassungen": zusammenfassungen},
         ensure_ascii=False,
