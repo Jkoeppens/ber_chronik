@@ -60,7 +60,14 @@ CREATE TABLE einheit (
     autor              TEXT,
     kurzfassung        TEXT,
     seite              INTEGER,
-    ebene              INTEGER,            -- 1|2|3, nur literaturexzerpt
+    -- Gliederungstiefe des Literaturexzerpts: 1 Organizer, 2 bibliografische
+    -- Ebene, 3 Notiz unter einer Buchquelle. NULL bei jedem anderen Format.
+    --
+    -- Die Grenze gehört dem heutigen Parser, nicht dem Gegenstand: ein Exzerpt
+    -- könnte tiefer gegliedert sein, ingest/kern.py vergibt aber nur diese
+    -- drei. Wer den Parser vertieft, hebt hier mit — der CHECK meldet sich
+    -- dann, und das ist seine Aufgabe.
+    ebene              INTEGER CHECK (ebene IN (1, 2, 3)),
     ist_zitat          INTEGER,            -- NULL = nicht erhoben, 0 = geprüft
 
     -- Ergebnis der Datierung

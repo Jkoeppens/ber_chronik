@@ -234,12 +234,12 @@ def test_die_datenbank_weist_erfundene_werte_ab(sql: str) -> None:
     con.close()
 
 
-def test_die_ausnahmen_ohne_check_sind_genau_diese_zwei() -> None:
-    """Zwei Spalten führen einen geschlossenen Vorrat ohne CHECK — beide mit Grund.
+def test_die_einzige_ausnahme_ohne_check_ist_lauf_schritt() -> None:
+    """Eine Spalte führt einen geschlossenen Vorrat ohne CHECK — mit Grund.
 
     Die Liste steht hier ausdrücklich und wird nicht aus dem Schema geraten: ein
     Parser über SQL-Kommentare verrutscht an der ersten mehrzeiligen Klausel und
-    gäbe dann falsche Sicherheit. Kommt eine dritte Ausnahme dazu, soll jemand
+    gäbe dann falsche Sicherheit. Kommt eine zweite Ausnahme dazu, soll jemand
     sie hier eintragen und dabei begründen müssen.
     """
     ausnahmen = {
@@ -247,9 +247,6 @@ def test_die_ausnahmen_ohne_check_sind_genau_diese_zwei() -> None:
         # zur Sprache kommen; ein Tippfehler macht nichts kaputt, er taucht nur
         # nicht in der Aufstellung auf.
         ("lauf", "schritt"),
-        # 1|2|3 ist die Gliederungstiefe des Literaturexzerpts, kein Vorrat aus
-        # Namen. Sie steht in keinem Literal und wird nirgends geprüft.
-        ("einheit", "ebene"),
     }
     schema = (ROOT / "schema.sql").read_text(encoding="utf-8")
     con = sqlite3.connect(":memory:")
@@ -282,3 +279,45 @@ def test_rolle_steht_im_vokabular_und_nicht_nur_im_kommentar() -> None:
     assert vokabular.pruefen("nutzer", vokabular.ROLLEN, "Rolle") == "nutzer"
     with pytest.raises(vokabular.UnbekannterWert):
         vokabular.pruefen("chef", vokabular.ROLLEN, "Rolle")
+
+
+def test_ebene_ist_auf_die_drei_stufen_beschraenkt() -> None:
+    """1|2|3 sind die Stufen, die ingest/kern.py vergibt — NULL bleibt erlaubt.
+
+    Die Grenze gehört dem heutigen Parser und nicht dem Gegenstand: ein Exzerpt
+    könnte tiefer gegliedert sein. Wer den Parser vertieft, hebt hier mit; genau
+    dafür meldet sich der CHECK. NULL muss durchgehen, weil jedes Format außer
+    literaturexzerpt keine Ebene hat.
+    """
+    con = sqlite3.connect(":memory:")
+    con.executescript((ROOT / "schema.sql").read_text(encoding="utf-8"))
+    con.executescript("""
+        INSERT INTO zugang (id, token, angelegt_am) VALUES (1,'t','2026-01-01');
+        INSERT INTO projekt (id, titel, eigentuemer_id, angelegt_am)
+             VALUES ('p','P',1,'2026-01-01');
+        INSERT INTO quelle (id, projekt_id, quellformat, eingelesen_am)
+             VALUES ('q','p','literaturexzerpt','2026-01-01');
+    """)
+    for stufe in (1, 2, 3, None):
+        con.execute("INSERT INTO einheit (quelle_id, position, typ, text, ebene) "
+                    "VALUES ('q', ?, 'content', 'x', ?)", (stufe or 9, stufe))
+    for schlecht in (0, 4, -1):
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            con.execute("INSERT INTO einheit (quelle_id, position, typ, text, ebene) "
+                        "VALUES ('q', 100, 'content', 'x', ?)", (schlecht,))
+    con.close()
+
+
+def test_der_parser_vergibt_nur_die_erlaubten_stufen() -> None:
+    """Gegenprobe am Erzeuger: was ingest/kern.py setzt, passiert den CHECK."""
+    import ast
+
+    quelle = (ROOT / "src" / "neu" / "ingest" / "kern.py").read_text(encoding="utf-8")
+    baum = ast.parse(quelle)
+    gesetzt = {
+        k.value.value
+        for k in ast.walk(baum)
+        if isinstance(k, ast.keyword) and k.arg == "ebene"
+        and isinstance(k.value, ast.Constant) and isinstance(k.value.value, int)
+    }
+    assert gesetzt <= {1, 2, 3}, gesetzt

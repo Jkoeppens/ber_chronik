@@ -80,7 +80,14 @@ CREATE TABLE einheit (
     autor              TEXT,
     kurzfassung        TEXT,
     seite              INTEGER,
-    ebene              INTEGER,            -- 1|2|3, nur literaturexzerpt
+    -- Gliederungstiefe des Literaturexzerpts: 1 Organizer, 2 bibliografische
+    -- Ebene, 3 Notiz unter einer Buchquelle. NULL bei jedem anderen Format.
+    --
+    -- Die Grenze gehört dem heutigen Parser, nicht dem Gegenstand: ein Exzerpt
+    -- könnte tiefer gegliedert sein, ingest/kern.py vergibt aber nur diese
+    -- drei. Wer den Parser vertieft, hebt hier mit — der CHECK meldet sich
+    -- dann, und das ist seine Aufgabe.
+    ebene              INTEGER CHECK (ebene IN (1, 2, 3)),
     ist_zitat          INTEGER,            -- NULL = nicht erhoben, 0 = geprüft
 
     -- Ergebnis der Datierung
@@ -403,7 +410,9 @@ Rechnung liest sie, und der Export nimmt sie nicht mit. Sie bleiben trotzdem:
   (`ingest/kern.py:160/178/181`). Ohne sie wäre ein Exzerpt eine flache Liste
   Absätze, und die Gliederung, die der Historiker im DOCX angelegt hat, wäre beim
   Einlesen verloren. Sie später zurückzugewinnen hieße, jedes Dokument neu
-  einzulesen.
+  einzulesen. Der `CHECK` auf 1|2|3 hält fest, was der Parser heute vergibt, nicht
+  was ein Exzerpt sein kann — wer tiefer gliedert, hebt ihn mit an. Dass er sich
+  dann meldet, ist seine Aufgabe.
 - `autor` und `kurzfassung` kommen aus dem Obsidian-Frontmatter und kosten beim
   Einlesen nichts. Sie wegzulassen hieße, sie beim nächsten Sync erst wieder zu
   beschaffen.
