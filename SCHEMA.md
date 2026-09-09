@@ -39,7 +39,8 @@ CREATE TABLE zugang (
     token        TEXT    NOT NULL UNIQUE,
     name         TEXT    NOT NULL DEFAULT '',
     organisation TEXT    NOT NULL DEFAULT '',
-    rolle        TEXT    NOT NULL DEFAULT 'nutzer',  -- verwalter | nutzer
+    rolle        TEXT    NOT NULL DEFAULT 'nutzer'
+                         CHECK (rolle IN ('verwalter', 'nutzer')),
     angelegt_am  TEXT    NOT NULL
 );
 
@@ -54,7 +55,9 @@ CREATE TABLE projekt_zugang (
 CREATE TABLE quelle (
     id            TEXT NOT NULL PRIMARY KEY,
     projekt_id    TEXT NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
-    quellformat   TEXT NOT NULL,   -- literaturexzerpt | presseexzerpt | pressesammlung
+    quellformat   TEXT NOT NULL
+                  CHECK (quellformat IN ('literaturexzerpt', 'presseexzerpt',
+                                         'pressesammlung')),
     pfad          TEXT,            -- DOCX-Datei oder Dropbox-Ordner
     eingelesen_am TEXT NOT NULL
 );
@@ -64,7 +67,8 @@ CREATE TABLE einheit (
     id                 INTEGER NOT NULL PRIMARY KEY,
     quelle_id          TEXT    NOT NULL REFERENCES quelle(id) ON DELETE CASCADE,
     position           INTEGER NOT NULL,
-    typ                TEXT    NOT NULL,   -- content | heading | bibliography | meta
+    typ                TEXT    NOT NULL
+                       CHECK (typ IN ('content', 'heading', 'bibliography', 'meta')),
     text               TEXT    NOT NULL,
 
     -- Herkunft im Material
@@ -96,7 +100,8 @@ CREATE TABLE einheit (
 
     -- Ergebnis der Klassifikation
     kategorie_id       INTEGER REFERENCES kategorie(id) ON DELETE SET NULL,
-    konfidenz          TEXT,               -- high | medium | low
+    konfidenz          TEXT                -- NULL = nie klassifiziert
+                       CHECK (konfidenz IN ('high', 'medium', 'low')),
     kategorie_herkunft TEXT                -- automatisch | manuell
                        CHECK (kategorie_herkunft IN ('automatisch', 'manuell')),
                                            -- NULL = nie zugeordnet
@@ -231,11 +236,16 @@ CREATE TABLE anmeldung (
 CREATE TABLE lauf (
     id          INTEGER NOT NULL PRIMARY KEY,
     projekt_id  TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
-    schritt     TEXT    NOT NULL,   -- ingest | datierung | klassifikation | …
+    schritt     TEXT    NOT NULL,   -- ingest | datierung | taxonomie |
+                                -- klassifikation | akteure | export.
+                                -- Geschlossen, aber ohne CHECK: ein neuer
+                                -- Schritt soll nicht zuerst als
+                                -- Datenbankfehler zur Sprache kommen.
     begonnen_am TEXT    NOT NULL,
     beendet_am  TEXT,               -- NULL, solange der Lauf läuft
     parameter   TEXT,               -- JSON: womit er aufgerufen wurde
-    status      TEXT    NOT NULL    -- laeuft | erfolg | fehler
+    status      TEXT    NOT NULL
+                        CHECK (status IN ('laeuft', 'erfolg', 'fehler'))
 );
 
 -- ── Indizes ───────────────────────────────────────────────────────────────────
@@ -308,6 +318,24 @@ Wer ein Projekt besitzt, steht an `projekt.eigentuemer_id`.
 **Behalten:** `rolle` mit zwei Stufen. `verwalter` steht über allen Projekten,
 `nutzer` sieht nur die eigenen und öffentlichen.
 
+**Wartet auf Schritt 8 — Mehrbenutzerbetrieb.** Vier Stellen sind angelegt und
+haben heute keine Wirkung. Das ist keine offene Frage, sondern ein bereitgelegter
+Platz:
+
+| Stelle | Stand heute |
+|---|---|
+| `projekt_zugang` | kein `SELECT`, kein `INSERT` im Code; die Tabelle ist leer |
+| `zugang.rolle` | wird beim Anlegen geschrieben, nirgends gelesen |
+| `zugang.organisation` | wird einmal geschrieben (`ingest/cli.py`), nirgends gelesen |
+| `projekt.oeffentlich` | wird gelesen und ausgeliefert, aber nichts hängt daran |
+
+Bis dahin gehört alles einem festen lokalen Zugang (siehe
+`projekte.lokaler_zugang`). Die Spalten jetzt zu entfernen und später wieder
+einzuziehen hieße, zweimal zu migrieren; sie leer mitzuführen kostet nichts.
+
+Offen ist an dieser Stelle nur eines, und es steht unten unter den offenen
+Punkten: **wie weit die Verwalterrechte reichen.**
+
 ### `quelle`
 
 **Zusammengelegt:** `quellentyp` und `herkunft` werden zu `quellformat` mit drei
@@ -365,6 +393,27 @@ Wiederaufnahme-Bedingung. `manuell` ist gegen Neuläufe geschützt, wie
 Presseexzerpten; der Vorgabewert `0` hätte für jedes Literaturexzerpt „geprüft, kein
 Zitat" behauptet. `NULL` heißt nicht erhoben, `0` heißt geprüft.
 
+**Vier Spalten werden geschrieben und noch von niemandem gelesen:** `autor`,
+`kurzfassung`, `ebene` und `ist_zitat`. Sie stehen im Modell `Einheit` und gehen
+über `GET /api/projekt/{id}/einheiten` hinaus, aber keine Fläche zeigt sie, keine
+Rechnung liest sie, und der Export nimmt sie nicht mit. Sie bleiben trotzdem:
+
+- `ebene` trägt die Hierarchie des Literaturexzerpts — 1 für den Organizer, 2 für
+  die bibliografische Ebene, 3 für die Notizen unter einer Buchquelle
+  (`ingest/kern.py:160/178/181`). Ohne sie wäre ein Exzerpt eine flache Liste
+  Absätze, und die Gliederung, die der Historiker im DOCX angelegt hat, wäre beim
+  Einlesen verloren. Sie später zurückzugewinnen hieße, jedes Dokument neu
+  einzulesen.
+- `autor` und `kurzfassung` kommen aus dem Obsidian-Frontmatter und kosten beim
+  Einlesen nichts. Sie wegzulassen hieße, sie beim nächsten Sync erst wieder zu
+  beschaffen.
+- `ist_zitat` unterscheidet Zitat von Fließtext und ist die Grundlage jeder
+  späteren Auswertung, die beides trennen will.
+
+Der Unterschied zu `projekt.status`, das aus demselben Grund entfernt wurde: jene
+Spalte war aus dem Bestand jederzeit wieder herstellbar, diese vier sind es nicht —
+sie stehen nur im Ausgangsmaterial.
+
 **Ergänzt:** `kategorie_herkunft` und `kategorie_lauf_id`. Heute steht einer
 Zuordnung nicht an, wie sie zustande kam: `confidence` bedeutet im LLM-Pfad die
 Selbsteinschätzung des Modells und im BGE-Pfad einen Schwellwert auf der
@@ -400,8 +449,15 @@ Erscheinungsdaten in der Quellennotation, die heute geparst und nie gelesen werd
 
 ### `kategorie`
 
-**Entfernt:** `position` — existierte nur, um Farben abzuleiten. Farben werden in der
-Oberfläche vergeben.
+**Entfernt:** `position` — existierte nur, um Farben abzuleiten. Farben sollen in
+der Oberfläche vergeben werden.
+
+Noch tun sie es nicht: `export/kern.farbzuordnung` vergibt sie serverseitig nach
+Listenplatz und liefert sie als `color_map` in `project_meta.json` aus, wo
+`viz/highlight.js` sie liest. Die Datenbank hält keine Farben — die Regel gilt
+also für den Ablageort, noch nicht für die Vergabestelle. Entschieden ist, dass
+viz/ sie ableitet; die Umstellung gehört in die viz/-Runde und steht als offener
+Punkt unten.
 
 **Ergänzt:** `herkunft` — `vorschlag` für eine Kategorie aus dem Clustering-Lauf,
 `manuell` für eine, die der Historiker angelegt oder überarbeitet hat. Ohne die
@@ -468,9 +524,16 @@ fest, sondern nur, was zu prüfen wäre. Ein Neulauf ersetzt sie.
 der Tabelle eine Zeile je *Vorkommen* statt je Einheit, und der Schlüssel ein
 eigener: `UNIQUE (einheit_id, akteur_id, start)`.
 
-GLiNER liefert diese Offsets ohnehin, der heutige Code wirft sie weg; die Zuordnung
-wird danach per Wortgrenz-Regex neu gesucht — einmal beim Erzeugen und noch einmal
-im Browser, um die Namen einzufärben. Mit den Offsets entfällt die zweite Suche.
+GLiNER liefert solche Offsets, aber sie werden nicht benutzt: `_zuordnen` in
+`akteure/dienst.py` sucht die Fundstellen per Wortgrenz-Regex über Normalform und
+Aliase — absichtlich, denn der Regex findet auch die Aliase, die der Erkenner nicht
+als Treffer meldet. Was in `start`/`ende` steht, stammt also aus dieser Suche.
+
+Die zweite Suche im Browser bleibt damit bestehen. `data.json` trägt `actors` als
+reine Namensliste ohne Positionen, und `viz/highlight.js` sucht die Namen erneut,
+um sie einzufärben. Das aufzulösen hieße, die Offsets mitzuexportieren und viz/
+umzustellen — beides steht nicht an. Siehe den offenen Punkt „Fundstellen und
+Aliase" unten, der denselben Sachverhalt von der anderen Seite beschreibt.
 
 ### `lauf`
 
@@ -524,11 +587,24 @@ oder umsortiert wird. Die Datenbank hält keine Farben — die Oberfläche brauc
 eine Regel, die ohne Reihenfolge auskommt. Naheliegend wäre eine Ableitung aus dem
 Kategorienamen: stabil, solange der Name gleich bleibt.
 
-**Jahrzehnt-Anker.** `detect_anchors` erkennt „1890er Jahre", verwirft aber den Wert
-und setzt nur `praezision = jahrzehnt`. Das Segment gilt danach als undatiert. Ein
-solcher Anker weiß mehr — 1890 bis 1899. Vor einer Änderung sollte gezählt werden,
-wie oft der Fall in `osmanisch` und `nahda` tatsächlich vorkommt; bei `damaskus` war
-es genau einer.
+**Jahrzehnt-Anker — gezählt, erledigt.** Die Erkennung legt für „1890er Jahre" einen
+Anker mit `herkunft = 'jahrzehnt'` und `jahr = NULL` an; `datierung/kern.py:348`
+wertet ihn nicht aus, die Einheit fällt in die Interpolation. Ein solcher Anker
+wüsste mehr — 1890 bis 1899.
+
+Gezählt über den ganzen Bestand, nach dem, was aus den Einheiten tatsächlich wurde:
+
+| Projekt | Jahrzehnt-Anker | Einheit trägt ohnehin eine Jahreszahl | fällt in die Interpolation |
+|---|---|---|---|
+| `damaskus` | 9 | 8 | **1** |
+| `nahda` | 8 | 8 | 0 |
+| `osmanisch` | 1 | 1 | 0 |
+
+In acht von neun Fällen bei `damaskus` gewinnt eine Jahreszahl aus dem Fließtext,
+der Jahrzehnt-Zweig wird gar nicht erreicht; in `nahda` und `osmanisch` jedes Mal.
+**Der Fall betrifft genau eine Einheit im gesamten Bestand.** Damit lohnt die
+Auswertung nicht, und der Punkt ist geschlossen. Der Wert bleibt im Vorrat und im
+`CHECK`: er kostet nichts, und die Zählung wäre bei anderem Material eine andere.
 
 **Herkunft des Akteurs-Namens.** `akteur.herkunft` sagt, ob ein Mensch die Zeile
 angefasst hat, aber nicht, welcher Lauf sie erzeugt hat — anders als bei
@@ -556,7 +632,12 @@ Einheiten heißt `Gelvin 127 (schreibt was über Haqaiq)` — eine Notiz des His
 kein Werk. Die Interpolation liefe darüber als eigenen Block und würde 46 Einheiten
 gegen einen Anker datieren, der keiner ist.
 
-Die Spalte muss deshalb von Hand korrigierbar sein: der Historiker muss Gruppen
-zusammenlegen, trennen und umbenennen können, ohne das DOCX zu ändern und ohne neu
-einzulesen. Wo diese Korrektur im Wizard sitzt — eigener Schritt oder Teil der
-Zeitkorrektur in Schritt 3 — ist offen.
+Von Hand korrigierbar wäre die Spalte deshalb gut: der Historiker könnte Gruppen
+zusammenlegen, trennen und umbenennen, ohne das DOCX zu ändern und ohne neu
+einzulesen. Es gibt dafür heute keinen Weg — keine Route, kein Rumpffeld, keine
+Fläche; geschrieben wird `chronologie_gruppe` nur beim Einlesen.
+
+**Das steht nicht an.** Es ist Fachlogik, keine Aufräumarbeit, und es wäre ein
+eigener Schritt im Ablauf. Bis dahin gilt: wer eine falsche Gruppe hat, korrigiert
+die Überschriftenformatierung im DOCX und liest neu ein. Kein Versäumnis, sondern
+eine verschobene Erweiterung.

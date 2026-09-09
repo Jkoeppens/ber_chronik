@@ -1,9 +1,20 @@
 """
 export.py — die Dateien erzeugen, die viz/ liest, und sie ausliefern
 
-Der Export liest nur. Was in den Dateien steht, hat jeder Schritt vorher in
-seine eigene Tabelle geschrieben; hier wird nichts mehr gerechnet, was nicht
-schon dasteht.
+Der Export leitet ab, er entscheidet nichts. Jede Angabe in den Dateien steht
+so schon in einer Tabelle — kein Datum wird hier erkannt, keine Kategorie
+zugeordnet, kein Akteur gefunden.
+
+Gerechnet wird trotzdem, und zwar dreierlei: das Netzwerklayout (300
+Iterationen Kräftesimulation über export/kern.layout), die Knoten und Kanten
+daraus (export/kern.netz, mit LINK_MIN_COUNT) und die Farbzuordnung nach
+Listenplatz (export/kern.farbzuordnung). Alle drei sind Darstellungsfragen,
+für die es in der Datenbank nichts gibt, woraus man sie ablesen könnte — die
+Farbvergabe soll auf Dauer nach viz/, siehe den offenen Punkt in SCHEMA.md.
+
+Geschrieben wird ebenfalls: die fünf Dateien, und eine lauf-Zeile, die
+festhält, wann mit welchen Parametern exportiert wurde. Deshalb steht hier
+verbindung_schreibend() und nicht verbindung().
 
 Ausgeliefert werden genau die fünf Dateien, die viz/ lädt — data/ enthält auch
 Datenbanken und Rohdokumente.

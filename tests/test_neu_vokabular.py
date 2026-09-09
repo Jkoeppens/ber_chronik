@@ -167,8 +167,9 @@ def test_das_pydantic_modell_kennt_denselben_vorrat() -> None:
 def test_schema_und_vokabular_stimmen_ueberein() -> None:
     """Was schema.sql per CHECK erlaubt, ist der Vorrat aus vokabular.py.
 
-    Die vier Spalten, die ihren Vorrat vorher nur im Kommentar führten, tragen
-    ihn jetzt als CHECK — ein Kommentar hält nichts auf.
+    Jede Spalte mit geschlossenem Wertevorrat trägt ihn als CHECK — ein
+    Kommentar hält nichts auf. Die einzige Ausnahme ist lauf.schritt, und sie
+    ist begründet: siehe test_lauf_schritt_bleibt_absichtlich_ohne_check.
     """
     schema = (ROOT / "schema.sql").read_text(encoding="utf-8")
     con = sqlite3.connect(":memory:")
@@ -178,6 +179,11 @@ def test_schema_und_vokabular_stimmen_ueberein() -> None:
     con.close()
 
     erwartet = [
+        ("zugang", "rolle", vokabular.ROLLEN),
+        ("quelle", "quellformat", vokabular.QUELLFORMATE),
+        ("einheit", "typ", vokabular.EINHEIT_TYPEN),
+        ("einheit", "konfidenz", vokabular.KONFIDENZEN),
+        ("lauf", "status", vokabular.LAUF_STATUS),
         ("einheit", "praezision", vokabular.PRAEZISIONEN),
         ("einheit", "datierung_herkunft", vokabular.DATIERUNG_HERKUENFTE),
         ("einheit", "kategorie_herkunft", vokabular.KATEGORIE_HERKUENFTE),
@@ -200,6 +206,11 @@ def test_schema_und_vokabular_stimmen_ueberein() -> None:
     "UPDATE einheit SET datierung_herkunft = 'geraten'",
     "UPDATE anker SET herkunft = 'geraten'",
     "UPDATE kategorie SET herkunft = 'geraten'",
+    "UPDATE zugang SET rolle = 'chef'",
+    "UPDATE quelle SET quellformat = 'buchnotizen'",
+    "UPDATE einheit SET typ = 'absatz'",
+    "UPDATE einheit SET konfidenz = 'sehr hoch'",
+    "UPDATE lauf SET status = 'fertig'",
 ])
 def test_die_datenbank_weist_erfundene_werte_ab(sql: str) -> None:
     con = sqlite3.connect(":memory:")
@@ -215,7 +226,59 @@ def test_die_datenbank_weist_erfundene_werte_ab(sql: str) -> None:
         INSERT INTO anker (einheit_id, jahr, herkunft) VALUES (1, 1900, 'text');
         INSERT INTO kategorie (projekt_id, name, herkunft)
              VALUES ('p','Eins','vorschlag');
+        INSERT INTO lauf (projekt_id, schritt, begonnen_am, status)
+             VALUES ('p','ingest','2026-01-01','erfolg');
     """)
     with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
         con.execute(sql)
     con.close()
+
+
+def test_die_ausnahmen_ohne_check_sind_genau_diese_zwei() -> None:
+    """Zwei Spalten führen einen geschlossenen Vorrat ohne CHECK — beide mit Grund.
+
+    Die Liste steht hier ausdrücklich und wird nicht aus dem Schema geraten: ein
+    Parser über SQL-Kommentare verrutscht an der ersten mehrzeiligen Klausel und
+    gäbe dann falsche Sicherheit. Kommt eine dritte Ausnahme dazu, soll jemand
+    sie hier eintragen und dabei begründen müssen.
+    """
+    ausnahmen = {
+        # Ein neuer Verarbeitungsschritt soll nicht zuerst als Datenbankfehler
+        # zur Sprache kommen; ein Tippfehler macht nichts kaputt, er taucht nur
+        # nicht in der Aufstellung auf.
+        ("lauf", "schritt"),
+        # 1|2|3 ist die Gliederungstiefe des Literaturexzerpts, kein Vorrat aus
+        # Namen. Sie steht in keinem Literal und wird nirgends geprüft.
+        ("einheit", "ebene"),
+    }
+    schema = (ROOT / "schema.sql").read_text(encoding="utf-8")
+    con = sqlite3.connect(":memory:")
+    con.executescript(schema)
+    ddl = {z[0]: z[1] for z in con.execute(
+        "SELECT name, sql FROM sqlite_master WHERE type='table'")}
+    con.close()
+    for tabelle, spalte in ausnahmen:
+        assert f"CHECK ({spalte} IN" not in ddl[tabelle], f"{tabelle}.{spalte} hat doch einen"
+
+
+def test_lauf_schritt_bleibt_absichtlich_ohne_check() -> None:
+    """Geschlossen im Vorrat, offen in der Datenbank — und das ist gewollt.
+
+    Ein neuer Verarbeitungsschritt soll nicht zuerst als Datenbankfehler zur
+    Sprache kommen. Ein falsch geschriebener Schritt macht auch nichts kaputt:
+    er taucht nur nicht in der Aufstellung auf.
+    """
+    schema = (ROOT / "schema.sql").read_text(encoding="utf-8")
+    lauf = re.search(r"CREATE TABLE lauf \((.*?)\n\);", schema, re.S).group(1)
+    assert "CHECK (schritt IN" not in lauf
+    # Der Kommentar zählt genau die sechs auf, die vokabular.py kennt.
+    for schritt in vokabular.LAUF_SCHRITTE:
+        assert schritt in lauf, schritt
+    assert "…" not in lauf
+
+
+def test_rolle_steht_im_vokabular_und_nicht_nur_im_kommentar() -> None:
+    assert vokabular.ROLLEN == ("verwalter", "nutzer")
+    assert vokabular.pruefen("nutzer", vokabular.ROLLEN, "Rolle") == "nutzer"
+    with pytest.raises(vokabular.UnbekannterWert):
+        vokabular.pruefen("chef", vokabular.ROLLEN, "Rolle")

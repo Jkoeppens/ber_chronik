@@ -19,7 +19,8 @@ CREATE TABLE zugang (
     token        TEXT    NOT NULL UNIQUE,
     name         TEXT    NOT NULL DEFAULT '',
     organisation TEXT    NOT NULL DEFAULT '',
-    rolle        TEXT    NOT NULL DEFAULT 'nutzer',  -- verwalter | nutzer
+    rolle        TEXT    NOT NULL DEFAULT 'nutzer'
+                         CHECK (rolle IN ('verwalter', 'nutzer')),
     angelegt_am  TEXT    NOT NULL
 );
 
@@ -34,7 +35,9 @@ CREATE TABLE projekt_zugang (
 CREATE TABLE quelle (
     id            TEXT NOT NULL PRIMARY KEY,
     projekt_id    TEXT NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
-    quellformat   TEXT NOT NULL,   -- literaturexzerpt | presseexzerpt | pressesammlung
+    quellformat   TEXT NOT NULL
+                  CHECK (quellformat IN ('literaturexzerpt', 'presseexzerpt',
+                                         'pressesammlung')),
     pfad          TEXT,            -- DOCX-Datei oder Dropbox-Ordner
     eingelesen_am TEXT NOT NULL
 );
@@ -44,7 +47,8 @@ CREATE TABLE einheit (
     id                 INTEGER NOT NULL PRIMARY KEY,
     quelle_id          TEXT    NOT NULL REFERENCES quelle(id) ON DELETE CASCADE,
     position           INTEGER NOT NULL,
-    typ                TEXT    NOT NULL,   -- content | heading | bibliography | meta
+    typ                TEXT    NOT NULL
+                       CHECK (typ IN ('content', 'heading', 'bibliography', 'meta')),
     text               TEXT    NOT NULL,
 
     -- Herkunft im Material
@@ -76,7 +80,8 @@ CREATE TABLE einheit (
 
     -- Ergebnis der Klassifikation
     kategorie_id       INTEGER REFERENCES kategorie(id) ON DELETE SET NULL,
-    konfidenz          TEXT,               -- high | medium | low
+    konfidenz          TEXT                -- NULL = nie klassifiziert
+                       CHECK (konfidenz IN ('high', 'medium', 'low')),
     kategorie_herkunft TEXT                -- automatisch | manuell
                        CHECK (kategorie_herkunft IN ('automatisch', 'manuell')),
                                            -- NULL = nie zugeordnet
@@ -211,11 +216,16 @@ CREATE TABLE anmeldung (
 CREATE TABLE lauf (
     id          INTEGER NOT NULL PRIMARY KEY,
     projekt_id  TEXT    NOT NULL REFERENCES projekt(id) ON DELETE CASCADE,
-    schritt     TEXT    NOT NULL,   -- ingest | datierung | klassifikation | …
+    schritt     TEXT    NOT NULL,   -- ingest | datierung | taxonomie |
+                                -- klassifikation | akteure | export.
+                                -- Geschlossen, aber ohne CHECK: ein neuer
+                                -- Schritt soll nicht zuerst als
+                                -- Datenbankfehler zur Sprache kommen.
     begonnen_am TEXT    NOT NULL,
     beendet_am  TEXT,               -- NULL, solange der Lauf läuft
     parameter   TEXT,               -- JSON: womit er aufgerufen wurde
-    status      TEXT    NOT NULL    -- laeuft | erfolg | fehler
+    status      TEXT    NOT NULL
+                        CHECK (status IN ('laeuft', 'erfolg', 'fehler'))
 );
 
 -- ── Indizes ───────────────────────────────────────────────────────────────────

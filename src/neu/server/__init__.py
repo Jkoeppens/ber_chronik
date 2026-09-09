@@ -27,8 +27,13 @@ gewinnt) und protokolliert, welche Anbieter aktiv sind und was fehlt. Ein
 fehlender Anbieter bricht den Start nicht ab; nur die Schritte, die ihn
 brauchen, antworten dann mit 503.
 
-Liest und schreibt ausschließlich data/neu.db. data/projects.db und
-dev_server.py bleiben unberührt.
+Die einzige Datenbank ist data/neu.db. data/projects.db wird nie geöffnet —
+darüber wacht test_projects_db_wird_nie_geoeffnet, das jede Zeichenkette im
+Code prüft. dev_server.py bleibt unberührt.
+
+Dateien schreibt der Server sehr wohl: die fünf Exportdateien nach
+data/exporte/{projekt}/ (server/export.py) und die hochgeladenen DOCX nach
+data/raw/ (server/ingest.py). Beides sind Dateien, keine Datenbanken.
 """
 
 import logging

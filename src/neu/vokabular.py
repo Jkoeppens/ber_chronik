@@ -27,6 +27,14 @@ from typing import Literal, get_args
 # Pipeline-Schritt — Segmentierung, Datierung, Interpolation.
 Quellformat = Literal["literaturexzerpt", "presseexzerpt", "pressesammlung"]
 
+# ── zugang.rolle ──────────────────────────────────────────────────────────────
+# Zwei Stufen: 'verwalter' steht über allen Projekten, 'nutzer' sieht nur die
+# eigenen und öffentlichen. Wirkt noch nicht — der Mehrbenutzerbetrieb ist
+# Schritt 8. Der Vorrat steht trotzdem hier und nicht nur im Schemakommentar:
+# das war die letzte Stelle, an der eine Spalte ihre erlaubten Werte allein in
+# der Prosa führte.
+Rolle = Literal["verwalter", "nutzer"]
+
 # ── einheit.typ ───────────────────────────────────────────────────────────────
 EinheitTyp = Literal["content", "heading", "bibliography", "meta"]
 
@@ -69,6 +77,12 @@ AkteurHerkunft = Literal["gliner", "manuell"]
 KandidatGrund = Literal["alias", "schreibweise", "aehnlichkeit"]
 
 # ── lauf.status / lauf.schritt ────────────────────────────────────────────────
+# lauf.schritt ist geschlossen und nicht offen: der Schemakommentar endete
+# lange auf '…', während dieser Literal sechs Werte festlegte — zwei Aussagen
+# über dieselbe Spalte. Es sind sechs, einer je Schritt des Ablaufs. Einen
+# CHECK trägt die Spalte trotzdem nicht: ein neuer Schritt käme sonst zuerst
+# als Datenbankfehler zur Sprache, und ein falsch geschriebener Schritt macht
+# nichts kaputt, er taucht nur nicht in der Aufstellung auf.
 LaufStatus = Literal["laeuft", "erfolg", "fehler"]
 LaufSchritt = Literal[
     "ingest", "datierung", "taxonomie", "klassifikation", "akteure", "export",
@@ -84,6 +98,7 @@ Umfang = Literal["offen", "alle", "auch_manuell"]
 # Abgeleitet, nicht danebengeschrieben.
 
 QUELLFORMATE: tuple[str, ...] = get_args(Quellformat)
+ROLLEN: tuple[str, ...] = get_args(Rolle)
 EINHEIT_TYPEN: tuple[str, ...] = get_args(EinheitTyp)
 PRAEZISIONEN: tuple[str, ...] = get_args(Praezision)
 DATIERUNG_HERKUENFTE: tuple[str, ...] = get_args(DatierungHerkunft)
