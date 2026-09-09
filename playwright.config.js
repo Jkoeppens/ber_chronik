@@ -41,8 +41,13 @@ export default defineConfig({
     url: 'http://localhost:8765/viz/',
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
+    // Beide still: http.server schreibt für JEDE Datei eine Zeile ins
+    // Zugriffsprotokoll, und zwar auf stderr. Mit 'pipe' waren das rund
+    // 37 KB Rauschen vor jedem Commit, in dem die Testliste unterging.
+    // Startet der Dienst gar nicht, meldet Playwright das ohnehin über die
+    // url-Prüfung.
     stdout: 'ignore',
-    stderr: 'pipe',
+    stderr: 'ignore',
   },
   reporter: [['list'], ['html', { open: 'never' }]],
 });
