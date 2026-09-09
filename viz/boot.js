@@ -1,6 +1,10 @@
 // ── Boot ──────────────────────────────────────────────────────────────────────
+// Ohne ?project= gibt es keine Datenbasis: DATA_BASE wäre leer, und die vier
+// Aufrufe gingen gegen /viz/data.json — bis September 2026 lag dort ein
+// eingecheckter Datensatz vom 30. März. Er ist gelöscht, und geladen wird hier
+// nichts mehr; index.html zeigt in dem Fall die Meldung statt der Fläche.
 const _v = `v=${Date.now()}`;
-Promise.all([
+if (PAGE_PROJECT) Promise.all([
   fetch(`${DATA_BASE}data.json?${_v}`).then(r => r.json()),
   fetch(`${DATA_BASE}entities_seed.csv?${_v}`).then(r => r.text())
     .catch(() => ""),

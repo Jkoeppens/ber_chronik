@@ -1,0 +1,85 @@
+{
+  "title": "BER Chronik 1989–2017",
+  "taxonomy": [
+    {
+      "name": "Kapazitätsvergleiche",
+      "description": "Berliner Flughäfen (Tegel, Schönefeld) werden als konkurrierende Systeme dargestellt, deren Leistung sich in Millionen Passagieren quantifiziert. Der Text misst nicht Projekte, sondern operative Realitäten: bestehende Flughäfen mit messbaren Durchsatzmengen, gegen die der geplante BER als zukünftige Alternative positioniert wird.",
+      "keywords": [
+        "millionen",
+        "schönefeld",
+        "tegel"
+      ]
+    },
+    {
+      "name": "Serielle Terminfestlegung und Einzelproblem-Protokollierung",
+      "description": "TSP und BerlZtg dokumentieren wiederholte Eröffnungstermine (2017, 2018, August 2018) des BER, die der Aufsichtsrat mit Mehdorn und Lütke Daldrup setzt und verfallen lässt. Jedes Scheitern wird als isoliertes technisches Problem (Sprinkleranlagen, Siemens-Mängel, Entrauchung) oder Verfahrensverzögerung protokolliert — das System funktioniert durch Zurechnung auf lösbare Einzelmängel, nicht durch Anerkennung von Systemversagen.",
+      "keywords": [
+        "ber",
+        "tsp",
+        "mehdorn"
+      ]
+    },
+    {
+      "name": "Juristische Blockademechanismen",
+      "description": "Texte dokumentieren formale Gegenwehr gegen den BER in Brandenburg: Oberverwaltungsgericht, Bundesverwaltungsgericht, Planfeststellungsbeschwerden, Nachtflugverbote, Landesentwicklungsplan-Kipps. Gegner nutzen Schallschutzgutachten, Raumordnungsverfahren und Planfeststellungsbeschluss als Instrumente, um den Flughafen durch Verfahrensrecht zu blockieren, nicht durch politische Ablehnung.",
+      "keywords": [
+        "tsp",
+        "brandenburg",
+        "planfeststellungsbeschluss"
+      ]
+    },
+    {
+      "name": "Personalisierte Verantwortungszurechnung",
+      "description": "Einzelne Akteure (Schwarz, Mehdorn, Amann, Großmann, Mühlenfeld, Pieper) werden namentlich mit Entlassungen, Beurlaubungen, Rücktritten und Korruptionsvorwürfen verknüpft — vor allem die SPD-nahen Geschäftsführer und Aufsichtsräte. Der Text funktioniert durch Identifikation: wer trat ab, wer wurde abgelöst, wer hatte Erinnerungslücken, wer schützte wen — Verantwortung konzentriert sich auf benennbare Personen, nicht auf Strukturen oder Entscheidungsketten.",
+      "keywords": [
+        "schwarz",
+        "technikchef",
+        "entwicklung"
+      ]
+    },
+    {
+      "name": "Kapitalgebilde und Gesellschafterwechsel",
+      "description": "Gründungen, Fusionen und Umwandlungen der Flughafengesellschaft (BBF, PPS, BBI, Hochtief-IVG-Konsortium) werden als Verwaltungs- und Eigentümerwechsel dargestellt. Texte verfolgen, wer Gesellschafter wird (Deutsche Bank, IVG, Hochtief), wer Aufträge erhält, wer Bürgschaften verlangt, welche Privatisierungsverträge geschlossen werden — der Flughafen erscheint als Kapitalgebilde mit wechselnden Eigentümerstrukturen und Konsortialverhältnissen, nicht als Infrastrukturprojekt.",
+      "keywords": [
+        "bbf",
+        "hochtief",
+        "berlin"
+      ]
+    },
+    {
+      "name": "Politische Machtwechsel und Amtsübergaben",
+      "description": "Wahlen zum Berliner Abgeordnetenhaus und Brandenburger Landtag (September, Oktober, Dezember, Januar) sowie Koalitionswechsel unter Wowereit, Stolpe und Müller werden als Daten aufgelistet. Der BER fungiert als Kontext von Regierungswechseln — Flughafenchefs und Aufsichtsratsvorsitzende folgen Wahlentscheidungen, nicht umgekehrt; Spitzentreffen und Untersuchungsausschüsse konstituieren sich nach politischen Umbrüchen.",
+      "keywords": [
+        "spd",
+        "wowereit",
+        "berliner"
+      ]
+    },
+    {
+      "name": "Finanzierungslücken und Kostendynamik",
+      "description": "Milliarden und Millionen Euro werden als konkrete Summen für Gesamtkosten (5,4, 5,8, 6,6 Milliarden), Mehrkosten, Kapitalspritzen, Stillstandskosten und Kredite genannt. Der BER wird durch Rentabilitätsfragen und Finanzierungslücken definiert — Texte argumentieren über Geldflüsse: welche Lücke klafft, wer zahlt (Berlin, Brandenburg, Bund), welche Bürgschaften nötig sind, welche Zinsen anfallen, ob die Höhe der Kosten noch zu halten ist.",
+      "keywords": [
+        "euro",
+        "milliarden",
+        "millionen"
+      ]
+    }
+  ],
+  "color_map": {
+    "Kapazitätsvergleiche": "#3b82f6",
+    "Serielle Terminfestlegung und Einzelproblem-Protokollierung": "#f59e0b",
+    "Juristische Blockademechanismen": "#10b981",
+    "Personalisierte Verantwortungszurechnung": "#8b5cf6",
+    "Kapitalgebilde und Gesellschafterwechsel": "#ef4444",
+    "Politische Machtwechsel und Amtsübergaben": "#06b6d4",
+    "Finanzierungslücken und Kostendynamik": "#f97316"
+  },
+  "node_color_map": {
+    "Konzept": "#60a5fa",
+    "Organisation": "#fbbf24",
+    "Ort": "#34d399",
+    "Person": "#c084fc"
+  },
+  "year_min": 1989,
+  "year_max": 2017
+}

@@ -9,6 +9,22 @@
 </head>
 <body>
 
+<!-- Ohne ?project= gibt es nichts zu zeigen. Bis September 2026 lag hier ein
+     eingecheckter Datensatz vom 30. März, der dann geladen wurde — er trug die
+     alte Ankerform s0001 und Felder, die kein Export mehr schreibt. Wer die
+     Seite ohne Projekt aufrief, sah also stillschweigend veraltetes Material. -->
+<div id="kein-projekt" hidden
+     style="display:flex; flex-direction:column; align-items:center; justify-content:center;
+            height:100vh; gap:14px; font-family:system-ui,-apple-system,sans-serif; color:#374151;">
+  <div style="font-size:17px; font-weight:500;">Kein Projekt gewählt</div>
+  <div style="font-size:13px; color:#6b7280; max-width:34em; text-align:center; line-height:1.6;">
+    Die Visualisierung zeigt immer ein bestimmtes Projekt. Die Adresse braucht
+    dafür <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">?project=…</code>
+    — den Weg dorthin nimmt man am besten über die Projektliste.
+  </div>
+  <a id="zur-liste" href="/" style="font-size:13px; color:#6d28d9; text-decoration:none;">Zur Projektliste →</a>
+</div>
+
 <div id="main">
   <div id="left-col">
     <header style="display:flex; align-items:center; height:44px; padding:0 20px; background:#F7F5F0; gap:24px; flex-shrink:0;">
@@ -67,13 +83,21 @@
 
 <script src="config.js"></script>
 <script>
-// ── Rückweg in die Oberfläche ─────────────────────────────────────────────────
+// ── Welches Projekt, und der Rückweg dorthin ──────────────────────────────────
 // Die Viz kennt ihr Projekt nur aus ?project= — in den fünf exportierten Dateien
-// steht die Kennung nirgends. Fehlt der Parameter, bleibt der Link unsichtbar
-// statt ins Leere zu führen.
+// steht die Kennung nirgends. Ohne Parameter gibt es nichts zu zeigen und keinen
+// Ort, an den ein Rückweg führen könnte; dann tritt die Meldung an die Stelle
+// der Fläche. boot.js lädt in dem Fall gar nicht erst (siehe dort).
 (function () {
   const projekt = new URLSearchParams(location.search).get("project");
-  if (!projekt) return;
+  if (!projekt) {
+    document.getElementById("kein-projekt").hidden = false;
+    // display und nicht das hidden-Attribut: #main trägt in style.css ein
+    // display:flex, und das schlägt die Vorgabe des Attributs.
+    document.getElementById("main").style.display = "none";
+    document.getElementById("zur-liste").href = `${API_URL}/`;
+    return;
+  }
   const link = document.getElementById("zur-oberflaeche");
   link.href = `${API_URL}/projekt/${encodeURIComponent(projekt)}/export`;
   link.style.display = "";

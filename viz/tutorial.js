@@ -281,8 +281,12 @@ document.getElementById("tutorial-btn").onclick = tutorialStart;
 
 // ── Auto-start on first visit ─────────────────────────────────────────────────
 
+// Bei jedem Projekt, nicht nur bei 'ber'. Die feste Kennung stammte aus der
+// Zeit, als 'ber' der eingecheckte Datensatz war und ohne ?project= geladen
+// wurde; seit der weg ist, hätte die Bedingung die Führung auf ein einziges
+// Projekt eingeschränkt, ohne dass das je jemand entschieden hätte.
 if (!localStorage.getItem("tutorial_seen") &&
-    new URLSearchParams(location.search).get("project") === "ber") {
+    new URLSearchParams(location.search).get("project")) {
   window.addEventListener("load", () => setTimeout(tutorialStart, 600));
 }
 

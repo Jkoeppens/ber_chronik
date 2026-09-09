@@ -89,37 +89,17 @@ function highlightEntities(text) {
   return highlightWithKeywords(text, []);
 }
 
-// (selectedEntity, netNodeSelection, netNeighbors, actorsByAnchor, DIM,
-//  chartDotSelection, hlState, setHighlight — defined in highlight-state.js)
-
-function setHighlight(mode, anchors = null, active = null, focusEntity = null) {
-  hlState = { mode, anchors, active, focusEntity };
-  _applyHighlight();
-}
-
-function _applyHighlight() {
-  _applyTimelineHighlight();
-  if (typeof applyNetworkState === "function") applyNetworkState();
-  if (typeof _applyChartEntityHighlight === "function") _applyChartEntityHighlight();
-}
-
-function _applyTimelineHighlight() {
-  if (!chartDotSelection) return;
-  const { mode, anchors, active } = hlState;
-  if (mode === "none" || !anchors || anchors.size === 0) {
-    chartDotSelection
-      .attr("r", 4).attr("opacity", null)
-      .attr("stroke", "#fff").attr("stroke-width", 1.5);
-    return;
-  }
-  const isSource  = v => v.anchorSet && [...anchors].some(a => v.anchorSet.has(a));
-  const isFocused = v => active && v.anchorSet?.has(active);
-  chartDotSelection
-    .attr("r",            v => isFocused(v) ? 9 : isSource(v) ? 7 : 4)
-    .attr("opacity",      v => isFocused(v) ? 1 : isSource(v) ? (mode === "single" ? 0.4 : 1) : DIM)
-    .attr("stroke",       v => isFocused(v) ? "#f5c518" : "#fff")
-    .attr("stroke-width", v => isFocused(v) ? 2.5 : 1.5);
-}
+// Das Hervorheben steht vollständig in highlight-state.js: hlState,
+// setHighlight, _applyHighlight, _applyTimelineHighlight und die Größen, an
+// denen sie hängen (selectedEntity, netNodeSelection, netNeighbors,
+// actorsByAnchor, DIM, chartDotSelection).
+//
+// Hier standen dieselben drei Funktionen ein zweites Mal. Sie liefen nie:
+// index.html lädt highlight-state.js danach, und deren Deklarationen
+// überschreiben diese. Gleich waren sie auch nicht — die tote Fassung von
+// _applyHighlight rief applyNetworkState() statt _applyNetworkHighlight().
+// Wer die Hervorhebung anfasste, las also mit einiger Wahrscheinlichkeit die
+// falsche.
 
 // ── Text helpers ──────────────────────────────────────────────────────────────
 function highlightWithKeywords(text, keywords, focusNormalform = null) {

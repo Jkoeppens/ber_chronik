@@ -16,9 +16,14 @@ function pairKey(a, b) {
 }
 
 let _lastVisibleIds = new Set();  // updated by drawNetwork; read by applyNetworkState
-// Fetch precomputed layout eagerly so it's ready before first tab-open
+// Fetch precomputed layout eagerly so it's ready before first tab-open.
+// Nur mit Projekt: ohne ?project= ist DATA_BASE leer und der Aufruf ginge
+// gegen /viz/network_layout.json — dort lag bis September 2026 der
+// eingecheckte Datensatz, jetzt liegt dort nichts.
 let _networkLayout = null;
-fetch(`${DATA_BASE}network_layout.json?v=${Date.now()}`).then(r => r.json()).then(l => { _networkLayout = l; }).catch(() => {});
+if (PAGE_PROJECT) {
+  fetch(`${DATA_BASE}network_layout.json?v=${Date.now()}`).then(r => r.json()).then(l => { _networkLayout = l; }).catch(() => {});
+}
 
 // ── Unified network state machine ─────────────────────────────────────────────
 // Priority order (highest wins):

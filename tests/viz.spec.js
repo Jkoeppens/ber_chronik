@@ -3,11 +3,15 @@ import { test, expect } from '@playwright/test';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/** Das eingefrorene Prüfstück: ein ber-Export vom 9.9.2026, der nie neu
+ *  erzeugt wird. Siehe data/exporte/pruefstueck/HERKUNFT.md. */
+export const PRUEFSTUECK = '/viz/?project=pruefstueck';
+
 /** Wait until the boot Promise.all has completed and the chart is drawn. */
 async function waitForBoot(page) {
   // Suppress the auto-start tutorial so the overlay never blocks clicks
   await page.addInitScript(() => localStorage.setItem('tutorial_seen', '1'));
-  await page.goto('http://localhost:8765/viz/');
+  await page.goto(PRUEFSTUECK);
   // Dots only exist after drawChart() — proxy for data loaded
   await page.locator('circle.dot').first().waitFor({ state: 'visible', timeout: 20_000 });
 }

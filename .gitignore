@@ -26,7 +26,15 @@ data/projects/*_test_*/
 
 # Exporte des neuen Systems: jederzeit aus data/neu.db neu erzeugbar
 # (python3 -m src.neu.export.cli --projekt <kennung>)
-data/exporte/
+#
+# Der Inhalt, nicht das Verzeichnis: ein ausgeschlossenes Verzeichnis betritt
+# git gar nicht erst, und die Ausnahme darunter käme nie zur Wirkung.
+data/exporte/*
+
+# Ausnahme: das Prüfstück. Ein eingefrorener ber-Export, gegen den die
+# Playwright-Tests laufen — er ist gerade deshalb ein Prüfmaß, weil er NICHT
+# neu erzeugt wird. Siehe data/exporte/pruefstueck/HERKUNFT.md.
+!data/exporte/pruefstueck/
 
 # Pipeline-Outputs die nicht versioniert werden
 data/projects/*/obsidian_checkpoint.json
