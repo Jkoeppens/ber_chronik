@@ -7,6 +7,7 @@ Endpoints:
   GET /api/projekt/{id}/kennzahlen  ein Projekt mit seinen Zahlen
   GET /api/projekt/{id}/einheiten   seine Einheiten, nach Quelle und Position
                                     sortiert, Filter ?typ=content
+  POST /api/projekt/{id}/chat       eine Frage, beantwortet im Ereignisstrom
   dazu die Schritte: quelle, themen, datieren, akteure, export
 
 Starten:
@@ -50,6 +51,7 @@ env_laden()
 
 from src.neu.server import (  # noqa: E402
     akteure,
+    chat,
     datierung,
     export,
     ingest,
@@ -100,7 +102,7 @@ app = FastAPI(
 # überschneiden sich.
 
 for teil in (konfiguration, projekte, ingest, themen, laeufe, datierung,
-             akteure, export):
+             akteure, export, chat):
     app.include_router(teil.router)
 
 

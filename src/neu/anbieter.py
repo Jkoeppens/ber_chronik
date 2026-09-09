@@ -36,7 +36,7 @@ import time
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Iterator
 
 import numpy as np
 
@@ -510,6 +510,117 @@ def llm_funktion(
         return antwort, in_tokens, out_tokens
 
     return frage_ollama, m
+
+
+def llm_strom_funktion(
+    name: str | None = None, modell: str | None = None
+) -> tuple[Callable[[str, str], Iterator[str]], str]:
+    """Gibt (strom, Modellname) zurück. strom(prompt, system) liefert Textstücke.
+
+    Dasselbe wie llm_funktion(), nur stückweise. Zwei Aufgaben, zwei Formen:
+    ein Klassifikationslauf will eine fertige Antwort und die Tokenzahlen, eine
+    Chatantwort will man beim Entstehen lesen. Eine Funktion für beides hieße,
+    dass eine Seite immer wartet.
+
+    Die Stücke sind roher Text, nichts weiter — keine Steuerwörter dazwischen.
+    Wer daraus Ereignisse macht, tut das eine Schicht weiter oben.
+
+    Anthropic streamt über messages.stream, Ollama über denselben Weg wie
+    llm_funktion(); dort ist der Strom schon da, es wird nur nicht mehr am Ende
+    zusammengeklebt. Die Frist gilt in beiden Fällen für die Stille zwischen
+    zwei Stücken, nicht für die Gesamtdauer.
+    """
+    anbieter = _wahl("llm", name)
+    block = _abschnitt("llm", anbieter)
+    _schluessel_pruefen(anbieter, block)
+    m = llm_modellname(name, modell)
+    antwort_token = int(block["antwort_token"])
+
+    if anbieter == "anthropic":
+        import anthropic
+
+        client = anthropic.Anthropic()
+
+        def strom_anthropic(prompt: str, system: str) -> Iterator[str]:
+            with client.messages.stream(
+                model=m, max_tokens=antwort_token, temperature=0,
+                system=system,
+                messages=[{"role": "user", "content": prompt}],
+            ) as lauf:
+                yield from lauf.text_stream
+
+        return strom_anthropic, m
+
+    import requests
+
+    basis = ollama_basis()
+    frist = ollama_frist()
+    puls_takt = int(block["puls_sekunden"])
+
+    def strom_ollama(prompt: str, system: str) -> Iterator[str]:
+        was = f"Ollama {m} (Strom)"
+        gesehen = 0
+        try:
+            with requests.post(
+                f"{basis}/api/generate",
+                json={"model": m, "prompt": prompt, "stream": True, "system": system,
+                      "options": {"num_ctx": 8192, "temperature": 0,
+                                  "num_predict": antwort_token}},
+                timeout=(10, frist),
+                stream=True,
+            ) as r:
+                r.raise_for_status()
+                protokoll.info("%s: Anfrage gestellt, %d Zeichen Prompt", was, len(prompt))
+                with _Puls(was, puls_takt) as puls:
+                    for zeile in r.iter_lines(decode_unicode=True):
+                        if not zeile:
+                            continue
+                        try:
+                            teil = json.loads(zeile)
+                        except json.JSONDecodeError as exc:
+                            raise AnbieterFehler(
+                                f"Ollama liefert eine unlesbare Zeile: {zeile[:200]}",
+                                "ollama_antwort_ungueltig",
+                            ) from exc
+                        if teil.get("error"):
+                            raise AnbieterFehler(
+                                f"Ollama meldet einen Fehler: {teil['error']}",
+                                "ollama_fehler",
+                            )
+                        bruch = teil.get("response") or ""
+                        if bruch:
+                            gesehen += len(bruch)
+                            puls.empfangen(len(bruch))
+                            yield bruch
+                        if teil.get("done"):
+                            if teil.get("done_reason") == "length":
+                                protokoll.warning(
+                                    "%s: bei antwort_token=%d abgeschnitten. "
+                                    "Die Antwort ist unvollständig.", was, antwort_token,
+                                )
+                            break
+        except requests.Timeout as exc:
+            stand = (f"{gesehen} Zeichen waren angekommen" if gesehen
+                     else "es kam nie ein Zeichen an")
+            raise AnbieterFehler(
+                f"Ollama ({m} auf {basis}) war {frist} s still — {stand}. "
+                "Erlaubte Stille über OLLAMA_TIMEOUT ändern, ein kleineres "
+                "Modell wählen, oder mit LLM_PROVIDER=anthropic rechnen.",
+                "ollama_zeitueberschreitung",
+            ) from exc
+        except requests.ConnectionError as exc:
+            raise AnbieterFehler(
+                f"Ollama ist unter {basis} nicht erreichbar. Läuft der Dienst?",
+                "ollama_nicht_erreichbar",
+            ) from exc
+
+        if gesehen == 0:
+            raise AnbieterFehler(
+                f"Ollama ({m}) hat den Aufruf beendet, ohne Text zu liefern.",
+                "ollama_antwort_leer",
+            )
+
+    return strom_ollama, m
 
 
 def kosten(modell: str, in_tokens: int, out_tokens: int) -> float:

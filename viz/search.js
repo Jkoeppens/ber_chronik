@@ -131,22 +131,40 @@ async function sendChat() {
     <div class="chat-answer-text" id="stream-target"></div>`;
   setHighlight("none");  // clear entity focus while answer loads
   let usedFallback = false;
+  // Ohne ?project= gibt es kein Projekt, an das die Frage gehen könnte —
+  // dann bleibt nur die lokale Volltextsuche.
+  if (!PAGE_PROJECT) {
+    const result = fulltextSearch(question);
+    result.apiError = "Ohne Projekt (?project=…) gibt es keine KI-Antwort.";
+    renderChatAnswer(viewEl, question, "local", result);
+    sendBtn.disabled = false;
+    input.disabled   = false;
+    input.focus();
+    return;
+  }
+
   try {
-    const res = await fetch(`${API_URL}/chat/stream`, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ question, ...(PAGE_PROJECT && { project_id: PAGE_PROJECT }) }),
-      signal:  AbortSignal.timeout(60000),
-    });
+    const res = await fetch(
+      `${API_URL}/api/projekt/${encodeURIComponent(PAGE_PROJECT)}/chat`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ frage: question }),
+        signal:  AbortSignal.timeout(60000),
+      });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || res.statusText);
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.fehler?.meldung || res.statusText);
     }
 
+    // Server-Sent Events mit benannten Ereignissen: die Art steht in der
+    // event-Zeile, der Text in der data-Zeile. Der alte Weg schob __done__
+    // und __error__ in den Textstrom und klaubte sie hier wieder heraus —
+    // ein Absatz, der zufällig so anfing, brachte den Leser durcheinander.
     const reader  = res.body.getReader();
     const decoder = new TextDecoder();
     let rawText = "";
     let buffer  = "";
+    let art     = "";
 
     outer: while (true) {
       const { done, value } = await reader.read();
@@ -155,20 +173,21 @@ async function sendChat() {
       const lines = buffer.split("\n");
       buffer = lines.pop();
       for (const line of lines) {
+        if (line.startsWith("event: ")) { art = line.slice(7).trim(); continue; }
         if (!line.startsWith("data: ")) continue;
-        let parsed;
-        try { parsed = JSON.parse(line.slice(6)); } catch { continue; }
-        if (typeof parsed === "string") {
-          rawText += parsed;
+        let inhalt;
+        try { inhalt = JSON.parse(line.slice(6)); } catch { continue; }
+        if (art === "stueck") {
+          rawText += inhalt.text;
           const target = document.getElementById("stream-target");
           if (target) target.textContent = rawText;
-        } else if (parsed.type === "done") {
+        } else if (art === "fertig") {
           renderChatAnswer(viewEl, question, "ai", {
-            data: { answer: rawText, sources: parsed.sources, keywords: parsed.keywords },
+            data: { answer: rawText, sources: inhalt.quellen, keywords: inhalt.stichwoerter },
           });
           break outer;
-        } else if (parsed.type === "error") {
-          throw new Error(parsed.message);
+        } else if (art === "abbruch") {
+          throw new Error(inhalt.meldung);
         }
       }
     }

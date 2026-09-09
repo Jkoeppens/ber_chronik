@@ -811,6 +811,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projekt/{projekt_id}/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chat
+         * @description Beantwortet eine Frage aus den Absätzen des Projekts.
+         *
+         *     Gesucht wird zweifach — nach Stichwörtern und nach Bedeutung — und beides
+         *     per Reciprocal Rank Fusion zusammengelegt; die besten 20 Absätze gehen in
+         *     den Prompt. Das Abschlussereignis nennt unter `quellen` die Anker, die im
+         *     Antworttext tatsächlich vorkommen, nicht die angebotenen.
+         *
+         *     Antwortet als text/event-stream. Die Ereignisse stehen oben im Modul.
+         */
+        post: operations["chat_api_projekt__projekt_id__chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1065,6 +1092,17 @@ export interface components {
              * @description Die DOCX-Datei
              */
             datei: string;
+        };
+        /**
+         * ChatRumpf
+         * @description Eine Frage auf Deutsch.
+         */
+        ChatRumpf: {
+            /**
+             * Frage
+             * @description Die Frage. Leer wird abgewiesen, nicht stumm beantwortet.
+             */
+            frage: string;
         };
         /**
          * DatierenRumpf
@@ -4883,6 +4921,84 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ExportAntwort"];
                 };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    chat_api_projekt__projekt_id__chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Nicht gefunden */
             404: {

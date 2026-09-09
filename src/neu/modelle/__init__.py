@@ -39,6 +39,7 @@ from src.neu.modelle.akteure import (
     VerschmelzenRumpf,
     ZusammenfassenRumpf,
 )
+from src.neu.modelle.chat import ChatRumpf
 from src.neu.modelle.datierung import (
     Anker,
     Ausreisser,
@@ -96,7 +97,7 @@ from src.neu.modelle.themen import (
 __all__ = [
     "AkteurAendernRumpf", "AkteurAnlegenRumpf", "AkteurAntwort", "AkteurHerkunft",
     "AkteurListe", "AkteurStatus", "AkteurTyp", "AkteurZeile", "AkteureErkennenRumpf",
-    "AnbieterLage", "Anker", "AnmeldungBeginn", "Ausreisser",
+    "AnbieterLage", "Anker", "AnmeldungBeginn", "Ausreisser", "ChatRumpf",
     "DatierenRumpf", "DatierungAntwort", "DatierungHerkunft", "DatierungRumpf",
     "DatierungUmfang", "DatierungVerteilung", "DatierungZeileAntwort",
     "DropboxOrdnerListe", "DropboxOrdnerRumpf", "DropboxStand",

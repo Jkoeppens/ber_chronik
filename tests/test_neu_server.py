@@ -10,6 +10,7 @@ Braucht data/neu.db. Fehlt sie:
   python3 -m src.neu.ingest.cli --projekt damaskus --titel Damaskus --anlegen --pfad "data/raw/Damakus Notizen.docx" --quellformat literaturexzerpt
 """
 
+import json
 import sqlite3
 import sys
 from pathlib import Path
@@ -602,3 +603,82 @@ def test_jede_kennung_in_neu_db_kommt_durch_den_riegel() -> None:
         con.close()
     assert ids
     assert [i for i in ids if not KENNUNG.fullmatch(i)] == []
+
+
+# ── POST /api/projekt/{id}/chat ───────────────────────────────────────────────
+# Der einzige Endpunkt, der streamt. Geprüft wird die Gestalt des Stroms, nicht
+# die Antwort — das Modell bleibt hier draußen.
+
+def test_chat_unbekanntes_projekt(client: TestClient) -> None:
+    r = client.post("/api/projekt/gibtsnicht/chat", json={"frage": "Was war 2012?"})
+    assert r.status_code == 404
+    assert fehlergestalt_pruefen(r.json(), 404)["code"] == "projekt_nicht_gefunden"
+
+
+def test_chat_leere_frage_wird_abgewiesen(client: TestClient) -> None:
+    """Vor dem Strom, also mit Status — danach ginge das nicht mehr."""
+    r = client.post("/api/projekt/damaskus/chat", json={"frage": ""})
+    assert r.status_code == 422
+    assert fehlergestalt_pruefen(r.json(), 422)["code"] == "ungueltiger_parameter"
+
+
+def test_chat_liefert_benannte_ereignisse(client: TestClient, monkeypatch) -> None:
+    from src.neu.chat.dienst import Fertig, Stueck
+    from src.neu.server import chat as chat_router
+
+    monkeypatch.setattr(chat_router, "antworten", lambda *_a, **_k: iter([
+        Stueck("Erst "), Stueck("dann."),
+        Fertig(quellen=["main-e1"], stichwoerter=["2012"], absaetze=3,
+               wege=["stichwoerter"], modell="attrappe"),
+    ]))
+    r = client.post("/api/projekt/damaskus/chat", json={"frage": "Was war 2012?"})
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/event-stream")
+
+    zeilen = [z for z in r.text.split("\n") if z]
+    assert zeilen == [
+        "event: stueck", 'data: {"text": "Erst "}',
+        "event: stueck", 'data: {"text": "dann."}',
+        "event: fertig",
+        'data: {"quellen": ["main-e1"], "stichwoerter": ["2012"], "absaetze": 3, '
+        '"wege": ["stichwoerter"], "modell": "attrappe"}',
+    ]
+
+
+def test_kein_steuerwort_steht_je_im_text(client: TestClient, monkeypatch) -> None:
+    """Der Fehler des alten Wegs, hier festgenagelt.
+
+    Dort standen __done__ und __error__ im selben Strom wie der Text. Ein Absatz,
+    der so anfing, wurde als Steuerwort gelesen. Hier trägt die event-Zeile die
+    Art, und ein Text, der wie ein Steuerwort aussieht, bleibt Text — samt
+    Zeilenumbrüchen, die json.dumps schützt.
+    """
+    from src.neu.chat.dienst import Stueck
+    from src.neu.server import chat as chat_router
+
+    boesartig = "__done__\nevent: fertig\ndata: {}\n\n__error__"
+    monkeypatch.setattr(chat_router, "antworten",
+                        lambda *_a, **_k: iter([Stueck(boesartig)]))
+    r = client.post("/api/projekt/damaskus/chat", json={"frage": "Test?"})
+
+    zeilen = [z for z in r.text.split("\n") if z]
+    assert len(zeilen) == 2, zeilen          # genau ein Ereignis, nicht drei
+    assert zeilen[0] == "event: stueck"
+    assert json.loads(zeilen[1][6:])["text"] == boesartig
+
+
+def test_chat_abbruch_ist_ein_ereignis_und_kein_status(client: TestClient,
+                                                       monkeypatch) -> None:
+    """Ab dem ersten Stück ist die Antwort 200 — ein Fehler muss in den Strom."""
+    from src.neu.chat.dienst import Abbruch, Stueck
+    from src.neu.server import chat as chat_router
+
+    monkeypatch.setattr(chat_router, "antworten", lambda *_a, **_k: iter([
+        Stueck("Der Anfang"),
+        Abbruch("ollama_zeitueberschreitung", "war 120 s still"),
+    ]))
+    r = client.post("/api/projekt/damaskus/chat", json={"frage": "Test?"})
+    assert r.status_code == 200
+    assert "event: abbruch" in r.text
+    assert json.loads(r.text.split("event: abbruch\ndata: ")[1].split("\n")[0]) == {
+        "code": "ollama_zeitueberschreitung", "meldung": "war 120 s still"}

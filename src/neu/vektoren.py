@@ -143,6 +143,37 @@ def hole(
     return np.vstack([treffer[i] for i in ids])
 
 
+def vorhandene(
+    con: sqlite3.Connection, einheiten: Sequence[tuple[int, str]], modell: str
+) -> dict[int, np.ndarray]:
+    """Nur was schon abgelegt ist. Rechnet nichts, schreibt nichts.
+
+    Für Leser, die auf einen Vektor verzichten können — der Chat etwa. hole()
+    ist für einen Lauf gedacht: es rechnet nach, was fehlt, und braucht dafür
+    eine schreibende Verbindung und Minuten. Auf eine Frage hin ist beides
+    falsch, und die Antwort auf 'es liegt keiner vor' ist hier nicht 'dann
+    rechnen wir', sondern 'dann eben ohne'.
+
+    Die Prüfsumme wird geprüft wie in hole(): ein Vektor zu einem inzwischen
+    geänderten Text gilt als nicht vorhanden.
+    """
+    if not einheiten:
+        return {}
+    ids = [i for i, _ in einheiten]
+    gespeichert = _gespeicherte(con, ids, modell)
+    treffer = {
+        einheit_id: abgelegt[1]
+        for einheit_id, text in einheiten
+        if (abgelegt := gespeichert.get(einheit_id)) is not None
+        and abgelegt[0] == pruefsumme(text)
+    }
+    # Wie in hole(): verschiedene Längen unter einem Modellnamen heißt kaputt,
+    # nicht veraltet. Dann gilt nichts davon.
+    if len({v.shape[0] for v in treffer.values()}) > 1:
+        return {}
+    return treffer
+
+
 def lage(con: sqlite3.Connection, projekt_id: str, modell: str) -> dict:
     """Wie viele content-Einheiten für dieses Modell noch zu rechnen wären.
 
