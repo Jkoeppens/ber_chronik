@@ -1,9 +1,13 @@
 # Die Prüfung, die bei jedem Push läuft.
 #
-# Ohne sie sind 521 Tests eine Zusage und keine Prüfung — genau die Lage, in
-# der ein Syntaxfehler drei Monate überlebt hat. Der pre-commit-Hook taugt
-# dafür nicht: er überspringt sich selbst, wenn kein viz-Server läuft, also
-# faktisch immer.
+# Ohne sie sind die Tests eine Zusage und keine Prüfung — genau die Lage, in
+# der ein Syntaxfehler drei Monate überlebt hat.
+#
+# Der pre-commit-Hook taugt dafür nicht, und zwar aus zwei Gründen. Er lief
+# lange gar nicht: bis September 2026 übersprang er seinen Playwright-Teil,
+# wenn kein Server auf 8765 lief, also fast immer. Das ist behoben
+# (playwright.config.js fährt ihn selbst hoch). Der zweite Grund bleibt: ein
+# Hook läuft nur bei dem, der von Hand committet, und nur auf dessen Maschine.
 name: Prüfung
 
 on:
@@ -64,3 +68,54 @@ jobs:
         run: npm run check
 
       - run: npm run build
+
+  viz:
+    name: Playwright
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Der webServer-Block in playwright.config.js startet
+      # `python3 -m http.server 8765` aus der Wurzel. ubuntu-latest bringt ein
+      # python3 mit; hier steht es trotzdem, damit die Abhängigkeit sichtbar
+      # ist und nicht davon lebt, was das Abbild gerade dabeihat.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - run: npm ci
+
+      # --with-deps holt die Systembibliotheken dazu, die Chromium auf einem
+      # nackten Runner braucht. Nur chromium: die Tests laufen in keinem
+      # zweiten Browser, und Firefox und WebKit wären zwei Downloads, die
+      # nichts prüfen.
+      - name: Chromium holen
+        run: npx playwright install --with-deps chromium
+
+      # Kein data/neu.db, kein Sprachmodell, kein Einbetter. Gelaufen wird
+      # gegen data/exporte/pruefstueck/ — einen eingefrorenen ber-Export, der
+      # im Verzeichnisbaum liegt. Der Dienst dahinter ist ein Dateiserver.
+      #
+      # Was von außen kommt: viz/index.html holt d3 und marked von
+      # cdn.jsdelivr.net. Ist der nicht erreichbar, wird dieser Job rot, ohne
+      # dass am Quelltext etwas falsch wäre.
+      - name: Browsertests
+        run: npx playwright test
+
+      # Nur wenn etwas schiefging: der Bericht sagt, welcher Klick wo hängen
+      # blieb. Ein grüner Lauf braucht ihn nicht.
+      - name: Bericht sichern
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-bericht
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
