@@ -157,14 +157,30 @@ def _zuordnungen_llm(
     taxonomie: list[dict],
     melden: Callable[[int, int], None] | None = None,
 ) -> list[Zuordnung]:
-    from src.generalized.llm import TASK_CLASSIFY, get_provider
+    """Ein Modellaufruf je Einheit — der teure Weg, gegen den BGE-Weg gestellt.
 
-    provider = get_provider(task=TASK_CLASSIFY)
+    Über src.neu.anbieter und nicht mehr über generalized.llm.get_provider():
+    das war die letzte Stelle in src/neu/, die an der alten Fabrik hing. Sie
+    fällt bei fehlendem LLM_PROVIDER stillschweigend auf 'ollama' zurück und
+    führt ihre eigene Modelltabelle — womit es zwei Modellauswahlen im System
+    gab und nur eine in anbieter.toml stand.
+
+    Ohne Aufgabe, also mit der Vorgabe des Anbieters. Die drei benannten
+    Aufgaben sind Taxonomie, Zusammenfassungen und Chat; das Zuordnen ist keine
+    davon und braucht auch keine eigene — wer hier abweichen will, setzt das
+    Modell für den ganzen Anbieter.
+    """
+    from src.neu.anbieter import llm_funktion
+
+    roh_frage, _ = llm_funktion()
     block = kern.baue_kategorienblock(taxonomie)
     namen = [c["name"] for c in taxonomie]
 
     def frage_modell(prompt: str, system: str) -> str:
-        return provider.complete(prompt, system)
+        # llm_funktion() gibt (Text, Eingabe-Token, Ausgabe-Token); der Kern
+        # will nur den Text. Die Zahlen zählt dieser Weg nicht mit — der
+        # BGE-Weg daneben hat keine, und eine halbe Abrechnung wäre irreführend.
+        return roh_frage(prompt, system)[0]
 
     return [kern.klassifiziere_eine(t, block, namen, frage_modell)
             for _, t in einheiten]

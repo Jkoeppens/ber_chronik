@@ -25,6 +25,10 @@ ANBIETER_VARIABLEN = (
     "ANTHROPIC_API_KEY", "VOYAGE_API_KEY",
     "ANTHROPIC_MODEL_ANALYZE", "OLLAMA_MODEL", "OLLAMA_TIMEOUT", "OLLAMA_BASE_URL",
     "GLINER_MODEL",
+    # Je Aufgabe, beide Anbieter — sonst schlägt eine gesetzte .env in die Tests
+    # durch und ein Test wird grün, weil die Maschine so eingerichtet ist.
+    *(f"{p}_MODEL_{a.upper()}"
+      for p in ("ANTHROPIC", "OLLAMA") for a in ("taxonomie", "zusammenfassungen", "chat")),
 )
 
 
@@ -240,6 +244,90 @@ def test_modell_ueberschreibbar_unter_bestehendem_namen(monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "anthropic")
     monkeypatch.setenv("ANTHROPIC_MODEL_ANALYZE", "claude-sonnet-4-6")
     assert anbieter.llm_modellname() == "claude-sonnet-4-6"
+
+
+# ── Modell je Aufgabe ─────────────────────────────────────────────────────────
+# llama3.2:3b beantwortet Fragen brauchbar, hält aber die Zitierregeln nicht
+# ein: gemessen 446 Textstücke ohne eine einzige eckige Klammer. Ein Modell je
+# Anbieter hieß, dass die Quellenangaben lokal tot sind.
+
+def test_ohne_aufgabe_gilt_die_vorgabe(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    assert anbieter.llm_modellname() == "llama3.2:3b"
+
+
+def test_aufgabeneintrag_aus_der_datei_gilt(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    assert anbieter.llm_modellname("chat") == "llama3.1:8b"
+
+
+def test_ohne_aufgabeneintrag_gilt_die_vorgabe(monkeypatch):
+    """taxonomie und zusammenfassungen stehen nicht in der Datei."""
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    assert anbieter.llm_modellname("taxonomie") == "llama3.2:3b"
+    assert anbieter.llm_modellname("zusammenfassungen") == "llama3.2:3b"
+
+
+def test_umgebung_je_aufgabe_schlaegt_die_datei(monkeypatch):
+    """OLLAMA_MODEL_CHAT und ANTHROPIC_MODEL_CHAT haben ihre Wirkung zurück."""
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("OLLAMA_MODEL_CHAT", "mistral:7b")
+    assert anbieter.llm_modellname("chat") == "mistral:7b"
+    assert anbieter.llm_modellname("taxonomie") == "llama3.2:3b"
+
+    monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("ANTHROPIC_MODEL_CHAT", "claude-sonnet-4-6")
+    assert anbieter.llm_modellname("chat") == "claude-sonnet-4-6"
+    assert anbieter.llm_modellname("taxonomie") == "claude-haiku-4-5-20251001"
+
+
+def test_das_genauere_schlaegt_das_allgemeinere(monkeypatch):
+    """Ein gesetztes OLLAMA_MODEL nimmt modell_chat nicht still zurück.
+
+    Sonst wäre eine Umgebungsvariable für alles eine unsichtbare Rücknahme
+    dessen, was jemand ausdrücklich in die Datei geschrieben hat.
+    """
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("OLLAMA_MODEL", "qwen:4b")
+    assert anbieter.llm_modellname() == "qwen:4b"
+    assert anbieter.llm_modellname("taxonomie") == "qwen:4b"
+    assert anbieter.llm_modellname("chat") == "llama3.1:8b"
+
+
+def test_ausdrueckliches_modell_schlaegt_alles(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("OLLAMA_MODEL_CHAT", "mistral:7b")
+    assert anbieter.llm_modellname("chat", modell="gemma:2b") == "gemma:2b"
+
+
+def test_unbekannte_aufgabe_scheitert(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    with pytest.raises(anbieter.AnbieterFehler) as exc:
+        anbieter.llm_modellname("erfunden")
+    assert exc.value.code == "aufgabe_unbekannt"
+
+
+def test_modelle_je_aufgabe_sind_aufgeloest(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    assert anbieter.llm_modelle_je_aufgabe() == {
+        "taxonomie": "llama3.2:3b",
+        "zusammenfassungen": "llama3.2:3b",
+        "chat": "llama3.1:8b",
+    }
+
+
+def test_jedes_modell_je_aufgabe_steht_in_der_lage(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    lage, _ = anbieter.llm_lage()
+    assert lage.modelle == anbieter.llm_modelle_je_aufgabe()
+    assert set(lage.modelle) == set(anbieter.LLM_AUFGABEN)
+
+
+def test_embedding_lage_nennt_ihre_zwei_aufgaben(monkeypatch):
+    monkeypatch.setenv("EMBEDDING_PROVIDER", "local")
+    lage, _ = anbieter.embedding_lage()
+    assert lage.modelle == {"themen": "BAAI/bge-m3",
+                            "akteure": "paraphrase-multilingual-MiniLM-L12-v2"}
 
 
 # ── Preise ────────────────────────────────────────────────────────────────────

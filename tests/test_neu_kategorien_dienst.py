@@ -85,11 +85,15 @@ def _einheiten(con: sqlite3.Connection, texte: list[str], typ: str = "content") 
 
 
 def _attrappe(antwort: str):
-    """Ein Modell, das immer dieselbe Antwort gibt. Kein Netz."""
-    class P:
-        def complete(self, prompt, system):
-            return antwort
-    return P()
+    """Ein Modell, das immer dieselbe Antwort gibt. Kein Netz.
+
+    In der Gestalt von anbieter.llm_funktion(): (frage_modell, Modellname), und
+    frage_modell gibt (Text, Eingabe-Token, Ausgabe-Token). Vorher war es die
+    Gestalt von generalized.llm.get_provider() — ein Objekt mit .complete().
+    """
+    def bauen(*_a, **_k):
+        return (lambda prompt, system: (antwort, 0, 0)), "attrappe"
+    return bauen
 
 
 @pytest.fixture
@@ -227,9 +231,10 @@ def test_unbekannte_kategorie_wird_null_bei_gesetzter_herkunft(con, monkeypatch)
     _kategorien(con)
     ids = _einheiten(con, ["a"])
 
-    import src.generalized.llm as llm
-    monkeypatch.setattr(llm, "get_provider",
-                        lambda task=None: _attrappe('{"category":"Sport","confidence":"high"}'))
+    from src.neu import anbieter
+    monkeypatch.setattr(
+        anbieter, "llm_funktion",
+        _attrappe('{"category":"Sport","confidence":"high"}'))
 
     ergebnis = klassifizieren(con, "p", verfahren="llm")
     assert ergebnis.anzahl_ohne_kategorie == 1
@@ -246,8 +251,8 @@ def test_unbekannte_kategorie_wird_null_bei_gesetzter_herkunft(con, monkeypatch)
 def test_unlesbare_antwort_ergibt_weder_kategorie_noch_konfidenz(con, monkeypatch) -> None:
     _kategorien(con)
     ids = _einheiten(con, ["a"])
-    import src.generalized.llm as llm
-    monkeypatch.setattr(llm, "get_provider", lambda task=None: _attrappe("kein JSON"))
+    from src.neu import anbieter
+    monkeypatch.setattr(anbieter, "llm_funktion", _attrappe("kein JSON"))
 
     klassifizieren(con, "p", verfahren="llm")
     zeile = con.execute(

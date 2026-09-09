@@ -206,7 +206,7 @@ def vorschlagen(
             )
 
         embed, emb_modell = anbieter.embedding_funktion("themen")
-        frage_modell, llm_modell = anbieter.llm_funktion()
+        frage_modell, llm_modell = anbieter.llm_funktion("taxonomie")
 
         if lauf_id is not None:
             laeufe.fortschritt(

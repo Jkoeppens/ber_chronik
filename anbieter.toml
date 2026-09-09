@@ -62,8 +62,21 @@ schluessel = "VOYAGE_API_KEY"
 
 # ── Sprachmodell ─────────────────────────────────────────────────────────────
 
+# Ein Modell je Anbieter als Vorgabe, dazu optional eines je Aufgabe — dieselbe
+# Gestalt wie bei [embedding.local] oben. Die drei Aufgaben heißen taxonomie,
+# zusammenfassungen und chat; fehlt der Eintrag, gilt modell.
+#
+# Es überschreibt, von oben nach unten: ein modell-Argument im Code, dann
+# {ANBIETER}_MODEL_{AUFGABE} aus der Umgebung, dann modell_{aufgabe} hier, dann
+# die allgemeine Umgebungsvariable, dann modell hier. Das Genauere schlägt das
+# Allgemeinere, gleich woher es kommt.
+
 [llm.anthropic]
 modell = "claude-haiku-4-5-20251001"   # Umgebung: ANTHROPIC_MODEL_ANALYZE
+# modell_taxonomie / modell_zusammenfassungen / modell_chat wären hier möglich
+# (Umgebung: ANTHROPIC_MODEL_TAXONOMIE, …_ZUSAMMENFASSUNGEN, …_CHAT). Bei
+# Anthropic weicht nichts ab: Haiku hält die Zitierregeln ein, gemessen an
+# 10 von 20 angebotenen Ankern, alle korrekt kopiert.
 schluessel = "ANTHROPIC_API_KEY"
 antwort_token = 2048
 
@@ -77,6 +90,11 @@ antwort_token = 2048
 
 [llm.ollama]
 modell = "llama3.2:3b"              # Umgebung: OLLAMA_MODEL
+# Der Chat weicht ab. 3b beantwortet Fragen brauchbar, hält aber die
+# Zitierregeln nicht ein: gemessen 446 Textstücke ohne eine einzige eckige
+# Klammer, womit die Quellenangaben lokal tot waren. Umgebung:
+# OLLAMA_MODEL_CHAT.
+modell_chat = "llama3.1:8b"
 basis = "http://localhost:11434"    # Umgebung: OLLAMA_BASE_URL
 schluessel = ""
 # Obergrenze der Antwortlänge. Ohne Deckel läuft ein kleines Modell in eine

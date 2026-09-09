@@ -222,7 +222,8 @@ def antworten(
         return
 
     try:
-        strom, modell = (strom_funktion or llm_strom_funktion)()
+        strom, modell = (strom_funktion() if strom_funktion
+                     else llm_strom_funktion("chat"))
     except AnbieterFehler as exc:
         yield Abbruch(exc.code, str(exc))
         return

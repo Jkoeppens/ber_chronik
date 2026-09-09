@@ -34,7 +34,7 @@ import os
 import threading
 import time
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterator
 
@@ -51,6 +51,23 @@ LLM_ANBIETER = ("anthropic", "ollama")
 # war lange möglich — die Taxonomiefläche schrieb MiniLM an den Kopf, wo
 # bge-m3 rechnete.
 AUFGABEN = ("themen", "akteure")
+
+# Wofür das Sprachmodell gefragt wird. Dieselbe Achse wie oben, aus demselben
+# Grund: llama3.2:3b taugt für Kategorienamen und Kurzfassungen, schreibt im
+# Chat aber keine einzige Fußnote — 446 Textstücke, keine eckige Klammer. Ein
+# Modell je Anbieter hieß, dass die Quellenangaben lokal tot sind.
+#
+# Die Aufrufprofile gehen ohnehin auseinander: Taxonomie sind vier Aufrufe je
+# Lauf, Zusammenfassungen einer je Akteur (bei nahda-durchlauf 70 mit 85 000
+# Eingabe-Token), Chat genau einer — und der einzige, bei dem jemand wartet.
+LLM_AUFGABEN = ("taxonomie", "zusammenfassungen", "chat")
+
+# Unter welchem Namen die Umgebung ein Modell überschreibt. Die allgemeine
+# Variable je Anbieter ist die bestehende; je Aufgabe kommt der Aufgabenname
+# dahinter. OLLAMA_MODEL_CHAT und ANTHROPIC_MODEL_CHAT bekommen damit die
+# Wirkung zurück, die sie im alten Server hatten.
+_LLM_VARIABLE = {"anthropic": "ANTHROPIC_MODEL_ANALYZE", "ollama": "OLLAMA_MODEL"}
+_LLM_PRAEFIX = {"anthropic": "ANTHROPIC_MODEL", "ollama": "OLLAMA_MODEL"}
 
 protokoll = logging.getLogger("ber.neu.anbieter")
 
@@ -376,20 +393,69 @@ class _Puls:
 
 # ── Sprachmodell ──────────────────────────────────────────────────────────────
 
-def llm_modellname(name: str | None = None, modell: str | None = None) -> str:
-    """Welches Sprachmodell gilt — ohne Schlüsselprüfung, ohne Aufruf."""
+def llm_modellname(
+    aufgabe: str | None = None,
+    name: str | None = None,
+    modell: str | None = None,
+) -> str:
+    """Welches Sprachmodell für diese Aufgabe gilt — ohne Schlüsselprüfung.
+
+    aufgabe=None heißt 'die Vorgabe', nicht 'irgendeine'. Wer keine Aufgabe
+    nennt, bekommt modell aus dem Anbieterblock.
+
+    Was gewinnt, von oben nach unten:
+
+      1. ein ausdrücklich übergebenes modell
+      2. die Umgebung je Aufgabe        OLLAMA_MODEL_CHAT
+      3. der Aufgabeneintrag in der Datei  [llm.ollama].modell_chat
+      4. die Umgebung, allgemein        OLLAMA_MODEL
+      5. modell in der Datei            [llm.ollama].modell
+
+    Das Genauere schlägt das Allgemeinere, gleich woher es kommt: wer
+    modell_chat einträgt, will die Abweichung auch dann, wenn in der Umgebung
+    ein OLLAMA_MODEL für alles andere steht. Sonst wäre eine gesetzte
+    Umgebungsvariable eine stille Rücknahme der Datei.
+    """
+    if modell:
+        return modell
     anbieter = _wahl("llm", name)
     block = _abschnitt("llm", anbieter)
-    variable = {"anthropic": "ANTHROPIC_MODEL_ANALYZE", "ollama": "OLLAMA_MODEL"}[anbieter]
-    return modell or _umgebung(variable) or str(block["modell"])
+
+    if aufgabe is not None:
+        if aufgabe not in LLM_AUFGABEN:
+            raise AnbieterFehler(
+                f"Unbekannte Aufgabe '{aufgabe}'. Erlaubt: " + " | ".join(LLM_AUFGABEN),
+                "aufgabe_unbekannt",
+            )
+        je_aufgabe = _umgebung(f"{_LLM_PRAEFIX[anbieter]}_{aufgabe.upper()}")
+        if je_aufgabe:
+            return je_aufgabe
+        if f"modell_{aufgabe}" in block:
+            return str(block[f"modell_{aufgabe}"])
+
+    return _umgebung(_LLM_VARIABLE[anbieter]) or str(block["modell"])
+
+
+def llm_modelle_je_aufgabe(name: str | None = None) -> dict[str, str]:
+    """Was für jede Aufgabe tatsächlich gälte — für die Auskunft.
+
+    Aufgelöst, nicht bloß abgeschrieben: wo kein Aufgabeneintrag steht, steht
+    hier die Vorgabe. Die Fläche soll sagen können, womit gerechnet wird, ohne
+    die Vorrangregel nachzubauen.
+    """
+    return {aufgabe: llm_modellname(aufgabe, name) for aufgabe in LLM_AUFGABEN}
 
 
 def llm_funktion(
-    name: str | None = None, modell: str | None = None
+    aufgabe: str | None = None,
+    name: str | None = None,
+    modell: str | None = None,
 ) -> tuple[Callable[[str, str], tuple[str, int, int]], str]:
     """Gibt (frage_modell, Modellname) zurück.
 
     frage_modell(prompt, system) -> (antwort, in_tokens, out_tokens).
+
+    aufgabe wählt das Modell (siehe llm_modellname); None nimmt die Vorgabe.
 
     Der Ollama-Weg läuft im Strom und protokolliert dabei mit (siehe _Puls),
     damit ein langer Aufruf von einem hängenden zu unterscheiden ist. Er meldet
@@ -398,7 +464,7 @@ def llm_funktion(
     anbieter = _wahl("llm", name)
     block = _abschnitt("llm", anbieter)
     _schluessel_pruefen(anbieter, block)
-    m = llm_modellname(name, modell)
+    m = llm_modellname(aufgabe, name, modell)
     antwort_token = int(block["antwort_token"])
 
     if anbieter == "anthropic":
@@ -513,7 +579,9 @@ def llm_funktion(
 
 
 def llm_strom_funktion(
-    name: str | None = None, modell: str | None = None
+    aufgabe: str | None = None,
+    name: str | None = None,
+    modell: str | None = None,
 ) -> tuple[Callable[[str, str], Iterator[str]], str]:
     """Gibt (strom, Modellname) zurück. strom(prompt, system) liefert Textstücke.
 
@@ -533,7 +601,7 @@ def llm_strom_funktion(
     anbieter = _wahl("llm", name)
     block = _abschnitt("llm", anbieter)
     _schluessel_pruefen(anbieter, block)
-    m = llm_modellname(name, modell)
+    m = llm_modellname(aufgabe, name, modell)
     antwort_token = int(block["antwort_token"])
 
     if anbieter == "anthropic":
@@ -661,6 +729,11 @@ class Anbieterlage:
     # (src/neu/vektoren.py), ist die Verwechslung kein Schönheitsfehler mehr.
     # `modell` ist das der Themen; hier steht das andere.
     modell_akteure: str | None = None
+    # Aufgabe → Modell, aufgelöst. Beim Sprachmodell die drei aus LLM_AUFGABEN,
+    # beim Embedding die zwei aus AUFGABEN. Aufgelöst und nicht abgeschrieben:
+    # wo kein Aufgabeneintrag steht, steht hier die Vorgabe, damit niemand die
+    # Vorrangregel nachbauen muss, um zu wissen, womit gerechnet wird.
+    modelle: dict[str, str] = field(default_factory=dict)
 
 
 def _fehlt(fehler: AnbieterFehler, anbieter: str | None = None) -> Anbieterlage:
@@ -693,6 +766,8 @@ def embedding_lage() -> tuple[Anbieterlage, float | None]:
         bekannt=True,
         modell=str(block["modell_themen"]),
         modell_akteure=str(block["modell_akteure"]),
+        modelle={a: str(block[f"modell_{a}"]) for a in AUFGABEN
+                 if f"modell_{a}" in block},
         schluessel_name=variable,
         schluessel_vorhanden=da,
         einsatzbereit=da is not False,
@@ -716,6 +791,7 @@ def llm_lage() -> tuple[Anbieterlage, int | None]:
         anbieter=anbieter,
         bekannt=True,
         modell=llm_modellname(),
+        modelle=llm_modelle_je_aufgabe(),
         schluessel_name=variable,
         schluessel_vorhanden=da,
         einsatzbereit=da is not False,

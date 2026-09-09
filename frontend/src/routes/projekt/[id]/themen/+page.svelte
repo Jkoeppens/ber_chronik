@@ -227,9 +227,16 @@
 	<div style="display:flex;align-items:center;gap:10px">
 		<span class="section-label" style="flex:1">Themen und Zuordnung</span>
 		{#if konfiguration}
+			<!-- Das Modell dieser Aufgabe, nicht die Vorgabe des Anbieters: seit es
+			     ein Modell je Aufgabe gibt, wären sie nicht mehr dasselbe, und die
+			     Zeile stünde falsch am Kopf einer Fläche, die etwas anderes rechnet. -->
 			<span class="leer">
-				{konfiguration.llm.modell ?? 'kein Sprachmodell'} ·
-				{konfiguration.embedding.modell ?? 'kein Embedding'}
+				{konfiguration.llm.modelle?.taxonomie ??
+					konfiguration.llm.modell ??
+					'kein Sprachmodell'} ·
+				{konfiguration.embedding.modelle?.themen ??
+					konfiguration.embedding.modell ??
+					'kein Embedding'}
 			</span>
 		{/if}
 	</div>

@@ -1024,6 +1024,13 @@ export interface components {
              */
             modell_akteure: string | null;
             /**
+             * Modelle
+             * @description Aufgabe → Modell, so wie es tatsächlich benutzt wird. Beim Sprachmodell taxonomie/zusammenfassungen/chat, beim Embedding themen/akteure. Wo kein eigenes Modell eingetragen ist, steht hier die Vorgabe — aufgelöst, damit die Fläche die Vorrangregel nicht nachbauen muss.
+             */
+            modelle?: {
+                [key: string]: string;
+            };
+            /**
              * Schluessel Name
              * @description Welche Variable gebraucht wird; null bei lokalen Anbietern
              */

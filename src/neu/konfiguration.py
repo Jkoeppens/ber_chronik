@@ -86,6 +86,11 @@ def _zeile(name: str, a: Anbieterlage) -> str:
         teile.append(a.modell)
     if a.modell_akteure and a.modell_akteure != a.modell:
         teile.append(f"{a.modell_akteure} (Akteure)")
+    # Nur was abweicht. Alle drei Aufgaben aufzuzählen, wenn sie dasselbe
+    # Modell nehmen, verstellt den Blick auf den einen Fall, der anders ist.
+    for aufgabe, m in sorted(a.modelle.items()):
+        if m != a.modell and m != a.modell_akteure:
+            teile.append(f"{m} ({aufgabe})")
     stand = "Schlüssel vorhanden" if a.schluessel_vorhanden else "ohne Schlüssel, lokal"
     return f"  {name:10s} ✓  {' · '.join(teile)}  ({stand})"
 

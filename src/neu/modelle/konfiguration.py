@@ -20,6 +20,14 @@ class AnbieterLage(BaseModel):
                     "Akteuren. Bei 'local' ein anderes als modell; beim "
                     "Sprachmodell immer null.",
     )
+    modelle: dict[str, str] = Field(
+        default_factory=dict,
+        description="Aufgabe → Modell, so wie es tatsächlich benutzt wird. "
+                    "Beim Sprachmodell taxonomie/zusammenfassungen/chat, beim "
+                    "Embedding themen/akteure. Wo kein eigenes Modell "
+                    "eingetragen ist, steht hier die Vorgabe — aufgelöst, "
+                    "damit die Fläche die Vorrangregel nicht nachbauen muss.",
+    )
     schluessel_name: str | None = Field(
         description="Welche Variable gebraucht wird; null bei lokalen Anbietern"
     )

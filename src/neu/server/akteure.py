@@ -124,7 +124,7 @@ def akteure_zusammenfassen(
     try:
         from src.neu.anbieter import llm_funktion
 
-        llm_funktion()
+        llm_funktion("zusammenfassungen")
     except AnbieterFehler as exc:
         raise HTTPException(status_code=503, detail=(exc.code, str(exc)))
 

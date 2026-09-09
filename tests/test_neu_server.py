@@ -228,9 +228,72 @@ def test_konfiguration_liefert_die_lage(client: TestClient) -> None:
     }
     for teil in ("embedding", "llm"):
         assert set(body[teil]) == {
-            "anbieter", "bekannt", "modell", "modell_akteure", "schluessel_name",
-            "schluessel_vorhanden", "einsatzbereit", "hinweis",
+            "anbieter", "bekannt", "modell", "modell_akteure", "modelle",
+            "schluessel_name", "schluessel_vorhanden", "einsatzbereit", "hinweis",
         }
+
+
+def test_konfiguration_nennt_je_aufgabe_ein_modell(client: TestClient,
+                                                   monkeypatch) -> None:
+    """Die Auskunft muss aufgelöst sein, nicht bloß abgeschrieben.
+
+    Wo kein modell_{aufgabe} in anbieter.toml steht, hat hier die Vorgabe zu
+    stehen — sonst müsste die Fläche die Vorrangregel nachbauen, um zu sagen,
+    womit gerechnet wird.
+    """
+    from src.neu.anbieter import LLM_AUFGABEN
+
+    monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "irgendwas")
+    monkeypatch.delenv("ANTHROPIC_MODEL_ANALYZE", raising=False)
+    for aufgabe in LLM_AUFGABEN:
+        monkeypatch.delenv(f"ANTHROPIC_MODEL_{aufgabe.upper()}", raising=False)
+
+    llm = client.get("/api/konfiguration").json()["llm"]
+    assert set(llm["modelle"]) == set(LLM_AUFGABEN)
+    # Für Anthropic weicht in anbieter.toml nichts ab: alle drei = Vorgabe.
+    assert set(llm["modelle"].values()) == {llm["modell"]}
+
+
+def test_konfiguration_zeigt_das_abweichende_chatmodell(client: TestClient,
+                                                        monkeypatch) -> None:
+    """Ollama weicht beim Chat ab — genau das soll die Auskunft sichtbar machen."""
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+    monkeypatch.delenv("OLLAMA_MODEL_CHAT", raising=False)
+
+    llm = client.get("/api/konfiguration").json()["llm"]
+    assert llm["modelle"]["chat"] == "llama3.1:8b"
+    assert llm["modelle"]["taxonomie"] == llm["modell"] == "llama3.2:3b"
+    assert llm["modelle"]["zusammenfassungen"] == "llama3.2:3b"
+
+
+def test_umgebung_je_aufgabe_schlaegt_die_datei(client: TestClient,
+                                                monkeypatch) -> None:
+    """OLLAMA_MODEL_CHAT hat seine Wirkung zurück.
+
+    Im alten Server steuerte die Variable TASK_CHAT; nach dem Anbieter-Umbau
+    stand sie wirkungslos in .env herum.
+    """
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("OLLAMA_MODEL_CHAT", "mistral:7b")
+
+    llm = client.get("/api/konfiguration").json()["llm"]
+    assert llm["modelle"]["chat"] == "mistral:7b"
+    assert llm["modelle"]["taxonomie"] != "mistral:7b"
+
+
+def test_das_genauere_schlaegt_das_allgemeinere(client: TestClient,
+                                                monkeypatch) -> None:
+    """Ein gesetztes OLLAMA_MODEL nimmt modell_chat nicht still zurück."""
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("OLLAMA_MODEL", "qwen:4b")
+    monkeypatch.delenv("OLLAMA_MODEL_CHAT", raising=False)
+
+    llm = client.get("/api/konfiguration").json()["llm"]
+    assert llm["modell"] == "qwen:4b"                    # Vorgabe kommt aus der Umgebung
+    assert llm["modelle"]["taxonomie"] == "qwen:4b"
+    assert llm["modelle"]["chat"] == "llama3.1:8b"       # die Abweichung bleibt
 
 
 def test_lokales_embedding_nennt_beide_modelle(client: TestClient, monkeypatch) -> None:

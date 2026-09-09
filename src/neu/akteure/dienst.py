@@ -803,7 +803,7 @@ def zusammenfassungen_erzeugen(
     if frage_modell is None:
         from src.neu.anbieter import llm_funktion
 
-        frage_modell, llm_modell = llm_funktion()
+        frage_modell, llm_modell = llm_funktion("zusammenfassungen")
 
     je_akteur = _absaetze_je_akteur(con, projekt_id)
     kandidaten = [
