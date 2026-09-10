@@ -189,3 +189,76 @@ test('D4 · ein fehlendes Layout wird gemeldet, nicht verschluckt', async ({ pag
   // Und das Netz wird trotzdem gezeichnet.
   expect(await page.locator('#network g[cursor="pointer"]').count()).toBeGreaterThan(0);
 });
+
+
+// ── 5 · Der Einstieg zeigt die Fläche, nicht die Meldung ──────────────────────
+// Nachtrag zu Schritt C. Der Kasten "Kein Projekt gewählt" trug das
+// hidden-Attribut UND ein eigenes display:flex im Inline-Stil. Ein Inline-Stil
+// schlägt die Browserregel [hidden] { display: none }, also stand er bei jedem
+// Aufruf sichtbar da — 800 px hoch, über der Fläche — obwohl das Attribut
+// gesetzt war und die Prüfung auf ?project= richtig entschied.
+//
+// Warum keiner der 31 Tests das traf: sie warten auf circle.dot mit
+// state:'visible', und Playwright nennt ein Element sichtbar, sobald es eine
+// Fläche hat — nicht erst, wenn es im Bildausschnitt liegt. Geklickt wird mit
+// force:true oder dispatchEvent, beides scrollt hin oder umgeht die
+// Trefferauflösung. Alle prüften die Zustandsmaschine, keiner das Layout.
+//
+// Deshalb prüfen die folgenden nicht nur "ist da", sondern "steht oben".
+
+const MIT_PROJEKT = ['pruefstueck', 'ber', 'damaskus'];
+
+for (const projekt of MIT_PROJEKT) {
+  test(`D5 · ?project=${projekt} zeigt die Fläche, nicht die Meldung`,
+    async ({ page }) => {
+      await laden(page, `/viz/?project=${projekt}`);
+      const z = await page.evaluate(() => {
+        const kp = document.getElementById('kein-projekt');
+        const main = document.getElementById('main');
+        return {
+          meldung: getComputedStyle(kp).display,
+          meldungHoehe: kp.getBoundingClientRect().height,
+          flaeche: getComputedStyle(main).display,
+          flaecheOben: main.getBoundingClientRect().top,
+        };
+      });
+      expect(z.meldung).toBe('none');
+      expect(z.meldungHoehe).toBe(0);
+      expect(z.flaeche).not.toBe('none');
+      // Der eigentliche Fehler war, dass die Fläche 800 px tief begann.
+      expect(z.flaecheOben).toBe(0);
+    });
+}
+
+test('D5 · das Diagramm liegt im ersten Bildausschnitt', async ({ page }) => {
+  // 'visible' allein hätte den Fehler nicht gefunden: das Diagramm war
+  // gerendert, nur unterhalb der Bildkante.
+  await laden(page, '/viz/?project=ber');
+  const kasten = await page.locator('svg#chart').boundingBox();
+  const hoehe = page.viewportSize().height;
+  expect(kasten).not.toBeNull();
+  expect(kasten.y).toBeLessThan(hoehe);
+  expect(kasten.y + kasten.height).toBeGreaterThan(0);
+});
+
+test('D5 · ohne ?project= gilt es umgekehrt', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tutorial_seen', '1'));
+  await page.goto('/viz/');
+  await page.locator('#kein-projekt').waitFor({ state: 'visible', timeout: 10_000 });
+  const z = await page.evaluate(() => ({
+    meldung: getComputedStyle(document.getElementById('kein-projekt')).display,
+    flaeche: getComputedStyle(document.getElementById('main')).display,
+  }));
+  expect(z.meldung).toBe('flex');
+  expect(z.flaeche).toBe('none');
+});
+
+test('D5 · das hidden-Attribut wird für diesen Kasten gar nicht mehr benutzt',
+  async ({ page }) => {
+    // Die Wurzel des Fehlers, nicht nur seine Wirkung: solange Attribut und
+    // Inline-Stil beide mitreden, ist der nächste Griff danebengegriffen.
+    await laden(page, '/viz/?project=ber');
+    const hat = await page.evaluate(() =>
+      document.getElementById('kein-projekt').hasAttribute('hidden'));
+    expect(hat).toBe(false);
+  });
