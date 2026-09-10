@@ -262,3 +262,146 @@ test('D5 · das hidden-Attribut wird für diesen Kasten gar nicht mehr benutzt',
       document.getElementById('kein-projekt').hasAttribute('hidden'));
     expect(hat).toBe(false);
   });
+
+
+// ── 6 · Die Chatfrist ─────────────────────────────────────────────────────────
+// Vorher: AbortSignal.timeout(60000), eine Frist auf die GESAMTDAUER. Gemessen
+// gegen ber mit llama3.1:8b braucht eine Antwort 57, 81 und 118 Sekunden —
+// zwei von drei Fragen liefen hinein. Und was schon geliefert war, wurde beim
+// Abbruch weggeworfen: 1764 Zeichen auf dem Schirm, danach null.
+//
+// Der echte Chat wird hier nicht gerufen — er dauert Minuten und braucht ein
+// Sprachmodell. Der Endpunkt ist gestellt; geprüft wird, was viz/ daraus macht.
+
+/** Ein SSE-Rumpf aus benannten Ereignissen. */
+function sse(...ereignisse) {
+  return ereignisse.map(([art, inhalt]) =>
+    `event: ${art}\ndata: ${JSON.stringify(inhalt)}\n\n`).join('');
+}
+
+async function chatStellen(page, rumpf) {
+  await page.route('**/api/projekt/*/chat', route => route.fulfill({
+    status: 200,
+    headers: { 'content-type': 'text/event-stream' },
+    body: rumpf,
+  }));
+}
+
+async function fragen(page, frage = 'Wer trug die Verantwortung dafür?') {
+  await page.locator('#chat-input').fill(frage);
+  await page.locator('#chat-send').click();
+  await expect(page.locator('#chat-send')).toBeEnabled({ timeout: 20_000 });
+}
+
+test('D6 · eine vollständige Antwort kommt als KI-Antwort mit Quellen', async ({ page }) => {
+  await laden(page, '/viz/?project=pruefstueck');
+  const anker = await page.evaluate(() => allEntries.find(e => e.doc_anchor).doc_anchor);
+  await chatStellen(page, sse(
+    ['stueck', { text: 'Die Kosten stiegen ' }],
+    ['stueck', { text: `[${anker}].` }],
+    ['fertig', { quellen: [anker], stichwoerter: ['kosten'], absaetze: 3,
+                 wege: ['stichwoerter'], modell: 'attrappe' }],
+  ));
+  await fragen(page);
+
+  const z = await page.evaluate(() => ({
+    modus: document.querySelector('.chat-mode')?.textContent,
+    text: document.querySelector('.chat-answer-text')?.textContent ?? '',
+    abbruch: [...document.querySelectorAll('.chat-params')]
+      .some(e => e.textContent.includes('Abgebrochen')),
+    quellen: document.querySelector('.chat-sources-header')?.textContent ?? '',
+  }));
+  expect(z.modus).toBe('KI-Antwort');
+  expect(z.text).toContain('Die Kosten stiegen');
+  expect(z.abbruch).toBe(false);
+  expect(z.quellen).toContain('1');
+});
+
+test('D6 · ein Strom ohne Abschluss verliert den Text nicht', async ({ page }) => {
+  // Der Fall, den es vorher gar nicht gab: die Schleife brach normal ab, und
+  // niemand rief renderChatAnswer — der Rohtext blieb ohne Markdown, ohne
+  // Quellen und ohne Hinweis stehen.
+  await laden(page, '/viz/?project=pruefstueck');
+  const anker = await page.evaluate(() => allEntries.find(e => e.doc_anchor).doc_anchor);
+  await chatStellen(page, sse(
+    ['stueck', { text: '## Überschrift\n\nEin angefangener Satz ' }],
+    ['stueck', { text: `mit Beleg [${anker}] und dann` }],
+  ));
+  await fragen(page);
+
+  const z = await page.evaluate(() => ({
+    modus: document.querySelector('.chat-mode')?.textContent,
+    text: document.querySelector('.chat-answer-text')?.textContent ?? '',
+    hinweis: [...document.querySelectorAll('.chat-params')]
+      .map(e => e.textContent).find(x => x.includes('Abgebrochen')) ?? '',
+    quellen: document.querySelector('.chat-sources-header')?.textContent ?? '',
+    ueberschrift: !!document.querySelector('.chat-answer-text h2'),
+  }));
+  expect(z.modus).toBe('KI-Antwort');           // nicht Volltextsuche
+  expect(z.text).toContain('Ein angefangener Satz');
+  expect(z.hinweis).toContain('unvollständig');
+  expect(z.ueberschrift).toBe(true);            // Markdown ist ausgewertet
+  expect(z.quellen).toContain('1');             // Anker aus dem Text gewonnen
+});
+
+test('D6 · ohne ein einziges Zeichen bleibt die Volltextsuche', async ({ page }) => {
+  await laden(page, '/viz/?project=pruefstueck');
+  await chatStellen(page, '');
+  await fragen(page, 'Welche Kosten entstanden dabei?');
+
+  const z = await page.evaluate(() => ({
+    modus: document.querySelector('.chat-mode')?.textContent,
+    karten: document.querySelectorAll('#panel-content .ep-para').length,
+  }));
+  expect(z.modus).toBe('Volltextsuche');
+  expect(z.karten).toBeGreaterThan(0);
+});
+
+test('D6 · ein abbruch-Ereignis behält den Text davor', async ({ page }) => {
+  await laden(page, '/viz/?project=pruefstueck');
+  await chatStellen(page, sse(
+    ['stueck', { text: 'Der Anfang steht schon.' }],
+    ['abbruch', { code: 'ollama_zeitueberschreitung', meldung: 'war 120 s still' }],
+  ));
+  await fragen(page);
+
+  const z = await page.evaluate(() => ({
+    modus: document.querySelector('.chat-mode')?.textContent,
+    text: document.querySelector('.chat-answer-text')?.textContent ?? '',
+    hinweis: [...document.querySelectorAll('.chat-params')]
+      .map(e => e.textContent).find(x => x.includes('Abgebrochen')) ?? '',
+  }));
+  expect(z.modus).toBe('KI-Antwort');
+  expect(z.text).toContain('Der Anfang steht schon');
+  expect(z.hinweis).toContain('war 120 s still');
+});
+
+test('D6 · keine Frist auf die Gesamtdauer mehr', async ({ page }) => {
+  // Die Wurzel, nicht nur die Wirkung: AbortSignal.timeout misst die
+  // Gesamtdauer und ist damit das falsche Maß für einen Strom.
+  const quelle = await page.request.get('/viz/search.js').then(r => r.text());
+  // Auf die AUFRUFFORM, nicht auf das bloße Wort: der Kommentar darüber nennt
+  // die alte Frist beim Namen, und das soll er auch.
+  expect(quelle).not.toMatch(/signal:\s*AbortSignal\.timeout/);
+  expect(quelle).toMatch(/STILLE_MS\s*=\s*150_000/);
+  // Größer als [llm.ollama].stille_sekunden = 120 aus anbieter.toml.
+  const toml = await page.request.get('/anbieter.toml').then(r => r.text());
+  const stille = Number(toml.match(/stille_sekunden\s*=\s*(\d+)/)[1]);
+  expect(150).toBeGreaterThan(stille);
+});
+
+test('D6 · ankerAusText nimmt nur Anker, die es wirklich gibt', async ({ page }) => {
+  await laden(page, '/viz/?project=pruefstueck');
+  const z = await page.evaluate(() => {
+    const echt = allEntries.find(e => e.doc_anchor).doc_anchor;
+    return {
+      echt,
+      gefunden: ankerAusText(`Erst [${echt}], dann [gibtsnicht-e9], dann [${echt}] nochmal.`),
+      formen: ankerAusText(`[[${echt}]] und [source: ${echt}]`),
+      leer: ankerAusText('Ganz ohne Klammern.'),
+    };
+  });
+  expect(z.gefunden).toEqual([z.echt]);   // erfundener raus, Dublette raus
+  expect(z.formen).toEqual([z.echt]);
+  expect(z.leer).toEqual([]);
+});

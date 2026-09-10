@@ -70,8 +70,17 @@ function renderChatAnswer(viewEl, question, mode, content) {
       <div class="chat-sources-header">Verwendete Quellen (${sourceEntries.length})</div>
       <div class="chat-hits">${sourceCards}</div>` : "";
 
+    // Abgebrochen: der Text steht trotzdem da, aber er ist unvollständig, und
+    // das muss dranstehen. Ihn wegzuwerfen wäre die schlechtere Auskunft.
+    const abbruchHTML = data.abbruch ? `
+      <div class="chat-params" style="color:#c55">
+        Abgebrochen nach ${data.abbruch.sekunden} s — die Antwort ist unvollständig.
+        ${escapeHtml(data.abbruch.grund)}
+      </div>` : "";
+
     viewEl.innerHTML = `
       <div class="chat-meta">${modeLabel}<span class="chat-question-label">${escapeHtml(question)}</span></div>
+      ${abbruchHTML}
       <div class="chat-answer-text">${answerHtml}</div>
       ${data.keywords?.length ? `<div class="chat-params">Keywords: ${data.keywords.join(", ")}</div>` : ""}
       ${sourcesHTML}
@@ -93,6 +102,32 @@ function renderChatAnswer(viewEl, question, mode, content) {
     `;
     setHighlight("answer", new Set(hits.map(h => h.doc_anchor).filter(Boolean)));
   }
+}
+
+// Dieselben drei Formen, die chat/kern.genannte_quellen() kennt: [anker],
+// [[anker]] und [source: anker]. Für einen abgebrochenen Strom gibt es kein
+// 'fertig'-Ereignis und damit keine Quellenliste vom Server — hier wird sie
+// aus dem Text gewonnen, gegen die vorhandenen Absätze abgeglichen.
+function ankerAusText(text) {
+  const gesehen = [];
+  for (const m of text.matchAll(/\[(?:source:\s*)?\[?([A-Za-z0-9][\w\-]*)\]?\]/g)) {
+    if (entriesByAnchor.has(m[1]) && !gesehen.includes(m[1])) gesehen.push(m[1]);
+  }
+  return gesehen;
+}
+
+// Eine unvollständige Antwort — der Text bleibt stehen, mit dem Hinweis, dass
+// er es ist. Die Quellenliste kommt sonst aus dem 'fertig'-Ereignis; kam das
+// nicht, wird sie aus dem Text selbst gewonnen.
+function teilantwort(viewEl, question, text, begonnen, grund) {
+  renderChatAnswer(viewEl, question, "ai", {
+    data: {
+      answer: text,
+      sources: ankerAusText(text),
+      keywords: [],
+      abbruch: { sekunden: Math.round((Date.now() - begonnen) / 1000), grund },
+    },
+  });
 }
 
 async function sendChat() {
@@ -131,6 +166,31 @@ async function sendChat() {
     <div class="chat-answer-text" id="stream-target"></div>`;
   setHighlight("none");  // clear entity focus while answer loads
   let usedFallback = false;
+  // Außerhalb des try, damit der catch ihn sieht. Stand er drinnen, war
+  // schon gelieferter Text beim Abbruch verloren — gemessen 1764 Zeichen auf
+  // dem Schirm, danach null.
+  let rawText = "";
+  const begonnen = Date.now();
+
+  // Eine Frist auf die STILLE, nicht auf die Gesamtdauer. Die alte
+  // AbortSignal.timeout(60000) maß etwas anderes als der Vorgang tut: eine
+  // Antwort, die stetig Text liefert, ist gesund, gleich wie lange sie
+  // braucht. Gemessen gegen ber mit llama3.1:8b: erstes Zeichen nach 26 bis
+  // 31 s, fertig nach 57, 81 und 118 s — zwei von drei Fragen liefen in die
+  // 60 s. Die Zahl stammte aus der Zeit von llama3.2:3b (19 s / 32 s) und ist
+  // beim Modellwechsel stehen geblieben.
+  //
+  // 150 s liegt über [llm.ollama].stille_sekunden = 120 aus anbieter.toml:
+  // gäbe der Browser früher auf als der Server, schnitte er einen Aufruf ab,
+  // den der Server für gesund hält — und der Server schriebe weiter in eine
+  // geschlossene Verbindung.
+  //
+  // Hier oben und nicht im try, damit der catch die Zahl nennen kann.
+  const STILLE_MS = 150_000;
+  const wache = new AbortController();
+  let letztes = Date.now();
+  let takt = null;
+
   // Ohne ?project= gibt es kein Projekt, an das die Frage gehen könnte —
   // dann bleibt nur die lokale Volltextsuche.
   if (!PAGE_PROJECT) {
@@ -144,13 +204,17 @@ async function sendChat() {
   }
 
   try {
+    takt = setInterval(() => {
+      if (Date.now() - letztes > STILLE_MS) wache.abort(new Error("stille"));
+    }, 1000);
+
     const res = await fetch(
       `${API_URL}/api/projekt/${encodeURIComponent(PAGE_PROJECT)}/chat`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ frage: question }),
-        signal:  AbortSignal.timeout(60000),
-      });
+        signal:  wache.signal,
+      }).finally(() => { letztes = Date.now(); });
     if (!res.ok) {
       const err = await res.json().catch(() => null);
       throw new Error(err?.fehler?.meldung || res.statusText);
@@ -162,12 +226,13 @@ async function sendChat() {
     // ein Absatz, der zufällig so anfing, brachte den Leser durcheinander.
     const reader  = res.body.getReader();
     const decoder = new TextDecoder();
-    let rawText = "";
     let buffer  = "";
     let art     = "";
+    let abgeschlossen = false;   // kam 'fertig'?
 
     outer: while (true) {
       const { done, value } = await reader.read();
+      letztes = Date.now();      // jedes Bruchstück setzt die Stille zurück
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
@@ -185,19 +250,48 @@ async function sendChat() {
           renderChatAnswer(viewEl, question, "ai", {
             data: { answer: rawText, sources: inhalt.quellen, keywords: inhalt.stichwoerter },
           });
+          abgeschlossen = true;
           break outer;
         } else if (art === "abbruch") {
           throw new Error(inhalt.meldung);
         }
       }
     }
+
+    // Ohne 'fertig' hier angekommen heißt: der Strom ist zu Ende, ohne dass er
+    // abgeschlossen wurde —
+    // der Server ist mitten im Satz weggebrochen. Ohne diesen Zweig blieb der
+    // Rohtext im stream-target stehen, ohne Markdown, ohne Quellen, ohne
+    // Hinweis; der Knopf wurde wieder frei und nichts sagte, dass etwas fehlt.
+    if (!abgeschlossen) {
+      if (rawText.trim()) {
+        teilantwort(viewEl, question, rawText, begonnen,
+                    "Der Strom endete ohne Abschluss.");
+      } else {
+        throw new Error("Der Strom endete, ohne ein Zeichen zu liefern.");
+      }
+    }
   } catch (err) {
-    console.warn("[chat] API nicht erreichbar, Fallback aktiv:", err?.message ?? err);
-    usedFallback = true;
-    const result = fulltextSearch(question);
-    result.apiError = err?.message ?? String(err);
-    renderChatAnswer(viewEl, question, "local", result);
+    console.warn("[chat] Strom abgebrochen:", err?.message ?? err);
+    const sekunden = Math.round((Date.now() - begonnen) / 1000);
+    const grund = err?.name === "AbortError" || err?.message === "stille"
+      ? `Nach ${Math.round(STILLE_MS / 1000)} s ohne ein Zeichen aufgegeben.`
+      : `Grund: ${err?.message ?? String(err)}`;
+
+    if (rawText.trim()) {
+      teilantwort(viewEl, question, rawText, begonnen, grund);
+    } else {
+      // Kein Zeichen angekommen: dann ist die Volltextsuche das Beste, was
+      // sich noch anbieten lässt.
+      usedFallback = true;
+      const result = fulltextSearch(question);
+      result.apiError = `${grund} (nach ${sekunden} s)`;
+      renderChatAnswer(viewEl, question, "local", result);
+    }
   } finally {
+    // Hier und nicht im inneren Block: läuft schon der fetch auf einen Fehler,
+    // liefe das Intervall sonst für immer weiter.
+    if (takt !== null) clearInterval(takt);
     sendBtn.disabled = false;
     input.disabled   = false;
     if (!usedFallback) input.value = "";
