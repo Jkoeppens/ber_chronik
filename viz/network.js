@@ -16,14 +16,39 @@ function pairKey(a, b) {
 }
 
 let _lastVisibleIds = new Set();  // updated by drawNetwork; read by applyNetworkState
-// Fetch precomputed layout eagerly so it's ready before first tab-open.
-// Nur mit Projekt: ohne ?project= ist DATA_BASE leer und der Aufruf ginge
-// gegen /viz/network_layout.json — dort lag bis September 2026 der
-// eingecheckte Datensatz, jetzt liegt dort nichts.
+// Das vorberechnete Layout. Früh anstoßen, damit es beim ersten Öffnen des
+// Reiters schon da ist — aber das VERSPRECHEN merken, nicht nur den Wert.
+//
+// Vorher stand hier eine nackte Zuweisung mit .catch(() => {}). Zwei Fehler in
+// einer Zeile:
+//
+//   Der Abruf beginnt beim Parsen, gezeichnet wird beim Klick auf den Reiter.
+//   Wer schnell klickt oder einen langsamen Server hat, zeichnet, bevor die
+//   Datei da ist — dann streut die Kraftsimulation, und dasselbe Netz sieht
+//   bei jedem Aufruf anders aus. Die Datei lag die ganze Zeit vor.
+//
+//   Und schlug der Abruf fehl, sagte das leere .catch nichts. Der Zufallsweg
+//   galt dann dauerhaft, ohne dass irgendwo etwas darauf hindeutete.
+//
+// Jetzt: drawNetwork wartet auf _layoutVersprechen, und ein Fehlschlag wird
+// gemeldet — samt der Folge, die er hat.
 let _networkLayout = null;
-if (PAGE_PROJECT) {
-  fetch(`${DATA_BASE}network_layout.json?v=${Date.now()}`).then(r => r.json()).then(l => { _networkLayout = l; }).catch(() => {});
-}
+const _layoutVersprechen = PAGE_PROJECT
+  ? fetch(`${DATA_BASE}network_layout.json?v=${Date.now()}`)
+      .then(r => {
+        if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+        return r.json();
+      })
+      .then(l => { _networkLayout = l; return l; })
+      .catch(err => {
+        console.warn(
+          `[netz] network_layout.json nicht ladbar (${err.message}). Das Netz ` +
+          `wird stattdessen mit einer Kraftsimulation gestreut und sieht bei ` +
+          `jedem Aufruf anders aus. Fehlt die Datei, hilft ein neuer Export.`
+        );
+        return null;
+      })
+  : Promise.resolve(null);
 
 // ── Unified network state machine ─────────────────────────────────────────────
 // Priority order (highest wins):
@@ -132,7 +157,12 @@ function applyNetworkState() {
     });
 }
 
-function drawNetwork(nodes, links) {
+async function drawNetwork(nodes, links) {
+  // Auf das Layout warten, nicht darauf hoffen. Liegt es schon vor, ist das
+  // ein Mikrotask; liegt es nicht vor, ist eine kurze leere Fläche besser als
+  // ein Netz, das beim nächsten Mal anders aussieht.
+  await _layoutVersprechen;
+
   netFocusNode    = null;
   netFocusPair    = null;
   activeNetThemes = new Set(EVENT_TYPES);

@@ -24,7 +24,7 @@ import { defineConfig } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
-  testMatch: ['viz.spec.js', 'hervorheben.spec.js'],
+  testMatch: ['viz.spec.js', 'hervorheben.spec.js', 'anzeige.spec.js'],
   timeout: 30_000,
   retries: 0,
   workers: 1,          // sequential – tests share a running server

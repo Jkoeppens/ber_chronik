@@ -1,4 +1,45 @@
 // ── Timeline chart ────────────────────────────────────────────────────────────
+
+// Deutsche Monats- und Tagesnamen für jedes d3.timeFormat auf dieser Seite.
+// Ohne das steht bei einer Spanne von 350 bis 1500 Tagen "May 2013" an der
+// Achse — %b nimmt sonst die eingebauten englischen Namen. Muss vor dem
+// ersten timeFormat-Aufruf stehen, deshalb hier oben.
+d3.timeFormatDefaultLocale({
+  dateTime: "%A, der %e. %B %Y, %X",
+  date: "%d.%m.%Y",
+  time: "%H:%M:%S",
+  periods: ["AM", "PM"],
+  days: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+  shortDays: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+  months: ["Januar", "Februar", "März", "April", "Mai", "Juni",
+           "Juli", "August", "September", "Oktober", "November", "Dezember"],
+  shortMonths: ["Jan", "Feb", "Mrz", "Apr", "Mai", "Jun",
+                "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+});
+
+// ── Beschriftungsdichte ───────────────────────────────────────────────────────
+// Ein Tick je Bin ergab bei damaskus 216 Beschriftungen auf 900 Pixeln — bei
+// 147 Punkten also mehr Beschriftungen als Daten. Stattdessen eine Leiter, die
+// auf eine runde Schrittweite einrastet.
+//
+// Übernommen aus src/generalized/export_preview.py:427-434, samt der Zielzahl
+// von etwa sechs Ticks und der Leiter selbst. Dort rechnet sie über Jahre;
+// hier über die Bins, weil die Achse Jahre, Monate, Wochen oder Tage zeigen
+// kann. Die Zahlen sind dieselben.
+const TICK_LEITER = [1, 2, 5, 10, 20, 50, 100];
+const TICK_ZIEL   = 6;
+
+function _tickIntervall(von, bis) {
+  const bi = window._binInterval;
+  if (!bi) return null;
+  // count() zählt die Grenzen zwischen zwei Zeitpunkten — die Zahl der Bins.
+  const bins = Math.max(bi.count(von, bis), 1);
+  const roh  = bins / TICK_ZIEL;
+  const schritt = TICK_LEITER.find(s => roh <= s) ?? TICK_LEITER[TICK_LEITER.length - 1];
+  // every(1) ist dasselbe wie das Intervall selbst; every(0) wäre null.
+  return schritt <= 1 ? bi : (bi.every(schritt) ?? bi);
+}
+
 let _chartG = null, _clipG = null, _xAxisG = null;
 let _x = null, _y = null, _h = 0, _w = 0;
 let _series = [], _area = null, _defs = null;
@@ -74,7 +115,10 @@ function drawChart(series, binDates) {
     .call(d3.axisLeft(y).ticks(5).tickSize(-w).tickFormat(""));
 
   const xAxisG = g.append("g").attr("class","axis").attr("transform",`translate(0,${h})`);
-  xAxisG.call(d3.axisBottom(x).ticks(window._binInterval).tickFormat(d => _fmtBinDate(d)).tickSize(4));
+  // Aus der ganzen Domäne — das ist der ungezoomte Blick.
+  const [_von, _bis] = x.domain();
+  xAxisG.call(d3.axisBottom(x).ticks(_tickIntervall(_von, _bis))
+    .tickFormat(d => _fmtBinDate(d)).tickSize(4));
 
   g.append("g").attr("class","axis")
     .call(d3.axisLeft(y).ticks(5).tickSize(4).tickPadding(6));
@@ -205,7 +249,13 @@ function drawChart(series, binDates) {
       _x = xNew;
 
       // X axis
-      xAxisG.call(d3.axisBottom(xNew).ticks(window._binInterval).tickFormat(d => _fmtBinDate(d)).tickSize(4));
+      // Aus der SICHTBAREN Spanne, nicht aus der ganzen: wer hineinzoomt,
+      // sieht weniger Bins und soll dafür wieder etwa sechs Beschriftungen
+      // bekommen. Stünde hier die ganze Domäne, spränge die Achse beim ersten
+      // Zoom auf die alte Dichte zurück.
+      const [_zVon, _zBis] = xNew.domain();
+      xAxisG.call(d3.axisBottom(xNew).ticks(_tickIntervall(_zVon, _zBis))
+        .tickFormat(d => _fmtBinDate(d)).tickSize(4));
 
       // Updated generators
       const lineNew = d3.line().x(v => xNew(v.year)).y(v => y(v.count)).curve(d3.curveMonotoneX);

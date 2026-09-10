@@ -458,15 +458,23 @@ Erscheinungsdaten in der Quellennotation, die heute geparst und nie gelesen werd
 
 ### `kategorie`
 
-**Entfernt:** `position` — existierte nur, um Farben abzuleiten. Farben sollen in
-der Oberfläche vergeben werden.
+**Entfernt:** `position` — existierte nur, um Farben abzuleiten. Farben werden in
+der Oberfläche vergeben.
 
-Noch tun sie es nicht: `export/kern.farbzuordnung` vergibt sie serverseitig nach
-Listenplatz und liefert sie als `color_map` in `project_meta.json` aus, wo
-`viz/highlight.js` sie liest. Die Datenbank hält keine Farben — die Regel gilt
-also für den Ablageort, noch nicht für die Vergabestelle. Entschieden ist, dass
-viz/ sie ableitet; die Umstellung gehört in die viz/-Runde und steht als offener
-Punkt unten.
+Seit Schritt D auch tatsächlich: `export/kern.farbzuordnung` ist weg, ebenso
+`color_map` und `node_color_map` in `project_meta.json`. `viz/highlight.js`
+leitet die Kategorienfarbe aus dem **Namen** ab — ein Hash bestimmt den
+Palettenplatz, bei Kollision wird der nächste freie genommen. Die Reihenfolge
+spielt keine Rolle mehr; eine Kategorie in der Mitte zu löschen verschiebt
+höchstens die Farbe derer, die mit ihr um einen Platz gerungen haben (gemessen
+an `ber`: eine von sechs, vorher drei von sechs).
+
+Vollständige Unverschiebbarkeit ginge nur mit einer reinen Funktion des Namens,
+ohne Kollisionsauflösung. Gemessen ist das unbrauchbar: in jedem der sieben
+Projekte lägen dann zwei Kategorien unter 20° Farbtonabstand, in `ber` unter 2°.
+
+Die Akteursfarben kommen aus dem festen Wertevorrat der vier Typen und brauchten
+nie durch den Export zu gehen.
 
 **Ergänzt:** `herkunft` — `vorschlag` für eine Kategorie aus dem Clustering-Lauf,
 `manuell` für eine, die der Historiker angelegt oder überarbeitet hat. Ohne die
@@ -589,12 +597,6 @@ Damit fällt auch `events` aus `project_meta.json` weg.
 ---
 
 ## Offene Punkte
-
-**Farbzuweisung für Kategorien.** Heute leitet der Export die Farbe aus dem
-Listenplatz ab, weshalb sich alle Farben verschieben, sobald eine Kategorie gelöscht
-oder umsortiert wird. Die Datenbank hält keine Farben — die Oberfläche braucht also
-eine Regel, die ohne Reihenfolge auskommt. Naheliegend wäre eine Ableitung aus dem
-Kategorienamen: stabil, solange der Name gleich bleibt.
 
 **Jahrzehnt-Anker — gezählt, erledigt.** Die Erkennung legt für „1890er Jahre" einen
 Anker mit `herkunft = 'jahrzehnt'` und `jahr = NULL` an; `datierung/kern.py:348`

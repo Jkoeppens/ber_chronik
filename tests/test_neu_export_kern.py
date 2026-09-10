@@ -8,6 +8,7 @@ Ausführen:
   python3 -m pytest tests/test_neu_export_kern.py -v
 """
 
+import json
 import sys
 from pathlib import Path
 
@@ -122,53 +123,59 @@ def test_spanne_ohne_datierte_einheit_ist_leer():
 def test_spanne_kommt_nicht_aus_einer_gespeicherten_angabe():
     """Der Zeitraum ist eine Ableitung — kein Feld kann ihn verengen."""
     einheiten = [_e(id=1, jahr_von=1780), _e(id=2, jahr_von=1995)]
-    meta = kern.metadaten("T", [], [], einheiten)
+    meta = kern.metadaten("T", [], einheiten)
     assert (meta["year_min"], meta["year_max"]) == (1780, 1995)
 
 
-# ── Farben ────────────────────────────────────────────────────────────────────
+# ── Keine Farben ──────────────────────────────────────────────────────────────
+# Bis September 2026 rechnete kern.farbzuordnung() aus CAT_PALETTE und
+# NODE_PALETTE die Felder color_map und node_color_map. Hier standen vier
+# Tests darauf, einer davon hielt ausdrücklich fest, dass sich beim Löschen in
+# der Mitte alle nachfolgenden Farben verschieben. Beides ist weg: eine Farbe
+# ist Darstellung und gehört nicht in den Export. Vergeben wird sie in
+# viz/highlight.js, aus dem Namen statt aus dem Listenplatz.
 
-def test_farbe_folgt_dem_listenplatz():
-    zuordnung = kern.farbzuordnung(["A", "B", "C"], kern.CAT_PALETTE)
-    assert zuordnung == {"A": kern.CAT_PALETTE[0], "B": kern.CAT_PALETTE[1],
-                         "C": kern.CAT_PALETTE[2]}
+def test_der_export_vergibt_keine_farben():
+    """Die Gegenprobe zur Entscheidung — kein Farbfeld, keine Palette."""
+    taxonomie = [{"name": "Kosten", "description": "Geld", "keywords": []}]
+    meta = kern.metadaten("T", taxonomie, [_e(jahr_von=1900)])
+    assert "color_map" not in meta
+    assert "node_color_map" not in meta
+    assert not hasattr(kern, "farbzuordnung")
+    assert not hasattr(kern, "CAT_PALETTE")
+    assert not hasattr(kern, "NODE_PALETTE")
 
 
-def test_farbe_verschiebt_sich_beim_loeschen_in_der_mitte():
-    """Übernommene Schwäche, hier festgehalten statt stillschweigend geerbt."""
-    vorher = kern.farbzuordnung(["A", "B", "C"], kern.CAT_PALETTE)
-    nachher = kern.farbzuordnung(["A", "C"], kern.CAT_PALETTE)
-    assert vorher["C"] != nachher["C"]
-    assert vorher["A"] == nachher["A"]
-
-
-def test_palette_wiederholt_sich_ab_dem_elften():
-    namen = [f"K{i}" for i in range(12)]
-    z = kern.farbzuordnung(namen, kern.CAT_PALETTE)
-    assert z["K0"] == z["K10"]
-    assert z["K1"] == z["K11"]
+def test_kein_feld_der_ausgabe_traegt_eine_farbe():
+    """Breiter gefasst: nirgends im project_meta.json steht ein Farbwert."""
+    import re
+    taxonomie = [{"name": "Kosten", "description": "Geld", "keywords": []}]
+    meta = kern.metadaten("Damaskus", taxonomie, [_e(jahr_von=1908)])
+    als_text = json.dumps(meta, ensure_ascii=False)
+    assert not re.search(r"#[0-9a-fA-F]{6}", als_text), als_text
 
 
 # ── metadaten ─────────────────────────────────────────────────────────────────
 
 def test_metadaten_gestalt():
     taxonomie = [{"name": "Kosten", "description": "Geld", "keywords": []}]
-    akteure = [Akteur("Enver", "Person"), Akteur("CUP", "Organisation")]
-    meta = kern.metadaten("Damaskus", taxonomie, akteure, [_e(jahr_von=1908)])
+    meta = kern.metadaten("Damaskus", taxonomie, [_e(jahr_von=1908)])
     assert meta["title"] == "Damaskus"
     assert meta["taxonomy"] == taxonomie
-    assert meta["color_map"] == {"Kosten": kern.CAT_PALETTE[0]}
-    assert set(meta["node_color_map"]) == {"Person", "Organisation"}
     # Die toten Felder der Vorlage
     assert "doc_type" not in meta
     assert "entity_types" not in meta
 
 
+def test_metadaten_kennt_die_akteure_nicht_mehr():
+    """Der Parameter ist weg, weil er nur node_color_map gespeist hat.
 
-
-def test_akteur_ohne_typ_taucht_nicht_in_der_farbtabelle_auf():
-    meta = kern.metadaten("T", [], [Akteur("X", None)], [_e(jahr_von=1900)])
-    assert meta["node_color_map"] == {}
+    Er stand noch da, nachdem die Farben gefallen waren — ein Argument, das
+    niemand mehr liest, ist eine Zusage, die niemand mehr hält.
+    """
+    import inspect
+    assert list(inspect.signature(kern.metadaten).parameters) == [
+        "titel", "taxonomie", "einheiten"]
 
 
 # ── entities_seed.csv ─────────────────────────────────────────────────────────

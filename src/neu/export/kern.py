@@ -7,7 +7,8 @@ muss die bestehende Visualisierung ohne eine geänderte Zeile laden können.
 
 Fachlogik übernommen aus src/generalized/export_exploration.py:
     build_entries samt date_js-Regeln, build_entities_csv, build_meta,
-    CAT_PALETTE und NODE_PALETTE, die Farbzuweisung nach Listenplatz
+    CAT_PALETTE und NODE_PALETTE — die sind seit September 2026 weg, die
+    Farben vergibt viz/
 und aus src/generalized/precompute_network.js:
     Knoten- und Kantenbildung, LINK_MIN_COUNT = 2, die Leinwand 1100×600
 
@@ -46,16 +47,10 @@ from typing import Sequence
 
 from src.neu.kategorien.kern import normalisiere_kategorie
 
-# ── Farbpaletten ──────────────────────────────────────────────────────────────
-# Unverändert aus export_exploration.py.
-
-CAT_PALETTE = [
-    "#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444",
-    "#06b6d4", "#f97316", "#6366f1", "#14b8a6", "#a855f7",
-]
-NODE_PALETTE = [
-    "#60a5fa", "#fbbf24", "#34d399", "#c084fc", "#f87171", "#6ee7b7",
-]
+# Keine Farbpaletten mehr. CAT_PALETTE und NODE_PALETTE standen hier, bis
+# September 2026 farbzuordnung() daraus color_map und node_color_map rechnete.
+# Eine Farbe ist Darstellung; sie gehört nicht in den Export. Vergeben wird sie
+# jetzt in viz/highlight.js, aus dem Kategorienamen statt aus dem Listenplatz.
 
 # ── Netzwerk ──────────────────────────────────────────────────────────────────
 # Muss mit viz/boot.js übereinstimmen.
@@ -205,32 +200,22 @@ def spanne(einheiten: Sequence[Einheit]) -> tuple[int | None, int | None]:
     return min(von), max(bis)
 
 
-def farbzuordnung(namen: Sequence[str], palette: Sequence[str]) -> dict[str, str]:
-    """Name → Farbe nach Listenplatz.
-
-    Übernommen wie sie ist, samt ihrer Schwäche: wer eine Kategorie löscht
-    oder umsortiert, verschiebt alle nachfolgenden Farben. Ab dem elften
-    Eintrag wiederholt sich die Palette.
-    """
-    return {name: palette[i % len(palette)] for i, name in enumerate(namen)}
-
-
 def metadaten(
     titel: str,
     taxonomie: Sequence[dict],
-    akteure: Sequence[Akteur],
     einheiten: Sequence[Einheit],
 ) -> dict:
-    """project_meta.json — Titel, Taxonomie, Farben, Zeitraum."""
-    namen = [c["name"] for c in taxonomie if c.get("name")]
-    typen = sorted({a.typ for a in akteure if a.typ})
+    """project_meta.json — Titel, Taxonomie, Zeitraum.
+
+    Keine Farben. color_map und node_color_map standen hier bis September 2026;
+    viz/highlight.js leitet beide selbst ab — die Kategorienfarbe aus dem Namen,
+    die Akteursfarbe aus dem festen Wertevorrat der vier Typen.
+    """
     jahr_min, jahr_max = spanne(einheiten)
 
     meta: dict = {
         "title": titel,
         "taxonomy": list(taxonomie),
-        "color_map": farbzuordnung(namen, CAT_PALETTE),
-        "node_color_map": farbzuordnung(typen, NODE_PALETTE),
     }
     if jahr_min is not None:
         meta["year_min"] = jahr_min

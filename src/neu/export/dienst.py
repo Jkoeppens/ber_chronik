@@ -184,7 +184,7 @@ def exportieren(
         namen = [c["name"] for c in taxonomie if c.get("name")]
         liste = kern.eintraege(einheiten, namen)
         knoten, kanten = kern.netz(liste)
-        meta = kern.metadaten(titel, taxonomie, akteure, einheiten)
+        meta = kern.metadaten(titel, taxonomie, einheiten)
         z = kern.zaehlung(liste, knoten, kanten, akteure)
 
         with con:

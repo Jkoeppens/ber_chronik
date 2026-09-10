@@ -1,7 +1,7 @@
 """
 tests/test_neu_pruefstueck.py — das eingefrorene Prüfstück
 
-data/exporte/pruefstueck/ ist ein Export des Projekts `ber` vom 9. September
+data/exporte/pruefstueck/ ist ein Export des Projekts `ber` vom 10. September
 2026, unverändert eingefroren. Die Playwright-Tests laden ihn über
 /viz/?project=pruefstueck und vergleichen gegen feste Zahlen.
 
@@ -33,13 +33,13 @@ PRUEFSTUECK = ROOT / "data" / "exporte" / "pruefstueck"
 # Testfehler, sondern ein Hinweis: jemand hat das Prüfmaß angefasst.
 PRUEFSUMMEN = {
     "data.json":
-        "968e62c4f14c50422eac64354841b6e55b0d9889cdbb94efac5a2f1eca29f929",
+        "551eb591fb090e2f0a0887865a4dda4e9ec287a9666e8662a3ea71dd3347cb40",
     "entities_seed.csv":
         "b494a614b7dd288ff7b4a4e3b347d9b20824a9248a474b24ba2e161e82efcf6e",
     "network_layout.json":
         "bef5be79f275a3af443009a490241aa7fc1c040a466a9b421154d85613856f68",
     "project_meta.json":
-        "52a4ace4602692d8421ffe2a7d6827c4691e1362e2fc0f808d8f9fc7be73897a",
+        "14543ac681948d81f78468457b35f035bf926a99011a15ef4f8d46d450554dec",
 }
 
 # Die Zahlen, gegen die die Playwright-Tests prüfen. Sie stehen hier ein

@@ -65,21 +65,6 @@
       ]
     }
   ],
-  "color_map": {
-    "Kapazitätsvergleiche": "#3b82f6",
-    "Serielle Terminfestlegung und Einzelproblem-Protokollierung": "#f59e0b",
-    "Juristische Blockademechanismen": "#10b981",
-    "Personalisierte Verantwortungszurechnung": "#8b5cf6",
-    "Kapitalgebilde und Gesellschafterwechsel": "#ef4444",
-    "Politische Machtwechsel und Amtsübergaben": "#06b6d4",
-    "Finanzierungslücken und Kostendynamik": "#f97316"
-  },
-  "node_color_map": {
-    "Konzept": "#60a5fa",
-    "Organisation": "#fbbf24",
-    "Ort": "#34d399",
-    "Person": "#c084fc"
-  },
   "year_min": 1989,
   "year_max": 2017
 }

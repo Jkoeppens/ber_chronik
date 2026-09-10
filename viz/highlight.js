@@ -5,7 +5,7 @@ marked.use({ breaks: true, gfm: true });
 const PAGE_PROJECT = new URLSearchParams(location.search).get("project") ?? null;
 // data/exporte/ und nicht data/projects/: dort schreibt der alte Wizard, und
 // drei Kennungen gibt es in beiden Datenbanken. Ohne ?project= bleibt die Basis
-// leer — dann liest viz/ die fünf eingecheckten Dateien neben sich.
+// leer — und ohne Projekt lädt viz/ gar nichts (siehe boot.js).
 const DATA_BASE    = PAGE_PROJECT ? `../data/exporte/${PAGE_PROJECT}/` : "";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -15,41 +15,81 @@ const _EVENT_TYPES_FALLBACK = [
 ];
 let EVENT_TYPES = [..._EVENT_TYPES_FALLBACK];
 
-// Fallback palettes used when project_meta.json is absent or has no color_map.
-const _COLOR_FALLBACK = {
-  Kosten:    "#B84040",
-  Termin:    "#3A6EA8",
-  Klage:     "#4A8F5C",
-  Technik:   "#B87A30",
-  Personalie:"#7A5A9A",
-  Planung:   "#2A8A9A",
-  Vertrag:   "#7A4A30",
-  Beschluss: "#5A7A30",
-  Claim:     "#888880",
-};
-// Muted palette — same colors for rest and active states.
-// Visual distinction between highlighted and dimmed nodes comes from the
-// group opacity attribute (1 vs DIM=0.35) set in applyNetworkState.
-const _NODE_COLOR_FALLBACK = {
-  Person:  "#3A6EA8",
-  Org:     "#B87A30",
-  Gremium: "#7A5A9A",
-  Partei:  "#B84040",
-};
+// ── Farben ────────────────────────────────────────────────────────────────────
+// Vergeben wird hier, nicht im Export. Bis September 2026 rechnete
+// export/kern.farbzuordnung sie nach Listenplatz aus und legte sie als
+// color_map in project_meta.json — wer eine Kategorie in der Mitte löschte,
+// verschob alle nachfolgenden Farben. Eine Farbe ist Darstellung; sie gehört
+// nicht durch die Datenbank und nicht durch den Export.
+//
+// Die Zuordnung hängt am NAMEN, nicht an der Position: der Name bestimmt über
+// einen Hash den Palettenplatz. Zwei Namen können denselben treffen, und bei
+// sieben Kategorien auf zwölf Plätzen ist das eher die Regel als die Ausnahme
+// — deshalb probiert jeder Name der Reihe nach hash(name, 0), hash(name, 1),
+// … bis ein freier Platz kommt.
+//
+// Damit hängt die Zuordnung an der MENGE der Namen, nicht an ihrer
+// Reihenfolge: verarbeitet wird in einer Folge, die sich aus den Namen selbst
+// ergibt (nach Hash sortiert). Was das kostet, sei gesagt: eine Kategorie zu
+// löschen kann die Farbe derer ändern, die mit ihr um einen Platz gerungen
+// haben — gemessen an ber eine von sechs, wo es vorher drei von sechs waren.
+// Vollständige Unverschiebbarkeit ginge nur mit einer reinen Funktion des
+// Namens, und die ist unbrauchbar: gemessen liegen dann in JEDEM der sieben
+// Projekte zwei Kategorien unter 20° Farbtonabstand, in ber unter 2°.
+const PALETTE = [
+  "#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444", "#06b6d4",
+  "#f97316", "#6366f1", "#14b8a6", "#a855f7", "#84cc16", "#ec4899",
+];
 
-let COLOR      = { ..._COLOR_FALLBACK };
-let NODE_COLOR = { ..._NODE_COLOR_FALLBACK };
+// FNV-1a, 32 Bit. Klein, ohne Abhängigkeit, und für jeden Namen derselbe Wert
+// in jedem Browser — das ist die einzige Anforderung.
+function _hash(text, runde = 0) {
+  let h = (0x811c9dc5 ^ runde) >>> 0;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.codePointAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
+
+function farbzuordnung(namen, palette = PALETTE) {
+  const eindeutig = [...new Set(namen)].filter(Boolean);
+  // Die Verarbeitungsfolge kommt aus den Namen selbst, nicht aus der Eingabe.
+  const reihe = eindeutig.sort((a, b) => _hash(a) - _hash(b) || (a < b ? -1 : 1));
+  const belegt = new Set();
+  const zuordnung = {};
+  for (const name of reihe) {
+    let platz = null;
+    for (let runde = 0; runde < palette.length; runde++) {
+      const p = _hash(name, runde) % palette.length;
+      if (!belegt.has(p)) { platz = p; break; }
+    }
+    // Mehr Namen als Farben: dann teilen sich zwei eine. Besser als keine.
+    if (platz === null) platz = _hash(name) % palette.length;
+    belegt.add(platz);
+    zuordnung[name] = palette[platz];
+  }
+  return zuordnung;
+}
+
+// Akteurstypen sind ein fester Wertevorrat (src/neu/vokabular.py: AkteurTyp),
+// keine Namen aus dem Material. Vier feste Farben, kein Hash — und deshalb
+// brauchte auch node_color_map nie durch den Export zu gehen.
+const NODE_COLOR_VORRAT = {
+  Person:       "#3A6EA8",
+  Organisation: "#B87A30",
+  Ort:          "#4A8F5C",
+  Konzept:      "#7A5A9A",
+};
+let COLOR      = farbzuordnung(_EVENT_TYPES_FALLBACK);
+let NODE_COLOR = { ...NODE_COLOR_VORRAT };
 
 function initColors(meta) {
   if (meta && meta.taxonomy && meta.taxonomy.length) {
     EVENT_TYPES = meta.taxonomy.map(c => c.name);
   }
-  if (meta && meta.color_map && Object.keys(meta.color_map).length) {
-    COLOR = { ...meta.color_map };
-  }
-  if (meta && meta.node_color_map && Object.keys(meta.node_color_map).length) {
-    NODE_COLOR = { ...meta.node_color_map };
-  }
+  COLOR = farbzuordnung(EVENT_TYPES);
+  NODE_COLOR = { ...NODE_COLOR_VORRAT };
 }
 
 // ── Entity lookup ─────────────────────────────────────────────────────────────
@@ -101,7 +141,6 @@ function highlightEntities(text) {
 // Wer die Hervorhebung anfasste, las also mit einiger Wahrscheinlichkeit die
 // falsche.
 
-// ── Text helpers ──────────────────────────────────────────────────────────────
 function highlightWithKeywords(text, keywords, focusNormalform = null) {
   const kwSet = new Set(keywords.map(k => k.toLowerCase()));
   const allPatterns = [
