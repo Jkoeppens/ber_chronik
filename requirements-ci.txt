@@ -1,4 +1,11 @@
-# Was die Prüfung braucht — nicht was der Betrieb braucht.
+# Die drei Paketlisten dieses Projekts, damit der Nächste nicht rät:
+#
+#   requirements.txt       lokale Entwicklung, ungepinnt
+#   requirements.lock.txt  das Abbild (Dockerfile), feste Stände
+#   requirements-ci.txt    diese Datei — die Prüfung, ohne schwere Pakete
+#
+# WOFÜR DIESE. Die Prüfung in .github/workflows/pruefung.yml — nicht der
+# Betrieb.
 #
 # GLiNER, torch, voyageai und anthropic fehlen hier mit Absicht: die Tests
 # geben Erkenner, Embedding und Sprachmodell als Funktionen herein und rühren

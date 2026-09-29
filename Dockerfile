@@ -1,7 +1,9 @@
 # Dockerfile — der neue Dienst (src/neu) samt Oberfläche
 #
-# Nicht das alte von Fly.io: das ist Dockerfile.local, baut nur Python, startet
-# dev_server.py auf festem Port 8001 und kennt kein Node.
+# Das einzige Dockerfile im Projekt. Bis Ende September lagen daneben ein
+# Dockerfile.local (nur Python, dev_server.py auf festem Port 8001, kein Node)
+# und ein fly.toml — beide für den alten Server und für Fly.io, das nie ein
+# erfolgreiches Deployment hatte. Entsorgt.
 #
 # Zwei Werkzeugketten, weil zwei gebraucht werden: Python für den Dienst, Node
 # einmalig für frontend/build. Zur Laufzeit ist kein Node nötig — seit

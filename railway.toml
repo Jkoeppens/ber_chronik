@@ -1,6 +1,19 @@
+# railway.toml — wie Railway dieses Projekt baut und startet
+#
+# builder AUSDRÜCKLICH: ein Dockerfile im Wurzelverzeichnis hat auf Railway
+# ohnehin Vorrang, aber dann stünde die Absicht nirgends und ergäbe sich nur aus
+# der Anwesenheit einer Datei. Vorher stand hier "railpack" und daneben lag eine
+# railpack.json, die seit dem 18. Mai ungültig war (install statt
+# steps.install.commands) und lautlos übergangen wurde — sie verwies zudem auf
+# requirements-api.txt, gelöscht am selben Tag. Der Startbefehl darin startete
+# src.generalized.dev_server, also den ALTEN Server; genau das lief auf Railway.
 [build]
-builder = "railpack"
+builder = "dockerfile"
 
+# KEIN startCommand hier. Er steht im Dockerfile als CMD, und nur dort: zwei
+# Orte, die dasselbe sagen können, sagen irgendwann Verschiedenes. Lokal läuft
+# der Container über CMD, also soll Railway denselben Weg nehmen — was hier
+# stünde, wäre ein Weg, den niemand ausprobiert hat.
 [deploy]
 restartPolicyType = "on_failure"
 volumeMounts = [{ mountPath = "/data", name = "ber-data" }]
@@ -8,5 +21,8 @@ volumeMounts = [{ mountPath = "/data", name = "ber-data" }]
 [variables]
 LLM_PROVIDER = "anthropic"
 EMBEDDING_PROVIDER = "voyage"
+# Wirkt seit dem 28. September tatsächlich: bis dahin las nur src/generalized
+# diese Variable, und src/neu legte Datenbank, Uploads und Exporte in den
+# Container, wo sie jeden Deploy nicht überlebten. Siehe src/neu/pfade.py.
 DATA_ROOT = "/data"
 DROPBOX_REDIRECT_URL = "https://berchronik-production.up.railway.app/api/obsidian/oauth/callback"

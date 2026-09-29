@@ -1,3 +1,21 @@
+# Die drei Paketlisten dieses Projekts, damit der Nächste nicht rät:
+#
+#   requirements.txt       diese Datei — lokale Entwicklung, ungepinnt
+#   requirements.lock.txt  das Abbild (Dockerfile), feste Stände
+#   requirements-ci.txt    die Prüfung (pruefung.yml), ohne schwere Pakete
+#
+# WOFÜR DIESE. Die lokale Arbeitsumgebung. Spannen und keine festen Stände:
+# hier soll ein `pip install -U` neue Versionen bringen dürfen, damit Brüche
+# früh und in der Entwicklung auffallen statt im Betrieb.
+#
+# NICHT für das Abbild. Genau dieselben Spannen ergaben am 1. Juni und am 28.
+# September zwei verschiedene Programme — transformers sprang von 4.x auf 5.16,
+# und GLiNER lud danach nicht mehr. Deshalb baut das Dockerfile aus
+# requirements.lock.txt.
+#
+# Zwei Pakete fehlen hier, die der Betrieb braucht und die nur lokal zufällig
+# vorhanden waren: FlagEmbedding und sentence-transformers. Sie stehen im Lock.
+
 fastapi>=0.110,<1.0
 uvicorn[standard]>=0.29,<1.0
 anthropic>=0.40,<1.0

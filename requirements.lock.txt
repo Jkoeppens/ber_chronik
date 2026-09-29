@@ -1,4 +1,13 @@
-# requirements.lock.txt — feste Stände für den Betrieb
+# requirements.lock.txt — feste Stände für das Abbild
+#
+# Die drei Paketlisten dieses Projekts, damit der Nächste nicht rät:
+#
+#   requirements.txt       lokale Entwicklung, ungepinnt
+#   requirements.lock.txt  diese Datei — das Abbild, feste Stände
+#   requirements-ci.txt    die Prüfung (pruefung.yml), ohne schwere Pakete
+#
+# WOFÜR DIESE. Das Docker-Abbild, und nur das. Wer lokal arbeitet, nimmt
+# requirements.txt; wer die Prüfung fährt, requirements-ci.txt.
 #
 # WARUM GEPINNT. requirements.txt führt nur Spannen (gliner>=0.2,<1.0 und so
 # fort). Derselbe Commit ergab dadurch am 1. Juni ein anderes Abbild als am

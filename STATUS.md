@@ -520,7 +520,9 @@ Railway nutzt bei Nixpacks-Build `railway.toml` — `Dockerfile` wird ignoriert.
 
 #### R5 — Node.js fehlt für `precompute_network.js`
 
-`export_exploration.py` ruft `node src/precompute_network.js` via `subprocess.run` auf. Node.js ist weder im `Dockerfile` noch in `railway.toml` (`requirements-api.txt`) als Dependency deklariert. Das Netzwerk-Layout wird stumm übersprungen oder wirft einen Fehler.
+`export_exploration.py` ruft `node src/precompute_network.js` via `subprocess.run` auf. Node.js ist für diesen Pfad nirgends als Dependency deklariert. Das Netzwerk-Layout wird stumm übersprungen oder wirft einen Fehler.
+
+**Stand 2026-09-29:** Betrifft nur `src/generalized`. Die genannten Orte gibt es nicht mehr — `requirements-api.txt` ist am 18. Mai gelöscht worden, `railpack.json` Ende September. Das neue System hat den `node`-Aufruf nicht: `src/neu/export/kern.py` rechnet das Layout mit `networkx.spring_layout`, und das `Dockerfile` braucht Node nur zur Bauzeit für `frontend/build`.
 
 #### R6 — `PORT`-Env-Var wird ignoriert in `dev_server.py`
 

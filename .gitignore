@@ -12,7 +12,13 @@ data/raw/
 
 # Laufzeit-Daten (auf Railway im Volume, lokal nicht committen)
 data/projects.db
+data/projects.db-wal
+data/projects.db-shm
 data/neu.db
+# Die WAL-Nebendateien gehören zur Datenbank und sind ohne sie wertlos. Sie
+# fehlten hier und standen deshalb bei jedem Blick in git status als neu.
+data/neu.db-wal
+data/neu.db-shm
 data/dropbox_tokens.json
 *.npy
 
@@ -23,6 +29,14 @@ data/projects/test_*/
 data/projects/damaskus_test_*/
 data/projects/*_test/
 data/projects/*_test_*/
+# Erzeugnisse einzelner Durchläufe und Messreihen des alten Systems. Sie
+# entstehen beim Ausprobieren und sind aus der Quelle wiederherstellbar.
+data/projects/baseline_*/
+data/projects/rec_*/
+data/projects/*_neu/
+data/projects/*-probe/
+data/projects/*-test-*/
+data/projects/*-durchlauf/
 
 # Exporte des neuen Systems: jederzeit aus data/neu.db neu erzeugbar
 # (python3 -m src.neu.export.cli --projekt <kennung>)
@@ -49,3 +63,10 @@ invites.json
 # Logs
 logs/
 node_modules
+
+# Erzeugte Prüfberichte. playwright-report/ ist dreimal versehentlich
+# mitgewandert und änderte sich danach bei jedem Testlauf — 37 KB Rauschen je
+# Commit. Der Bericht entsteht aus playwright.config.js (reporter: html) und
+# gehört dem Lauf, nicht dem Projekt.
+playwright-report/
+test-results/

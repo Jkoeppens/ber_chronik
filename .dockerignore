@@ -12,8 +12,9 @@
 .venv
 .pytest_cache
 
-# Laufzeitdaten. Die Datenbank kommt aufs Laufwerk (NEU_DB), Rohdokumente
-# werden hochgeladen, Exporte entstehen zur Laufzeit.
+# Laufzeitdaten. Alles davon entsteht unter DATA_ROOT — das Abbild setzt es auf
+# /data, also aufs eingehängte Laufwerk: die Datenbank wird beim Hochfahren
+# angelegt, Rohdokumente werden hochgeladen, Exporte entstehen zur Laufzeit.
 data/neu.db*
 data/projects.db*
 data/raw/*
