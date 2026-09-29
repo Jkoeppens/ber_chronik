@@ -745,3 +745,76 @@ def test_chat_abbruch_ist_ein_ereignis_und_kein_status(client: TestClient,
     assert "event: abbruch" in r.text
     assert json.loads(r.text.split("event: abbruch\ndata: ")[1].split("\n")[0]) == {
         "code": "ollama_zeitueberschreitung", "meldung": "war 120 s still"}
+
+
+# ── GET /api/bestand ──────────────────────────────────────────────────────────
+# Der Anlass: bge-m3 wiegt 4,3 GB, GLiNER 1,1 GB. Auf dem 5-GB-Laufwerk der
+# Railway-Vorgabe füllt ein Umschalten auf 'local' das Laufwerk — gemessen von
+# 1,2 GB auf 5,4 GB, ohne eine einzige Meldung.
+
+def test_bestand_trennt_nach_art(client: TestClient) -> None:
+    r = client.get("/api/bestand")
+    assert r.status_code == 200
+    d = r.json()
+    for feld in ("daten_wurzel", "laufwerk_bytes", "laufwerk_frei", "laufwerk_belegt",
+                 "datenbank", "modelle", "rohdaten", "exporte", "vektoren",
+                 "gezaehlt_bytes", "warnungen"):
+        assert feld in d, f"'{feld}' fehlt"
+    assert d["laufwerk_bytes"] > 0
+    assert d["laufwerk_frei"] <= d["laufwerk_bytes"]
+    assert d["datenbank"]["bytes"] > 0
+
+
+def test_bestand_gibt_bytes_und_keine_zeichenketten(client: TestClient) -> None:
+    """Die Fläche formatiert, der Server zählt — sonst ließe sich nicht addieren."""
+    d = client.get("/api/bestand").json()
+    for liste in ("modelle", "rohdaten", "exporte"):
+        for posten in d[liste]:
+            assert isinstance(posten["bytes"], int), f"{liste}: {posten}"
+
+
+def test_vektoren_tragen_ob_sie_benutzt_werden(client: TestClient) -> None:
+    for v in client.get("/api/bestand").json()["vektoren"]:
+        assert isinstance(v["benutzt"], bool)
+        assert v["masse"] > 0
+
+
+# ── GET /api/projekt/{id}/bestand ─────────────────────────────────────────────
+
+def test_projekt_bestand_nennt_was_verschwindet(client: TestClient) -> None:
+    r = client.get("/api/projekt/damaskus/bestand")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["projekt_id"] == "damaskus"
+    assert d["anzahl_einheiten"] > 0
+    # Getrennt nach eigen und geteilt: data/raw/ liegt flach nach Dateinamen,
+    # und dieselbe Datei darf zwei Projekten gehören.
+    assert isinstance(d["rohdateien"], list)
+    assert isinstance(d["rohdateien_geteilt"], list)
+    assert d["bytes_gesamt"] >= 0
+
+
+def test_projekt_bestand_unbekannt_ist_404(client: TestClient) -> None:
+    r = client.get("/api/projekt/gibtsnicht/bestand")
+    assert r.status_code == 404
+    assert fehlergestalt_pruefen(r.json(), 404)["code"] == "projekt_nicht_gefunden"
+
+
+# ── POST /api/bestand/vektoren/loeschen ───────────────────────────────────────
+
+def test_vektoren_eines_unbekannten_modells_ist_404(client: TestClient) -> None:
+    r = client.post("/api/bestand/vektoren/loeschen",
+                    json={"modell": "gibtsnicht/modell"})
+    assert r.status_code == 404
+    assert fehlergestalt_pruefen(r.json(), 404)["code"] == "modell_ohne_vektoren"
+
+
+def test_das_eingestellte_modell_laesst_sich_nicht_wegraeumen(client: TestClient) -> None:
+    """409 und nicht 404: das Modell gibt es, nur räumen darf man es nicht."""
+    vektoren = client.get("/api/bestand").json()["vektoren"]
+    benutzt = [v["modell"] for v in vektoren if v["benutzt"]]
+    if not benutzt:
+        pytest.skip("Kein eingestelltes Modell hat Vektoren in dieser Datenbank.")
+    r = client.post("/api/bestand/vektoren/loeschen", json={"modell": benutzt[0]})
+    assert r.status_code == 409
+    assert fehlergestalt_pruefen(r.json(), 409)["code"] == "modell_in_benutzung"

@@ -19,6 +19,11 @@ import type { components, paths } from './api-typen';
 export type Einheit = components['schemas']['Einheit'];
 export type EinheitenListe = components['schemas']['EinheitenListe'];
 export type ProjektZeile = components['schemas']['ProjektZeile'];
+export type Bestand = components['schemas']['BestandAntwort'];
+export type BestandPosten = components['schemas']['BestandPosten'];
+export type VektorPosten = components['schemas']['VektorPosten'];
+export type ProjektBestand = components['schemas']['ProjektBestandAntwort'];
+export type VektorenGeloescht = components['schemas']['VektorenGeloescht'];
 export type ProjektListe = components['schemas']['ProjektListe'];
 export type Kennzahlen = components['schemas']['Kennzahlen'];
 export type Lauf = components['schemas']['Lauf'];
@@ -489,6 +494,27 @@ export function ladeDropboxOrdner(projektId: string): Promise<DropboxOrdnerListe
 export function leseDropboxEin(projektId: string): Promise<IngestAntwort> {
 	return ruf<IngestAntwort>(`/api/projekt/${encodeURIComponent(projektId)}/quelle/dropbox`, {
 		method: 'POST'
+	});
+}
+
+// ── Bestand ─────────────────────────────────────────────────────────────────
+
+/** Was auf der Datenwurzel liegt, nach Art getrennt. */
+export function ladeBestand(): Promise<Bestand> {
+	return ruf<Bestand>('/api/bestand');
+}
+
+/** Was am Löschen eines Projekts hängt. Vor der Rückfrage, nicht danach. */
+export function ladeProjektBestand(projektId: string): Promise<ProjektBestand> {
+	return ruf<ProjektBestand>(`/api/projekt/${encodeURIComponent(projektId)}/bestand`);
+}
+
+/** Räumt die Vektoren eines Modells weg. Das eingestellte Modell ist geschützt. */
+export function loescheVektoren(modell: string): Promise<VektorenGeloescht> {
+	return ruf<VektorenGeloescht>('/api/bestand/vektoren/loeschen', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ modell })
 	});
 }
 

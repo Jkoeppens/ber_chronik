@@ -21,6 +21,7 @@ etwas Besonderes bedeuten.
 from __future__ import annotations
 
 import re
+import shutil
 import sqlite3
 import unicodedata
 from datetime import datetime, timezone
@@ -308,17 +309,18 @@ def einheiten(
     }
 
 
-def loeschen(con: sqlite3.Connection, projekt_id: str) -> dict:
-    """Löscht ein Projekt samt allem, was daran hängt.
+def dateien_eines_projekts(con: sqlite3.Connection, projekt_id: str) -> dict:
+    """Was an Dateien zu diesem Projekt gehört, mit Größen. Löscht nichts.
 
-    Quellen, Einheiten, Kategorien, Akteure und Läufe gehen über
-    ON DELETE CASCADE mit. Die Exportdateien unter data/projects/ bleiben
-    liegen — sie sind ein Erzeugnis, kein Bestandteil des Projekts, und Dateien
-    zu löschen ist nicht Sache dieses Diensts.
+    Getrennt nach 'eigen' und 'geteilt', und diese Trennung ist der Grund, dass
+    die Funktion überhaupt existiert: data/raw/ liegt flach nach Dateinamen, und
+    server/ingest.py erlaubt ausdrücklich, dass zwei Projekte dieselbe Datei
+    benutzen (gleicher Name, gleicher Inhalt). Wer beim Löschen alle Pfade der
+    eigenen quelle-Zeilen wegräumt, reißt dem anderen Projekt den Ursprung
+    seiner Einheiten weg.
 
-    Die Zahl der gelöschten Einheiten wird vorher gezählt: hinterher gibt es
-    sie nicht mehr, und ein Löschen, das nicht sagt, was es mitgenommen hat,
-    ist schlecht zu prüfen.
+    Ordnerpfade einer Sammlung zählen nicht mit: die liegen in der Dropbox des
+    Nutzers, nicht bei uns.
     """
     zeile = con.execute(
         "SELECT titel FROM projekt WHERE id = ?", (projekt_id,)
@@ -327,12 +329,116 @@ def loeschen(con: sqlite3.Connection, projekt_id: str) -> dict:
         raise ProjektFehler(
             f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
         )
-    anzahl = con.execute(
+
+    eigene: list[dict] = []
+    geteilte: list[dict] = []
+    for pfad_text, quellformat in con.execute(
+        "SELECT pfad, quellformat FROM quelle WHERE projekt_id = ?", (projekt_id,)
+    ):
+        if not pfad_text:
+            continue
+        pfad = Path(pfad_text)
+        if not pfad.is_file():
+            continue          # fehlt schon, oder ist ein Dropbox-Ordner
+        andere = con.execute(
+            "SELECT COUNT(*) FROM quelle WHERE pfad = ? AND projekt_id <> ?",
+            (pfad_text, projekt_id),
+        ).fetchone()[0]
+        eintrag = {
+            "name": pfad.name,
+            "bytes": pfad.stat().st_size,
+            "dateien": 1,
+            "hinweis": f"auch von {andere} anderem Projekt benutzt" if andere else "",
+            "pfad": str(pfad),
+        }
+        (geteilte if andere else eigene).append(eintrag)
+
+    verzeichnis = export_verzeichnis(projekt_id)
+    export = None
+    if verzeichnis.is_dir():
+        dateien = [p for p in verzeichnis.rglob("*") if p.is_file()]
+        export = {
+            "name": verzeichnis.name,
+            "bytes": sum(p.stat().st_size for p in dateien),
+            "dateien": len(dateien),
+            "hinweis": "",
+            "pfad": str(verzeichnis),
+        }
+
+    vektoren = con.execute(
+        "SELECT COALESCE(SUM(length(v.vektor)), 0) FROM einheit_embedding v "
+        "JOIN einheit e ON e.id = v.einheit_id "
+        "JOIN quelle q ON q.id = e.quelle_id WHERE q.projekt_id = ?",
+        (projekt_id,),
+    ).fetchone()[0]
+
+    anzahl_einheiten = con.execute(
         "SELECT COUNT(*) FROM einheit e JOIN quelle q ON q.id = e.quelle_id "
         "WHERE q.projekt_id = ?", (projekt_id,)
     ).fetchone()[0]
+    anzahl_quellen = con.execute(
+        "SELECT COUNT(*) FROM quelle WHERE projekt_id = ?", (projekt_id,)
+    ).fetchone()[0]
+
+    return {
+        "projekt_id": projekt_id,
+        "titel": zeile[0],
+        "anzahl_einheiten": anzahl_einheiten,
+        "anzahl_quellen": anzahl_quellen,
+        "rohdateien": eigene,
+        "rohdateien_geteilt": geteilte,
+        "export": export,
+        "vektoren_bytes": int(vektoren),
+        # Was TATSÄCHLICH frei wird: die geteilten Dateien bleiben liegen, und
+        # die Vektoren geben ihren Platz erst nach einem VACUUM zurück.
+        "bytes_gesamt": (
+            sum(d["bytes"] for d in eigene) + (export["bytes"] if export else 0)
+        ),
+    }
+
+
+def loeschen(con: sqlite3.Connection, projekt_id: str) -> dict:
+    """Löscht ein Projekt samt allem, was daran hängt — auch seine Dateien.
+
+    Quellen, Einheiten, Kategorien, Akteure, Läufe und Vektoren gehen über
+    ON DELETE CASCADE mit. Bis September 2026 blieben die Rohdatei und das
+    Exportverzeichnis liegen, mit der Begründung, Dateien zu löschen sei nicht
+    Sache dieses Diensts. Das war ein Leck: niemand sonst räumte sie weg, und
+    nach ein paar Durchläufen lagen Rohdateien und Exporte von Projekten auf dem
+    Laufwerk, die es nicht mehr gab.
+
+    Geteilte Rohdateien bleiben. Welche das sind, sagt dateien_eines_projekts().
+
+    Erst die Dateien, dann die Zeilen: hinterher wäre nicht mehr ablesbar,
+    welche Datei zu welchem Projekt gehörte. Was wirklich verschwand, steht in
+    der Antwort — auch wenn eine Datei sich nicht löschen ließ.
+    """
+    bestand = dateien_eines_projekts(con, projekt_id)
+
+    entfernt: list[str] = []
+    gescheitert: list[str] = []
+    for eintrag in bestand["rohdateien"]:
+        try:
+            Path(eintrag["pfad"]).unlink()
+            entfernt.append(eintrag["pfad"])
+        except OSError as fehler:
+            gescheitert.append(f"{eintrag['pfad']}: {fehler}")
+    if bestand["export"]:
+        try:
+            shutil.rmtree(bestand["export"]["pfad"])
+            entfernt.append(bestand["export"]["pfad"])
+        except OSError as fehler:
+            gescheitert.append(f"{bestand['export']['pfad']}: {fehler}")
 
     with con:
         con.execute("DELETE FROM projekt WHERE id = ?", (projekt_id,))
 
-    return {"projekt_id": projekt_id, "titel": zeile[0], "geloeschte_einheiten": anzahl}
+    return {
+        "projekt_id": projekt_id,
+        "titel": bestand["titel"],
+        "geloeschte_einheiten": bestand["anzahl_einheiten"],
+        "geloeschte_dateien": entfernt,
+        "geteilte_dateien": [d["name"] for d in bestand["rohdateien_geteilt"]],
+        "freigegebene_bytes": bestand["bytes_gesamt"],
+        "nicht_geloescht": gescheitert,
+    }

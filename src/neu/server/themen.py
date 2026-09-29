@@ -275,7 +275,7 @@ def kategorien_speichern(
         return KategorienGespeichert(**antwort, lauf_id=None)
 
     def arbeit(eigene, lauf_id: int) -> None:
-        klassifizieren(eigene, projekt_id=projekt_id, verfahren="bge",
+        klassifizieren(eigene, projekt_id=projekt_id, verfahren="vektoren",
                        umfang="alle", lauf_id=lauf_id)
 
     try:

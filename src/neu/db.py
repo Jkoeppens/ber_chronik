@@ -59,6 +59,43 @@ def anlegen_wenn_noetig() -> bool:
     return True
 
 
+# ── Altlasten ─────────────────────────────────────────────────────────────────
+# Kein Migrationswerkzeug, sondern eine Liste benannter Einzelfälle. Jeder
+# beschreibt, was er berichtigt und warum; jeder muss mehrfach laufen dürfen,
+# ohne etwas kaputtzumachen. Wenn diese Liste lang wird, ist das das Zeichen,
+# dass ein richtiges Werkzeug fällig ist — heute steht ein Eintrag darin.
+ALTLASTEN: list[tuple[str, str, str]] = [
+    (
+        "verfahren_bge_wird_vektoren",
+        # Die Umbenennung von September 2026: 'bge' nannte den Weg, klang aber
+        # nach dem Modell — und war irreführend, sobald Voyage rechnete.
+        # Migriert statt beides zu lesen, weil der Wert nirgends verzweigt: er
+        # wird nur angezeigt. Zwei Schreibweisen für dieselbe Sache dauerhaft
+        # mitzulesen, wäre teurer als eine einmalige Berichtigung.
+        "UPDATE lauf SET parameter = replace(parameter, '\"verfahren\": \"bge\"',"
+        " '\"verfahren\": \"vektoren\"') WHERE parameter LIKE '%\"verfahren\": \"bge\"%'",
+        "lauf-Zeilen: verfahren 'bge' → 'vektoren'",
+    ),
+]
+
+
+def altlasten_nachziehen(con: sqlite3.Connection) -> list[str]:
+    """Führt die Berichtigungen aus und sagt, welche etwas geändert haben.
+
+    Jede trägt ihre eigene WHERE-Bedingung, die im Normalfall auf nichts
+    passt — ein Start ohne Altlasten kostet damit je Eintrag eine Abfrage und
+    ändert nichts. Gemeldet wird nur, was tatsächlich Zeilen berührt hat;
+    sonst stünde bei jedem Start eine Zeile, die nichts bedeutet.
+    """
+    getan = []
+    with con:
+        for name, sql, beschreibung in ALTLASTEN:
+            zeiger = con.execute(sql)
+            if zeiger.rowcount > 0:
+                getan.append(f"{beschreibung} ({zeiger.rowcount} Zeilen)")
+    return getan
+
+
 def verbindung() -> sqlite3.Connection:
     """Nur-Lese-Verbindung. Zeilen kommen als sqlite3.Row (Zugriff über Spaltennamen)."""
     pfad = db_pfad()

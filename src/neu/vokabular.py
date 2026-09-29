@@ -88,6 +88,15 @@ LaufSchritt = Literal[
     "ingest", "datierung", "taxonomie", "klassifikation", "akteure", "export",
 ]
 
+# ── Verfahren der Zuordnung ───────────────────────────────────────────────────
+# Kein Spaltenwert, sondern ein Parameter — er steht in lauf.parameter und im
+# Rumpf von /klassifizieren. Hieß bis September 2026 'bge' statt 'vektoren' und
+# war damit falsch benannt: der Wert nennt den WEG, nicht das Modell. Womit
+# gerechnet wurde, steht daneben in lauf.parameter.embedding_modell — und das
+# war je nach Anbieter BAAI/bge-m3 ODER voyage-4, während 'verfahren' in beiden
+# Fällen 'bge' sagte. Wer die Lauf-Zeile las, hielt es für eine Modellangabe.
+Verfahren = Literal["vektoren", "llm"]
+
 # ── Umfang eines Neulaufs ─────────────────────────────────────────────────────
 # Kein Spaltenwert, sondern ein Parameter — steht hier, weil ihn Datierung und
 # Klassifikation gleichlautend führten.
@@ -113,6 +122,7 @@ KANDIDAT_GRUENDE: tuple[str, ...] = get_args(KandidatGrund)
 LAUF_STATUS: tuple[str, ...] = get_args(LaufStatus)
 LAUF_SCHRITTE: tuple[str, ...] = get_args(LaufSchritt)
 UMFAENGE: tuple[str, ...] = get_args(Umfang)
+VERFAHREN: tuple[str, ...] = get_args(Verfahren)
 
 
 class UnbekannterWert(ValueError):

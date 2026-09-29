@@ -167,3 +167,63 @@ def test_ohne_schema_kein_stilles_ersatzschema(laufwerk, monkeypatch):
     with pytest.raises(FileNotFoundError):
         db_modul.anlegen_wenn_noetig()
     assert not (laufwerk / "neu.db").exists()
+
+
+# ── Altlasten ─────────────────────────────────────────────────────────────────
+# Stehen hier und nicht in test_neu_bestand.py: sie gehören zum Hochfahren,
+# nicht zum Bestand.
+
+def test_verfahren_bge_wird_zu_vektoren(laufwerk):
+    """Die Umbenennung von September 2026, an alten lauf-Zeilen nachgezogen.
+
+    Migriert und nicht doppelt gelesen, weil der Wert nirgends verzweigt: er
+    wird nur angezeigt.
+    """
+    import json
+
+    from src.neu.db import altlasten_nachziehen, verbindung_schreibend
+
+    db_modul.anlegen_wenn_noetig()
+    con = verbindung_schreibend()
+    try:
+        with con:
+            zeiger = con.execute(
+                "INSERT INTO zugang (token, name, organisation, rolle, angelegt_am) "
+                "VALUES ('t', '', '', 'nutzer', '2026-01-01')"
+            )
+            con.execute(
+                "INSERT INTO projekt (id, titel, eigentuemer_id, angelegt_am) "
+                "VALUES ('p', 'P', ?, '2026-01-01')", (zeiger.lastrowid,)
+            )
+            for parameter in (
+                '{"verfahren": "bge", "umfang": "alle"}',
+                '{"verfahren": "llm", "umfang": "offen"}',
+            ):
+                con.execute(
+                    "INSERT INTO lauf (projekt_id, schritt, begonnen_am, parameter, "
+                    "status) VALUES ('p', 'klassifikation', '2026-01-01', ?, 'erfolg')",
+                    (parameter,),
+                )
+
+        getan = altlasten_nachziehen(con)
+        assert getan == ["lauf-Zeilen: verfahren 'bge' → 'vektoren' (1 Zeilen)"]
+
+        werte = sorted(
+            json.loads(z[0])["verfahren"]
+            for z in con.execute("SELECT parameter FROM lauf")
+        )
+        assert werte == ["llm", "vektoren"]
+
+        # Ein zweiter Lauf findet nichts mehr — sonst stünde bei jedem Start
+        # eine Zeile, die nichts bedeutet.
+        assert altlasten_nachziehen(con) == []
+    finally:
+        con.close()
+
+
+def test_der_vorrat_kennt_bge_nicht_mehr():
+    """Der Wert nennt den Weg, nicht das Modell — und 'bge' klang nach dem Modell."""
+    from src.neu.vokabular import VERFAHREN
+
+    assert VERFAHREN == ("vektoren", "llm")
+    assert "bge" not in VERFAHREN

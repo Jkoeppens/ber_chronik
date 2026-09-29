@@ -5,17 +5,12 @@ Ein Modul, weil es ein Schritt ist: Kategorien und die Zuordnung darauf sind
 nicht zu trennen.
 """
 
-from typing import Literal
-
 from pydantic import BaseModel, Field
 
-from src.neu.vokabular import Umfang
+from src.neu.vokabular import Umfang, Verfahren
 from src.neu.vokabular import VorschlagHerkunft as KategorieHerkunft
 
-__all_vokabular__ = (Umfang, KategorieHerkunft)
-
-
-Verfahren = Literal["bge", "llm"]
+__all_vokabular__ = (Umfang, KategorieHerkunft, Verfahren)
 
 
 class KlassifizierenRumpf(BaseModel):
@@ -27,7 +22,10 @@ class KlassifizierenRumpf(BaseModel):
     Möglichkeit anzubieten.
     """
 
-    verfahren: Verfahren = Field(default="bge", description="bge = lokal, llm = API")
+    verfahren: Verfahren = Field(
+        default="vektoren",
+        description="vektoren = Ähnlichkeit zum Einbettungsmodell, llm = Sprachmodell",
+    )
 
 
 class ZuordnungRumpf(BaseModel):

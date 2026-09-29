@@ -117,12 +117,17 @@ def einheiten(
 
 @router.delete("/api/projekt/{projekt_id}", responses=FEHLER_ANTWORTEN)
 def projekt_loeschen(projekt_id: str) -> dict:
-    """Löscht ein Projekt samt allem, was daran hängt.
+    """Löscht ein Projekt samt allem, was daran hängt — auch seine Dateien.
 
-    Quellen, Einheiten, Kategorien, Akteure und Läufe gehen über
-    ON DELETE CASCADE mit. Die Exportdateien unter data/projects/ bleiben
-    liegen — sie sind ein Erzeugnis, kein Bestandteil des Projekts, und
-    Dateien zu löschen ist nicht Sache dieses Endpoints.
+    Quellen, Einheiten, Kategorien, Akteure, Läufe und Vektoren gehen über
+    ON DELETE CASCADE mit; die eigene Rohdatei und das Exportverzeichnis werden
+    entfernt. Rohdateien, die ein anderes Projekt mitbenutzt, bleiben liegen —
+    welche das sind, steht in der Antwort und vorher in
+    GET /api/projekt/{id}/bestand.
+
+    Bis September 2026 blieben Rohdatei und Export liegen, mit der Begründung,
+    Dateien zu löschen sei nicht Sache dieses Endpoints. Niemand sonst räumte
+    sie weg.
     """
     con = verbindung_schreibend()
     try:

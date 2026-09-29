@@ -339,3 +339,31 @@ select.input {
 	font-weight: 400;
 	color: var(--c-text-3);
 }
+
+/* ── Der Laufwerksstand im Kopf der Projektliste ──────────────────────────────
+   Klein und unauffällig, solange Platz ist; rot, sobald es knapp wird oder eine
+   Warnung anliegt. Der Anlass: bge-m3 wiegt 4,3 GB, und auf dem 5-GB-Laufwerk
+   der Railway-Vorgabe hat ein Anbieterwechsel das Laufwerk gefüllt, ohne dass
+   irgendwo eine Zahl stand. */
+.bestand-marke {
+	font-size: 11px;
+	color: var(--c-text-3);
+	text-decoration: none;
+	border: 1px solid var(--c-border-ui);
+	border-radius: 4px;
+	padding: 3px 7px;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.bestand-marke:hover {
+	color: var(--c-text);
+	border-color: var(--c-text-4);
+}
+
+.bestand-marke--knapp {
+	color: var(--c-danger);
+	border-color: var(--c-danger-border);
+	background: var(--c-danger-bg);
+	font-weight: 600;
+}

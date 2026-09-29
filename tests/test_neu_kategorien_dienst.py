@@ -116,10 +116,10 @@ def test_lauf_nimmt_nur_offene_einheiten(con, monkeypatch) -> None:
         )
 
     monkeypatch.setitem(
-        dienst.VERFAHREN, "bge",
+        dienst.WEGE, "vektoren",
         lambda con, einheiten, tax, melden=None: [kern.Zuordnung("Politik", "high", "automatisch") for _ in einheiten],
     )
-    ergebnis = klassifizieren(con, "p", verfahren="bge", umfang="offen")
+    ergebnis = klassifizieren(con, "p", verfahren="vektoren", umfang="offen")
     assert ergebnis.anzahl_einheiten == 2
 
 
@@ -132,7 +132,7 @@ def test_nicht_content_einheiten_bleiben_unberuehrt(con, monkeypatch) -> None:
             "VALUES ('q', 99, 'bibliography', 'Literaturangabe')"
         )
     monkeypatch.setitem(
-        dienst.VERFAHREN, "bge",
+        dienst.WEGE, "vektoren",
         lambda con, einheiten, tax, melden=None: [kern.Zuordnung("Politik", "high", "automatisch") for _ in einheiten],
     )
     klassifizieren(con, "p")
@@ -150,7 +150,7 @@ def test_manuell_bleibt_auch_bei_umfang_alle_unberuehrt(con, monkeypatch) -> Non
     zuordnung_setzen(con, ids[0], kat[1])          # von Hand auf 'Kosten'
 
     monkeypatch.setitem(
-        dienst.VERFAHREN, "bge",
+        dienst.WEGE, "vektoren",
         lambda con, einheiten, tax, melden=None: [kern.Zuordnung("Politik", "high", "automatisch") for _ in einheiten],
     )
     ergebnis = klassifizieren(con, "p", umfang="alle")
@@ -169,7 +169,7 @@ def test_nur_auch_manuell_ueberschreibt_die_handkorrektur(con, monkeypatch) -> N
     zuordnung_setzen(con, ids[0], kat[1])
 
     monkeypatch.setitem(
-        dienst.VERFAHREN, "bge",
+        dienst.WEGE, "vektoren",
         lambda con, einheiten, tax, melden=None: [kern.Zuordnung("Politik", "high", "automatisch") for _ in einheiten],
     )
     ergebnis = klassifizieren(con, "p", umfang="auch_manuell")
@@ -268,7 +268,7 @@ def test_lauf_wird_festgehalten_und_verknuepft(con, monkeypatch) -> None:
     _kategorien(con)
     ids = _einheiten(con, ["a"])
     monkeypatch.setitem(
-        dienst.VERFAHREN, "bge",
+        dienst.WEGE, "vektoren",
         lambda con, einheiten, tax, melden=None: [kern.Zuordnung("Politik", "high", "automatisch") for _ in einheiten],
     )
     ergebnis = klassifizieren(con, "p")
@@ -280,7 +280,7 @@ def test_lauf_wird_festgehalten_und_verknuepft(con, monkeypatch) -> None:
     assert lauf[0] == "p"
     assert lauf[1] == "klassifikation"
     assert lauf[2] and lauf[3]
-    assert json.loads(lauf[4])["verfahren"] == "bge"
+    assert json.loads(lauf[4])["verfahren"] == "vektoren"
     assert lauf[5] == "erfolg"
 
     verknuepft = con.execute(
@@ -296,7 +296,7 @@ def test_fehlschlag_rollt_zurueck_und_haelt_den_lauf_fest(con, monkeypatch) -> N
     def kaputt(con, einheiten, tax, melden=None):
         raise RuntimeError("Modell nicht erreichbar")
 
-    monkeypatch.setitem(dienst.VERFAHREN, "bge", kaputt)
+    monkeypatch.setitem(dienst.WEGE, "vektoren", kaputt)
     with pytest.raises(RuntimeError):
         klassifizieren(con, "p")
 
@@ -370,7 +370,7 @@ def test_bge_ist_deterministisch_und_die_klempnerei_verzerrt_nichts(tmp_path) ->
         _kategorien(con, [(c["name"], c.get("description", ""),
                            ",".join(c.get("keywords", []))) for c in tax])
 
-        erst = klassifizieren(con, "p", verfahren="bge")
+        erst = klassifizieren(con, "p", verfahren="vektoren")
         assert erst.anzahl_einheiten == 672
         assert erst.anzahl_ohne_kategorie == 0      # BGE ordnet immer zu
 

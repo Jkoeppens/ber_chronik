@@ -37,6 +37,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bestand": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bestand
+         * @description Was auf der Datenwurzel liegt, nach Art getrennt, mit Warnungen.
+         *
+         *     Der Anlass: auf 5 GB — der Vorgabe bei Railway — passen GLiNER (1,1 GB) und
+         *     bge-m3 (4,3 GB) zusammen nicht. Ein Umschalten auf 'local' im Betrieb füllt
+         *     das Laufwerk, und vor dieser Route sagte es niemand.
+         */
+        get: operations["bestand_api_bestand_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projekt/{projekt_id}/bestand": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Projekt Bestand
+         * @description Was am Löschen dieses Projekts hängt — für die Rückfrage, vor dem Löschen.
+         *
+         *     Eine eigene Route und kein Feld in /api/projekte: sie sieht auf das
+         *     Dateisystem, und die Projektliste soll das nicht je Zeile tun.
+         */
+        get: operations["projekt_bestand_api_projekt__projekt_id__bestand_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bestand/vektoren/loeschen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vektoren Loeschen
+         * @description Räumt die Vektoren eines Modells weg. Nur auf ausdrückliche Anweisung.
+         *
+         *     Kein Lauf tut das je von selbst, auch nicht beim Anbieterwechsel: dass die
+         *     Werte des anderen Modells liegenbleiben, ist der Grund, warum ein
+         *     Zurückschalten nicht neu rechnet. Das eingestellte Modell ist geschützt.
+         */
+        post: operations["vektoren_loeschen_api_bestand_vektoren_loeschen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projekte": {
         parameters: {
             query?: never;
@@ -126,12 +197,17 @@ export interface paths {
         post?: never;
         /**
          * Projekt Loeschen
-         * @description Löscht ein Projekt samt allem, was daran hängt.
+         * @description Löscht ein Projekt samt allem, was daran hängt — auch seine Dateien.
          *
-         *     Quellen, Einheiten, Kategorien, Akteure und Läufe gehen über
-         *     ON DELETE CASCADE mit. Die Exportdateien unter data/projects/ bleiben
-         *     liegen — sie sind ein Erzeugnis, kein Bestandteil des Projekts, und
-         *     Dateien zu löschen ist nicht Sache dieses Endpoints.
+         *     Quellen, Einheiten, Kategorien, Akteure, Läufe und Vektoren gehen über
+         *     ON DELETE CASCADE mit; die eigene Rohdatei und das Exportverzeichnis werden
+         *     entfernt. Rohdateien, die ein anderes Projekt mitbenutzt, bleiben liegen —
+         *     welche das sind, steht in der Antwort und vorher in
+         *     GET /api/projekt/{id}/bestand.
+         *
+         *     Bis September 2026 blieben Rohdatei und Export liegen, mit der Begründung,
+         *     Dateien zu löschen sei nicht Sache dieses Endpoints. Niemand sonst räumte
+         *     sie weg.
          */
         delete: operations["projekt_loeschen_api_projekt__projekt_id__delete"];
         options?: never;
@@ -1086,6 +1162,75 @@ export interface components {
             /** Einheiten */
             einheiten: number[];
         };
+        /**
+         * BestandAntwort
+         * @description Der ganze Überblick über die Datenwurzel.
+         */
+        BestandAntwort: {
+            /** Daten Wurzel */
+            daten_wurzel: string;
+            /**
+             * Platz Knapp
+             * @description True, wenn weniger als 6 GB oder weniger als 10 % frei sind — dann passt BAAI/bge-m3 (4,3 GB) nicht mehr dazu
+             */
+            platz_knapp: boolean;
+            /** Laufwerk Bytes */
+            laufwerk_bytes: number;
+            /** Laufwerk Frei */
+            laufwerk_frei: number;
+            /** Laufwerk Belegt */
+            laufwerk_belegt: number;
+            datenbank: components["schemas"]["BestandPosten"];
+            /** Modelle */
+            modelle: components["schemas"]["BestandPosten"][];
+            /**
+             * Modelle Wurzel
+             * @description HF_HOME, oder der Vorgabeort
+             */
+            modelle_wurzel: string;
+            /**
+             * Modelle Auf Datenwurzel
+             * @description False heißt: die Gewichte überleben keinen Neustart
+             */
+            modelle_auf_datenwurzel: boolean;
+            /** Rohdaten */
+            rohdaten: components["schemas"]["BestandPosten"][];
+            /** Exporte */
+            exporte: components["schemas"]["BestandPosten"][];
+            /** Vektoren */
+            vektoren: components["schemas"]["VektorPosten"][];
+            /**
+             * Gezaehlt Bytes
+             * @description Summe der Posten — nicht laufwerk_belegt, dort liegt auch Fremdes
+             */
+            gezaehlt_bytes: number;
+            /** Warnungen */
+            warnungen: string[];
+        };
+        /**
+         * BestandPosten
+         * @description Ein Eintrag im Überblick.
+         */
+        BestandPosten: {
+            /**
+             * Name
+             * @description Modellname, Projektkennung oder Dateiname
+             */
+            name: string;
+            /** Bytes */
+            bytes: number;
+            /**
+             * Dateien
+             * @description 0 heißt: nicht nach Dateien gezählt
+             * @default 0
+             */
+            dateien: number;
+            /**
+             * Hinweis
+             * @default
+             */
+            hinweis: string;
+        };
         /** Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post */
         Body_quelle_hochladen_api_projekt__projekt_id__quelle_datei_post: {
             /**
@@ -1753,11 +1898,11 @@ export interface components {
         KlassifizierenRumpf: {
             /**
              * Verfahren
-             * @description bge = lokal, llm = API
-             * @default bge
+             * @description vektoren = Ähnlichkeit zum Einbettungsmodell, llm = Sprachmodell
+             * @default vektoren
              * @enum {string}
              */
-            verfahren: "bge" | "llm";
+            verfahren: "vektoren" | "llm";
         };
         /** KonfigurationAntwort */
         KonfigurationAntwort: {
@@ -1911,6 +2056,35 @@ export interface components {
              */
             id?: string | null;
         };
+        /**
+         * ProjektBestandAntwort
+         * @description Was am Löschen eines Projekts hängt. Für die Rückfrage, vor dem Löschen.
+         */
+        ProjektBestandAntwort: {
+            /** Projekt Id */
+            projekt_id: string;
+            /** Titel */
+            titel: string;
+            /** Anzahl Einheiten */
+            anzahl_einheiten: number;
+            /** Anzahl Quellen */
+            anzahl_quellen: number;
+            /** Rohdateien */
+            rohdateien: components["schemas"]["BestandPosten"][];
+            /**
+             * Rohdateien Geteilt
+             * @description Von anderen Projekten mitbenutzt — bleiben liegen
+             */
+            rohdateien_geteilt: components["schemas"]["BestandPosten"][];
+            export: components["schemas"]["BestandPosten"] | null;
+            /** Vektoren Bytes */
+            vektoren_bytes: number;
+            /**
+             * Bytes Gesamt
+             * @description Was durch das Löschen tatsächlich frei wird
+             */
+            bytes_gesamt: number;
+        };
         /** ProjektListe */
         ProjektListe: {
             /** Anzahl */
@@ -2034,6 +2208,53 @@ export interface components {
             text: string;
         };
         /**
+         * VektorPosten
+         * @description Vektoren eines Modells im Zwischenspeicher.
+         */
+        VektorPosten: {
+            /** Modell */
+            modell: string;
+            /** Bytes */
+            bytes: number;
+            /** Einheiten */
+            einheiten: number;
+            /**
+             * Masse
+             * @description Dimensionen je Vektor
+             */
+            masse: number;
+            /**
+             * Benutzt
+             * @description True, wenn der eingestellte Anbieter dieses Modell nimmt
+             */
+            benutzt: boolean;
+        };
+        /** VektorenGeloescht */
+        VektorenGeloescht: {
+            /** Modell */
+            modell: string;
+            /** Geloeschte Vektoren */
+            geloeschte_vektoren: number;
+            /** Freigegebene Bytes */
+            freigegebene_bytes: number;
+            /** Hinweis */
+            hinweis: string;
+        };
+        /**
+         * VektorenLoeschenRumpf
+         * @description Rumpf von POST /api/bestand/vektoren/loeschen.
+         *
+         *     Das Modell im Rumpf und nicht im Pfad: 'BAAI/bge-m3' enthält einen
+         *     Schrägstrich und wäre als Pfadsegment nur verkodiert übertragbar.
+         */
+        VektorenLoeschenRumpf: {
+            /**
+             * Modell
+             * @description Genau wie in der Übersicht, z. B. BAAI/bge-m3
+             */
+            modell: string;
+        };
+        /**
          * VerschmelzenRumpf
          * @description Rumpf von POST /api/akteure/verschmelzen.
          */
@@ -2110,6 +2331,234 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KonfigurationAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    bestand_api_bestand_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestandAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    projekt_bestand_api_projekt__projekt_id__bestand_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projekt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjektBestandAntwort"];
+                };
+            };
+            /** @description Nicht gefunden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Steht dem gerade etwas entgegen */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ungültiger Parameter */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Serverfehler */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Ein Dienst dahinter antwortet nicht */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+            /** @description Anbieter nicht verfügbar */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FehlerAntwort"];
+                };
+            };
+        };
+    };
+    vektoren_loeschen_api_bestand_vektoren_loeschen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VektorenLoeschenRumpf"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VektorenGeloescht"];
                 };
             };
             /** @description Nicht gefunden */

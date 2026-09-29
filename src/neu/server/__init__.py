@@ -3,6 +3,7 @@ server — Leseserver auf data/neu.db
 
 Endpoints:
   GET /api/konfiguration            welche Anbieter, Modelle und Schwellen gelten
+  GET /api/bestand                  was auf dem Laufwerk liegt, nach Art getrennt
   GET /api/projekte                 alle Projekte
   GET /api/projekt/{id}/kennzahlen  ein Projekt mit seinen Zahlen
   GET /api/projekt/{id}/einheiten   seine Einheiten, nach Quelle und Position
@@ -57,6 +58,7 @@ env_laden()
 
 from src.neu.server import (  # noqa: E402
     akteure,
+    bestand,
     chat,
     datierung,
     export,
@@ -121,6 +123,8 @@ def datenbank_melden() -> None:
             protokoll.warning("LEERE DATENBANK ANGELEGT: %s", z["datenbank"])
             protokoll.warning("aus %s. Noch kein Projekt vorhanden.", db_modul.SCHEMA)
             protokoll.warning("=" * 68)
+        else:
+            _altlasten_melden()
 
     protokoll.info("Quellbestand: %s", z["quellbestand"])
     protokoll.info(
@@ -131,6 +135,30 @@ def datenbank_melden() -> None:
     protokoll.info("  Datenbank:  %s", z["datenbank"])
     protokoll.info("  Rohdaten:   %s", z["rohdaten"])
     protokoll.info("  Exporte:    %s", z["exporte"])
+
+
+def _altlasten_melden() -> None:
+    """Zieht benannte Berichtigungen nach. Nur bei einer bestehenden Datenbank.
+
+    Eine frisch angelegte hat keine Altlasten — sie kommt aus dem heutigen
+    schema.sql. Dass eine Zeile berichtigt wurde, ist eine Information und
+    keine Warnung: es ist der Normalfall beim ersten Start nach einer
+    Umbenennung.
+    """
+    from src.neu.db import altlasten_nachziehen, verbindung_schreibend
+
+    try:
+        con = verbindung_schreibend()
+    except (FileNotFoundError, sqlite3.Error) as exc:
+        protokoll.error("Altlasten nicht geprüft: %s", exc)
+        return
+    try:
+        for zeile in altlasten_nachziehen(con):
+            protokoll.info("Nachgezogen: %s", zeile)
+    except sqlite3.Error as exc:
+        protokoll.error("Altlasten nicht nachgezogen: %s", exc)
+    finally:
+        con.close()
 
 
 def anbieter_melden() -> None:
@@ -167,8 +195,8 @@ app = FastAPI(
 # in der erzeugten api-typen.ts. Sie ist sonst ohne Wirkung: keine zwei Routen
 # überschneiden sich.
 
-for teil in (konfiguration, projekte, ingest, themen, laeufe, datierung,
-             akteure, export, chat):
+for teil in (konfiguration, bestand, projekte, ingest, themen, laeufe,
+             datierung, akteure, export, chat):
     app.include_router(teil.router)
 
 

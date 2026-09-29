@@ -7,6 +7,8 @@
 		ladeDropboxStand,
 		ladeProjekte,
 		legeProjektAn,
+		ladeBestand,
+		ladeProjektBestand,
 		loescheProjekt,
 		leseDateiEin,
 		leseDropboxEin,
@@ -159,6 +161,39 @@
 	}
 
 	// ── Exportieren aus der Liste ────────────────────────────────────────────
+	/* Der Laufwerksstand, klein und immer sichtbar. Nicht der ganze Bestand —
+	   nur die Zahl, bei der man hinsehen will, mit dem Weg dorthin. */
+	let laufwerk = $state<{ frei: number; knapp: boolean; hinweise: number } | null>(null);
+
+	/* Rot heißt AUSSCHLIESSLICH: der Platz reicht nicht mehr für einen
+	   Modellwechsel. Andere Warnungen — verwaiste Dateien, Gewichte am falschen
+	   Ort — stehen als Anzahl daneben. Sonst hätte die Farbe zwei Bedeutungen,
+	   und eine Entwicklungsmaschine mit 44 GB frei sähe aus wie ein volles
+	   Laufwerk. Die Grenze selbst zieht der Server (bestand.KNAPP_BYTES). */
+	async function bestandHolen() {
+		try {
+			const b = await ladeBestand();
+			laufwerk = {
+				frei: b.laufwerk_frei,
+				knapp: b.platz_knapp,
+				hinweise: b.warnungen.length
+			};
+		} catch {
+			/* Ein fehlender Bestand ist kein Grund, die Projektliste zu stören. */
+			laufwerk = null;
+		}
+	}
+
+	$effect(() => {
+		bestandHolen();
+	});
+
+	function gb(bytes: number): string {
+		return bytes >= 1024 ** 3
+			? `${(bytes / 1024 ** 3).toFixed(1)} GB`
+			: `${Math.round(bytes / 1024 ** 2)} MB`;
+	}
+
 	let exportiertGerade = $state<string | null>(null);
 
 	async function exportierenUndNachladen(projektId: string) {
@@ -194,21 +229,55 @@
 		return zeilen.join('\n');
 	}
 
-	/** Löschen mit Rückfrage — die Zahlen stehen in der Frage, nicht im Kleingedruckten. */
+	/**
+	 * Löschen mit Rückfrage — und die Rückfrage nennt die Dateien mit Größen.
+	 *
+	 * Erst /bestand fragen, dann fragen: vorher stand im Bestätigungstext, die
+	 * Exportdateien blieben liegen. Das war wahr und trotzdem falsch — niemand
+	 * räumte sie je weg. Jetzt gehen sie mit, und wer das bestätigt, soll
+	 * vorher wissen, was verschwindet.
+	 */
 	async function projektLoeschen(p: ProjektZeile) {
-		if (
-			!confirm(
-				`Projekt '${p.titel}' endgültig löschen?\n\n` +
-					`${p.anzahl_einheiten} Einheiten, ${p.anzahl_quellen} Quelle(n) und alles, ` +
-					`was daran hängt — Kategorien, Akteure, Läufe.\n\n` +
-					`Die Exportdateien unter data/projects/ bleiben liegen.`
-			)
-		)
+		let bestand;
+		try {
+			bestand = await ladeProjektBestand(p.id);
+		} catch (e) {
+			fehler = e instanceof ApiFehler ? e.message : 'Bestand des Projekts nicht abrufbar.';
 			return;
+		}
+
+		const teile = [
+			`Projekt '${p.titel}' endgültig löschen?`,
+			'',
+			`${bestand.anzahl_einheiten} Einheiten, ${bestand.anzahl_quellen} Quelle(n) und alles, ` +
+				`was daran hängt — Kategorien, Akteure, Läufe, Vektoren.`,
+			''
+		];
+		if (bestand.rohdateien.length > 0) {
+			teile.push('Diese Dateien werden mit gelöscht:');
+			for (const d of bestand.rohdateien) teile.push(`  · ${d.name} (${gb(d.bytes)})`);
+		}
+		if (bestand.export) {
+			teile.push(
+				`  · Export ${bestand.export.name}/ — ${bestand.export.dateien} Dateien (${gb(bestand.export.bytes)})`
+			);
+		}
+		if (bestand.rohdateien_geteilt.length > 0) {
+			teile.push('');
+			teile.push('Diese bleiben liegen, weil andere Projekte sie benutzen:');
+			for (const d of bestand.rohdateien_geteilt) teile.push(`  · ${d.name}`);
+		}
+		teile.push('');
+		teile.push(`Frei wird dadurch: ${gb(bestand.bytes_gesamt)}.`);
+
+		if (!confirm(teile.join('\n'))) return;
+
 		fehler = null;
 		try {
 			await loescheProjekt(p.id);
 			nachgeladen = (await ladeProjekte()).projekte;
+			/* Der Platz hat sich geändert — die Marke soll das zeigen. */
+			await bestandHolen();
 		} catch (e) {
 			fehler = e instanceof ApiFehler ? e.message : 'Unbekannter Fehler beim Löschen.';
 		}
@@ -225,6 +294,16 @@
 <main class="inhalt">
 	<div style="display:flex;align-items:center;gap:10px">
 		<span class="section-label" style="flex:1">Projekte</span>
+		<a
+			class="bestand-marke"
+			class:bestand-marke--knapp={laufwerk?.knapp}
+			href="/bestand"
+			title="Was auf dem Laufwerk liegt"
+		>
+			{laufwerk ? `${gb(laufwerk.frei)} frei` : 'Bestand'}{laufwerk && laufwerk.hinweise > 0
+				? ` · ${laufwerk.hinweise} Hinweis${laufwerk.hinweise > 1 ? 'e' : ''}`
+				: ''}
+		</a>
 		<button
 			class="btn btn-dashed btn-sm"
 			onclick={() => {

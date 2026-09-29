@@ -120,7 +120,7 @@ def _einheiten_lesen(
 
 # ── Verfahren ─────────────────────────────────────────────────────────────────
 
-def _zuordnungen_bge(
+def _zuordnungen_vektoren(
     con: sqlite3.Connection,
     einheiten: list[tuple[int, str]],
     taxonomie: list[dict],
@@ -186,7 +186,9 @@ def _zuordnungen_llm(
             for _, t in einheiten]
 
 
-VERFAHREN = {"bge": _zuordnungen_bge, "llm": _zuordnungen_llm}
+# Der Name des Wegs, nicht des Modells: welches Einbettungsmodell rechnet,
+# entscheidet der Anbieter, und es steht in lauf.parameter.embedding_modell.
+WEGE = {"vektoren": _zuordnungen_vektoren, "llm": _zuordnungen_llm}
 
 
 # ── Klassifizieren ────────────────────────────────────────────────────────────
@@ -194,7 +196,7 @@ VERFAHREN = {"bge": _zuordnungen_bge, "llm": _zuordnungen_llm}
 def klassifizieren(
     con: sqlite3.Connection,
     projekt_id: str,
-    verfahren: str = "bge",
+    verfahren: str = "vektoren",
     umfang: str = "offen",
     lauf_id: int | None = None,
 ) -> KlassifikationErgebnis:
@@ -204,9 +206,9 @@ def klassifizieren(
     in einer Transaktion, zusammen mit der lauf-Zeile. Bei einem Fehler wird
     alles zurückgerollt und der Fehlversuch als lauf-Zeile festgehalten.
     """
-    if verfahren not in VERFAHREN:
+    if verfahren not in WEGE:
         raise KlassifikationFehler(
-            f"Unbekanntes Verfahren '{verfahren}'. Erlaubt: {' | '.join(VERFAHREN)}",
+            f"Unbekanntes Verfahren '{verfahren}'. Erlaubt: {' | '.join(WEGE)}",
             "verfahren_unbekannt",
         )
     if umfang not in UMFAENGE:
@@ -253,7 +255,7 @@ def klassifizieren(
                 laeufe.fortschritt(con, lauf_id, phase="embedding",
                                    aus_speicher=gespeichert, zu_rechnen=offen)
 
-        zuordnungen = VERFAHREN[verfahren](con, einheiten, taxonomie, melden)
+        zuordnungen = WEGE[verfahren](con, einheiten, taxonomie, melden)
         id_je_name = {c["name"]: c["id"] for c in taxonomie}
 
         with con:

@@ -39,6 +39,14 @@ from src.neu.modelle.akteure import (
     VerschmelzenRumpf,
     ZusammenfassenRumpf,
 )
+from src.neu.modelle.bestand import (
+    BestandAntwort,
+    BestandPosten,
+    ProjektBestandAntwort,
+    VektorenGeloescht,
+    VektorenLoeschenRumpf,
+    VektorPosten,
+)
 from src.neu.modelle.chat import ChatRumpf
 from src.neu.modelle.datierung import (
     Anker,
@@ -95,6 +103,12 @@ from src.neu.modelle.themen import (
 )
 
 __all__ = [
+    "BestandAntwort",
+    "BestandPosten",
+    "ProjektBestandAntwort",
+    "VektorPosten",
+    "VektorenGeloescht",
+    "VektorenLoeschenRumpf",
     "AkteurAendernRumpf", "AkteurAnlegenRumpf", "AkteurAntwort", "AkteurHerkunft",
     "AkteurListe", "AkteurStatus", "AkteurTyp", "AkteurZeile", "AkteureErkennenRumpf",
     "AnbieterLage", "Anker", "AnmeldungBeginn", "Ausreisser", "ChatRumpf",
