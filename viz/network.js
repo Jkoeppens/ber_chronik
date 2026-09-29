@@ -470,7 +470,7 @@ async function drawNetwork(nodes, links) {
 
   node
     .on("mouseenter", (event, d) => {
-      showTip(`${d.count} Nennungen`, event);
+      showTip(`${d.id} — ${d.count} Nennungen`, event);
       // Suppress hover effect when ego or KI highlight is active
       if (netFocusNode || hlState.mode !== "none") return;
       const nbrs = neighbors.get(d.id) || new Set();
