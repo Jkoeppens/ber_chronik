@@ -21,7 +21,9 @@ Datenbanken und Rohdokumente.
 
 Die Wurzel ist data/exporte/, nicht data/projects/. Dort schreibt das alte
 System; drei Kennungen gibt es in beiden Datenbanken. Gebildet wird der Pfad
-in projekte.export_verzeichnis(), an einer Stelle für Schreiben und Lesen.
+in src/neu/pfade.py — und dort an zwei Stellen, weil Schreiben und Lesen
+auseinanderfallen, sobald DATA_ROOT gesetzt ist: geschrieben wird immer aufs
+Laufwerk, gelesen notfalls auch aus dem Quellbestand (das Prüfstück).
 """
 
 from __future__ import annotations
@@ -34,7 +36,7 @@ from fastapi.responses import FileResponse
 from src.neu.db import verbindung_schreibend
 from src.neu.export.dienst import ExportFehler, exportieren
 from src.neu.modelle import ExportAntwort, ExportierenRumpf
-from src.neu.projekte import export_verzeichnis
+from src.neu.pfade import export_quelle
 from src.neu.server.gemeinsam import (
     FEHLER_ANTWORTEN,
     nicht_gefunden,
@@ -102,8 +104,12 @@ def exportdatei(projekt_id: str, datei: str) -> FileResponse:
             "kennung_ungueltig",
             f"'{projekt_id}' ist keine Projektkennung.",
         )
-    pfad = export_verzeichnis(projekt_id) / datei
-    if not pfad.is_file():
+    # export_quelle und nicht export_verzeichnis: geschrieben wird aufs
+    # Laufwerk, gelesen auch aus dem Quellbestand — das Prüfstück liegt im
+    # Git und wandert nicht mit. Mit DATA_ROOT fallen die beiden auseinander.
+    verzeichnis = export_quelle(projekt_id)
+    pfad = (verzeichnis / datei) if verzeichnis else None
+    if pfad is None or not pfad.is_file():
         raise nicht_gefunden(
             "exportdatei_fehlt",
             f"'{datei}' gibt es für '{projekt_id}' nicht — schon exportiert?",

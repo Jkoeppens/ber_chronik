@@ -17,6 +17,7 @@ from pathlib import Path
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
+from src.neu import pfade
 from src.neu import projekte as projekt_dienst
 from src.neu.modelle import Fehler, FehlerAntwort
 from src.neu.projekte import ProjektFehler
@@ -60,7 +61,13 @@ def projekt_muss_es_geben(con: sqlite3.Connection, projekt_id: str) -> None:
 
 # ── Pfade aus dem Netz ────────────────────────────────────────────────────────
 
-ROHDATEN = WURZEL / "data" / "raw"
+def rohdaten() -> Path:
+    """Wohin hochgeladene DOCX gelegt werden — träge, nicht beim Import.
+
+    Als Konstante hielte sie den Wert vom ersten Import fest; ein Test, der
+    DATA_ROOT danach setzt, schriebe dann in den Arbeitsbaum.
+    """
+    return pfade.rohdaten()
 
 
 def pfad_in_rohdaten(angabe: str) -> Path:
@@ -76,8 +83,9 @@ def pfad_in_rohdaten(angabe: str) -> Path:
             detail=("pfad_unzulaessig",
                     "pfad muss relativ zu data/raw/ sein und darf kein '..' enthalten."),
         )
-    ziel = (ROHDATEN / kandidat).resolve()
-    if not str(ziel).startswith(str(ROHDATEN.resolve())):
+    wurzel = rohdaten()
+    ziel = (wurzel / kandidat).resolve()
+    if not str(ziel).startswith(str(wurzel.resolve())):
         raise HTTPException(
             status_code=422,
             detail=("pfad_unzulaessig", "pfad zeigt aus data/raw/ heraus."),

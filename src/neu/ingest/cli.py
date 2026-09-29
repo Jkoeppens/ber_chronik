@@ -12,29 +12,21 @@ from __future__ import annotations
 
 import argparse
 import secrets
-import sqlite3
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 from src.neu import projekte
-from src.neu.db import db_pfad, verbindung_schreibend
+from src.neu.db import anlegen_wenn_noetig, db_pfad, verbindung_schreibend
 from src.neu.ingest.dienst import IngestFehler, einlesen
 from src.neu.ingest.kern import QUELLFORMATE
 
-ROOT = Path(__file__).resolve().parent.parent.parent.parent
-SCHEMA = ROOT / "schema.sql"
-
-
 def _anlegen(projekt_id: str, titel: str) -> None:
     """Datenbank aus schema.sql erzeugen und ein Projekt mit Eigentümer anlegen."""
-    pfad = db_pfad()
-    if not pfad.exists():
-        pfad.parent.mkdir(parents=True, exist_ok=True)
-        con = sqlite3.connect(pfad)
-        con.executescript(SCHEMA.read_text(encoding="utf-8"))
-        con.close()
-        print(f"Datenbank angelegt: {pfad}")
+    # Dasselbe Anlegen macht der Server beim Hochfahren; es steht in db.py, und
+    # zwar nur dort. Hier stand bis September 2026 eine zweite Fassung.
+    if anlegen_wenn_noetig():
+        print(f"Datenbank angelegt: {db_pfad()}")
 
     con = verbindung_schreibend()
     try:

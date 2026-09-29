@@ -35,7 +35,7 @@ from src.neu.modelle import (
 )
 from src.neu.server.gemeinsam import (
     FEHLER_ANTWORTEN,
-    ROHDATEN,
+    rohdaten,
     pfad_in_rohdaten,
 )
 
@@ -64,7 +64,7 @@ def quelle_anlegen(projekt_id: str, rumpf: QuelleAnlegen) -> IngestAntwort:
     if rumpf.quellformat == "pressesammlung":
         pfad = Path(rumpf.pfad).expanduser()
         if not pfad.is_absolute():
-            pfad = (ROHDATEN / pfad).resolve()
+            pfad = (rohdaten() / pfad).resolve()
         if not pfad.is_dir():
             raise HTTPException(
                 status_code=422,

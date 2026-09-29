@@ -1,0 +1,69 @@
+# requirements.lock.txt — feste Stände für den Betrieb
+#
+# WARUM GEPINNT. requirements.txt führt nur Spannen (gliner>=0.2,<1.0 und so
+# fort). Derselbe Commit ergab dadurch am 1. Juni ein anderes Abbild als am
+# 28. September: transformers sprang von 4.x auf 5.16.1, torch von 2.x auf
+# 2.14.0. Ein Neubau ist damit kein Neubau, sondern ein neues Programm.
+#
+# Gemessen: auf Railway scheiterte GLiNER nach dem Neubau still —
+#   [startup] GLiNER konnte nicht geladen werden:
+#   `tiktoken` is required to read a `tiktoken` file.
+# Ursache ist transformers 5.x zusammen mit fehlendem protobuf. Lokal, mit den
+# Ständen unten, lädt GLiNER.
+#
+# WOHER DIE ZAHLEN. Aus der Arbeitsumgebung, in der 699 pytest und 44
+# Playwright grün sind und GLiNER lädt. Das ist der belegte Stand, nicht ein
+# geratener.
+#
+# Aktualisieren: Stände hier hochsetzen, bauen, Tests und einen Akteurslauf
+# laufen lassen, erst dann übernehmen.
+
+# ── Dienst ────────────────────────────────────────────────────────────────────
+fastapi==0.135.2
+starlette==1.0.0            # fehlte in requirements.txt; kam nur über fastapi
+pydantic==2.12.5            # fehlte; kam nur über fastapi
+uvicorn[standard]==0.42.0
+python-multipart==0.0.24    # DOCX-Upload
+python-dotenv==1.2.2
+
+# ── Datenhaltung und Einlesen ────────────────────────────────────────────────
+aiosqlite==0.22.1           # nur src/generalized
+python-docx==1.1.2          # fehlte; DOCX lesen — kam über NICHTS
+PyYAML==6.0.2               # fehlte; Obsidian-Frontmatter — kam über NICHTS
+dropbox==12.0.2
+
+# ── Rechnen ──────────────────────────────────────────────────────────────────
+numpy==2.4.3                # fehlte; kam nur zufällig über voyageai/torch
+networkx==3.6.1             # fehlte; spring_layout im Export — kam über torch
+scikit-learn==1.8.0
+
+# ── Anbieter ─────────────────────────────────────────────────────────────────
+anthropic==0.46.0
+voyageai==0.5.0
+requests==2.33.1
+
+# ── Lokale Embeddings ────────────────────────────────────────────────────────
+# Beide fehlten, auch in requirements.txt: das Abbild konnte mit
+# EMBEDDING_PROVIDER=local — der Vorgabe — nicht rechnen. Gemessen am 28.
+# September im Container, Lauf 2 brach ab mit "FlagEmbedding nicht installiert".
+# Lokal sind sie da, deshalb fiel es nie auf.
+#   FlagEmbedding     → BAAI/bge-m3, die Themen (embeddings.py:86)
+#   sentence-transformers → MiniLM, die Akteure (embeddings.py:63)
+FlagEmbedding==1.4.0
+sentence-transformers==5.3.0
+
+# ── Entitätserkennung ────────────────────────────────────────────────────────
+# torch kommt aus dem CPU-Index (siehe Dockerfile): auf amd64 zöge der
+# Vorgabe-Index den vollen CUDA-Stapel nach — nvidia-cublas, cudnn, cufft,
+# cusolver, cusparse, nccl, triton —, auf einer Maschine ohne GPU.
+torch==2.12.0
+transformers==4.57.6        # NICHT 5.x — siehe oben
+tokenizers==0.22.2
+gliner==0.2.26
+sentencepiece==0.2.1
+protobuf==7.34.1            # ohne das kein SentencePiece-Tokenizer, kein GLiNER
+tqdm==4.66.5
+
+# ── Alter Server ─────────────────────────────────────────────────────────────
+# Nur von src/generalized gebraucht. Fällt weg, sobald dev_server.py weg ist.
+slowapi>=0.1.9,<1.0

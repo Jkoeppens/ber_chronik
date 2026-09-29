@@ -37,6 +37,7 @@ data/raw/ (server/ingest.py). Beides sind Dateien, keine Datenbanken.
 """
 
 import logging
+import os
 import sqlite3
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -65,6 +66,8 @@ from src.neu.server import (  # noqa: E402
     projekte,
     themen,
 )
+from src.neu import db as db_modul  # noqa: E402
+from src.neu import pfade  # noqa: E402
 from src.neu.server.gemeinsam import (  # noqa: E402
     WURZEL,
     fehler_antwort,
@@ -72,6 +75,62 @@ from src.neu.server.gemeinsam import (  # noqa: E402
 )
 
 protokoll = logging.getLogger("ber.neu")
+
+
+def protokoll_einrichten() -> None:
+    """Gibt 'ber' einen eigenen Ausgang nach stderr.
+
+    Ohne das war jede Startmeldung unsichtbar: uvicorn richtet Handler für
+    seine eigenen Logger ein, nicht für den Wurzel-Logger, und ohne Handler
+    verschluckt logging alles unter WARNING. Gemessen mit --log-level info —
+    die Anbieterzeilen standen nirgends.
+
+    Nur wenn noch keiner da ist: wer den Server einbettet und sein eigenes
+    Protokoll aufgesetzt hat, soll es behalten.
+    """
+    wurzel = logging.getLogger("ber")
+    if wurzel.handlers:
+        return
+    ausgang = logging.StreamHandler()
+    ausgang.setFormatter(logging.Formatter("%(levelname)s:     %(message)s"))
+    wurzel.addHandler(ausgang)
+    wurzel.setLevel(logging.INFO)
+
+
+def datenbank_melden() -> None:
+    """Legt die Datenbank an, wenn sie fehlt, und sagt in jedem Fall wo sie liegt.
+
+    Ein leeres Laufwerk ist der Normalfall einer frischen Installation. Vorher
+    fuhr der Server dort hoch und jeder Aufruf gab 500 'datenbank_fehlt' —
+    ein toter Dienst, dessen Ursache man nur im Fehlertext sah.
+
+    Dass eine Datenbank NEU entstanden ist, steht als Warnung im Protokoll und
+    nicht als Notiz: auf einem Laufwerk, das Daten tragen sollte, ist es die
+    wichtigste Zeile des Starts. Wer sie beim zweiten Deploy wiedersieht, weiß,
+    dass das Laufwerk nicht hält.
+    """
+    z = pfade.lage()
+    try:
+        neu = db_modul.anlegen_wenn_noetig()
+    except (FileNotFoundError, sqlite3.Error) as exc:
+        protokoll.error("Datenbank konnte nicht angelegt werden: %s", exc)
+        neu = False
+    else:
+        if neu:
+            protokoll.warning("=" * 68)
+            protokoll.warning("LEERE DATENBANK ANGELEGT: %s", z["datenbank"])
+            protokoll.warning("aus %s. Noch kein Projekt vorhanden.", db_modul.SCHEMA)
+            protokoll.warning("=" * 68)
+
+    protokoll.info("Quellbestand: %s", z["quellbestand"])
+    protokoll.info(
+        "Datenwurzel:  %s%s",
+        z["daten_wurzel"],
+        "" if os.environ.get("DATA_ROOT") else "  (DATA_ROOT nicht gesetzt)",
+    )
+    protokoll.info("  Datenbank:  %s", z["datenbank"])
+    protokoll.info("  Rohdaten:   %s", z["rohdaten"])
+    protokoll.info("  Exporte:    %s", z["exporte"])
 
 
 def anbieter_melden() -> None:
@@ -89,6 +148,8 @@ def anbieter_melden() -> None:
 
 @asynccontextmanager
 async def lebenszyklus(_: FastAPI):
+    protokoll_einrichten()
+    datenbank_melden()
     anbieter_melden()
     yield
 

@@ -1,5 +1,38 @@
-fly.toml
-.git/
-__pycache__/
-.envrc
-.venv/
+# Was nicht ins Abbild gehört.
+#
+# Ohne das sind es 2,3 GB Kontext: .git allein 131 MB, data/ 80 MB,
+# node_modules zweimal 82 MB. Gebraucht wird davon nichts — die
+# Abhängigkeiten werden im Abbild installiert, nicht kopiert.
+
+.git
+.github
+**/node_modules
+**/__pycache__
+**/*.pyc
+.venv
+.pytest_cache
+
+# Laufzeitdaten. Die Datenbank kommt aufs Laufwerk (NEU_DB), Rohdokumente
+# werden hochgeladen, Exporte entstehen zur Laufzeit.
+data/neu.db*
+data/projects.db*
+data/raw/*
+data/projects/
+data/exporte/*
+data/invites.json
+data/dropbox_tokens.json
+# Ausnahme: das Prüfstück ist eingecheckt und wird von den Browsertests
+# gebraucht — es gehört mit ins Abbild.
+!data/exporte/pruefstueck
+
+# Der Frontend-Build entsteht in der eigenen Stufe; ein lokaler würde ihn
+# überschreiben und wäre womöglich älter.
+frontend/build
+
+# Prüfung und Werkzeug
+playwright-report
+test-results
+tests
+.env
+.env.*
+!.env.example

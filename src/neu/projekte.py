@@ -26,7 +26,9 @@ import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
-WURZEL = Path(__file__).resolve().parent.parent.parent
+from src.neu import pfade
+
+# WURZEL und die Datenpfade stehen in src/neu/pfade.py.
 
 LOKALER_TOKEN = "lokal"
 LOKALER_NAME = "Lokaler Zugang"
@@ -137,22 +139,14 @@ def anlegen(con: sqlite3.Connection, titel: str, kennung: str | None = None) -> 
 # ── Lesen ─────────────────────────────────────────────────────────────────────
 
 def export_verzeichnis(projekt_id: str) -> Path:
-    """Wohin dieses System exportiert und wo viz/ nachsieht: data/exporte/{id}/.
-
-    Eine eigene Wurzel, nicht data/projects/{id}/exploration/. Dort schreibt
-    das alte System, und drei Kennungen — ber, nahda, osmanisch — gibt es in
-    beiden Datenbanken. Ein Export von hier aus überschriebe dann, was 8001
-    ausliefert, ohne dass irgendwo ein Konflikt sichtbar würde.
-
-    Die einzige Stelle, die den Pfad bildet: der Export schreibt hierhin
-    (export/dienst.py), die Route liest von hier (server/export.py), und
-    hat_export sieht hier nach.
-    """
-    return WURZEL / "data" / "exporte" / projekt_id
+    """Wohin dieses System exportiert. Siehe pfade.export_verzeichnis()."""
+    return pfade.export_verzeichnis(projekt_id)
 
 
 def _export_datei(projekt_id: str) -> Path:
-    return export_verzeichnis(projekt_id) / "data.json"
+    """Für hat_export: auch ein mitgeliefertes Verzeichnis zählt."""
+    quelle = pfade.export_quelle(projekt_id)
+    return (quelle or export_verzeichnis(projekt_id)) / "data.json"
 
 
 def _export_vorhanden(projekt_id: str) -> bool:

@@ -634,7 +634,7 @@ def test_exportdatei_liefert_die_datei(client: TestClient, tmp_path, monkeypatch
     ziel = tmp_path / "probe"
     ziel.mkdir()
     (ziel / "data.json").write_text('{"count": 1}', encoding="utf-8")
-    monkeypatch.setattr(export_router, "export_verzeichnis", lambda _: ziel)
+    monkeypatch.setattr(export_router, "export_quelle", lambda _: ziel)
 
     r = client.get("/data/exporte/probe/data.json")
     assert r.status_code == 200
