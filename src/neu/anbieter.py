@@ -219,10 +219,70 @@ def embedding_tempo(name: str | None = None) -> float | None:
     return float(wert) if wert else None
 
 
+def embedding_stapel(name: str | None = None) -> int | None:
+    """Wie viele Texte höchstens in EINE Anfrage gehen — oder None, wenn egal.
+
+    None für die lokalen Modelle: sie stapeln selbst und kennen keine Grenze je
+    Aufruf, nur Arbeitsspeicher. Voyage weist eine zu große Anfrage ab.
+    """
+    _, block = _embedding_block(name)
+    wert = block.get("stapel_grenze")
+    return int(wert) if wert else None
+
+
+def _gestapelt(
+    embed: Callable[[list[str]], np.ndarray], grenze: int
+) -> Callable[[list[str]], np.ndarray]:
+    """Zerlegt eine Anfrage in Stapel und setzt sie in der Reihenfolge zusammen.
+
+    Der Aufrufer merkt nichts davon: hinein gehen n Texte, heraus kommen n
+    Zeilen in derselben Reihenfolge. Genau daran hängt alles — der Vektor an
+    Platz i muss zum Text an Platz i gehören, und wenn das verrutscht, ist das
+    Ergebnis nicht falsch aussehend, sondern still falsch: jeder Akteur bekäme
+    die Ähnlichkeit eines anderen, und niemand sähe einen Fehler.
+
+    vstack über aufeinanderfolgende Scheiben hält die Reihenfolge von selbst;
+    es gibt keine Sortierung, die danebengehen könnte. Nacheinander und nicht
+    nebenläufig: die Anfragen kosten Geld, und eine Begrenzung je Zeit hat
+    Voyage auch — ein Fächer aus zehn gleichzeitigen Anfragen liefe dort hinein.
+
+    Dass sich die Werte durch das Zerlegen nicht ändern, liegt an der
+    Normalisierung: VoyageProvider teilt jede Zeile durch ihre eigene Länge.
+    Eine zeilenweise Rechnung kennt ihre Nachbarn nicht, und ein Stapel von 500
+    ergibt darum dieselben Zahlen wie einer von 1000.
+    """
+    def embed_in_stapeln(texte: list[str]) -> np.ndarray:
+        texte = list(texte)
+        if not texte:
+            # Kein Aufruf über das Netz für nichts. Die Form bleibt zweistufig,
+            # damit ein vstack darüber nicht an der Dimensionszahl scheitert.
+            return np.empty((0, 0), dtype=np.float32)
+        if len(texte) <= grenze:
+            return embed(texte)
+        teile = [embed(texte[i:i + grenze]) for i in range(0, len(texte), grenze)]
+        zusammen = np.vstack(teile)
+        # Eine Behauptung über fremden Code, und darum geprüft: käme ein Stapel
+        # kürzer zurück als hineingegeben, verschöbe sich ab dort jede Zuordnung.
+        if len(zusammen) != len(texte):
+            raise AnbieterFehler(
+                f"Das Einbettungsmodell gab {len(zusammen)} Vektoren für "
+                f"{len(texte)} Texte zurück.",
+                "stapel_unvollstaendig",
+            )
+        return zusammen
+
+    return embed_in_stapeln
+
+
 def embedding_funktion(
     aufgabe: str, name: str | None = None
 ) -> tuple[Callable[[list[str]], np.ndarray], str]:
-    """Gibt (embed, Modellname) zurück. Bricht ab, wenn etwas fehlt."""
+    """Gibt (embed, Modellname) zurück. Bricht ab, wenn etwas fehlt.
+
+    Die eine Stelle für beide Aufgaben: Themen und Akteure holen ihre
+    Einbettungsfunktion hier. Was hier gilt — etwa die Stapelgrenze —, gilt
+    darum für beide, ohne dass es zweimal dastehen müsste.
+    """
     anbieter, block = _embedding_block(name)
     modell = embedding_modellname(aufgabe, name)
     _schluessel_pruefen(anbieter, block)
@@ -231,7 +291,9 @@ def embedding_funktion(
         from src.generalized.embeddings import VoyageProvider
 
         provider = VoyageProvider()
-        return (lambda texte: provider.encode(list(texte))), modell
+        embed = lambda texte: provider.encode(list(texte))  # noqa: E731
+        grenze = embedding_stapel(name)
+        return (_gestapelt(embed, grenze) if grenze else embed), modell
 
     if aufgabe == "akteure":
         from src.generalized.embeddings import MiniLMProvider

@@ -55,6 +55,14 @@ modell_akteure = "voyage-4"
 # Voyage-4 liegt bei kurzen Namen enger beieinander als MiniLM. Mit 0,92
 # führte ein Voyage-Lauf praktisch nichts mehr zusammen.
 schwelle_akteure = 0.78
+# Wie viele Texte höchstens in EINE Anfrage gehen. Voyage weist mehr ab:
+#   "The batch size limit is 1000. Your batch size is 1100."
+# Gemessen im Betrieb an einem Akteurslauf. Es trifft nicht nur die Akteure —
+# die Einheiten gehen denselben Weg, und ber lag mit 949 knapp darunter.
+# Als Wert hier und nicht als Zahl im Code: eine Eigenschaft des Anbieters wie
+# das Modell und die Schwelle. Wer sie hebt, wenn Voyage sie hebt, ändert eine
+# Zeile und keinen Code.
+stapel_grenze = 1000
 # Kein einheiten_je_sekunde: über das Netz hängt die Dauer an der Leitung und
 # an der Stapelgröße, und gemessen ist sie nicht. Lieber keine Angabe als eine
 # erfundene.
