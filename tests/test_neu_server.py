@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT))
 
 from src.neu.db import db_pfad          # noqa: E402
 from src.neu.server import app          # noqa: E402
+from tests.conftest import TEST_PASSWORT, basic_kopf  # noqa: E402
 
 pytestmark = pytest.mark.skipif(
     not db_pfad().exists(),
@@ -32,7 +33,16 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(scope="module")
 def client() -> TestClient:
-    return TestClient(app)
+    """Angemeldet. Der Riegel gilt für jede Anfrage — auch im Test.
+
+    auth und kein Umgehen: die Tests gehen DURCH die Middleware, mit dem
+    Passwort aus conftest.py. Ein Schalter, der sie für Tests abschaltet, wäre
+    die Hintertür, die sie verhindern soll — und 668 Tests, die den Riegel nie
+    berühren, wären ein Netz mit einem Loch genau an der Stelle, die zählt.
+
+    Der Benutzername ist beliebig; geprüft wird nur das Passwort.
+    """
+    return TestClient(app, headers=basic_kopf())
 
 
 def fehlergestalt_pruefen(body: dict, status: int) -> dict:
@@ -74,7 +84,7 @@ def test_leere_datenbank_gibt_200_mit_leerer_liste(tmp_path, monkeypatch) -> Non
     con.close()
 
     monkeypatch.setenv("NEU_DB", str(leere_db))
-    r = TestClient(app).get("/api/projekte")
+    r = TestClient(app, headers=basic_kopf()).get("/api/projekte")
 
     assert r.status_code == 200
     assert r.json() == {"anzahl": 0, "projekte": []}
@@ -486,7 +496,7 @@ def _eigene_db(tmp_path, monkeypatch) -> tuple[TestClient, sqlite3.Connection]:
             con.execute("INSERT INTO kategorie (projekt_id, name, beschreibung, "
                         "schlagworte, herkunft) VALUES ('p',?,'','','vorschlag')", (name,))
     monkeypatch.setenv("NEU_DB", str(pfad))
-    return TestClient(app), con
+    return TestClient(app, headers=basic_kopf()), con
 
 
 def test_leere_liste_haengt_keinen_lauf_an(tmp_path, monkeypatch) -> None:

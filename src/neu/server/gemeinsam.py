@@ -83,11 +83,53 @@ def pfad_in_rohdaten(angabe: str) -> Path:
             detail=("pfad_unzulaessig",
                     "pfad muss relativ zu data/raw/ sein und darf kein '..' enthalten."),
         )
-    wurzel = rohdaten()
+    wurzel = rohdaten().resolve()
     ziel = (wurzel / kandidat).resolve()
-    if not str(ziel).startswith(str(wurzel.resolve())):
+    # is_relative_to und nicht startswith: '/data/rawboese' beginnt mit
+    # '/data/raw' und kam damit durch. Ohne '..' und ohne absolute Angabe war
+    # das nicht zu erreichen — über einen Symlink in data/raw/ aber doch, denn
+    # resolve() folgt ihm.
+    if not ziel.is_relative_to(wurzel):
         raise HTTPException(
             status_code=422,
             detail=("pfad_unzulaessig", "pfad zeigt aus data/raw/ heraus."),
+        )
+    return ziel
+
+
+def pfad_in_obsidian(angabe: str) -> Path:
+    """Bindet einen lokalen Obsidian-Ordner an OBSIDIAN_WURZEL.
+
+    Ohne die Variable ist dieser Weg GESCHLOSSEN, und die Meldung sagt das.
+    Kein Rückfall auf 'dann eben alles': bis September 2026 nahm dieser Weg
+    jeden absoluten Pfad, und im Netz ist das eine Leseprimitive für alles, was
+    der Prozess lesen darf.
+
+    Geprüft wird gegen die AUFGELÖSTE Form und nicht gegen eine Liste
+    verbotener Zeichen. Ein '..' abzuweisen genügt nicht: ein Symlink im Tresor
+    führt ohne jedes '..' hinaus, und resolve() folgt ihm. Wer stattdessen die
+    Zeichenkette prüft, prüft die Absicht des Aufrufers statt das Ziel.
+
+    403 und nicht 422: die Angabe ist nicht ungültig, sie ist nicht erlaubt.
+    """
+    wurzel = pfade.obsidian_wurzel()
+    if wurzel is None:
+        raise HTTPException(
+            status_code=403,
+            detail=("obsidian_wurzel_fehlt",
+                    "Ein lokaler Ordner als Quelle ist nicht freigegeben. Dieser "
+                    "Weg braucht OBSIDIAN_WURZEL in der Umgebung — den Ordner, "
+                    "unter dem ein Tresor liegen darf. Ohne sie bleibt der Weg "
+                    "über Dropbox."),
+        )
+    ziel = Path(angabe).expanduser()
+    if not ziel.is_absolute():
+        ziel = wurzel / ziel
+    ziel = ziel.resolve()
+    if not ziel.is_relative_to(wurzel):
+        raise HTTPException(
+            status_code=403,
+            detail=("pfad_ausserhalb_obsidian",
+                    f"'{angabe}' liegt nicht unter OBSIDIAN_WURZEL ({wurzel})."),
         )
     return ziel

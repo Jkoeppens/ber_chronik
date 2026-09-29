@@ -28,6 +28,11 @@ gewinnt) und protokolliert, welche Anbieter aktiv sind und was fehlt. Ein
 fehlender Anbieter bricht den Start nicht ab; nur die Schritte, die ihn
 brauchen, antworten dann mit 503.
 
+ZUGANG_PASSWORT dagegen bricht ihn ab. Jede Anfrage — Fläche, API, /viz/,
+Exportdateien — verlangt HTTP Basic damit; siehe src/neu/zugang.py. Es gibt
+keine Vorgabe, weil eine Vorgabe behaupten würde, dieser Dienst dürfe offen
+stehen.
+
 Die einzige Datenbank ist data/neu.db. data/projects.db wird nie geöffnet —
 darüber wacht test_projects_db_wird_nie_geoeffnet, das jede Zeichenkette im
 Code prüft. dev_server.py bleibt unberührt.
@@ -70,6 +75,7 @@ from src.neu.server import (  # noqa: E402
 )
 from src.neu import db as db_modul  # noqa: E402
 from src.neu import pfade  # noqa: E402
+from src.neu import zugang  # noqa: E402
 from src.neu.server.gemeinsam import (  # noqa: E402
     WURZEL,
     fehler_antwort,
@@ -182,12 +188,29 @@ async def lebenszyklus(_: FastAPI):
     yield
 
 
+# ── Der Riegel ────────────────────────────────────────────────────────────────
+# Hier und nicht im Lebenszyklus: dort ist uvicorn schon auf dem Port, und ein
+# Fehler danach ergäbe einen Dienst, der lauscht und jede Anfrage abweist. Beim
+# Import geworfen bricht der Start ab, bevor irgendetwas erreichbar ist.
+#
+# Damit lässt sich dieses Modul ohne ZUGANG_PASSWORT nicht einmal importieren.
+# Das ist gewollt und der Grund, warum tests/conftest.py die Variable setzt: ein
+# Test, der den Riegel versehentlich umgeht, soll auffallen, indem er gar nicht
+# erst läuft.
+ZUGANG_GEHEIMNIS = zugang.passwort()
+
 app = FastAPI(
     title="BER Chronik — Leseserver",
     description="Liest data/neu.db. Nur lesend.",
     version="0.1.0",
     lifespan=lebenszyklus,
 )
+
+# add_middleware und nicht ein Router-Abhängiges: so liegt der Riegel VOR allem,
+# was unten kommt — den Routern, dem /viz-Mount, den Exportdateien und der
+# SvelteKit-Fläche unter /. Eine Abhängigkeit je Route hätte bei jeder neuen
+# Route vergessen werden können.
+app.add_middleware(zugang.Riegel, geheimnis=ZUGANG_GEHEIMNIS)
 
 
 # ── Die Router, ein Modul je Schritt ──────────────────────────────────────────

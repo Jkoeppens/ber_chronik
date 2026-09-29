@@ -141,6 +141,11 @@ relevante Entscheidung schon dokumentiert ist.
 **4. `ARCHITECTURE.md`** — Technische Muster.
 Datenpfade, SSE-Protokoll, Auth-Pattern, Locks. Setzt Verständnis des Wizards voraus.
 
-**5. `STATUS.md`** — Was gerade tatsächlich funktioniert und was nicht.
+**5. `DEPLOYMENT.md`** — Wie der Dienst gebaut und betrieben wird.
+Welche Umgebungsvariablen gesetzt sein müssen, damit er überhaupt startet, was
+auf Railway gehört, und warum es keinen Gesundheitscheck gibt. Nur für den
+neuen Dienst; das alte System auf 8001 ist davon unberührt.
+
+**6. `STATUS.md`** — Was gerade tatsächlich funktioniert und was nicht.
 Bekannte Fallbacks, offene Inkonsistenzen, Bugs. Zuletzt lesen — es erklärt Abweichungen
 vom Soll-Zustand, der erst durch die anderen Dokumente klar ist.

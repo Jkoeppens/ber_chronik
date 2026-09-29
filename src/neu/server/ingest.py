@@ -5,9 +5,11 @@ Drei Wege ins System, und die Anmeldung, die den dritten möglich macht. Sie
 stehen zusammen, weil sie dieselbe Frage verschieden beantworten: woher kommt
 das Rohdokument.
 
-Der Pfad aus dem Netz wird gebunden, nicht bereinigt — siehe
-gemeinsam.pfad_in_rohdaten(). Für eine Sammlung gilt die Bindung nicht: ein
-Obsidian-Ordner liegt nie unter data/raw/.
+Der Pfad aus dem Netz wird gebunden, nicht bereinigt — an data/raw/ für
+Dokumente (gemeinsam.pfad_in_rohdaten), an OBSIDIAN_WURZEL für einen lokalen
+Tresor (gemeinsam.pfad_in_obsidian). Zwei Wurzeln, weil ein Obsidian-Ordner nie
+unter data/raw/ liegt; gebunden werden beide. Ist OBSIDIAN_WURZEL nicht gesetzt,
+ist der lokale Ordnerweg geschlossen und es bleibt der über Dropbox.
 """
 
 from __future__ import annotations
@@ -35,7 +37,7 @@ from src.neu.modelle import (
 )
 from src.neu.server.gemeinsam import (
     FEHLER_ANTWORTEN,
-    rohdaten,
+    pfad_in_obsidian,
     pfad_in_rohdaten,
 )
 
@@ -56,15 +58,16 @@ def quelle_anlegen(projekt_id: str, rumpf: QuelleAnlegen) -> IngestAntwort:
     Ein DOCX kommt aus data/raw/ — dorthin legt der Upload es ab, und ein Pfad
     aus dem Netz darf nicht ins übrige Dateisystem zeigen.
 
-    Ein Obsidian-Ordner liegt dort nie: er liegt in Dropbox oder als
-    absoluter Pfad auf der Platte, etwa unter ~/Library/CloudStorage/. Für
-    Sammlungen gilt die data/raw/-Bindung deshalb nicht — geprüft wird, dass
-    der Pfad ein vorhandenes Verzeichnis ist.
+    Ein Obsidian-Ordner liegt dort nie: er liegt in Dropbox oder als absoluter
+    Pfad auf der Platte, etwa unter ~/Library/CloudStorage/. Für Sammlungen gilt
+    die data/raw/-Bindung deshalb nicht — dafür gilt OBSIDIAN_WURZEL, und ohne
+    sie ist dieser Weg geschlossen. Siehe pfad_in_obsidian().
+
+    Bis September 2026 wurde hier jeder absolute Pfad genommen und alles
+    darunter an .md-Dateien eingelesen.
     """
     if rumpf.quellformat == "pressesammlung":
-        pfad = Path(rumpf.pfad).expanduser()
-        if not pfad.is_absolute():
-            pfad = (rohdaten() / pfad).resolve()
+        pfad = pfad_in_obsidian(rumpf.pfad)
         if not pfad.is_dir():
             raise HTTPException(
                 status_code=422,

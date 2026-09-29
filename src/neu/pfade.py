@@ -87,6 +87,28 @@ def export_quelle(projekt_id: str) -> Path | None:
     return None
 
 
+def obsidian_wurzel() -> Path | None:
+    """Unter welchem Ordner ein lokaler Obsidian-Tresor liegen darf — oder None.
+
+    None heißt: dieser Weg ist geschlossen. Das ist die Vorgabe, und im Betrieb
+    bleibt es dabei — dort kommt Obsidian über Dropbox, und einen
+    Obsidian-Ordner gibt es auf dem Container gar nicht.
+
+    Bis September 2026 gab es diese Schranke nicht: POST /api/projekt/{id}/quelle
+    nahm bei quellformat=pressesammlung jeden absoluten Pfad und las alle
+    .md-Dateien darunter ein. Lokal am Schreibtisch ist das bequem; hinter einer
+    öffentlichen Adresse ist es eine Leseprimitive für alles, was der Prozess
+    lesen darf.
+
+    Aufgelöst zurückgegeben, damit der Vergleich gegen die echte Form läuft und
+    nicht gegen die geschriebene.
+    """
+    roh = (os.environ.get("OBSIDIAN_WURZEL") or "").strip()
+    if not roh:
+        return None
+    return Path(roh).expanduser().resolve()
+
+
 def lage() -> dict[str, str]:
     """Alle Pfade auf einen Blick — für die Startmeldung und /api/konfiguration."""
     return {
@@ -95,4 +117,5 @@ def lage() -> dict[str, str]:
         "datenbank": str(datenbank()),
         "rohdaten": str(rohdaten()),
         "exporte": str(daten_wurzel() / "exporte"),
+        "obsidian_wurzel": str(obsidian_wurzel() or ""),
     }

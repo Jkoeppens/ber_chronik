@@ -109,6 +109,12 @@ async def run_pipeline_sse(steps):
 
 ## Auth-Pattern: `_require_token`
 
+> **Nur `src/generalized`.** Der neue Dienst hat das nicht: dort liegt seit
+> September 2026 eine Middleware vor allem (`src/neu/zugang.py`, HTTP Basic aus
+> `ZUGANG_PASSWORT`), und ohne sie startet er nicht. Die `zugang`-Tabelle mit
+> Token je Person ist Schritt 8; wenn sie kommt, wird die Middleware ersetzt —
+> deshalb ist am Frontend nichts um ein Behelfsverfahren herum gebaut.
+
 ### Aufrufsyntax (Walrus-Operator)
 
 ```python
