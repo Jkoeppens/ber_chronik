@@ -330,6 +330,26 @@ def dateien_eines_projekts(con: sqlite3.Connection, projekt_id: str) -> dict:
             f"Kein Projekt mit der Kennung '{projekt_id}'.", "projekt_nicht_gefunden"
         )
 
+    # Erst alle Pfade der ANDEREN Projekte, AUFGELÖST. Nicht als SQL-Vergleich
+    # auf die Zeichenkette: dieselbe Datei steht in der Datenbank verschieden
+    # geschrieben. Wer über die CLI einliest, trägt 'data/raw/x.docx' ein; wer
+    # hochlädt, '/Users/…/data/raw/x.docx'. Als Zeichenketten sind das zwei
+    # Dateien, als Pfade eine.
+    #
+    # Am 29. September hat genau das drei Quelldokumente gekostet: beim Löschen
+    # dreier Wegwerfprojekte galten die Dateien von ber, damaskus und nahda als
+    # nicht geteilt und wurden mitgenommen. Sie ließen sich aus dem Git und aus
+    # den Originalordnern zurückholen — verlassen kann man sich darauf nicht.
+    fremde: set[Path] = set()
+    for pfad_text, in con.execute(
+        "SELECT pfad FROM quelle WHERE projekt_id <> ? AND pfad IS NOT NULL",
+        (projekt_id,),
+    ):
+        try:
+            fremde.add(Path(pfad_text).expanduser().resolve())
+        except OSError:
+            continue          # unauflösbar heißt: zeigt auf nichts Löschbares
+
     eigene: list[dict] = []
     geteilte: list[dict] = []
     for pfad_text, quellformat in con.execute(
@@ -340,15 +360,12 @@ def dateien_eines_projekts(con: sqlite3.Connection, projekt_id: str) -> dict:
         pfad = Path(pfad_text)
         if not pfad.is_file():
             continue          # fehlt schon, oder ist ein Dropbox-Ordner
-        andere = con.execute(
-            "SELECT COUNT(*) FROM quelle WHERE pfad = ? AND projekt_id <> ?",
-            (pfad_text, projekt_id),
-        ).fetchone()[0]
+        andere = 1 if pfad.expanduser().resolve() in fremde else 0
         eintrag = {
             "name": pfad.name,
             "bytes": pfad.stat().st_size,
             "dateien": 1,
-            "hinweis": f"auch von {andere} anderem Projekt benutzt" if andere else "",
+            "hinweis": "wird von einem anderen Projekt benutzt" if andere else "",
             "pfad": str(pfad),
         }
         (geteilte if andere else eigene).append(eintrag)

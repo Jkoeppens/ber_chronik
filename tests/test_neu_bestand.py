@@ -278,6 +278,52 @@ def test_geteilte_rohdatei_bleibt(con, laufwerk):
     assert Path(pfad).is_file()
 
 
+def test_geteilt_gilt_auch_bei_anderer_schreibweise(con, laufwerk, monkeypatch):
+    """Dieselbe Datei, zweimal verschieden geschrieben, ist EINE Datei.
+
+    Der Fehler, der am 29. September drei Quelldokumente gekostet hat: die
+    Prüfung auf geteilte Dateien verglich die Zeichenketten aus der Spalte.
+    Wer über die CLI einliest, trägt 'data/raw/x.docx' ein; wer hochlädt, den
+    absoluten Pfad. Als Zeichenketten sind das zwei Dateien — und beim Löschen
+    des einen Projekts verschwand die Quelle des anderen.
+
+    Gemessen wurde es an ber, damaskus und nahda, alle drei mit relativem Pfad,
+    alle drei von einem Wegwerfprojekt mit absolutem Pfad überfahren.
+    """
+    datei = _rohdatei(laufwerk, "geteilt.docx", b"a" * 700)
+    monkeypatch.chdir(laufwerk)
+
+    # 'alt' nennt sie relativ (wie die CLI), 'neu' absolut (wie der Upload).
+    _projekt(con, "alt", "raw/geteilt.docx")
+    _projekt(con, "neu", str(datei))
+
+    z = projekte.dateien_eines_projekts(con, "neu")
+    assert [d["name"] for d in z["rohdateien"]] == []
+    assert [d["name"] for d in z["rohdateien_geteilt"]] == ["geteilt.docx"]
+
+    projekte.loeschen(con, "neu")
+    assert datei.exists(), "Die Datei von 'alt' wurde mitgerissen"
+
+    # Und umgekehrt: jetzt gehört sie 'alt' allein und darf mitgehen.
+    z = projekte.dateien_eines_projekts(con, "alt")
+    assert [d["name"] for d in z["rohdateien"]] == ["geteilt.docx"]
+    projekte.loeschen(con, "alt")
+    assert not datei.exists()
+
+
+def test_ein_symlink_auf_dieselbe_datei_zaehlt_auch_als_geteilt(con, laufwerk):
+    """resolve() löst ihn auf — sonst wäre es wieder dieselbe Lücke."""
+    datei = _rohdatei(laufwerk, "echt.docx", b"a" * 400)
+    umweg = laufwerk / "raw" / "umweg.docx"
+    umweg.symlink_to(datei)
+
+    _projekt(con, "eins", str(datei))
+    _projekt(con, "zwei", str(umweg))
+
+    projekte.loeschen(con, "zwei")
+    assert datei.exists(), "Der Symlink-Weg riss die echte Datei mit"
+
+
 def test_loeschen_ohne_dateien_bleibt_moeglich(con, laufwerk):
     """Ein Projekt, dessen Rohdatei schon weg ist, muss löschbar bleiben."""
     _projekt(con, "eins", str(laufwerk / "raw" / "gibtsnicht.docx"))
