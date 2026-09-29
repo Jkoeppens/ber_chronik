@@ -451,3 +451,176 @@ a.src-ref:hover { color: #111; border-bottom-color: #555; }
   padding: 10px 12px;
   background: #fff;
 }
+
+/* ── Der Projektwähler in der Kopfzeile ───────────────────────────────────────
+   Drei Abschnitte, drei Tönungen, und die Tönung ist die Aussage:
+
+     getönt (lila)  gehört zu dem, was gerade offen ist
+     weiß           anderes derselben Art — andere Projekte
+     beige          die Farbe der Anwendung außen herum: hier verlässt man
+                    die Visualisierung
+
+   Das Beige ist dasselbe wie das der Kopfzeile (--color-background-secondary).
+   Dass der letzte Abschnitt aussieht wie der Rahmen und nicht wie der Inhalt,
+   ist der ganze Hinweis. */
+
+#projektwahl {
+  position: relative;
+}
+
+#projekt-knopf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  padding: 3px 6px;
+  margin-left: -6px;      /* der Text soll bleiben, wo er stand */
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+#projekt-knopf:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+#project-title-text {
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+#projekt-pfeil {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  transition: transform 0.12s;
+}
+
+#projekt-knopf[aria-expanded="true"] #projekt-pfeil {
+  transform: rotate(180deg);
+}
+
+#projekt-menue {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 60;            /* über der Zeichenfläche, unter dem Tutorial */
+  min-width: 260px;
+  max-width: 340px;
+  background: #fff;
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: 7px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.13);
+  overflow: hidden;
+  font-size: 13px;
+}
+
+#projekt-menue.offen {
+  display: block;
+}
+
+.pw-abschnitt {
+  padding: 7px 0;
+}
+
+.pw-abschnitt + .pw-abschnitt {
+  border-top: 1px solid var(--color-border-tertiary);
+}
+
+.pw-kopf {
+  padding: 2px 13px 5px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+}
+
+.pw-eintrag {
+  display: block;
+  padding: 6px 13px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pw-eintrag:hover {
+  background: rgba(0, 0, 0, 0.055);
+}
+
+/* 1 · Das offene Projekt. */
+.pw-dieses {
+  background: #faf5ff;
+}
+
+.pw-dieses .pw-kopf {
+  color: #7c3aed;
+}
+
+.pw-dieses .pw-eintrag {
+  color: #5b21b6;
+  font-weight: 500;
+}
+
+.pw-dieses .pw-eintrag:hover {
+  background: #f1e8ff;
+}
+
+/* 2 · Andere Projekte. Weiß — dasselbe Papier wie das Menü selbst, weil es
+       dieselbe Art Sache ist. Die Liste darf lang werden. */
+.pw-andere #pw-liste {
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+/* 3 · Hinaus. */
+.pw-verlassen {
+  background: var(--color-background-secondary);
+  border-top-width: 1px;
+}
+
+.pw-verlassen .pw-eintrag {
+  color: var(--color-text-secondary);
+}
+
+.pw-verlassen .pw-eintrag::after {
+  content: " →";
+}
+
+.pw-hinweis {
+  padding: 5px 13px 6px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  white-space: normal;
+}
+
+.pw-fehler {
+  color: #b45309;
+}
+
+/* Dieselbe Liste auf der Seite 'Kein Projekt gewählt'. Dort ohne Menürahmen —
+   sie ist da kein Aufklapper, sondern der Inhalt. */
+#kp-liste {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 38em;
+}
+
+#kp-liste .pw-eintrag {
+  padding: 5px 11px;
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13px;
+}
+
+#kp-liste .pw-hinweis {
+  padding: 0;
+}

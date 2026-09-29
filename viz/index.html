@@ -27,6 +27,10 @@
     dafür <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">?project=…</code>
     — den Weg dorthin nimmt man am besten über die Projektliste.
   </div>
+  <!-- Dieselbe Liste wie im Menü der Kopfzeile. Ohne sie wäre diese Seite eine
+       Sackgasse mit einem einzigen Ausgang: der Fall 'kein Projekt' entsteht
+       gerade dann, wenn jemand nicht weiß, welche es gibt. -->
+  <div id="kp-liste"></div>
   <a id="zur-liste" href="/" style="font-size:13px; color:#6d28d9; text-decoration:none;">Zur Projektliste →</a>
 </div>
 
@@ -37,8 +41,40 @@
            Der Rückweg daneben wird unten aus ?project= gebildet und bleibt ohne
            diesen Parameter unsichtbar — es gäbe dann kein Projekt, in das er
            führen könnte. -->
-      <span id="project-title-text" style="font-size:15px; font-weight:500; white-space:nowrap;">BER Chronik 1989–2017</span>
-      <a id="zur-oberflaeche" href="#" style="display:none; font-size:12px; color:#6d28d9; text-decoration:none; white-space:nowrap;">Projekt bearbeiten →</a>
+      <div id="projektwahl">
+        <button id="projekt-knopf" type="button" aria-haspopup="true" aria-expanded="false">
+          <span id="project-title-text">BER Chronik 1989–2017</span>
+          <span id="projekt-pfeil" aria-hidden="true">▾</span>
+        </button>
+
+        <!-- Drei Abschnitte, drei Tönungen, und die Tönung ist die Aussage:
+             getönt = gehört zu dem, was gerade offen ist; weiß = anderes
+             derselben Art; beige = die Farbe der Anwendung außen herum, also
+             'du verlässt die Visualisierung'.
+
+             display über eine Klasse und NICHT über das hidden-Attribut: bei
+             #kein-projekt oben stand genau daran der Fehler, weil ein
+             Inline-display die Browserregel [hidden]{display:none} schlägt.
+             Hier gibt es gar kein Inline-display, an dem sich das wiederholen
+             könnte. -->
+        <div id="projekt-menue" role="menu">
+          <div class="pw-abschnitt pw-dieses">
+            <div class="pw-kopf">Dieses Projekt</div>
+            <a id="pw-bearbeiten" class="pw-eintrag" href="#" role="menuitem">Bearbeiten</a>
+          </div>
+
+          <div class="pw-abschnitt pw-andere">
+            <div class="pw-kopf">Andere Projekte</div>
+            <!-- Wird beim ersten Öffnen gefüllt, nicht beim Laden der Seite:
+                 wer das Menü nie aufklappt, soll dafür keine Anfrage kosten. -->
+            <div id="pw-liste"><div class="pw-hinweis">Wird geladen …</div></div>
+          </div>
+
+          <div class="pw-abschnitt pw-verlassen">
+            <a id="pw-uebersicht" class="pw-eintrag" href="/" role="menuitem">Projektübersicht</a>
+          </div>
+        </div>
+      </div>
       <nav id="tabs" style="display:flex; gap:0; align-items:center;">
         <button class="tab active" id="tab-timeline">Timeline</button>
         <button class="tab"        id="tab-network">Netzwerk</button>
@@ -95,15 +131,101 @@
 // der Fläche. boot.js lädt in dem Fall gar nicht erst (siehe dort).
 (function () {
   const projekt = new URLSearchParams(location.search).get("project");
+
+  /** Die Projektliste, einmal geholt und dann behalten. */
+  let geholt = null;
+  function projekteHolen() {
+    if (!geholt) geholt = fetch(`${API_URL}/api/projekte`)
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then(d => d.projekte || []);
+    return geholt;
+  }
+
+  /** Baut Einträge in ein Ziel. Ohne das aktuelle Projekt: der Abschnitt heißt
+   *  "Andere", und das offene steht schon im Abschnitt darüber. Ein zweites Mal
+   *  als "aktuell" markiert wäre dieselbe Sache an zwei Stellen. */
+  function listeFuellen(ziel, projekte) {
+    const andere = projekte.filter(p => p.id !== projekt);
+    ziel.textContent = "";
+    if (!andere.length) {
+      const leer = document.createElement("div");
+      leer.className = "pw-hinweis";
+      leer.textContent = projekt ? "Es gibt kein weiteres Projekt." : "Noch kein Projekt.";
+      ziel.appendChild(leer);
+      return;
+    }
+    for (const p of andere) {
+      const a = document.createElement("a");
+      a.className = "pw-eintrag";
+      a.setAttribute("role", "menuitem");
+      a.href = `?project=${encodeURIComponent(p.id)}`;
+      a.textContent = p.titel || p.id;
+      ziel.appendChild(a);
+    }
+  }
+
+  /** Scheitert der Abruf, steht das da — nicht eine leere Liste, die aussieht,
+   *  als gäbe es nichts. Der Fall tritt wirklich auf: viz/ wird auch ohne
+   *  Server ausgeliefert, und dann gibt es /api/projekte nicht. */
+  function fehlerZeigen(ziel, fehler) {
+    ziel.textContent = "";
+    const zeile = document.createElement("div");
+    zeile.className = "pw-hinweis pw-fehler";
+    zeile.textContent = `Projektliste nicht abrufbar (${fehler.message}).`;
+    ziel.appendChild(zeile);
+  }
+
+  // ── Ohne Projekt ────────────────────────────────────────────────────────────
+  // Die Kopfzeile stellt sich nicht: #main ist ganz ausgeblendet, es gibt also
+  // weder einen Namen zum Anklicken noch ein Menü, aus dem Abschnitt 1
+  // entfallen müsste. Die Frage löst sich an der Stelle von selbst — bleibt
+  // die Meldung, und die bekommt die Liste, die sie braucht.
   if (!projekt) {
     document.getElementById("kein-projekt").style.display = "flex";
     document.getElementById("main").style.display = "none";
     document.getElementById("zur-liste").href = `${API_URL}/`;
+    const ziel = document.getElementById("kp-liste");
+    projekteHolen()
+      .then(ps => listeFuellen(ziel, ps))
+      .catch(e => fehlerZeigen(ziel, e));
     return;
   }
-  const link = document.getElementById("zur-oberflaeche");
-  link.href = `${API_URL}/projekt/${encodeURIComponent(projekt)}/export`;
-  link.style.display = "";
+
+  // ── Mit Projekt: das Menü ───────────────────────────────────────────────────
+  document.getElementById("pw-bearbeiten").href =
+    `${API_URL}/projekt/${encodeURIComponent(projekt)}/export`;
+  document.getElementById("pw-uebersicht").href = `${API_URL}/`;
+
+  const knopf = document.getElementById("projekt-knopf");
+  const menue = document.getElementById("projekt-menue");
+  const liste = document.getElementById("pw-liste");
+  let gefuellt = false;
+
+  function schliessen() {
+    menue.classList.remove("offen");
+    knopf.setAttribute("aria-expanded", "false");
+  }
+
+  knopf.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (menue.classList.contains("offen")) return schliessen();
+    menue.classList.add("offen");
+    knopf.setAttribute("aria-expanded", "true");
+    if (!gefuellt) {
+      gefuellt = true;
+      projekteHolen()
+        .then(ps => listeFuellen(liste, ps))
+        .catch(e => { gefuellt = false; fehlerZeigen(liste, e); });
+    }
+  });
+
+  // Klick im Menü soll nicht bis zum document durchschlagen und es gleich
+  // wieder zumachen. Ein Klick auf einen Eintrag navigiert ohnehin.
+  menue.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("click", schliessen);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") schliessen();
+  });
 })();
 </script>
 <script src="highlight.js"></script>
