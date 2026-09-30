@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import {
 		ApiFehler,
@@ -128,19 +129,131 @@
 	const gezeigt = $derived(zeigeAlle ? sichtbar : sichtbar.slice(0, 60));
 
 	// ── Die Jahresachse links ───────────────────────────────────────────────
+	//
+	// Nur bei chronologischer Sortierung. In Dokumentreihenfolge wird sie
+	// ausgeblendet, und die Liste bekommt die Breite: eine Jahresachse neben
+	// einer Liste, die nicht nach Jahren geordnet ist, ist schlimmer als keine.
+	// Der Marker spränge bei jedem Scrollen vor und zurück, und ein Klick
+	// führte an eine Stelle, die mit dem Getroffenen nichts zu tun hat — die
+	// Achse behauptete eine Ordnung, die es gerade nicht gibt.
+	//
+	// Nicht durch etwas anderes ersetzt: das naheliegende wäre ein Streifen
+	// nach Quelldokument, aber jedes Projekt hier hat genau eine Quelle, und
+	// ein Streifen aus einem Block sagt nichts. Ein Fortschrittsbalken wäre die
+	// Bildlaufleiste noch einmal. Der Umschalter steht direkt darüber.
+	const achseAktiv = $derived(sortierung === 'chronologisch');
+
 	const jahre = $derived(
 		einheiten.map((e) => e.jahr_von).filter((j): j is number => j !== null && j !== undefined)
 	);
 	const achseVon = $derived(jahre.length ? Math.floor(Math.min(...jahre) / 10) * 10 : 1900);
 	const achseBis = $derived(jahre.length ? Math.ceil(Math.max(...jahre) / 10) * 10 : 2000);
+	const achseSpanne = $derived(Math.max(1, achseBis - achseVon));
+
+	/** Wo ein Jahr auf der Achse liegt, in Prozent von oben. */
+	function jahrAnteil(jahr: number): number {
+		return Math.min(100, Math.max(0, ((jahr - achseVon) / achseSpanne) * 100));
+	}
+
+	// Die Beschriftungen werden jetzt NACH ihrem Jahr gesetzt, nicht
+	// gleichmäßig verteilt. Vorher stand darüber ein justify-content:
+	// space-between und darunter ein angehängter letzter Wert, dessen Abstand
+	// vom vorletzten kleiner war als alle anderen — die Achse war also gar
+	// nicht linear. Für einen Zierstreifen egal, für ein Navigationsmittel
+	// nicht: Marker und Klick rechnen beide mit der Linearität.
 	const ticks = $derived.by(() => {
-		const spanne = Math.max(1, achseBis - achseVon);
-		const schritt = Math.max(1, Math.ceil(spanne / 8 / 10) * 10);
+		const schritt = Math.max(1, Math.ceil(achseSpanne / 8 / 10) * 10);
 		const werte: number[] = [];
 		for (let j = achseVon; j <= achseBis; j += schritt) werte.push(j);
-		if (werte[werte.length - 1] !== achseBis) werte.push(achseBis);
 		return werte;
 	});
+
+	// ── Marker und Sprung ───────────────────────────────────────────────────
+	// Beides hängt an derselben Zuordnung Karte↔Jahr. Die alte Vorschau
+	// (export_preview.py) hatte den mitwandernden Marker schon; beim Umbau auf
+	// Svelte ist er liegengeblieben, und die Achse war seitdem ein Zierstreifen.
+
+	let achseEl = $state<HTMLElement | null>(null);
+	let listeEl = $state<HTMLElement | null>(null);
+	/** Das Jahr, an dem der Blick gerade steht — null, solange nichts sichtbar ist. */
+	let markerJahr = $state<number | null>(null);
+	/** True, wenn die Karte an der Bezugslinie gar kein Datum hat. */
+	let markerUndatiert = $state(false);
+
+	function markerNachfuehren() {
+		if (!achseAktiv || !achseEl || !listeEl) return;
+		// Die Bezugslinie ist die Oberkante der Achse. Sie klebt am oberen Rand,
+		// also ist sie genau die Höhe, auf der man liest.
+		const linie = achseEl.getBoundingClientRect().top;
+		const karten = listeEl.querySelectorAll<HTMLElement>('[data-jahr]');
+		let treffer: HTMLElement | null = null;
+		for (const k of karten) {
+			// Die erste Karte, deren Unterkante noch unter der Linie liegt:
+			// die, die man an dieser Höhe gerade sieht.
+			if (k.getBoundingClientRect().bottom > linie) {
+				treffer = k;
+				break;
+			}
+		}
+		// Keine gefunden heißt: ganz nach unten gescrollt, alles liegt darüber.
+		if (!treffer) treffer = karten[karten.length - 1] ?? null;
+		if (!treffer) return;
+		const roh = treffer.dataset.jahr;
+		markerUndatiert = roh === '';
+		markerJahr = roh ? Number(roh) : null;
+	}
+
+	/** Gedrosselt auf einen Bildaufbau: scroll feuert sonst dutzendfach je Ruck. */
+	let angefordert = false;
+	function beimScrollen() {
+		if (angefordert) return;
+		angefordert = true;
+		requestAnimationFrame(() => {
+			angefordert = false;
+			markerNachfuehren();
+		});
+	}
+
+	$effect(() => {
+		// achseAktiv und gezeigt mitlesen, damit der Marker nach einem Wechsel
+		// der Sortierung oder nach 'alle zeigen' sofort stimmt.
+		void achseAktiv;
+		void gezeigt.length;
+		markerNachfuehren();
+	});
+
+	/** Klick auf die Achse: an das getroffene Jahr springen. */
+	async function zumJahrSpringen(ereignis: MouseEvent) {
+		if (!achseEl) return;
+		const kasten = achseEl.getBoundingClientRect();
+		const anteil = (ereignis.clientY - kasten.top) / kasten.height;
+		const jahr = achseVon + anteil * achseSpanne;
+
+		// Die erste Einheit, die nicht mehr davor liegt. sichtbar ist
+		// chronologisch sortiert, also ist das die Sprungstelle.
+		let stelle = sichtbar.findIndex(
+			(e) => e.jahr_von !== null && e.jahr_von !== undefined && e.jahr_von >= jahr
+		);
+		// Nichts dahinter: die Achse reicht bis zum aufgerundeten Jahrzehnt, die
+		// Daten enden früher — bei ber bis 2020 gegen 2017. Ein Klick in diese
+		// letzten Prozent fand nichts und verpuffte stumm. Jetzt führt er an das
+		// letzte Datierte, denn das ist, was 'ganz nach hinten' heißt.
+		if (stelle < 0) {
+			stelle = sichtbar.findLastIndex(
+				(e) => e.jahr_von !== null && e.jahr_von !== undefined
+			);
+		}
+		if (stelle < 0) return;   // gar nichts datiert — dann gibt es kein Ziel
+
+		// Liegt das Ziel hinter den ersten 60, muss erst der Rest da sein —
+		// sonst springt es an eine Karte, die es im DOM nicht gibt.
+		if (stelle >= gezeigt.length) {
+			zeigeAlle = true;
+			await tick();
+		}
+		const ziel = listeEl?.querySelectorAll<HTMLElement>('[data-jahr]')[stelle];
+		ziel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
 
 	// ── Neu datieren ────────────────────────────────────────────────────────
 	let laeuft = $state(false);
@@ -229,6 +342,8 @@
 
 	const beschaeftigt = $derived(laeuft || speichert);
 </script>
+
+<svelte:window onscroll={beimScrollen} onresize={beimScrollen} />
 
 <main class="inhalt">
 	<div style="display:flex;align-items:center;gap:10px">
@@ -340,18 +455,46 @@
 
 		<!-- ── Achse links, Karten rechts ─────────────────────────────────── -->
 		<div style="display:flex;gap:12px;align-items:flex-start">
-			<div class="achse">
-				{#each ticks as j (j)}
-					<div class="achse-tick">{j}</div>
-				{/each}
-			</div>
+			{#if achseAktiv}
+				<!-- Ein Knopf und kein div: die Achse ist bedienbar, also muss sie
+				     auch mit der Tastatur erreichbar sein. -->
+				<button
+					class="achse"
+					bind:this={achseEl}
+					type="button"
+					onclick={zumJahrSpringen}
+					title="Klicken, um an ein Jahr zu springen"
+					aria-label="Jahresachse — klicken, um an ein Jahr zu springen"
+				>
+					{#each ticks as j (j)}
+						<span class="achse-tick" style="top:{jahrAnteil(j)}%">{j}</span>
+					{/each}
 
-			<div class="zeilen" style="flex:1;min-width:0">
+					{#if markerJahr !== null}
+						<span class="achse-marker" style="top:{jahrAnteil(markerJahr)}%">
+							<span class="achse-marker-wert">{markerJahr}</span>
+						</span>
+					{:else if markerUndatiert}
+						<!-- Undatierte Einheiten stehen chronologisch am Ende und haben
+						     keinen Ort auf der Achse. Den Marker dort trotzdem
+						     irgendwohin zu setzen wäre eine Behauptung. -->
+						<span class="achse-marker achse-marker--ohne" style="top:100%">
+							<span class="achse-marker-wert">undatiert</span>
+						</span>
+					{/if}
+				</button>
+			{/if}
+
+			<div class="zeilen" bind:this={listeEl} style="flex:1;min-width:0">
 				{#each gezeigt as e (e.id)}
 					{@const h = herkunftVon(e)}
+					<!-- data-jahr trägt die Zuordnung Karte↔Jahr, an der Marker und
+					     Sprung beide hängen. Leer heißt undatiert — und das ist
+					     etwas anderes als 'kein data-jahr'. -->
 					<div
 						class="card datum-karte"
 						class:ausreisser={ausreisserIds.has(e.id)}
+						data-jahr={e.jahr_von ?? ''}
 						style="--rand:{HERKUNFT_FARBE[h] ?? '#ccc'}"
 					>
 						<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -462,21 +605,63 @@
 </main>
 
 <style>
+	/* Die Achse ist ein Knopf, sieht aber keiner sein: sie trägt nichts von
+	   dem, was ein Knopf sonst mitbringt. Bedienbar muss sie trotzdem sein. */
 	.achse {
-		flex: 0 0 56px;
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		align-items: flex-end;
+		flex: 0 0 62px;
 		position: sticky;
 		top: 12px;
 		height: 70vh;
+		border: 0;
 		border-right: 1px solid var(--c-border);
-		padding-right: 6px;
+		background: none;
+		padding: 0 8px 0 0;
+		font: inherit;
+		text-align: right;
+		cursor: pointer;
 	}
+	.achse:hover {
+		border-right-color: var(--c-text-4);
+	}
+	/* Absolut nach Jahr gesetzt, nicht gleichmäßig verteilt: sonst wäre die
+	   Achse nicht linear, und Marker wie Sprung rechneten daneben. */
 	.achse-tick {
+		position: absolute;
+		right: 8px;
+		transform: translateY(-50%);
 		font-size: 10px;
 		color: var(--c-text-3);
+		pointer-events: none;
+		user-select: none;
+	}
+	.achse-marker {
+		position: absolute;
+		right: -1px;
+		width: 22px;
+		height: 0;
+		border-top: 2px solid var(--c-primary);
+		transform: translateY(-1px);
+		pointer-events: none;
+	}
+	.achse-marker-wert {
+		position: absolute;
+		right: 26px;
+		top: -8px;
+		background: var(--c-primary);
+		color: #fff;
+		font-size: 10px;
+		font-variant-numeric: tabular-nums;
+		padding: 1px 5px;
+		border-radius: 3px;
+		white-space: nowrap;
+	}
+	/* Undatiertes hat keinen Ort auf einer Jahresachse. Der Marker steht am
+	   Fuß und sagt das, statt eine Jahreszahl zu behaupten. */
+	.achse-marker--ohne {
+		border-top-color: var(--c-text-4);
+	}
+	.achse-marker--ohne .achse-marker-wert {
+		background: var(--c-text-4);
 	}
 	.datum-karte {
 		padding: 8px 12px;
