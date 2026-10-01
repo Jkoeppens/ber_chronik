@@ -168,15 +168,12 @@ def test_kaputte_koepfe_geben_kein_passwort(wert: bytes):
     assert zugang._angebotenes([(b"authorization", wert)]) is None
 
 
-def test_der_vergleich_laeuft_in_gleichbleibender_zeit():
-    """compare_digest, nicht ==. Geprüft am Code, weil Zeit nicht messbar ist.
-
-    Eine Messung wäre auf einer geteilten Maschine wertlos und flackerte. Dass
-    die richtige Funktion benutzt wird, ist die Aussage, die sich halten lässt.
-    """
-    import inspect
-
-    assert "compare_digest" in inspect.getsource(zugang.Riegel._stimmt)
+# Der Test auf compare_digest steht in test_neu_zugang_tabelle.py. Er hieß hier
+# test_der_vergleich_laeuft_in_gleichbleibender_zeit und suchte das Wort im
+# Quelltext — wo es auch im Docstring stand, der es erklärt. Ein == daneben fiel
+# ihm nicht auf; die Gegenprobe hat das gezeigt. Die neue Fassung prüft den
+# AUFRUF über den Syntaxbaum und zusätzlich, dass kein == auf ein Geheimnis
+# daneben steht.
 
 
 # ── Der Ordnerpfad ────────────────────────────────────────────────────────────

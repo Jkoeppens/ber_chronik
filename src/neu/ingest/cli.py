@@ -11,12 +11,11 @@ Flag wird ein unbekanntes Projekt abgelehnt statt stillschweigend erzeugt.
 from __future__ import annotations
 
 import argparse
-import secrets
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from src.neu import projekte
+from src.neu import projekte, zugang
 from src.neu.db import anlegen_wenn_noetig, db_pfad, verbindung_schreibend
 from src.neu.ingest.dienst import IngestFehler, einlesen
 from src.neu.ingest.kern import QUELLFORMATE
@@ -33,7 +32,9 @@ def _anlegen(projekt_id: str, titel: str) -> None:
         if projekte.gibt_es(con, projekt_id):
             return
         jetzt = datetime.now(timezone.utc).isoformat(timespec="seconds")
-        token = secrets.token_urlsafe(32)
+        # Aus zugang.py und nicht hier: der Tokenwert entsteht an einer Stelle,
+        # damit nicht zwei Befehle verschieden viel Zufall vergeben.
+        token = zugang.neuer_token()
         with con:
             zeiger = con.execute(
                 "INSERT INTO zugang (token, name, organisation, rolle, angelegt_am) "

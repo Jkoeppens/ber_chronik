@@ -41,6 +41,30 @@ Jede Anfrage verlangt danach HTTP Basic — die Fläche unter `/`, die API,
 `/viz/` und die Exportdateien unter `/data/exporte/`. Der Benutzername wird
 nicht geprüft; das Geheimnis ist das Passwort. Siehe `src/neu/zugang.py`.
 
+### Ein Token je Person
+
+Das eingegebene Passwort wird in der Tabelle `zugang` nachgeschlagen. Jede
+Anfrage schlägt nach — kein Zwischenspeicher, damit ein entzogener Token sofort
+nicht mehr hereinlässt.
+
+```
+python3 -m src.neu.zugang_cli --anlegen "Name" --rolle verwalter
+python3 -m src.neu.zugang_cli --auflisten
+python3 -m src.neu.zugang_cli --entziehen 3
+```
+
+Der Token wird beim Anlegen **einmal** ausgegeben und steht danach nirgends —
+nicht in der Liste, nicht im Protokoll. Wer ihn verliert, bekommt einen neuen.
+
+`ZUGANG_PASSWORT` gilt **zusätzlich** weiter, damit eine leere Tabelle auf einem
+frischen Laufwerk niemanden aussperrt. Beim Hochfahren steht als Warnung, dass es
+gilt und wie viele Token daneben stehen. Es gehört entfernt, sobald ein eigener
+Token nachweislich hereinlässt.
+
+**Projektzugänge werden nicht geprüft:** wer herein ist, sieht alle Projekte. Die
+Tabelle `projekt_zugang` ist leer und wird von keiner Zeile Code gelesen. Ein
+Test in `tests/test_neu_zugang_tabelle.py` bricht, sobald sich das ändert.
+
 ---
 
 ## Was auf Railway gesetzt sein muss

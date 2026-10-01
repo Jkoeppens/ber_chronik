@@ -167,6 +167,24 @@ def _altlasten_melden() -> None:
         con.close()
 
 
+def zugang_melden() -> None:
+    """Sagt, womit man hereinkommt: Token aus der Tabelle, und das Geheimnis.
+
+    Auf WARNING und nicht auf INFO, weil ZUGANG_PASSWORT ein geteiltes Geheimnis
+    ist und geteilte Geheimnisse liegenbleiben — sie fallen niemandem auf, weil
+    sie funktionieren. Die Zeile soll bei jedem Start danach fragen, ob es noch
+    gebraucht wird. Vom Wert steht nie etwas da, nur dass er gilt.
+    """
+    anzahl = zugang.anzahl_token()
+    protokoll.info("Zugang: %d Token in der Tabelle 'zugang'", anzahl)
+    protokoll.warning(
+        "ZUGANG_PASSWORT gilt zusätzlich als Anmeldung. Es ist ein geteiltes "
+        "Geheimnis und gehört niemandem — entfernen, sobald ein eigener Token "
+        "nachweislich hereinlässt (%d steh%s bereit).",
+        anzahl, "t" if anzahl == 1 else "en",
+    )
+
+
 def anbieter_melden() -> None:
     """Sagt beim Hochfahren, womit gerechnet wird und was fehlt.
 
@@ -184,6 +202,7 @@ def anbieter_melden() -> None:
 async def lebenszyklus(_: FastAPI):
     protokoll_einrichten()
     datenbank_melden()
+    zugang_melden()
     anbieter_melden()
     yield
 
