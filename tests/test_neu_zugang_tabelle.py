@@ -519,3 +519,92 @@ def test_eine_kaputte_tabelle_laesst_niemanden_herein(tmp_path, monkeypatch):
     con.close()
     monkeypatch.setenv("NEU_DB", str(kaputt))
     assert zugang.nachschlagen("irgendwas") is None
+
+
+# ── Wann der Start abbricht ───────────────────────────────────────────────────
+#
+# Bis Oktober 2026 war die Bedingung "ZUGANG_PASSWORT fehlt" — damals war das
+# gemeinsame Geheimnis der einzige Weg herein, und sein Fehlen bedeutete einen
+# offenen Dienst. Seit die Tabelle geprüft wird, stimmt das nicht mehr: ein
+# Riegel besteht auch, wenn nur Token darin stehen.
+#
+# Vier Fälle, und nur einer bricht ab.
+
+def _leeren(con):
+    with con:
+        con.execute("DELETE FROM zugang")
+
+
+def test_passwort_ohne_token_startet(db, monkeypatch):
+    """Der Fall eines frischen Laufwerks: die Tabelle ist leer, das Passwort da."""
+    con, _ = db
+    _leeren(con)
+    monkeypatch.setenv("ZUGANG_PASSWORT", "ein-geheimnis")
+    assert zugang.riegel_oder_abbruch() == "ein-geheimnis"
+
+
+def test_token_ohne_passwort_startet(db, monkeypatch):
+    """Das Ziel der Umstellung: ZUGANG_PASSWORT darf weg, sobald Token da sind.
+
+    Vorher brach der Start hier ab — und zwar genau dann, wenn man die Variable
+    endlich entfernen wollte.
+    """
+    monkeypatch.delenv("ZUGANG_PASSWORT", raising=False)
+    assert zugang.anzahl_token() > 0
+    assert zugang.riegel_oder_abbruch() == ""
+
+
+def test_beides_startet_und_das_passwort_gewinnt(db, monkeypatch):
+    """Es gilt zusätzlich — die Reihenfolge im Riegel prüft es als zweites."""
+    monkeypatch.setenv("ZUGANG_PASSWORT", "ein-geheimnis")
+    assert zugang.anzahl_token() > 0
+    assert zugang.riegel_oder_abbruch() == "ein-geheimnis"
+
+
+def test_ohne_beides_bricht_der_start_ab(db, monkeypatch):
+    """Der einzige Fall, in dem der Dienst offen stünde."""
+    con, _ = db
+    _leeren(con)
+    monkeypatch.delenv("ZUGANG_PASSWORT", raising=False)
+
+    with pytest.raises(zugang.ZugangFehlt) as fehler:
+        zugang.riegel_oder_abbruch()
+
+    meldung = str(fehler.value)
+    # Die Meldung muss BEIDE Auswege nennen, sonst sucht man den zweiten nicht.
+    assert "ZUGANG_PASSWORT" in meldung
+    assert "zugang_cli --anlegen" in meldung
+
+
+def test_nur_blanks_zaehlen_weiterhin_nicht_als_passwort(db, monkeypatch):
+    con, _ = db
+    _leeren(con)
+    monkeypatch.setenv("ZUGANG_PASSWORT", "   ")
+    with pytest.raises(zugang.ZugangFehlt):
+        zugang.riegel_oder_abbruch()
+
+
+def test_passwort_wirft_nicht_mehr_von_sich_aus(monkeypatch):
+    """Die Funktion gibt jetzt zurück, was dasteht — auch nichts.
+
+    Wer sie zum Prüfen benutzt, prüft das Falsche: zuständig ist
+    riegel_oder_abbruch().
+    """
+    monkeypatch.delenv("ZUGANG_PASSWORT", raising=False)
+    assert zugang.passwort() == ""
+
+
+def test_ein_leeres_geheimnis_laesst_niemanden_herein(db, monkeypatch):
+    """Sonst wäre 'nur Token' ein Dienst, in den jeder leere Versuch kommt."""
+    monkeypatch.delenv("ZUGANG_PASSWORT", raising=False)
+    riegel = zugang.Riegel(None, geheimnis="")
+    for versuch in ("", "   ", "irgendwas", "None"):
+        assert riegel._wer(versuch) is None, versuch
+
+
+def test_mit_leerem_geheimnis_gelten_die_token_weiter(db, monkeypatch):
+    con, token = db
+    monkeypatch.delenv("ZUGANG_PASSWORT", raising=False)
+    riegel = zugang.Riegel(None, geheimnis="")
+    wer = riegel._wer(token["Jakob"])
+    assert wer is not None and wer.name == "Jakob"

@@ -37,20 +37,26 @@ def angemeldet() -> TestClient:
 
 # ── Der Start ─────────────────────────────────────────────────────────────────
 
-def test_ohne_passwort_startet_der_server_nicht(monkeypatch):
-    """Keine Vorgabe: eine Vorgabe würde behaupten, das darf offen stehen."""
+def test_passwort_liest_nur_noch(monkeypatch):
+    """ABSICHTLICH GEÄNDERT: passwort() wirft nicht mehr von sich aus.
+
+    Bis Oktober 2026 war ZUGANG_PASSWORT der einzige Weg herein, und sein
+    Fehlen bedeutete einen offenen Dienst — die Funktion brach deshalb selbst
+    ab. Seit die Tabelle zugang geprüft wird, stimmt diese Gleichsetzung nicht
+    mehr. Wer abbricht, entscheidet riegel_oder_abbruch(); die Fälle dazu
+    stehen in test_neu_zugang_tabelle.py.
+
+    Blanks gelten weiterhin als nicht gesetzt: ZUGANG_PASSWORT=" " in einer
+    .env ist ein Versehen und kein Geheimnis.
+    """
     monkeypatch.delenv("ZUGANG_PASSWORT", raising=False)
-    with pytest.raises(zugang.ZugangFehlt) as fehler:
-        zugang.passwort()
-    # Die Meldung muss die Variable nennen — sonst sucht man im Code danach.
-    assert "ZUGANG_PASSWORT" in str(fehler.value)
+    assert zugang.passwort() == ""
 
-
-def test_nur_blanks_gelten_als_nicht_gesetzt(monkeypatch):
-    """ZUGANG_PASSWORT=" " in einer .env ist ein Versehen, kein Geheimnis."""
     monkeypatch.setenv("ZUGANG_PASSWORT", "   ")
-    with pytest.raises(zugang.ZugangFehlt):
-        zugang.passwort()
+    assert zugang.passwort() == ""
+
+    monkeypatch.setenv("ZUGANG_PASSWORT", "  echt  ")
+    assert zugang.passwort() == "echt"
 
 
 def test_genau_zwei_pfade_sind_ausgenommen():

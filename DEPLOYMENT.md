@@ -26,12 +26,22 @@ Entsorgt und nicht wiederzubeleben: `railpack.json` (seit 18. Mai ungültig, ihr
 Genau eine bricht den Start ab. Alle anderen fehlenden Angaben legen nur
 einzelne Schritte lahm, die dann mit 503 antworten.
 
-| Variable | Wirkung, wenn sie fehlt |
-|---|---|
-| `ZUGANG_PASSWORT` | **Der Prozess startet nicht.** Die Meldung nennt die Variable. |
+Der Start bricht ab, wenn es **weder** ein gemeinsames Passwort **noch** einen
+Token in der Tabelle `zugang` gibt — dann stünde der Dienst offen. Alles andere
+startet:
+
+| `ZUGANG_PASSWORT` | Token in `zugang` | |
+|---|---|---|
+| gesetzt | keine | startet, WARNUNG über das geteilte Geheimnis |
+| nicht gesetzt | ja | startet, INFO „nur Token gelten" |
+| gesetzt | ja | startet, beides gilt, WARNUNG |
+| nicht gesetzt | keine | **Abbruch.** Die Meldung nennt beide Auswege |
 
 Es gibt keine Vorgabe, und das ist der Punkt: eine Vorgabe würde behaupten,
 dieser Dienst dürfe offen stehen.
+
+Auf einem frischen Laufwerk ist die Tabelle leer — dort muss das Passwort da
+sein. Sobald ein Token angelegt und ausprobiert ist, darf die Variable weg.
 
 ```
 ZUGANG_PASSWORT=$(python3 -c "import secrets; print(secrets.token_urlsafe(24))")
@@ -119,7 +129,7 @@ nichts. Die übrigen sind Geheimnisse und gehören nur dorthin.
 
 | Variable | Wert | Wofür |
 |---|---|---|
-| `ZUGANG_PASSWORT` | ein Geheimnis | **Pflicht.** Ohne sie startet nichts. |
+| `ZUGANG_PASSWORT` | ein Geheimnis | Pflicht, **solange kein Token existiert**. Danach entbehrlich. |
 | `DATA_ROOT` | `/data` | Datenbank, Uploads, Exporte aufs Laufwerk. In `railway.toml`. |
 | `LLM_PROVIDER` | `anthropic` | In `railway.toml`. |
 | `EMBEDDING_PROVIDER` | `voyage` | In `railway.toml`. Siehe „Platz" unten. |

@@ -240,21 +240,52 @@ class ZugangFehlt(RuntimeError):
 
 
 def passwort() -> str:
-    """Das gemeinsame Geheimnis. Wirft, wenn es fehlt.
+    """Das gemeinsame Geheimnis — oder eine leere Zeichenkette.
+
+    Wirft NICHT mehr. Bis Oktober 2026 war ZUGANG_PASSWORT der einzige Weg
+    herein, und sein Fehlen bedeutete deshalb einen offenen Dienst. Seit die
+    Tabelle zugang geprüft wird, ist das nicht mehr so: ein Riegel besteht auch,
+    wenn nur Token darin stehen. Was den Start abbricht, entscheidet jetzt
+    riegel_oder_abbruch().
 
     Blanks werden abgeschnitten, und ein Passwort, das nur daraus besteht, gilt
     als nicht gesetzt: ZUGANG_PASSWORT=" " in einer .env ist ein Versehen und
     kein Geheimnis.
     """
-    roh = (os.environ.get(VARIABLE) or "").strip()
-    if not roh:
-        raise ZugangFehlt(
-            f"{VARIABLE} ist nicht gesetzt. Ohne sie startet der Server nicht — "
-            f"es gibt keine Vorgabe, weil eine Vorgabe behaupten würde, dieser "
-            f"Dienst dürfe offen stehen. Setzen: {VARIABLE}=<Geheimnis> in .env "
-            f"(lokal) oder in den Variablen des Dienstes (Railway)."
-        )
-    return roh
+    return (os.environ.get(VARIABLE) or "").strip()
+
+
+def riegel_oder_abbruch() -> str:
+    """Gibt das gemeinsame Geheimnis zurück (auch leer) oder bricht den Start ab.
+
+    Abgebrochen wird genau dann, wenn es WEDER ein Passwort NOCH einen Token
+    gibt — dann stünde der Dienst offen, und das ist der Zustand, den es zu
+    verhindern gilt. Es gibt weiterhin keine Vorgabe: eine Vorgabe würde
+    behaupten, dieser Dienst dürfe offen stehen.
+
+    Beim Import geworfen und nicht im Lebenszyklus: dort ist uvicorn schon auf
+    dem Port, und ein Fehler danach ergäbe einen Dienst, der lauscht und jede
+    Anfrage abweist.
+
+    Die Tabelle wird hier gelesen, nicht nur die Umgebung. Ohne Datenbank zählt
+    sie als leer — auf einem frischen Laufwerk ist das der Normalfall, und dann
+    muss das Passwort da sein.
+    """
+    geheim = passwort()
+    if geheim:
+        return geheim
+    if anzahl_token() > 0:
+        return ""
+    raise ZugangFehlt(
+        f"Es gibt keinen Weg herein: {VARIABLE} ist nicht gesetzt, und in der "
+        f"Tabelle 'zugang' steht kein Token. Ohne beides startet der Server "
+        f"nicht — es gibt keine Vorgabe, weil eine Vorgabe behaupten würde, "
+        f"dieser Dienst dürfe offen stehen.\n"
+        f"Entweder: {VARIABLE}=<Geheimnis> in .env (lokal) oder in den "
+        f"Variablen des Dienstes (Railway).\n"
+        f"Oder:     python3 -m src.neu.zugang_cli --anlegen \"Name\" "
+        f"--rolle verwalter"
+    )
 
 
 def _angebotenes(kopfzeilen: list[tuple[bytes, bytes]]) -> str | None:
@@ -429,7 +460,10 @@ class Riegel:
         """
         if not angeboten:
             return None
-        if secrets.compare_digest(
+        # Ein leeres Geheimnis heißt: ZUGANG_PASSWORT ist nicht gesetzt, es
+        # gelten nur Token. Dann gar nicht vergleichen — nicht aus Vorsicht
+        # gegen compare_digest, sondern damit die Absicht im Code steht.
+        if self._geheimnis and secrets.compare_digest(
             angeboten.encode("utf-8"), self._geheimnis.encode("utf-8")
         ):
             return GEMEINSAM

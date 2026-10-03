@@ -186,12 +186,19 @@ def zugang_melden() -> None:
         zugang.keks_geheimnis()
     except (FileNotFoundError, sqlite3.Error) as exc:
         protokoll.error("Kein Signaturgeheimnis für Sitzungen: %s", exc)
-    protokoll.warning(
-        "ZUGANG_PASSWORT gilt zusätzlich als Anmeldung. Es ist ein geteiltes "
-        "Geheimnis und gehört niemandem — entfernen, sobald ein eigener Token "
-        "nachweislich hereinlässt (%d steh%s bereit).",
-        anzahl, "t" if anzahl == 1 else "en",
-    )
+    if ZUGANG_GEHEIMNIS:
+        protokoll.warning(
+            "ZUGANG_PASSWORT gilt zusätzlich als Anmeldung. Es ist ein geteiltes "
+            "Geheimnis und gehört niemandem — entfernen, sobald ein eigener Token "
+            "nachweislich hereinlässt (%d steh%s bereit).",
+            anzahl, "t" if anzahl == 1 else "en",
+        )
+    else:
+        # Keine Warnung, denn es gibt nichts zu bemängeln: das ist der Zustand,
+        # auf den die Warnung oben hinarbeitet.
+        protokoll.info(
+            "Zugang: nur Token gelten — ZUGANG_PASSWORT ist nicht gesetzt."
+        )
 
 
 def anbieter_melden() -> None:
@@ -221,11 +228,11 @@ async def lebenszyklus(_: FastAPI):
 # Fehler danach ergäbe einen Dienst, der lauscht und jede Anfrage abweist. Beim
 # Import geworfen bricht der Start ab, bevor irgendetwas erreichbar ist.
 #
-# Damit lässt sich dieses Modul ohne ZUGANG_PASSWORT nicht einmal importieren.
-# Das ist gewollt und der Grund, warum tests/conftest.py die Variable setzt: ein
-# Test, der den Riegel versehentlich umgeht, soll auffallen, indem er gar nicht
-# erst läuft.
-ZUGANG_GEHEIMNIS = zugang.passwort()
+# Abgebrochen wird, wenn es WEDER ein Passwort NOCH einen Token gibt. Bis
+# Oktober 2026 reichte das fehlende Passwort allein — damals war es der einzige
+# Weg herein. tests/conftest.py setzt die Variable weiterhin: ein Test, der den
+# Riegel versehentlich umgeht, soll auffallen, indem er gar nicht erst läuft.
+ZUGANG_GEHEIMNIS = zugang.riegel_oder_abbruch()
 
 app = FastAPI(
     title="BER Chronik — Leseserver",
