@@ -53,14 +53,20 @@ def test_nur_blanks_gelten_als_nicht_gesetzt(monkeypatch):
         zugang.passwort()
 
 
-def test_kein_pfad_ist_ausgenommen():
-    """Was hier stünde, stünde offen. Geprüft, damit es nicht unbemerkt wächst.
+def test_genau_zwei_pfade_sind_ausgenommen():
+    """Was hier steht, steht OFFEN. Der Test ist der Zaun um diese Liste.
 
-    Railway fragt nichts über HTTP ab — railway.toml setzt kein
-    healthcheckPath —, also gibt es nichts auszunehmen. Wer später eines
-    einträgt, muss diesen Test ändern und dabei nachdenken.
+    Bis Oktober 2026 war sie leer. Die Anmeldeseite muss vor der Anmeldung
+    erreichbar sein, sonst käme niemand zu ihr; /abmelden muss offen sein, weil
+    Abmelden mit einem bereits ungültigen Keks nicht an einem 401 scheitern
+    soll — das wäre eine Tür, die nur von innen zugeht.
+
+    Mehr darf es nicht werden. Wächst die Liste, bricht dieser Test, und wer sie
+    erweitert, muss hier vorbei und begründen, warum ein weiterer Pfad ohne
+    Anmeldung erreichbar sein soll. Railway fragt übrigens weiterhin nichts über
+    HTTP ab — railway.toml setzt kein healthcheckPath.
     """
-    assert zugang.OHNE_RIEGEL == ()
+    assert zugang.OHNE_RIEGEL == ("/anmelden", "/abmelden")
 
 
 # ── 401 ohne, 200 mit ─────────────────────────────────────────────────────────
@@ -84,16 +90,47 @@ GESCHUETZT = [
 IMMER_DA = [p for p in GESCHUETZT if p != "/"]
 
 
+# Seitenaufrufe führen zur Anmeldeseite, Programmpfade bekommen 401. Die Weiche
+# läuft über den Pfad: eine Kopfzeile wie Accept lässt sich weglassen und
+# fälschen, der Pfadraum liegt fest.
+SEITEN = ["/", "/viz/", "/viz/boot.js"]
+PROGRAMME = ["/api/projekte", "/api/konfiguration",
+             "/data/exporte/pruefstueck/data.json"]
+
+
+@pytest.mark.parametrize("pfad", PROGRAMME)
+def test_programmpfade_ohne_anmeldung_401(offen: TestClient, pfad: str):
+    """Ein Programm soll keine HTML-Seite geliefert bekommen, die es nicht liest."""
+    r = offen.get(pfad, follow_redirects=False)
+    assert r.status_code == 401, f"{pfad} gab {r.status_code}"
+
+
+@pytest.mark.parametrize("pfad", SEITEN)
+def test_seitenaufrufe_fuehren_zur_anmeldeseite(offen: TestClient, pfad: str):
+    """ABSICHTLICH GEÄNDERT: vorher 401, jetzt 302.
+
+    Der Zweck der Anmeldeseite ist, das Browserfenster abzulösen. Ein 401 auf
+    einen Seitenaufruf wäre entweder dieses Fenster (mit WWW-Authenticate) oder
+    eine nackte Fehlerseite — beides nicht, was ein Mensch sehen soll.
+    """
+    r = offen.get(pfad, follow_redirects=False)
+    assert r.status_code == 302, f"{pfad} gab {r.status_code}"
+    assert r.headers["location"].startswith("/anmelden?weiter=")
+
+
 @pytest.mark.parametrize("pfad", GESCHUETZT)
-def test_ohne_anmeldung_401(offen: TestClient, pfad: str):
-    r = offen.get(pfad)
-    assert r.status_code == 401, f"{pfad} stand offen"
+def test_ohne_anmeldung_kommt_niemand_durch(offen: TestClient, pfad: str):
+    """Egal auf welchem Weg abgewiesen wird — durchgelassen wird nicht."""
+    r = offen.get(pfad, follow_redirects=False)
+    assert r.status_code in (401, 302), f"{pfad} stand offen"
 
 
 @pytest.mark.parametrize("pfad", GESCHUETZT)
 def test_mit_anmeldung_kein_401(angemeldet: TestClient, pfad: str):
     """Durchgelassen. Was dahinter antwortet, ist eine andere Frage."""
-    assert angemeldet.get(pfad).status_code != 401, f"{pfad} wies ab"
+    r = angemeldet.get(pfad, follow_redirects=False)
+    assert r.status_code != 401, f"{pfad} wies ab"
+    assert r.status_code != 302, f"{pfad} wurde zur Anmeldung geschickt"
 
 
 @pytest.mark.parametrize("pfad", IMMER_DA)
@@ -102,12 +139,19 @@ def test_mit_anmeldung_200(angemeldet: TestClient, pfad: str):
     assert r.status_code == 200, f"{pfad} gab {r.status_code}"
 
 
-def test_der_401_fordert_basic_an(offen: TestClient):
-    """Ohne WWW-Authenticate fragt der Browser nicht von selbst."""
-    r = offen.get("/api/projekte")
-    kopf = r.headers["www-authenticate"]
-    assert kopf.startswith("Basic ")
-    assert 'realm="BER Chronik"' in kopf
+def test_kein_www_authenticate_mehr(offen: TestClient):
+    """ABSICHTLICH UMGEDREHT: vorher wurde die Kopfzeile VERLANGT.
+
+    Sie ist genau die Kopfzeile, die das Browserfenster öffnet. Sie zu schicken
+    und daneben eine Anmeldeseite anzubieten hieße, beides zu haben — und das
+    Fenster würde gewinnen, weil der Browser es sofort zeigt.
+
+    Basic funktioniert ohne sie weiter: wer Anmeldedaten mitschickt, wird
+    geprüft. Nur die unaufgeforderte Rückfrage entfällt.
+    """
+    for pfad in ("/api/projekte", "/"):
+        r = offen.get(pfad, follow_redirects=False)
+        assert "www-authenticate" not in {k.lower() for k in r.headers}, pfad
 
 
 def test_der_401_hat_die_eine_fehlergestalt(offen: TestClient):
@@ -120,9 +164,13 @@ def test_der_401_hat_die_eine_fehlergestalt(offen: TestClient):
 
 
 def test_auch_unbekannte_pfade_sind_verriegelt(offen: TestClient):
-    """401 vor 404: sonst verrät der Dienst, welche Pfade es gibt."""
-    assert offen.get("/gibtsnicht").status_code == 401
-    assert offen.get("/api/gibtsnicht").status_code == 401
+    """Vor 404: sonst verrät der Dienst, welche Pfade es gibt.
+
+    Unter /api/ bleibt es 401, sonst wird umgeleitet — dieselbe Weiche wie
+    überall, und sie darf an einem unbekannten Pfad nicht anders sein.
+    """
+    assert offen.get("/gibtsnicht", follow_redirects=False).status_code == 302
+    assert offen.get("/api/gibtsnicht", follow_redirects=False).status_code == 401
 
 
 def test_schreibende_wege_ebenso(offen: TestClient):

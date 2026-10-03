@@ -281,19 +281,30 @@ GESCHUETZT = ["/", "/api/projekte", "/viz/",
 
 
 @pytest.mark.parametrize("pfad", GESCHUETZT)
-def test_ohne_anmeldung_weiterhin_401(client, pfad):
-    assert client.get(pfad).status_code == 401, f"{pfad} stand offen"
+def test_ohne_anmeldung_kommt_niemand_durch(client, pfad):
+    """401 für Programmpfade, 302 zur Anmeldeseite für Seitenaufrufe.
+
+    Seit Oktober 2026 — vorher war alles 401. Die Reichweite ist dieselbe
+    geblieben, nur die Art der Abweisung hängt jetzt am Pfad.
+    """
+    r = client.get(pfad, follow_redirects=False)
+    assert r.status_code in (401, 302), f"{pfad} stand offen"
+    if pfad.startswith(("/api/", "/data/")):
+        assert r.status_code == 401, f"{pfad} wurde umgeleitet statt abgewiesen"
 
 
 @pytest.mark.parametrize("pfad", GESCHUETZT)
 def test_mit_token_kein_401(client, db, pfad):
     """Durchgelassen. '/' kann 503 geben, wenn frontend/build fehlt (CI)."""
     _, token = db
-    assert client.get(pfad, headers=_kopf(token["Jakob"])).status_code != 401
+    r = client.get(pfad, headers=_kopf(token["Jakob"]), follow_redirects=False)
+    assert r.status_code != 401
+    assert r.status_code != 302, "wurde zur Anmeldung geschickt trotz Token"
 
 
 def test_keine_zusaetzliche_ausnahme(db):
-    assert zugang.OHNE_RIEGEL == ()
+    """Genau die Anmeldeseite und ihr Gegenstück, kein Pfad mehr."""
+    assert zugang.OHNE_RIEGEL == ("/anmelden", "/abmelden")
 
 
 # ── Das Verwaltungsskript ─────────────────────────────────────────────────────

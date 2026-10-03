@@ -13,7 +13,13 @@ Widerrufbarkeit ist der ganze Zweck dieser Änderung. Die Abfrage geht über ein
 Tabelle mit einstelliger Zeilenzahl; das kostet nichts gegen den Nutzen,
 jemandem den Zugang wirklich nehmen zu können.
 
-WARUM BASIC UND KEIN ANMELDEFORMULAR. Es deckt in einem Zug alles ab — die
+DREI WEGE, in dieser Reihenfolge geprüft: ein Sitzungskeks, HTTP Basic, das
+gemeinsame ZUGANG_PASSWORT. Der Keks zuerst, weil er der Normalfall im Browser
+ist. Basic bleibt ausdrücklich — daran hängen curl, die Prüfungen und alles,
+was ohne Browser läuft.
+
+WARUM BASIC UND KEIN ANMELDEFORMULAR (gilt weiter für Basic selbst, die
+Anmeldeseite in server/anmeldung.py kam im Oktober 2026 daneben). Es deckt in einem Zug alles ab — die
 Fläche unter /, die API, /viz/ und die Exportdateien —, der Browser fragt selbst
 danach und merkt es sich, und am Frontend ändert sich keine Zeile. Damit nimmt
 es nichts vorweg: wenn die zugang-Tabelle mit Token je Person drankommt, wird
@@ -39,18 +45,24 @@ from __future__ import annotations
 
 import base64
 import binascii
+import hashlib
+import hmac
 import json
 import logging
 import os
 import secrets
 import sqlite3
+import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 #: Die Variable, die das Geheimnis trägt. Als Konstante, weil die Meldung beim
 #: Start sie nennen muss und ein Tippfehler dort nicht auffiele.
 VARIABLE = "ZUGANG_PASSWORT"
 
-#: Was der Browser im Anmeldefenster zeigt.
+#: Blieb aus der Zeit, als der Browser sein eigenes Anmeldefenster zeigte. Wird
+#: seit der Anmeldeseite nirgends mehr gesetzt — WWW-Authenticate ist genau die
+#: Kopfzeile, die dieses Fenster öffnet.
 BEREICH = "BER Chronik"
 
 #: Pfade ohne Riegel. Absichtlich LEER.
@@ -62,7 +74,17 @@ BEREICH = "BER Chronik"
 #: hier aufnehmen, sonst hält Railway den Dienst wegen 401 für tot. Und was hier
 #: steht, steht ohne Passwort offen: es darf nichts verraten, auch keine
 #: Versionsnummer und keinen Projektnamen.
-OHNE_RIEGEL: tuple[str, ...] = ()
+OHNE_RIEGEL: tuple[str, ...] = ("/anmelden", "/abmelden")
+
+#: Pfade, hinter denen Programme sitzen und keine Menschen. Sie bekommen 401 und
+#: niemals eine Weiterleitung: ein Aufruf aus der Fläche oder aus curl soll
+#: keine HTML-Seite geliefert bekommen, die er nicht lesen kann.
+#:
+#: Über den Pfad und nicht über Accept: eine Kopfzeile lässt sich weglassen und
+#: fälschen, der Pfadraum liegt fest.
+PROGRAMM_PFADE: tuple[str, ...] = (
+    "/api/", "/data/", "/openapi.json", "/docs", "/redoc",
+)
 
 protokoll = logging.getLogger("ber.neu")
 
@@ -84,6 +106,133 @@ class Person:
 
 #: Das gemeinsame Geheimnis, als Person gedacht. Es gehört niemandem.
 GEMEINSAM = Person(id=None, name="gemeinsames Passwort", rolle="verwalter")
+
+
+# ── Der Sitzungskeks ──────────────────────────────────────────────────────────
+#
+# Er trägt NUR die zugang.id und eine Frist, dazu eine Signatur. Kein Token,
+# kein Name, nichts Geheimes. Das ist der Zweck der Bauform: der Riegel schlägt
+# die Zeile bei jeder Anfrage nach, also beendet --entziehen auch bestehende
+# Sitzungen sofort. Ein Keks, der den Token selbst trüge, wäre für sich gültig
+# und überlebte jedes Entziehen bis zum Ablauf — bis zu dreißig Tage.
+#
+# Form:  <id>.<gueltig_bis>.<signatur>,  Signatur = HMAC-SHA256 über den Rumpf.
+
+KEKS = "ber_zugang"
+
+#: 30 Tage. Bei Gebrauch NICHT verlängert — der Keks läuft ab, der Token nicht.
+#: Ein verlorener Browser vergisst von selbst, ein verlorener Token nicht.
+KEKS_DAUER = 30 * 24 * 3600
+
+#: Wo das Signaturgeheimnis in der Tabelle einstellung steht.
+GEHEIMNIS_SCHLUESSEL = "keks_geheimnis"
+
+
+def keks_geheimnis(con: sqlite3.Connection | None = None) -> str:
+    """Das Geheimnis, mit dem Kekse signiert werden. Legt es einmalig an.
+
+    In der Datenbank und nicht in einer Umgebungsvariablen: eine Variable mehr
+    im Dashboard ist eine mehr, die jemand setzen, vergessen und falsch setzen
+    kann — und dort wird gerade aufgeräumt.
+
+    Wer die Zeile löscht, meldet alle Sitzungen ab: die Signaturen stimmen dann
+    nicht mehr. Kein Token wird davon ungültig. Das ist der Notausgang, falls
+    ein Keks abhanden kommt.
+    """
+    from src.neu.db import verbindung_schreibend
+
+    eigene = con is None
+    con = con or verbindung_schreibend()
+    try:
+        zeile = con.execute(
+            "SELECT wert FROM einstellung WHERE schluessel = ?",
+            (GEHEIMNIS_SCHLUESSEL,),
+        ).fetchone()
+        if zeile is not None:
+            return zeile[0]
+        wert = secrets.token_urlsafe(32)
+        with con:
+            con.execute(
+                "INSERT INTO einstellung (schluessel, wert, gesetzt_am) "
+                "VALUES (?, ?, ?)",
+                (GEHEIMNIS_SCHLUESSEL, wert,
+                 datetime.now(timezone.utc).isoformat(timespec="seconds")),
+            )
+        return wert
+    finally:
+        if eigene:
+            con.close()
+
+
+def _unterschrift(rumpf: str, geheimnis: str) -> str:
+    return hmac.new(
+        geheimnis.encode("utf-8"), rumpf.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+
+
+def keks_backen(zugang_id: int, geheimnis: str, jetzt: float | None = None) -> str:
+    """Der Wert, der in den Keks geht."""
+    bis = int((jetzt if jetzt is not None else time.time()) + KEKS_DAUER)
+    rumpf = f"{zugang_id}.{bis}"
+    return f"{rumpf}.{_unterschrift(rumpf, geheimnis)}"
+
+
+def keks_lesen(wert: str, geheimnis: str, jetzt: float | None = None) -> int | None:
+    """Die zugang.id aus einem Keks — oder None.
+
+    None bei allem, was nicht stimmt: falsche Form, falsche Signatur, Frist
+    abgelaufen. Kein Unterschied in der Antwort, denn für den Aufrufer ist jeder
+    dieser Fälle derselbe: nicht angemeldet.
+
+    Die Signatur wird VOR der Frist geprüft. Umgekehrt verriete die Reihenfolge
+    einem Fälscher, ob sein Rumpf wenigstens die richtige Gestalt hat.
+    """
+    if not wert:
+        return None
+    teile = wert.rsplit(".", 1)
+    if len(teile) != 2:
+        return None
+    rumpf, gegeben = teile
+    if not hmac.compare_digest(_unterschrift(rumpf, geheimnis), gegeben):
+        return None
+    try:
+        roh_id, roh_bis = rumpf.split(".", 1)
+        zugang_id, bis = int(roh_id), int(roh_bis)
+    except ValueError:
+        return None
+    if (jetzt if jetzt is not None else time.time()) >= bis:
+        return None
+    return zugang_id
+
+
+def nach_id(zugang_id: int) -> Person | None:
+    """Die Zeile zu einer id — oder None, wenn es sie nicht mehr gibt.
+
+    Der zweite Teil der Bauform: der Keks sagt nur, WER behauptet zu sein; ob es
+    diesen Zugang noch gibt, sagt die Tabelle. Deshalb wirkt --entziehen sofort,
+    auch auf laufende Sitzungen.
+    """
+    from src.neu.db import verbindung
+
+    try:
+        con = verbindung()
+    except (FileNotFoundError, sqlite3.Error):
+        return None
+    try:
+        zeile = con.execute(
+            "SELECT id, name, rolle FROM zugang WHERE id = ?", (zugang_id,)
+        ).fetchone()
+        if zeile is None:
+            return None
+        return Person(
+            id=zeile["id"],
+            name=zeile["name"] or f"Zugang {zeile['id']}",
+            rolle=zeile["rolle"],
+        )
+    except sqlite3.Error:
+        return None
+    finally:
+        con.close()
 
 
 class ZugangFehlt(RuntimeError):
@@ -193,6 +342,29 @@ def anzahl_token() -> int:
         con.close()
 
 
+def _keks_aus(kopfzeilen: list[tuple[bytes, bytes]]) -> str | None:
+    """Unseren Keks aus der Cookie-Zeile — oder None.
+
+    Von Hand und nicht über http.cookies: dessen SimpleCookie verschluckt fremde
+    Kekse mit ungewöhnlichen Zeichen still und gibt dann auch unseren nicht mehr
+    her. Hier wird nur nach dem einen gesucht; was daneben steht, ist
+    gleichgültig.
+
+    Der erste Treffer gewinnt. Zwei Kekse gleichen Namens kommen vor, wenn einer
+    für eine Unterdomäne gesetzt wurde; einen davon auszuwählen ist in jedem
+    Fall willkürlich, und alle der Reihe nach zu versuchen hieße, einem
+    Angreifer, der einen zweiten setzen kann, einen zweiten Versuch zu schenken.
+    """
+    for name, wert in kopfzeilen:
+        if name != b"cookie":
+            continue
+        for stueck in wert.decode("latin-1").split(";"):
+            schluessel, _, inhalt = stueck.partition("=")
+            if schluessel.strip() == KEKS:
+                return inhalt.strip()
+    return None
+
+
 class Riegel:
     """Lässt eine Anfrage durch oder antwortet mit 401. Nichts dazwischen."""
 
@@ -203,6 +375,47 @@ class Riegel:
         #: Wer schon einmal gemeldet wurde. Ein Set und keine Zählung: es geht
         #: um 'ist genannt', nicht um 'wie oft'.
         self._gemeldet: set[tuple[int | None, str]] = set()
+
+    def _wer_auch_immer(self, scope) -> Person | None:
+        """Drei Wege, in dieser Reihenfolge: Keks, Basic, gemeinsames Passwort.
+
+        Der Keks zuerst, weil er der Normalfall im Browser ist und ohne ihn jede
+        Anfrage einen Basic-Kopf mitschleppen müsste.
+
+        Basic bleibt ausdrücklich: daran hängen curl, die Prüfungen und alles,
+        was ohne Browser läuft. Es ist der Weg, der keine Sitzung braucht.
+        """
+        kopfzeilen = scope.get("headers") or []
+        wert = _keks_aus(kopfzeilen)
+        if wert:
+            zugang_id = keks_lesen(wert, self._geheimnis_keks())
+            if zugang_id is not None:
+                # Der Keks sagt nur, WER behauptet zu sein. Ob es den Zugang
+                # noch gibt, sagt die Tabelle — darum wirkt --entziehen sofort.
+                wer = nach_id(zugang_id)
+                if wer is not None:
+                    return wer
+        return self._wer(_angebotenes(kopfzeilen))
+
+    def _geheimnis_keks(self) -> str:
+        """Das Signaturgeheimnis, je Anfrage gelesen. NICHT gemerkt.
+
+        Eine erste Fassung merkte es sich für den Serverlauf — eine Abfrage
+        weniger je Anfrage. Das war falsch, aus demselben Grund, aus dem der
+        Token je Anfrage nachgeschlagen wird: ein gemerkter Wert ließe das
+        Löschen der Zeile erst beim nächsten Neustart wirken, und das Löschen
+        ist der Notausgang, falls ein Keks abhanden kommt. Ein Notausgang, der
+        erst nach einem Neustart aufgeht, ist keiner.
+
+        Es kostet eine Abfrage auf eine Tabelle mit einer Zeile. Dieselbe
+        Rechnung wie beim Token, und dieselbe Antwort.
+        """
+        try:
+            return keks_geheimnis()
+        except (FileNotFoundError, sqlite3.Error):
+            # Ohne Datenbank gibt es keine Sitzungen. Ein zufälliger Wert lässt
+            # jeden Keks scheitern, statt ihn durchzulassen.
+            return secrets.token_urlsafe(32)
 
     def _wer(self, angeboten: str | None) -> Person | None:
         """Wer das ist — oder None. Zwei Wege, beide mit compare_digest.
@@ -238,9 +451,10 @@ class Riegel:
         art = scope.get("type")
         if art == "lifespan":
             return await self.app(scope, receive, send)
-        if art == "http" and scope.get("path") in self._ohne_riegel:
+        pfad = scope.get("path", "")
+        if art == "http" and pfad in self._ohne_riegel:
             return await self.app(scope, receive, send)
-        wer = self._wer(_angebotenes(scope.get("headers") or []))
+        wer = self._wer_auch_immer(scope)
         if wer is not None:
             # Die erkannte Person für die Anfrage hinterlegen. Noch liest das
             # niemand; es ist die Fläche, auf der projekt_zugang später steht.
@@ -252,19 +466,51 @@ class Riegel:
             # ungeprüft durch, weil 401 kein Websocket-Abschluss ist.
             await send({"type": "websocket.close", "code": 1008})
             return
+
+        # Ein Mensch, der eine Seite aufruft, gehört zur Anmeldeseite. Ein
+        # Programm bekommt 401. Schreibende Zugriffe ebenfalls: eine
+        # Weiterleitung auf ein POST verwandelte es stillschweigend in ein GET.
+        if (scope.get("method") == "GET"
+                and not any(pfad.startswith(v) for v in PROGRAMM_PFADE)):
+            await self._weiterleiten(send, pfad, scope.get("query_string", b""))
+            return
         await self._abweisen(send)
+
+    async def _weiterleiten(self, send, pfad: str, abfrage: bytes) -> None:
+        """302 auf die Anmeldeseite, mit dem Ziel im Gepäck.
+
+        Das Ziel wird kodiert mitgegeben, damit man nach der Anmeldung dort
+        landet, wo man hinwollte, und nicht auf der Startseite.
+        """
+        from urllib.parse import quote
+
+        ziel = pfad + ("?" + abfrage.decode("latin-1") if abfrage else "")
+        ort = f"/anmelden?weiter={quote(ziel, safe='')}"
+        await send({
+            "type": "http.response.start",
+            "status": 302,
+            "headers": [
+                (b"location", ort.encode("latin-1")),
+                (b"content-length", b"0"),
+                # Keine zwischengespeicherte Weiterleitung: wer sich anmeldet,
+                # soll beim nächsten Aufruf die Seite sehen und nicht erneut die
+                # Umleitung aus dem Zwischenspeicher.
+                (b"cache-control", b"no-store"),
+            ],
+        })
+        await send({"type": "http.response.body", "body": b""})
 
     async def _abweisen(self, send) -> None:
         """401 in der einen Fehlergestalt des Servers.
 
         Dieselbe Gestalt wie jeder andere Fehler ({"fehler": {...}}), damit die
-        Fläche nicht zwei Formen auseinanderhalten muss. WWW-Authenticate ist
-        das Entscheidende: erst damit fragt der Browser von selbst.
+        Fläche nicht zwei Formen auseinanderhalten muss.
         """
         koerper = json.dumps(
             {"fehler": {
                 "code": "zugang_verweigert",
-                "meldung": "Dieser Dienst verlangt Benutzername und Passwort.",
+                "meldung": "Dieser Dienst verlangt eine Anmeldung. "
+                           "Im Browser: /anmelden",
                 "status": 401,
             }},
             ensure_ascii=False,
@@ -272,11 +518,15 @@ class Riegel:
         await send({
             "type": "http.response.start",
             "status": 401,
+            # KEIN WWW-Authenticate. Es ist genau die Kopfzeile, die das
+            # Browserfenster öffnet — und das abzulösen ist der Zweck der
+            # Anmeldeseite. Basic funktioniert ohne sie weiter: wer
+            # Anmeldedaten mitschickt, wird geprüft. Nur die unaufgeforderte
+            # Rückfrage entfällt. Für curl heißt das --basic -u, siehe
+            # DEPLOYMENT.md.
             "headers": [
                 (b"content-type", b"application/json; charset=utf-8"),
                 (b"content-length", str(len(koerper)).encode()),
-                (b"www-authenticate",
-                 f'Basic realm="{BEREICH}", charset="UTF-8"'.encode()),
             ],
         })
         await send({"type": "http.response.body", "body": koerper})

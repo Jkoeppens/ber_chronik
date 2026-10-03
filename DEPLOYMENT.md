@@ -61,6 +61,51 @@ frischen Laufwerk niemanden aussperrt. Beim Hochfahren steht als Warnung, dass e
 gilt und wie viele Token daneben stehen. Es gehört entfernt, sobald ein eigener
 Token nachweislich hereinlässt.
 
+### Die Anmeldeseite, und was das für curl heißt
+
+Im Browser führt `/anmelden` zu einem Formular mit einem Feld. Wer eine Seite
+ohne Anmeldung aufruft, wird dorthin umgeleitet (302); Programmpfade — `/api/`,
+`/data/`, `/openapi.json`, `/docs`, `/redoc` — bekommen weiterhin 401 mit der
+gewohnten Fehlergestalt, damit kein Programm eine HTML-Seite geliefert bekommt.
+
+**`WWW-Authenticate` wird nicht mehr geschickt.** Diese Kopfzeile ist genau das,
+was das Anmeldefenster des Browsers öffnet, und das abzulösen war der Zweck der
+Seite. Für `curl` heißt das:
+
+```
+curl --basic -u "x:$TOKEN" https://…/api/projekte     # richtig
+curl -u "x:$TOKEN" https://…/api/projekte             # geht auch
+curl --anyauth -u "x:$TOKEN" https://…                # geht NICHT mehr
+```
+
+`--anyauth` wartet auf die Kopfzeile, um das Verfahren zu wählen. Ohne sie
+schickt es nichts. `-u` allein nimmt ohnehin Basic, `--basic` sagt es nur
+ausdrücklich — beides funktioniert.
+
+Nach erfolgreicher Anmeldung setzt der Dienst einen Keks (`ber_zugang`,
+HttpOnly, Secure, SameSite=Lax, 30 Tage, bei Gebrauch nicht verlängert). Er
+trägt **nur** die `zugang.id` und eine Signatur, kein Geheimnis. Deshalb beendet
+`--entziehen` auch laufende Sitzungen sofort: der Riegel schlägt bei jeder
+Anfrage in der Tabelle nach.
+
+`/abmelden` löscht den Keks. Der Token bleibt gültig — abgemeldet wird dieser
+Browser, nicht der Zugang.
+
+### Alle abmelden, ohne einen Token zu entwerten
+
+Das Signaturgeheimnis steht in der Tabelle `einstellung` unter `keks_geheimnis`
+und entsteht beim ersten Hochfahren von selbst. Keine Umgebungsvariable.
+
+```sql
+DELETE FROM einstellung WHERE schluessel = 'keks_geheimnis';
+```
+
+Danach stimmt keine Signatur mehr: **alle Sitzungen enden sofort**, beim
+nächsten Lesen entsteht ein neues Geheimnis. **Kein Token wird dadurch
+ungültig** — jeder meldet sich einfach neu an. Das ist der Notausgang, falls ein
+Keks abhanden kommt; einen einzelnen Zugang nimmt man dagegen mit
+`zugang_cli --entziehen`.
+
 **Projektzugänge werden nicht geprüft:** wer herein ist, sieht alle Projekte. Die
 Tabelle `projekt_zugang` ist leer und wird von keiner Zeile Code gelesen. Ein
 Test in `tests/test_neu_zugang_tabelle.py` bricht, sobald sich das ändert.

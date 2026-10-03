@@ -412,6 +412,19 @@ Fix: Schritt analog zu Wizard-Logik dynamisch berechnen, Mindest-Schritt 1 Jahr.
 - **C1 — `import os` fehlt in `propose_taxonomy.py`** ✓ behoben (2026-05-19)
   `propose_taxonomy.py:250` nutzt `os.environ.get()` ohne `import os`. NameError bei jedem `--method bge`-Aufruf — betrifft Railway und alle Umgebungen mit `EMBEDDING_PROVIDER!=local`.
 
+### NIEDRIG
+
+#### Ein abgelaufener Keks zeigt im Frontend nur „401"
+
+Läuft der Sitzungskeks während der Benutzung ab (nach 30 Tagen), bekommt der
+nächste `fetch` aus der SvelteKit-Fläche einen 401 und zeigt „Der Server
+antwortete mit 401." — nicht die Anmeldeseite. Ein `fetch` folgt keiner
+Weiterleitung, die der Nutzer sähe, und `api.ts` kennt den Fall nicht.
+
+**Absichtlich nicht behandelt.** Das Frontend unangetastet zu lassen war die
+Begründung für die Bauform der Anmeldeseite; sie dafür doch anzufassen hieße,
+den Grund aufzugeben. Wer neu lädt, landet auf `/anmelden`. Stand 2026-10-03.
+
 ### HOCH
 
 - **C2 — `--method bge` kodiert stillschweigend Environment-Logik** [OFFEN]

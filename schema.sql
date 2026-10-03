@@ -218,6 +218,23 @@ CREATE TABLE anmeldung (
     begonnen_am TEXT NOT NULL
 );
 
+-- ── einstellung ───────────────────────────────────────────────────────────────
+-- Was der Dienst sich über Projekte hinaus merkt. Heute eine Zeile:
+-- keks_geheimnis, mit dem Sitzungskekse signiert werden.
+--
+-- In der Datenbank und nicht in einer Umgebungsvariablen: eine Variable mehr im
+-- Dashboard ist eine mehr, die jemand setzen, vergessen und falsch setzen kann.
+-- Hier entsteht sie beim Hochfahren von selbst und überlebt mit dem Laufwerk.
+--
+-- WERTE HIER SIND GEHEIM. Keine Auflistung zeigt sie — dieselbe Regel wie bei
+-- zugang.token. Wer keks_geheimnis löscht, meldet alle Sitzungen ab; kein Token
+-- wird davon ungültig.
+CREATE TABLE einstellung (
+    schluessel TEXT NOT NULL PRIMARY KEY,
+    wert       TEXT NOT NULL,
+    gesetzt_am TEXT NOT NULL
+);
+
 -- ── lauf ──────────────────────────────────────────────────────────────────────
 -- Ein Verarbeitungsschritt, der gelaufen ist. Was womit erzeugt wurde.
 CREATE TABLE lauf (

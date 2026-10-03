@@ -3,6 +3,7 @@ server — Leseserver auf data/neu.db
 
 Endpoints:
   GET /api/konfiguration            welche Anbieter, Modelle und Schwellen gelten
+  GET /anmelden                     die Anmeldeseite (ohne Riegel)
   GET /api/bestand                  was auf dem Laufwerk liegt, nach Art getrennt
   GET /api/projekte                 alle Projekte
   GET /api/projekt/{id}/kennzahlen  ein Projekt mit seinen Zahlen
@@ -63,6 +64,7 @@ env_laden()
 
 from src.neu.server import (  # noqa: E402
     akteure,
+    anmeldung,
     bestand,
     chat,
     datierung,
@@ -177,6 +179,13 @@ def zugang_melden() -> None:
     """
     anzahl = zugang.anzahl_token()
     protokoll.info("Zugang: %d Token in der Tabelle 'zugang'", anzahl)
+    # Das Signaturgeheimnis beim Hochfahren anlegen und nicht bei der ersten
+    # Anmeldung: so ist der Start die einzige Stelle, die dafür schreibt, und
+    # eine Anfrage bleibt lesend.
+    try:
+        zugang.keks_geheimnis()
+    except (FileNotFoundError, sqlite3.Error) as exc:
+        protokoll.error("Kein Signaturgeheimnis für Sitzungen: %s", exc)
     protokoll.warning(
         "ZUGANG_PASSWORT gilt zusätzlich als Anmeldung. Es ist ein geteiltes "
         "Geheimnis und gehört niemandem — entfernen, sobald ein eigener Token "
@@ -238,7 +247,7 @@ app.add_middleware(zugang.Riegel, geheimnis=ZUGANG_GEHEIMNIS)
 # überschneiden sich.
 
 for teil in (konfiguration, bestand, projekte, ingest, themen, laeufe,
-             datierung, akteure, export, chat):
+             datierung, akteure, export, chat, anmeldung):
     app.include_router(teil.router)
 
 

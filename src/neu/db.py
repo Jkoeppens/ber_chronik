@@ -76,6 +76,18 @@ ALTLASTEN: list[tuple[str, str, str]] = [
         " '\"verfahren\": \"vektoren\"') WHERE parameter LIKE '%\"verfahren\": \"bge\"%'",
         "lauf-Zeilen: verfahren 'bge' → 'vektoren'",
     ),
+    (
+        "tabelle_einstellung",
+        # Oktober 2026: der Sitzungskeks braucht ein Signaturgeheimnis, und das
+        # soll keine Umgebungsvariable sein. IF NOT EXISTS, weil eine frisch aus
+        # schema.sql erzeugte Datenbank sie schon hat — die Liste läuft nur auf
+        # bestehenden, aber billig ist billig.
+        "CREATE TABLE IF NOT EXISTS einstellung ("
+        " schluessel TEXT NOT NULL PRIMARY KEY,"
+        " wert       TEXT NOT NULL,"
+        " gesetzt_am TEXT NOT NULL)",
+        "Tabelle 'einstellung' angelegt",
+    ),
 ]
 
 
@@ -90,10 +102,32 @@ def altlasten_nachziehen(con: sqlite3.Connection) -> list[str]:
     getan = []
     with con:
         for name, sql, beschreibung in ALTLASTEN:
+            vorher = _bestand(con, sql)
             zeiger = con.execute(sql)
-            if zeiger.rowcount > 0:
+            # rowcount zählt nur bei UPDATE/DELETE/INSERT; bei CREATE TABLE ist
+            # er -1, auch wenn die Tabelle gerade entstanden ist. Deshalb für
+            # solche Anweisungen der Vergleich davor und danach.
+            if vorher is not None:
+                if not vorher and _bestand(con, sql):
+                    getan.append(beschreibung)
+            elif zeiger.rowcount > 0:
                 getan.append(f"{beschreibung} ({zeiger.rowcount} Zeilen)")
     return getan
+
+
+def _bestand(con: sqlite3.Connection, sql: str) -> bool | None:
+    """Ob die Tabelle einer CREATE-Anweisung schon da ist — sonst None.
+
+    None heißt: die Anweisung ist keine, bei der sich das fragen lässt, dann
+    zählt rowcount.
+    """
+    anfang = sql.strip().upper()
+    if not anfang.startswith("CREATE TABLE IF NOT EXISTS"):
+        return None
+    name = sql.strip().split()[5].strip("(")
+    return bool(con.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (name,)
+    ).fetchone())
 
 
 def verbindung() -> sqlite3.Connection:
